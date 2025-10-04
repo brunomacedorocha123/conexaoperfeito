@@ -1,0 +1,128 @@
+/* Estilos específicos da página de Cadastro */
+body.auth-page {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+
+.auth-page .logo h1 a {
+    color: white;
+    text-decoration: none;
+}
+
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+    padding: 40px 0;
+}
+
+.auth-card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 40px;
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.auth-card h2 {
+    color: var(--dark-color);
+    text-align: center;
+    margin-bottom: 10px;
+    font-size: 2rem;
+}
+
+.auth-subtitle {
+    text-align: center;
+    color: var(--text-light);
+    margin-bottom: 30px;
+}
+
+.auth-form {
+    margin-bottom: 20px;
+}
+
+.form-help {
+    display: block;
+    margin-top: 5px;
+    color: var(--text-light);
+    font-size: 0.85rem;
+}
+
+.terms-group {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.terms-group input[type="checkbox"] {
+    margin-top: 3px;
+}
+
+.terms-group label {
+    font-size: 0.9rem;
+    color: var(--text-color);
+    line-height: 1.4;
+}
+
+.terms-group a {
+    color: var(--primary-color);
+}
+
+.terms-group a:hover {
+    color: var(--primary-hover);
+}
+
+.auth-footer {
+    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid #e1e5e9;
+}
+
+.auth-footer p {
+    color: var(--text-light);
+    margin: 0;
+}
+
+.auth-footer a {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* Estados de validação */
+.form-input:invalid {
+    border-color: #ff6b6b;
+}
+
+.form-input:valid {
+    border-color: #4ecdc4;
+}
+
+.error-message {
+    color: #ff6b6b;
+    font-size: 0.85rem;
+    margin-top: 5px;
+    display: none;
+}
+
+.success-message {
+    color: #4ecdc4;
+    font-size: 0.85rem;
+    margin-top: 5px;
+    display: none;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+    .auth-card {
+        padding: 30px 20px;
+        margin: 20px;
+    }
+    
+    .auth-card h2 {
+        font-size: 1.5rem;
+    }
+}
