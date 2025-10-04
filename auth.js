@@ -1,13 +1,17 @@
-// auth.js - VERSÃO FUNCIONAL
-console.log('🔧 auth.js carregado!');
+// auth.js - VERSÃO QUE FUNCIONA COM EMAIL
+console.log('🚀 auth.js carregado!');
 
-// Funções de autenticação
+const SUPABASE_URL = 'https://ivposfgebabrtpexxpko.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2cG9zZmdlYmFicnRwZXh4cGtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1ODczMzEsImV4cCI6MjA3NTE2MzMzMX0.AJU3Vt2dqATDORS4mjTW3gDWeh1MK9lNTWk-uoG5ojo';
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Funções
 function isOver18(birthDate) {
     const today = new Date();
     const birth = new Date(birthDate);
     let age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
-    
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
         age--;
     }
@@ -19,19 +23,13 @@ function showAlert(message, type = 'error') {
     alertDiv.textContent = message;
     alertDiv.className = `alert alert-${type}`;
     alertDiv.classList.remove('hidden');
-    
-    setTimeout(() => {
-        alertDiv.classList.add('hidden');
-    }, 5000);
+    setTimeout(() => alertDiv.classList.add('hidden'), 5000);
 }
 
-// CADASTRO - FUNCIONAL
+// CADASTRO - COM EMAIL DE CONFIRMAÇÃO
 if (document.getElementById('registerForm')) {
-    console.log('📝 Formulário de cadastro encontrado!');
-    
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        console.log('🔄 Iniciando cadastro...');
         
         const fullName = document.getElementById('fullName').value;
         const nickname = document.getElementById('nickname').value;
@@ -40,19 +38,15 @@ if (document.getElementById('registerForm')) {
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
         
-        console.log('📧 Dados:', { email, fullName, nickname });
-        
         // Validações
         if (!isOver18(birthDate)) {
             showAlert('Você deve ter pelo menos 18 anos para se cadastrar.');
             return;
         }
-        
         if (password !== confirmPassword) {
             showAlert('As senhas não coincidem.');
             return;
         }
-        
         if (password.length < 6) {
             showAlert('A senha deve ter pelo menos 6 caracteres.');
             return;
@@ -64,69 +58,66 @@ if (document.getElementById('registerForm')) {
         document.getElementById('registerBtn').disabled = true;
         
         try {
-            // 1. CADASTRO NO SUPABASE AUTH
-            console.log('🚀 Cadastrando no Supabase Auth...');
-            const { data: authData, error: authError } = await supabase.auth.signUp({
+            console.log('📧 Tentando cadastrar:', email);
+            
+            // CADASTRO COM CONFIRMAÇÃO DE EMAIL - IGUAL À LOJA VIRTUAL
+            const { data, error } = await supabase.auth.signUp({
                 email: email,
                 password: password,
                 options: {
                     data: {
                         full_name: fullName,
                         nickname: nickname
-                    }
+                    },
+                    // 🔑 ISSO É O QUE ESTAVA FALTANDO - URL DE REDIRECIONAMENTO
+                    emailRedirectTo: 'https://conexaoperfeitaamor.netlify.app/login.html'
                 }
             });
             
-            if (authError) {
-                console.error('❌ Erro no Auth:', authError);
-                throw authError;
+            if (error) {
+                console.error('❌ Erro no cadastro:', error);
+                throw error;
             }
             
-            console.log('✅ Auth criado:', authData);
+            console.log('✅ Resposta do Supabase:', data);
             
-            // 2. CRIAR PERFIL NA TABELA
-            if (authData.user) {
-                console.log('💾 Criando perfil na tabela...');
-                const { data: profileData, error: profileError } = await supabase
+            if (data.user) {
+                // CRIAR PERFIL NA TABELA
+                const { error: profileError } = await supabase
                     .from('profiles')
                     .insert([
                         {
-                            id: authData.user.id,
+                            id: data.user.id,
                             full_name: fullName,
                             nickname: nickname,
                             birth_date: birthDate,
                             email: email
                         }
-                    ])
-                    .select();
+                    ]);
                 
                 if (profileError) {
-                    console.error('❌ Erro no Profile:', profileError);
-                    throw profileError;
+                    console.error('❌ Erro ao criar perfil:', profileError);
+                    // Mesmo com erro no perfil, o usuário foi criado no Auth
                 }
                 
-                console.log('✅ Perfil criado:', profileData);
+                // 🎉 SUCESSO - EMAIL ENVIADO
+                showAlert('✅ Cadastro realizado! Verifique seu email para confirmar a conta.', 'success');
                 
-                // SUCESSO
-                showAlert('🎉 Cadastro realizado! Verifique seu email para confirmar a conta.', 'success');
                 setTimeout(() => {
                     window.location.href = 'login.html';
-                }, 3000);
+                }, 4000);
             }
             
         } catch (error) {
-            console.error('💥 ERRO COMPLETO:', error);
-            
+            console.error('💥 ERRO:', error);
             if (error.message.includes('already registered')) {
                 showAlert('Este email já está cadastrado. Faça login.');
-            } else if (error.message.includes('nickname')) {
-                showAlert('Este nickname já está em uso. Escolha outro.');
             } else {
                 showAlert('Erro: ' + error.message);
             }
         } finally {
             document.getElementById('registerText').classList.remove('hidden');
-            document.getElementById('registerSpinner').classlist.add('hidden');
+            document.getElementById('registerSpinner').classList.add('hidden');
             document.getElementById('registerBtn').disabled = false;
         }
     });
@@ -177,18 +168,4 @@ async function logout() {
     } catch (error) {
         alert('Erro ao sair.');
     }
-}
-
-// VERIFICAR AUTENTICAÇÃO
-async function checkAuth() {
-    const { data: { user } } = await supabase.auth.getUser();
-    return user;
-}
-
-async function requireAuth() {
-    const user = await checkAuth();
-    if (!user) {
-        window.location.href = 'login.html';
-    }
-    return user;
 }
