@@ -1,4 +1,4 @@
-// Funções de autenticação
+// Funções de autenticação - VERSÃO CORRIGIDA
 
 // Verificar idade (mínimo 18 anos)
 function isOver18(birthDate) {
@@ -27,7 +27,7 @@ function showAlert(message, type = 'error') {
     }, 5000);
 }
 
-// Cadastro
+// Cadastro - VERSÃO CORRIGIDA
 if (document.getElementById('registerForm')) {
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -61,8 +61,10 @@ if (document.getElementById('registerForm')) {
         document.getElementById('registerBtn').disabled = true;
         
         try {
-            // Cadastrar no Supabase Auth
-            const { data, error } = await supabase.auth.signUp({
+            console.log('Iniciando cadastro para:', email);
+            
+            // 1. Primeiro cadastra no Auth do Supabase
+            const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: email,
                 password: password,
                 options: {
@@ -74,34 +76,59 @@ if (document.getElementById('registerForm')) {
                 }
             });
             
-            if (error) throw error;
+            if (authError) {
+                console.error('Erro no Auth:', authError);
+                throw authError;
+            }
             
-            if (data.user) {
-                // Criar perfil na tabela profiles
-                const { error: profileError } = await supabase
-                    .from('profiles')
-                    .insert([
-                        {
-                            id: data.user.id,
-                            full_name: fullName,
-                            nickname: nickname,
-                            birth_date: birthDate,
-                            email: email,
-                            created_at: new Date().toISOString()
-                        }
-                    ]);
+            console.log('Usuário criado no Auth:', authData.user);
+            
+            // 2. Depois cria o perfil na tabela profiles - FORMA SIMPLIFICADA
+            const profileData = {
+                id: authData.user.id,
+                full_name: fullName,
+                nickname: nickname,
+                birth_date: birthDate,
+                email: email,
+                created_at: new Date().toISOString()
+            };
+            
+            console.log('Tentando inserir perfil:', profileData);
+            
+            const { data: profileInsertData, error: profileError } = await supabase
+                .from('profiles')
+                .insert([profileData]);
+            
+            if (profileError) {
+                console.error('Erro ao criar perfil:', profileError);
                 
-                if (profileError) throw profileError;
-                
-                showAlert('Cadastro realizado com sucesso! Verifique seu e-mail para confirmar a conta.', 'success');
+                // Se der erro no perfil, tenta uma abordagem alternativa
+                showAlert('Cadastro realizado! Mas houve um problema técnico. Faça login para completar seu perfil.');
                 setTimeout(() => {
                     window.location.href = 'login.html';
                 }, 3000);
+                return;
             }
             
+            console.log('Perfil criado com sucesso:', profileInsertData);
+            
+            // Sucesso completo
+            showAlert('Cadastro realizado com sucesso! Verifique seu e-mail para confirmar a conta.', 'success');
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 3000);
+            
         } catch (error) {
-            console.error('Erro no cadastro:', error);
-            showAlert(error.message || 'Erro ao realizar cadastro. Tente novamente.');
+            console.error('Erro completo no cadastro:', error);
+            
+            // Mensagens de erro mais específicas
+            if (error.message.includes('already registered')) {
+                showAlert('Este e-mail já está cadastrado. Faça login ou use outro e-mail.');
+            } else if (error.message.includes('nickname')) {
+                showAlert('Este nickname já está em uso. Escolha outro.');
+            } else {
+                showAlert(error.message || 'Erro ao realizar cadastro. Tente novamente.');
+            }
         } finally {
             // Esconder loading
             document.getElementById('registerText').classList.remove('hidden');
@@ -111,7 +138,7 @@ if (document.getElementById('registerForm')) {
     });
 }
 
-// Login
+// Login - VERSÃO CORRIGIDA
 if (document.getElementById('loginForm')) {
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -125,14 +152,20 @@ if (document.getElementById('loginForm')) {
         document.getElementById('loginBtn').disabled = true;
         
         try {
+            console.log('Tentando login:', email);
+            
             const { data, error } = await supabase.auth.signInWithPassword({
                 email: email,
                 password: password
             });
             
-            if (error) throw error;
+            if (error) {
+                console.error('Erro no login:', error);
+                throw error;
+            }
             
             if (data.user) {
+                console.log('Login bem-sucedido:', data.user);
                 showAlert('Login realizado com sucesso!', 'success');
                 setTimeout(() => {
                     window.location.href = 'home.html';
@@ -140,8 +173,15 @@ if (document.getElementById('loginForm')) {
             }
             
         } catch (error) {
-            console.error('Erro no login:', error);
-            showAlert(error.message || 'Erro ao fazer login. Verifique suas credenciais.');
+            console.error('Erro completo no login:', error);
+            
+            if (error.message.includes('Invalid login credentials')) {
+                showAlert('E-mail ou senha incorretos. Verifique suas credenciais.');
+            } else if (error.message.includes('Email not confirmed')) {
+                showAlert('Confirme seu e-mail antes de fazer login.');
+            } else {
+                showAlert(error.message || 'Erro ao fazer login. Tente novamente.');
+            }
         } finally {
             // Esconder loading
             document.getElementById('loginText').classList.remove('hidden');
