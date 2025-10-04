@@ -1,9 +1,9 @@
-// Cadastro.js - ConexãoPerfeita (VERIFICAÇÃO FUNCIONAL)
+// Cadastro.js - ConexãoPerfeita (COM MELHOR TRATAMENTO DE ERROS)
 document.addEventListener('DOMContentLoaded', function() {
     const cadastroForm = document.getElementById('cadastroForm');
     const btnCadastrar = document.getElementById('btnCadastrar');
 
-    console.log('Cadastro.js carregado - COM verificação funcional');
+    console.log('Cadastro.js carregado');
 
     // Verificar idade
     function calcularIdade(dataNascimento) {
@@ -17,34 +17,28 @@ document.addEventListener('DOMContentLoaded', function() {
         return idade;
     }
 
-    // **VERIFICAÇÃO CORRETA DO NICKNAME**
+    // Verificação do nickname
     async function verificarNickname(nickname) {
         try {
-            console.log('🔍 Verificando nickname:', nickname);
-            
-            // CONSULTA SIMPLES E DIRETA
             const { data, error } = await supabase
                 .from('profiles')
                 .select('username')
                 .eq('username', nickname);
 
-            console.log('📦 Resposta da consulta:', data);
+            if (error) {
+                console.error('Erro ao verificar nickname:', error);
+                return false;
+            }
 
-            // **LÓGICA CORRETA:**
-            // Se data = [] (array vazio) → nickname NÃO existe → DISPONÍVEL
-            // Se data = [algum valor] → nickname JÁ existe → INDISPONÍVEL
-            const disponivel = data.length === 0;
-            
-            console.log('✅ Nickname disponível?', disponivel);
-            return disponivel;
+            return data.length === 0;
 
         } catch (error) {
-            console.error('❌ Erro na verificação:', error);
+            console.error('Erro:', error);
             return false;
         }
     }
 
-    // Validação em tempo real - FUNCIONAL
+    // Validação em tempo real do nickname
     const nicknameInput = document.getElementById('nickname');
     if (nicknameInput) {
         let timeout;
@@ -53,7 +47,6 @@ document.addEventListener('DOMContentLoaded', function() {
             clearTimeout(timeout);
             const nickname = this.value.trim();
             
-            // Resetar
             this.style.borderColor = '#e1e5e9';
             const msgExistente = this.parentNode.querySelector('.nickname-message');
             if (msgExistente) msgExistente.remove();
@@ -110,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
         confirmarSenhaInput.addEventListener('input', validarSenhas);
     }
 
-    // **SUBMIT COM VERIFICAÇÃO FINAL**
+    // SUBMIT DO FORMULÁRIO
     cadastroForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
@@ -128,7 +121,7 @@ document.addEventListener('DOMContentLoaded', function() {
             confirmarSenha: document.getElementById('confirmarSenha').value
         };
 
-        console.log('📝 Dados:', formData);
+        console.log('📝 Dados do formulário:', formData);
 
         // Validações básicas
         const idade = calcularIdade(formData.dataNascimento);
@@ -156,19 +149,19 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // **VERIFICAÇÃO FINAL DO NICKNAME**
-        console.log('🎯 Verificação FINAL do nickname...');
+        // Verificação final do nickname
+        console.log('🎯 Verificação final do nickname...');
         const nicknameDisponivel = await verificarNickname(formData.nickname);
-        console.log('✅ Resultado final:', nicknameDisponivel);
+        console.log('✅ Nickname disponível?', nicknameDisponivel);
         
         if (!nicknameDisponivel) {
-            alert('❌ Este nickname já está em uso. Por favor, escolha outro.');
+            alert('❌ Este nickname já está em uso. Escolha outro.');
             resetarBotao();
             return;
         }
 
         try {
-            console.log('📨 Cadastrando no Supabase Auth...');
+            console.log('📨 Enviando para Supabase Auth...');
             
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: formData.email,
@@ -183,27 +176,36 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            console.log('📩 Resposta do Auth:', { authData, authError });
+            console.log('📩 Resposta completa:', { authData, authError });
 
             if (authError) {
-                // Se mesmo assim der erro de username único
-                if (authError.message.includes('username') || authError.message.includes('duplicate')) {
-                    alert('❌ Nickname já em uso. Escolha outro.');
+                console.error('❌ Erro do Supabase:', authError);
+                
+                // Tratamento específico de erros
+                if (authError.message.includes('email')) {
+                    alert('❌ Erro com o e-mail: ' + authError.message);
+                } else if (authError.message.includes('password')) {
+                    alert('❌ Erro com a senha: ' + authError.message);
                 } else {
-                    alert('❌ Erro: ' + authError.message);
+                    alert('❌ Erro no cadastro: ' + authError.message);
                 }
+                
                 resetarBotao();
                 return;
             }
 
             if (authData.user) {
-                alert('✅ Cadastro realizado! Verifique seu e-mail.');
+                console.log('✅ Usuário criado:', authData.user);
+                alert('✅ Cadastro realizado com sucesso! Verifique seu e-mail para confirmar a conta.');
                 window.location.href = 'email.html';
+            } else {
+                alert('❌ Erro: Usuário não foi criado.');
+                resetarBotao();
             }
 
         } catch (error) {
-            console.error('💥 Erro:', error);
-            alert('❌ Erro no cadastro.');
+            console.error('💥 Erro geral:', error);
+            alert('❌ Erro inesperado no cadastro.');
             resetarBotao();
         }
     });
