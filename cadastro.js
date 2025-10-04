@@ -166,6 +166,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             if (authData.user) {
+                // ✅ CORREÇÃO: Salvar e-mail para possível reenvio - DENTRO DO IF
+                localStorage.setItem('last_signup_email', formData.email);
+                
                 alert('✅ Cadastro realizado! Verifique seu e-mail.');
                 window.location.href = 'email.html';
             }
@@ -181,6 +184,3 @@ document.addEventListener('DOMContentLoaded', function() {
         btnCadastrar.textContent = 'Criar minha conta';
     }
 });
-
-// Salvar e-mail para possível reenvio
-localStorage.setItem('last_signup_email', formData.email);
