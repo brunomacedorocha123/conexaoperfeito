@@ -1,13 +1,14 @@
-// Cadastro.js - DEFINITIVO
+// Cadastro.js - NOVO E SIMPLES
 document.addEventListener('DOMContentLoaded', function() {
     const cadastroForm = document.getElementById('cadastroForm');
     const btnCadastrar = document.getElementById('btnCadastrar');
 
-    console.log('Cadastro.js carregado');
+    console.log('🚀 Cadastro iniciado');
 
-    function calcularIdade(dataNascimento) {
+    // Função simples de idade
+    function calcularIdade(data) {
         const hoje = new Date();
-        const nascimento = new Date(dataNascimento);
+        const nascimento = new Date(data);
         let idade = hoje.getFullYear() - nascimento.getFullYear();
         const mes = hoje.getMonth() - nascimento.getMonth();
         if (mes < 0 || (mes === 0 && hoje.getDate() < nascimento.getDate())) {
@@ -16,171 +17,103 @@ document.addEventListener('DOMContentLoaded', function() {
         return idade;
     }
 
-    // VERIFICAÇÃO DEFINITIVA
-    async function verificarNickname(nickname) {
-        const { data, error } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('username', nickname);
+    // Verificação SIMPLES do nickname
+    async function nicknameDisponivel(nickname) {
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('username', nickname);
 
-        if (error) {
-            console.error('Erro:', error);
-            return false;
+            if (error) throw error;
+            return data.length === 0;
+        } catch (error) {
+            console.error('Erro verificação:', error);
+            return true;
         }
-
-        return data.length === 0;
     }
 
-    // Validação do nickname
-    const nicknameInput = document.getElementById('nickname');
-    if (nicknameInput) {
-        let timeout;
-        
-        nicknameInput.addEventListener('input', function() {
-            clearTimeout(timeout);
-            const nickname = this.value.trim();
-            
-            this.style.borderColor = '#e1e5e9';
-            const msgExistente = this.parentNode.querySelector('.nickname-message');
-            if (msgExistente) msgExistente.remove();
-            
-            if (nickname.length < 3) return;
-            
-            timeout = setTimeout(async () => {
-                const disponivel = await verificarNickname(nickname);
-                this.style.borderColor = disponivel ? '#4ecdc4' : '#ff6b6b';
-                
-                const mensagem = document.createElement('div');
-                mensagem.className = 'nickname-message';
-                mensagem.style.cssText = 'margin-top:5px; font-size:0.85rem; font-weight:600;';
-                mensagem.style.color = disponivel ? '#4ecdc4' : '#ff6b6b';
-                mensagem.textContent = disponivel ? '✓ Disponível' : '✗ Já em uso';
-                
-                this.parentNode.appendChild(mensagem);
-            }, 800);
-        });
-    }
-
-    // Validação da data de nascimento
-    const dataNascimentoInput = document.getElementById('dataNascimento');
-    if (dataNascimentoInput) {
-        dataNascimentoInput.addEventListener('change', function() {
-            if (!this.value) return;
-            
-            const idade = calcularIdade(this.value);
-            const valido = idade >= 18;
-            this.style.borderColor = valido ? '#4ecdc4' : '#ff6b6b';
-        });
-    }
-
-    // Validação de senha
-    const senhaInput = document.getElementById('senha');
-    const confirmarSenhaInput = document.getElementById('confirmarSenha');
-    
-    function validarSenhas() {
-        const senha = senhaInput.value;
-        const confirmarSenha = confirmarSenhaInput.value;
-        
-        if (confirmarSenha && senha !== confirmarSenha) {
-            confirmarSenhaInput.style.borderColor = '#ff6b6b';
-            return false;
-        } else if (confirmarSenha) {
-            confirmarSenhaInput.style.borderColor = '#4ecdc4';
-        }
-        
-        return true;
-    }
-    
-    if (senhaInput && confirmarSenhaInput) {
-        senhaInput.addEventListener('input', validarSenhas);
-        confirmarSenhaInput.addEventListener('input', validarSenhas);
-    }
-
-    // SUBMIT DEFINITIVO
+    // Submit DIRETO E FUNCIONAL
     cadastroForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
+        // Dados do formulário
+        const dados = {
+            nome: document.getElementById('nomeCompleto').value.trim(),
+            nascimento: document.getElementById('dataNascimento').value,
+            nickname: document.getElementById('nickname').value.trim(),
+            email: document.getElementById('email').value.trim(),
+            senha: document.getElementById('senha').value
+        };
+
+        console.log('📝 Tentando cadastrar:', dados);
+
+        // Validações BÁSICAS
+        if (calcularIdade(dados.nascimento) < 18) {
+            alert('❌ Precisa ter 18 anos ou mais');
+            return;
+        }
+
+        if (dados.senha.length < 6) {
+            alert('❌ Senha precisa de 6+ caracteres');
+            return;
+        }
+
+        if (dados.nickname.length < 3) {
+            alert('❌ Nickname precisa de 3+ caracteres');
+            return;
+        }
+
+        // Botão loading
         btnCadastrar.disabled = true;
         btnCadastrar.textContent = 'Cadastrando...';
 
-        const formData = {
-            nomeCompleto: document.getElementById('nomeCompleto').value.trim(),
-            dataNascimento: document.getElementById('dataNascimento').value,
-            nickname: document.getElementById('nickname').value.trim(),
-            email: document.getElementById('email').value.trim().toLowerCase(),
-            senha: document.getElementById('senha').value,
-            confirmarSenha: document.getElementById('confirmarSenha').value
-        };
-
-        // Validações
-        const idade = calcularIdade(formData.dataNascimento);
-        if (idade < 18) {
-            alert('❌ Você deve ter pelo menos 18 anos.');
-            resetarBotao();
-            return;
-        }
-
-        if (formData.senha !== formData.confirmarSenha) {
-            alert('❌ As senhas não coincidem.');
-            resetarBotao();
-            return;
-        }
-
-        if (formData.senha.length < 6) {
-            alert('❌ Senha deve ter 6+ caracteres.');
-            resetarBotao();
-            return;
-        }
-
-        if (formData.nickname.length < 3) {
-            alert('❌ Nickname deve ter 3+ caracteres.');
-            resetarBotao();
-            return;
-        }
-
-        // Verificação final
-        const nicknameDisponivel = await verificarNickname(formData.nickname);
-        
-        if (!nicknameDisponivel) {
-            alert('❌ Este nickname já está em uso. Escolha outro.');
-            resetarBotao();
-            return;
-        }
-
         try {
-            const { data: authData, error: authError } = await supabase.auth.signUp({
-                email: formData.email,
-                password: formData.senha,
+            // Verificar nickname
+            const disponivel = await nicknameDisponivel(dados.nickname);
+            if (!disponivel) {
+                alert('❌ Nickname já em uso');
+                btnCadastrar.disabled = false;
+                btnCadastrar.textContent = 'Criar minha conta';
+                return;
+            }
+
+            // CADASTRAR NO SUPABASE
+            console.log('📨 Enviando para Supabase...');
+            
+            const { data, error } = await supabase.auth.signUp({
+                email: dados.email,
+                password: dados.senha,
                 options: {
                     data: {
-                        full_name: formData.nomeCompleto,
-                        username: formData.nickname,
-                        birth_date: formData.dataNascimento
-                    },
-                    emailRedirectTo: 'https://conexaoperfeitaamor.netlify.app/email.html'
+                        full_name: dados.nome,
+                        username: dados.nickname,
+                        birth_date: dados.nascimento
+                    }
                 }
             });
 
-            if (authError) {
-                throw new Error(authError.message);
+            console.log('📩 Resposta:', { data, error });
+
+            if (error) {
+                throw new Error(error.message);
             }
 
-            if (authData.user) {
-                // ✅ CORREÇÃO: Salvar e-mail para possível reenvio - DENTRO DO IF
-                localStorage.setItem('last_signup_email', formData.email);
+            if (data.user) {
+                // SALVAR EMAIL PARA REENVIO
+                localStorage.setItem('cadastro_email', dados.email);
                 
-                alert('✅ Cadastro realizado! Verifique seu e-mail.');
+                alert('✅ Cadastrado! Verifique seu email.');
                 window.location.href = 'email.html';
+            } else {
+                throw new Error('Usuário não criado');
             }
 
         } catch (error) {
+            console.error('💥 Erro completo:', error);
             alert('❌ Erro: ' + error.message);
-            resetarBotao();
+            btnCadastrar.disabled = false;
+            btnCadastrar.textContent = 'Criar minha conta';
         }
     });
-
-    function resetarBotao() {
-        btnCadastrar.disabled = false;
-        btnCadastrar.textContent = 'Criar minha conta';
-    }
 });
