@@ -30,7 +30,7 @@ function showAlert(message, type = 'error') {
     }, 5000);
 }
 
-// CADASTRO - VERSÃO DEFINITIVA
+// CADASTRO - VERSÃO COM DEBUG
 if (document.getElementById('registerForm')) {
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -41,6 +41,8 @@ if (document.getElementById('registerForm')) {
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
+        
+        console.log('📝 Dados do formulário:', { fullName, nickname, birthDate, email });
         
         // Validações
         if (!isOver18(birthDate)) {
@@ -64,17 +66,35 @@ if (document.getElementById('registerForm')) {
         document.getElementById('registerBtn').disabled = true;
         
         try {
-            // 1. CADASTRO NO AUTH
+            console.log('🚀 Iniciando cadastro no Supabase Auth...');
+            
+            // 1. CADASTRO NO AUTH (SEM email confirmation para teste)
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: email,
-                password: password
+                password: password,
+                options: {
+                    data: {
+                        full_name: fullName,
+                        nickname: nickname
+                    }
+                }
             });
             
-            if (authError) throw authError;
+            console.log('📨 Resposta do Auth:', authData);
+            console.log('❌ Erro do Auth:', authError);
             
-            // 2. SE USUÁRIO FOI CRIADO, SALVAR PERFIL
+            if (authError) {
+                throw authError;
+            }
+            
             if (authData.user) {
-                const { error: profileError } = await supabase
+                console.log('✅ Usuário criado no Auth. ID:', authData.user.id);
+                console.log('📊 Status do email:', authData.user.email_confirmed_at ? 'Confirmado' : 'Não confirmado');
+                
+                // 2. SALVAR PERFIL NA TABELA
+                console.log('💾 Salvando perfil na tabela profiles...');
+                
+                const { data: profileData, error: profileError } = await supabase
                     .from('profiles')
                     .insert([
                         {
@@ -83,21 +103,45 @@ if (document.getElementById('registerForm')) {
                             nickname: nickname,
                             birth_date: birthDate,
                             email: email
-                            // Não enviar campos opcionais - deixar NULL
                         }
-                    ]);
+                    ])
+                    .select(); // Adiciona .select() para ver o resultado
                 
-                if (profileError) throw profileError;
+                console.log('📈 Resposta do Profile:', profileData);
+                console.log('❌ Erro do Profile:', profileError);
                 
-                showAlert('Cadastro realizado com sucesso! Verifique seu e-mail.', 'success');
+                if (profileError) {
+                    throw profileError;
+                }
+                
+                console.log('🎉 PERFIL CRIADO COM SUCESSO!');
+                
+                // Verificar se precisa confirmar email
+                if (authData.user.identities && authData.user.identities.length === 0) {
+                    showAlert('Este email já está cadastrado. Faça login.', 'error');
+                } else if (!authData.user.email_confirmed_at) {
+                    showAlert('Cadastro realizado! Verifique seu email para confirmar a conta.', 'success');
+                } else {
+                    showAlert('Cadastro realizado com sucesso! Redirecionando...', 'success');
+                }
+                
                 setTimeout(() => {
                     window.location.href = 'login.html';
                 }, 3000);
+            } else {
+                throw new Error('Usuário não foi criado');
             }
             
         } catch (error) {
-            console.error('Erro no cadastro:', error);
-            showAlert(error.message || 'Erro ao cadastrar. Tente novamente.');
+            console.error('💥 ERRO COMPLETO:', error);
+            
+            if (error.message.includes('User already registered')) {
+                showAlert('Este email já está cadastrado. Faça login ou use outro email.');
+            } else if (error.message.includes('nickname')) {
+                showAlert('Este nickname já está em uso. Escolha outro.');
+            } else {
+                showAlert('Erro: ' + (error.message || 'Erro desconhecido'));
+            }
         } finally {
             document.getElementById('registerText').classList.remove('hidden');
             document.getElementById('registerSpinner').classList.add('hidden');
@@ -119,10 +163,15 @@ if (document.getElementById('loginForm')) {
         document.getElementById('loginBtn').disabled = true;
         
         try {
+            console.log('🔐 Tentando login:', email);
+            
             const { data, error } = await supabase.auth.signInWithPassword({
                 email: email,
                 password: password
             });
+            
+            console.log('📨 Resposta do login:', data);
+            console.log('❌ Erro do login:', error);
             
             if (error) throw error;
             
@@ -134,6 +183,7 @@ if (document.getElementById('loginForm')) {
             }
             
         } catch (error) {
+            console.error('💥 Erro no login:', error);
             showAlert(error.message || 'Erro ao fazer login.');
         } finally {
             document.getElementById('loginText').classList.remove('hidden');
@@ -156,6 +206,7 @@ async function logout() {
 // VERIFICAR AUTENTICAÇÃO
 async function checkAuth() {
     const { data: { user } } = await supabase.auth.getUser();
+    console.log('👤 Usuário atual:', user);
     return user;
 }
 
