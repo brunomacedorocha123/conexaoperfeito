@@ -115,6 +115,12 @@ body.auth-page {
     display: none;
 }
 
+.nickname-message, .idade-message {
+    margin-top: 5px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
 /* Responsivo */
 @media (max-width: 768px) {
     .auth-card {

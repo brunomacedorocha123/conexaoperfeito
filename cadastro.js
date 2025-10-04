@@ -19,31 +19,28 @@ document.addEventListener('DOMContentLoaded', function() {
         return idade;
     }
 
-    // Verificar se nickname já existe - CORRIGIDA
+    // Verificar se nickname já existe
     async function verificarNickname(nickname) {
         try {
-            console.log('🔍 Verificando nickname:', nickname);
+            console.log('Verificando nickname:', nickname);
             
             const { data, error } = await supabase
                 .from('profiles')
                 .select('username')
                 .eq('username', nickname);
 
-            console.log('📦 Resposta do Supabase:', data);
+            console.log('Resposta do Supabase:', data);
 
             if (error) {
-                console.error('❌ Erro ao verificar nickname:', error);
+                console.error('Erro ao verificar nickname:', error);
                 return false;
             }
 
-            // CORREÇÃO: Se data é array vazio = nickname disponível
-            const disponivel = data.length === 0;
-            console.log('✅ Nickname disponível?', disponivel);
-            
-            return disponivel;
+            // Se data é um array vazio, nickname está disponível
+            return data.length === 0;
 
         } catch (error) {
-            console.error('❌ Erro:', error);
+            console.error('Erro:', error);
             return false;
         }
     }
@@ -142,7 +139,7 @@ document.addEventListener('DOMContentLoaded', function() {
     cadastroForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        console.log('🚀 Iniciando cadastro...');
+        console.log('Iniciando cadastro...');
         
         btnCadastrar.disabled = true;
         btnCadastrar.textContent = 'Cadastrando...';
@@ -157,52 +154,52 @@ document.addEventListener('DOMContentLoaded', function() {
             confirmarSenha: document.getElementById('confirmarSenha').value
         };
 
-        console.log('📝 Dados do formulário:', formData);
+        console.log('Dados do formulário:', formData);
 
         // Validações
         const idade = calcularIdade(formData.dataNascimento);
         if (idade < 18) {
-            alert('❌ Você deve ter pelo menos 18 anos para se cadastrar.');
+            alert('Você deve ter pelo menos 18 anos para se cadastrar.');
             btnCadastrar.disabled = false;
             btnCadastrar.textContent = 'Criar minha conta';
             return;
         }
 
         if (formData.senha !== formData.confirmarSenha) {
-            alert('❌ As senhas não coincidem.');
+            alert('As senhas não coincidem.');
             btnCadastrar.disabled = false;
             btnCadastrar.textContent = 'Criar minha conta';
             return;
         }
 
         if (formData.senha.length < 6) {
-            alert('❌ A senha deve ter pelo menos 6 caracteres.');
+            alert('A senha deve ter pelo menos 6 caracteres.');
             btnCadastrar.disabled = false;
             btnCadastrar.textContent = 'Criar minha conta';
             return;
         }
 
         if (formData.nickname.length < 3) {
-            alert('❌ O nickname deve ter pelo menos 3 caracteres.');
+            alert('O nickname deve ter pelo menos 3 caracteres.');
             btnCadastrar.disabled = false;
             btnCadastrar.textContent = 'Criar minha conta';
             return;
         }
 
         // Verificar nickname único
-        console.log('🎯 Verificação final do nickname...');
+        console.log('Verificação final do nickname...');
         const nicknameDisponivel = await verificarNickname(formData.nickname);
-        console.log('✅ Nickname disponível na verificação final:', nicknameDisponivel);
+        console.log('Nickname disponível na verificação final:', nicknameDisponivel);
         
         if (!nicknameDisponivel) {
-            alert('❌ Este nickname já está em uso. Por favor, escolha outro.');
+            alert('Este nickname já está em uso. Por favor, escolha outro.');
             btnCadastrar.disabled = false;
             btnCadastrar.textContent = 'Criar minha conta';
             return;
         }
 
         try {
-            console.log('📨 Enviando dados para o Supabase Auth...');
+            console.log('Enviando dados para o Supabase Auth...');
             
             // Cadastrar usuário no Supabase Auth
             const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -218,20 +215,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            console.log('📩 Resposta do Supabase Auth:', { authData, authError });
+            console.log('Resposta do Supabase Auth:', { authData, authError });
 
             if (authError) {
                 throw new Error(authError.message);
             }
 
             if (authData.user) {
-                alert('✅ Cadastro realizado com sucesso! Verifique seu e-mail para confirmar a conta.');
+                alert('Cadastro realizado com sucesso! Verifique seu e-mail para confirmar a conta.');
                 window.location.href = 'email.html';
             }
 
         } catch (error) {
-            console.error('💥 Erro no cadastro:', error);
-            alert('❌ Erro ao cadastrar: ' + error.message);
+            console.error('Erro no cadastro:', error);
+            alert('Erro ao cadastrar: ' + error.message);
             btnCadastrar.disabled = false;
             btnCadastrar.textContent = 'Criar minha conta';
         }
