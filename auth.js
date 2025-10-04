@@ -1,9 +1,5 @@
-// Configuração do Supabase
-const SUPABASE_URL = 'https://ivposfgebabrtpexxpko.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2cG9zZmdlYmFicnRwZXh4cGtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1ODczMzEsImV4cCI6MjA3NTE2MzMzMX0.AJU3Vt2dqATDORS4mjTW3gDWeh1MK9lNTWk-uoG5ojo';
-
-// Inicializar Supabase
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// auth.js - VERSÃO FUNCIONAL
+console.log('🔧 auth.js carregado!');
 
 // Funções de autenticação
 function isOver18(birthDate) {
@@ -15,7 +11,6 @@ function isOver18(birthDate) {
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
         age--;
     }
-    
     return age >= 18;
 }
 
@@ -30,10 +25,13 @@ function showAlert(message, type = 'error') {
     }, 5000);
 }
 
-// CADASTRO - LÓGICA SIMPLIFICADA
+// CADASTRO - FUNCIONAL
 if (document.getElementById('registerForm')) {
+    console.log('📝 Formulário de cadastro encontrado!');
+    
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
         e.preventDefault();
+        console.log('🔄 Iniciando cadastro...');
         
         const fullName = document.getElementById('fullName').value;
         const nickname = document.getElementById('nickname').value;
@@ -42,7 +40,9 @@ if (document.getElementById('registerForm')) {
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
         
-        // Validações (mantenha as suas)
+        console.log('📧 Dados:', { email, fullName, nickname });
+        
+        // Validações
         if (!isOver18(birthDate)) {
             showAlert('Você deve ter pelo menos 18 anos para se cadastrar.');
             return;
@@ -58,23 +58,36 @@ if (document.getElementById('registerForm')) {
             return;
         }
         
-        // Loading (mantenha seu visual)
+        // Loading
         document.getElementById('registerText').classList.add('hidden');
         document.getElementById('registerSpinner').classList.remove('hidden');
         document.getElementById('registerBtn').disabled = true;
         
         try {
-            // 1. CADASTRO NO AUTH (SIMPLES)
+            // 1. CADASTRO NO SUPABASE AUTH
+            console.log('🚀 Cadastrando no Supabase Auth...');
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: email,
-                password: password
+                password: password,
+                options: {
+                    data: {
+                        full_name: fullName,
+                        nickname: nickname
+                    }
+                }
             });
             
-            if (authError) throw authError;
-
-            // 2. SE USUÁRIO FOI CRIADO, SALVAR PERFIL
+            if (authError) {
+                console.error('❌ Erro no Auth:', authError);
+                throw authError;
+            }
+            
+            console.log('✅ Auth criado:', authData);
+            
+            // 2. CRIAR PERFIL NA TABELA
             if (authData.user) {
-                const { error: profileError } = await supabase
+                console.log('💾 Criando perfil na tabela...');
+                const { data: profileData, error: profileError } = await supabase
                     .from('profiles')
                     .insert([
                         {
@@ -84,34 +97,42 @@ if (document.getElementById('registerForm')) {
                             birth_date: birthDate,
                             email: email
                         }
-                    ]);
-
-                if (profileError) throw profileError;
-
-                showAlert('Cadastro realizado com sucesso! Faça login.', 'success');
+                    ])
+                    .select();
+                
+                if (profileError) {
+                    console.error('❌ Erro no Profile:', profileError);
+                    throw profileError;
+                }
+                
+                console.log('✅ Perfil criado:', profileData);
+                
+                // SUCESSO
+                showAlert('🎉 Cadastro realizado! Verifique seu email para confirmar a conta.', 'success');
                 setTimeout(() => {
                     window.location.href = 'login.html';
-                }, 2000);
+                }, 3000);
             }
             
         } catch (error) {
-            console.error('Erro:', error);
+            console.error('💥 ERRO COMPLETO:', error);
             
             if (error.message.includes('already registered')) {
-                showAlert('Este e-mail já está cadastrado. Faça login.');
+                showAlert('Este email já está cadastrado. Faça login.');
+            } else if (error.message.includes('nickname')) {
+                showAlert('Este nickname já está em uso. Escolha outro.');
             } else {
                 showAlert('Erro: ' + error.message);
             }
         } finally {
-            // Restaurar botão
             document.getElementById('registerText').classList.remove('hidden');
-            document.getElementById('registerSpinner').classList.add('hidden');
+            document.getElementById('registerSpinner').classlist.add('hidden');
             document.getElementById('registerBtn').disabled = false;
         }
     });
 }
 
-// LOGIN (mantenha sua lógica atual)
+// LOGIN
 if (document.getElementById('loginForm')) {
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -148,7 +169,7 @@ if (document.getElementById('loginForm')) {
     });
 }
 
-// LOGOUT (mantenha sua lógica)
+// LOGOUT
 async function logout() {
     try {
         await supabase.auth.signOut();
@@ -158,7 +179,7 @@ async function logout() {
     }
 }
 
-// VERIFICAR AUTENTICAÇÃO (mantenha sua lógica)
+// VERIFICAR AUTENTICAÇÃO
 async function checkAuth() {
     const { data: { user } } = await supabase.auth.getUser();
     return user;
