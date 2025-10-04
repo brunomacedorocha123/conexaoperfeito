@@ -181,3 +181,6 @@ document.addEventListener('DOMContentLoaded', function() {
         btnCadastrar.textContent = 'Criar minha conta';
     }
 });
+
+// Salvar e-mail para possível reenvio
+localStorage.setItem('last_signup_email', formData.email);
