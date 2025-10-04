@@ -1,9 +1,9 @@
-// Cadastro.js - ConexãoPerfeita
+// Cadastro.js - ConexãoPerfeita (VERIFICAÇÃO FUNCIONAL)
 document.addEventListener('DOMContentLoaded', function() {
     const cadastroForm = document.getElementById('cadastroForm');
     const btnCadastrar = document.getElementById('btnCadastrar');
 
-    console.log('Cadastro.js carregado');
+    console.log('Cadastro.js carregado - COM verificação funcional');
 
     // Verificar idade
     function calcularIdade(dataNascimento) {
@@ -17,37 +17,34 @@ document.addEventListener('DOMContentLoaded', function() {
         return idade;
     }
 
-    // VERIFICAÇÃO CORRIGIDA DO NICKNAME
+    // **VERIFICAÇÃO CORRETA DO NICKNAME**
     async function verificarNickname(nickname) {
         try {
             console.log('🔍 Verificando nickname:', nickname);
             
-            // VERIFICAÇÃO MAIS ROBUSTA
+            // CONSULTA SIMPLES E DIRETA
             const { data, error } = await supabase
                 .from('profiles')
-                .select('id, username')
-                .ilike('username', nickname); // usa ilike para case insensitive
+                .select('username')
+                .eq('username', nickname);
 
-            console.log('📦 Resposta completa:', { data, error });
+            console.log('📦 Resposta da consulta:', data);
 
-            if (error) {
-                console.error('❌ Erro na consulta:', error);
-                return true; // Se der erro, permite tentar o cadastro
-            }
-
-            // SE NÃO ENCONTROU NADA, nickname está disponível
-            const disponivel = !data || data.length === 0;
-            console.log('✅ Nickname disponível?', disponivel);
+            // **LÓGICA CORRETA:**
+            // Se data = [] (array vazio) → nickname NÃO existe → DISPONÍVEL
+            // Se data = [algum valor] → nickname JÁ existe → INDISPONÍVEL
+            const disponivel = data.length === 0;
             
+            console.log('✅ Nickname disponível?', disponivel);
             return disponivel;
 
         } catch (error) {
-            console.error('💥 Erro geral:', error);
-            return true; // Em caso de erro, permite tentar
+            console.error('❌ Erro na verificação:', error);
+            return false;
         }
     }
 
-    // Validação em tempo real do nickname - SIMPLIFICADA
+    // Validação em tempo real - FUNCIONAL
     const nicknameInput = document.getElementById('nickname');
     if (nicknameInput) {
         let timeout;
@@ -71,10 +68,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 mensagem.className = 'nickname-message';
                 mensagem.style.cssText = 'margin-top:5px; font-size:0.85rem; font-weight:600;';
                 mensagem.style.color = disponivel ? '#4ecdc4' : '#ff6b6b';
-                mensagem.textContent = disponivel ? '✓ Disponível' : '✗ Em uso';
+                mensagem.textContent = disponivel ? '✓ Disponível' : '✗ Já em uso';
                 
                 this.parentNode.appendChild(mensagem);
-            }, 1000);
+            }, 800);
         });
     }
 
@@ -87,17 +84,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const idade = calcularIdade(this.value);
             const valido = idade >= 18;
             this.style.borderColor = valido ? '#4ecdc4' : '#ff6b6b';
-            
-            const msgExistente = this.parentNode.querySelector('.idade-message');
-            if (msgExistente) msgExistente.remove();
-            
-            const mensagem = document.createElement('div');
-            mensagem.className = 'idade-message';
-            mensagem.style.cssText = 'margin-top:5px; font-size:0.85rem; font-weight:600;';
-            mensagem.style.color = valido ? '#4ecdc4' : '#ff6b6b';
-            mensagem.textContent = valido ? `✓ ${idade} anos` : `✗ ${idade} anos (precisa 18+)`;
-            
-            this.parentNode.appendChild(mensagem);
         });
     }
 
@@ -124,7 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
         confirmarSenhaInput.addEventListener('input', validarSenhas);
     }
 
-    // SUBMIT CORRIGIDO
+    // **SUBMIT COM VERIFICAÇÃO FINAL**
     cadastroForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
@@ -138,7 +124,8 @@ document.addEventListener('DOMContentLoaded', function() {
             dataNascimento: document.getElementById('dataNascimento').value,
             nickname: document.getElementById('nickname').value.trim(),
             email: document.getElementById('email').value.trim().toLowerCase(),
-            senha: document.getElementById('senha').value
+            senha: document.getElementById('senha').value,
+            confirmarSenha: document.getElementById('confirmarSenha').value
         };
 
         console.log('📝 Dados:', formData);
@@ -147,6 +134,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const idade = calcularIdade(formData.dataNascimento);
         if (idade < 18) {
             alert('❌ Você deve ter pelo menos 18 anos.');
+            resetarBotao();
+            return;
+        }
+
+        if (formData.senha !== formData.confirmarSenha) {
+            alert('❌ As senhas não coincidem.');
             resetarBotao();
             return;
         }
@@ -163,8 +156,19 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        // **VERIFICAÇÃO FINAL DO NICKNAME**
+        console.log('🎯 Verificação FINAL do nickname...');
+        const nicknameDisponivel = await verificarNickname(formData.nickname);
+        console.log('✅ Resultado final:', nicknameDisponivel);
+        
+        if (!nicknameDisponivel) {
+            alert('❌ Este nickname já está em uso. Por favor, escolha outro.');
+            resetarBotao();
+            return;
+        }
+
         try {
-            console.log('📨 Cadastrando no Supabase...');
+            console.log('📨 Cadastrando no Supabase Auth...');
             
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: formData.email,
@@ -179,10 +183,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            console.log('📩 Resposta:', { authData, authError });
+            console.log('📩 Resposta do Auth:', { authData, authError });
 
             if (authError) {
-                // Se for erro de username duplicado, o Supabase vai avisar
+                // Se mesmo assim der erro de username único
                 if (authError.message.includes('username') || authError.message.includes('duplicate')) {
                     alert('❌ Nickname já em uso. Escolha outro.');
                 } else {
