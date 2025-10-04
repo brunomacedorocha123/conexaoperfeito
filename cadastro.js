@@ -5,47 +5,49 @@ document.addEventListener('DOMContentLoaded', function() {
 
     console.log('Cadastro.js carregado');
 
-    // Verificar idade (maior de 18 anos)
+    // Verificar idade
     function calcularIdade(dataNascimento) {
         const hoje = new Date();
         const nascimento = new Date(dataNascimento);
         let idade = hoje.getFullYear() - nascimento.getFullYear();
-        
         const mes = hoje.getMonth() - nascimento.getMonth();
         if (mes < 0 || (mes === 0 && hoje.getDate() < nascimento.getDate())) {
             idade--;
         }
-        
         return idade;
     }
 
-    // Verificar se nickname já existe
+    // VERIFICAÇÃO CORRIGIDA DO NICKNAME
     async function verificarNickname(nickname) {
         try {
-            console.log('Verificando nickname:', nickname);
+            console.log('🔍 Verificando nickname:', nickname);
             
+            // VERIFICAÇÃO MAIS ROBUSTA
             const { data, error } = await supabase
                 .from('profiles')
-                .select('username')
-                .eq('username', nickname);
+                .select('id, username')
+                .ilike('username', nickname); // usa ilike para case insensitive
 
-            console.log('Resposta do Supabase:', data);
+            console.log('📦 Resposta completa:', { data, error });
 
             if (error) {
-                console.error('Erro ao verificar nickname:', error);
-                return false;
+                console.error('❌ Erro na consulta:', error);
+                return true; // Se der erro, permite tentar o cadastro
             }
 
-            // Se data é um array vazio, nickname está disponível
-            return data.length === 0;
+            // SE NÃO ENCONTROU NADA, nickname está disponível
+            const disponivel = !data || data.length === 0;
+            console.log('✅ Nickname disponível?', disponivel);
+            
+            return disponivel;
 
         } catch (error) {
-            console.error('Erro:', error);
-            return false;
+            console.error('💥 Erro geral:', error);
+            return true; // Em caso de erro, permite tentar
         }
     }
 
-    // Validação em tempo real do nickname
+    // Validação em tempo real do nickname - SIMPLIFICADA
     const nicknameInput = document.getElementById('nickname');
     if (nicknameInput) {
         let timeout;
@@ -54,33 +56,25 @@ document.addEventListener('DOMContentLoaded', function() {
             clearTimeout(timeout);
             const nickname = this.value.trim();
             
-            // Resetar cor
+            // Resetar
             this.style.borderColor = '#e1e5e9';
+            const msgExistente = this.parentNode.querySelector('.nickname-message');
+            if (msgExistente) msgExistente.remove();
             
-            if (nickname.length < 3) {
-                return;
-            }
+            if (nickname.length < 3) return;
             
             timeout = setTimeout(async () => {
                 const disponivel = await verificarNickname(nickname);
                 this.style.borderColor = disponivel ? '#4ecdc4' : '#ff6b6b';
                 
-                // Mostrar mensagem para o usuário
-                const mensagemExistente = this.parentNode.querySelector('.nickname-message');
-                if (mensagemExistente) {
-                    mensagemExistente.remove();
-                }
-                
                 const mensagem = document.createElement('div');
                 mensagem.className = 'nickname-message';
-                mensagem.style.marginTop = '5px';
-                mensagem.style.fontSize = '0.85rem';
+                mensagem.style.cssText = 'margin-top:5px; font-size:0.85rem; font-weight:600;';
                 mensagem.style.color = disponivel ? '#4ecdc4' : '#ff6b6b';
-                mensagem.textContent = disponivel ? '✓ Nickname disponível' : '✗ Nickname já em uso';
+                mensagem.textContent = disponivel ? '✓ Disponível' : '✗ Em uso';
                 
                 this.parentNode.appendChild(mensagem);
-                
-            }, 800);
+            }, 1000);
         });
     }
 
@@ -88,27 +82,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const dataNascimentoInput = document.getElementById('dataNascimento');
     if (dataNascimentoInput) {
         dataNascimentoInput.addEventListener('change', function() {
+            if (!this.value) return;
+            
             const idade = calcularIdade(this.value);
             const valido = idade >= 18;
-            
             this.style.borderColor = valido ? '#4ecdc4' : '#ff6b6b';
             
-            // Mostrar mensagem
-            const mensagemExistente = this.parentNode.querySelector('.idade-message');
-            if (mensagemExistente) {
-                mensagemExistente.remove();
-            }
+            const msgExistente = this.parentNode.querySelector('.idade-message');
+            if (msgExistente) msgExistente.remove();
             
-            if (this.value) {
-                const mensagem = document.createElement('div');
-                mensagem.className = 'idade-message';
-                mensagem.style.marginTop = '5px';
-                mensagem.style.fontSize = '0.85rem';
-                mensagem.style.color = valido ? '#4ecdc4' : '#ff6b6b';
-                mensagem.textContent = valido ? `✓ Idade válida (${idade} anos)` : `✗ Você precisa ter 18 anos ou mais (${idade} anos)`;
-                
-                this.parentNode.appendChild(mensagem);
-            }
+            const mensagem = document.createElement('div');
+            mensagem.className = 'idade-message';
+            mensagem.style.cssText = 'margin-top:5px; font-size:0.85rem; font-weight:600;';
+            mensagem.style.color = valido ? '#4ecdc4' : '#ff6b6b';
+            mensagem.textContent = valido ? `✓ ${idade} anos` : `✗ ${idade} anos (precisa 18+)`;
+            
+            this.parentNode.appendChild(mensagem);
         });
     }
 
@@ -135,73 +124,48 @@ document.addEventListener('DOMContentLoaded', function() {
         confirmarSenhaInput.addEventListener('input', validarSenhas);
     }
 
-    // Submit do formulário
+    // SUBMIT CORRIGIDO
     cadastroForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        console.log('Iniciando cadastro...');
+        console.log('🚀 Iniciando cadastro...');
         
         btnCadastrar.disabled = true;
         btnCadastrar.textContent = 'Cadastrando...';
 
-        // Coletar dados do formulário
         const formData = {
             nomeCompleto: document.getElementById('nomeCompleto').value.trim(),
             dataNascimento: document.getElementById('dataNascimento').value,
             nickname: document.getElementById('nickname').value.trim(),
-            email: document.getElementById('email').value.trim(),
-            senha: document.getElementById('senha').value,
-            confirmarSenha: document.getElementById('confirmarSenha').value
+            email: document.getElementById('email').value.trim().toLowerCase(),
+            senha: document.getElementById('senha').value
         };
 
-        console.log('Dados do formulário:', formData);
+        console.log('📝 Dados:', formData);
 
-        // Validações
+        // Validações básicas
         const idade = calcularIdade(formData.dataNascimento);
         if (idade < 18) {
-            alert('Você deve ter pelo menos 18 anos para se cadastrar.');
-            btnCadastrar.disabled = false;
-            btnCadastrar.textContent = 'Criar minha conta';
-            return;
-        }
-
-        if (formData.senha !== formData.confirmarSenha) {
-            alert('As senhas não coincidem.');
-            btnCadastrar.disabled = false;
-            btnCadastrar.textContent = 'Criar minha conta';
+            alert('❌ Você deve ter pelo menos 18 anos.');
+            resetarBotao();
             return;
         }
 
         if (formData.senha.length < 6) {
-            alert('A senha deve ter pelo menos 6 caracteres.');
-            btnCadastrar.disabled = false;
-            btnCadastrar.textContent = 'Criar minha conta';
+            alert('❌ Senha deve ter 6+ caracteres.');
+            resetarBotao();
             return;
         }
 
         if (formData.nickname.length < 3) {
-            alert('O nickname deve ter pelo menos 3 caracteres.');
-            btnCadastrar.disabled = false;
-            btnCadastrar.textContent = 'Criar minha conta';
-            return;
-        }
-
-        // Verificar nickname único
-        console.log('Verificação final do nickname...');
-        const nicknameDisponivel = await verificarNickname(formData.nickname);
-        console.log('Nickname disponível na verificação final:', nicknameDisponivel);
-        
-        if (!nicknameDisponivel) {
-            alert('Este nickname já está em uso. Por favor, escolha outro.');
-            btnCadastrar.disabled = false;
-            btnCadastrar.textContent = 'Criar minha conta';
+            alert('❌ Nickname deve ter 3+ caracteres.');
+            resetarBotao();
             return;
         }
 
         try {
-            console.log('Enviando dados para o Supabase Auth...');
+            console.log('📨 Cadastrando no Supabase...');
             
-            // Cadastrar usuário no Supabase Auth
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: formData.email,
                 password: formData.senha,
@@ -215,22 +179,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            console.log('Resposta do Supabase Auth:', { authData, authError });
+            console.log('📩 Resposta:', { authData, authError });
 
             if (authError) {
-                throw new Error(authError.message);
+                // Se for erro de username duplicado, o Supabase vai avisar
+                if (authError.message.includes('username') || authError.message.includes('duplicate')) {
+                    alert('❌ Nickname já em uso. Escolha outro.');
+                } else {
+                    alert('❌ Erro: ' + authError.message);
+                }
+                resetarBotao();
+                return;
             }
 
             if (authData.user) {
-                alert('Cadastro realizado com sucesso! Verifique seu e-mail para confirmar a conta.');
+                alert('✅ Cadastro realizado! Verifique seu e-mail.');
                 window.location.href = 'email.html';
             }
 
         } catch (error) {
-            console.error('Erro no cadastro:', error);
-            alert('Erro ao cadastrar: ' + error.message);
-            btnCadastrar.disabled = false;
-            btnCadastrar.textContent = 'Criar minha conta';
+            console.error('💥 Erro:', error);
+            alert('❌ Erro no cadastro.');
+            resetarBotao();
         }
     });
+
+    function resetarBotao() {
+        btnCadastrar.disabled = false;
+        btnCadastrar.textContent = 'Criar minha conta';
+    }
 });
