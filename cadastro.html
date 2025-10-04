@@ -3,75 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro - ConexãoPerfeita</title>
-    <link rel="stylesheet" href="global.css">
-    <link rel="stylesheet" href="cadastro.css">
+    <title>Cadastro - Conexão Perfeita</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="auth-page">
-    <div class="container">
-        <header class="header">
-            <div class="logo">
-                <h1><a href="index.html">💑 ConexãoPerfeita</a></h1>
-            </div>
-        </header>
-
-        <main class="auth-container">
-            <div class="auth-card">
-                <h2>Crie sua conta</h2>
-                <p class="auth-subtitle">Junte-se a milhares de pessoas encontrando amor</p>
-
-                <form id="cadastroForm" class="auth-form">
-                    <div class="form-group">
-                        <label for="nomeCompleto" class="form-label">Nome Completo *</label>
-                        <input type="text" id="nomeCompleto" class="form-input" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="dataNascimento" class="form-label">Data de Nascimento *</label>
-                        <input type="date" id="dataNascimento" class="form-input" required>
-                        <small class="form-help">Você deve ter pelo menos 18 anos</small>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="nickname" class="form-label">Nickname *</label>
-                        <input type="text" id="nickname" class="form-input" required>
-                        <small class="form-help">Nome que outros usuários verão (único)</small>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="email" class="form-label">E-mail *</label>
-                        <input type="email" id="email" class="form-input" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="senha" class="form-label">Senha *</label>
-                        <input type="password" id="senha" class="form-input" required minlength="6">
-                        <small class="form-help">Mínimo 6 caracteres</small>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="confirmarSenha" class="form-label">Confirmar Senha *</label>
-                        <input type="password" id="confirmarSenha" class="form-input" required>
-                    </div>
-
-                    <div class="form-group terms-group">
-                        <input type="checkbox" id="termos" required>
-                        <label for="termos">Aceito os <a href="#">Termos de Uso</a> e <a href="#">Política de Privacidade</a></label>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary btn-full" id="btnCadastrar">
-                        Criar minha conta
-                    </button>
-                </form>
-
-                <div class="auth-footer">
-                    <p>Já tem uma conta? <a href="login.html">Faça login aqui</a></p>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="logo" style="justify-content: center; margin-bottom: 20px;">
+                <div class="logo-icon">
+                    <i class="fas fa-heart"></i>
                 </div>
+                <div class="logo-text">Conexão Perfeita</div>
             </div>
-        </main>
+            
+            <h2>Criar Conta</h2>
+            
+            <div id="alertMessage" class="alert hidden"></div>
+            
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="fullName">Nome Completo *</label>
+                    <input type="text" id="fullName" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="nickname">Apelido (Nickname) *</label>
+                    <input type="text" id="nickname" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="birthDate">Data de Nascimento *</label>
+                    <input type="date" id="birthDate" class="form-control" required>
+                    <small style="color: var(--gray);">Você deve ter pelo menos 18 anos</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">E-mail *</label>
+                    <input type="email" id="email" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Senha *</label>
+                    <input type="password" id="password" class="form-control" required minlength="6">
+                    <small style="color: var(--gray);">Mínimo 6 caracteres</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmPassword">Confirmar Senha *</label>
+                    <input type="password" id="confirmPassword" class="form-control" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" id="registerBtn">
+                    <span id="registerText">Criar Conta</span>
+                    <div id="registerSpinner" class="hidden">
+                        <i class="fas fa-spinner fa-spin"></i> Cadastrando...
+                    </div>
+                </button>
+            </form>
+            
+            <div class="auth-links">
+                <p>Já tem uma conta? <a href="login.html">Faça login</a></p>
+                <p><a href="index.html">← Voltar para a página inicial</a></p>
+            </div>
+        </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase.js"></script>
-    <script src="cadastro.js"></script>
+    <script src="auth.js"></script>
 </body>
 </html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - Conexão Perfeita</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <div class="logo-text">Conexão Perfeita</div>
+                </div>
+                
+                <div class="user-menu">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <span id="userName">Usuário</span>
+                    <button class="btn btn-secondary" onclick="logout()" style="padding: 8px 15px;">Sair</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="home-container">
+        <section class="welcome-section">
+            <div class="container">
+                <h1>Bem-vindo ao Conexão Perfeita!</h1>
+                <p>Encontre pessoas compatíveis com seus interesses e valores. Sua jornada para conexões significativas começa aqui.</p>
+            </div>
+        </section>
+
+        <div class="container">
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-user-edit"></i>
+                    </div>
+                    <h3>Complete seu Perfil</h3>
+                    <p>Adicione seus interesses, valores e o que você procura em um relacionamento.</p>
+                    <button class="btn btn-primary" style="margin-top: 15px;" onclick="goToPanel()">
+                        Completar Perfil
+                    </button>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h3>Encontre Conexões</h3>
+                    <p>Busque pessoas compatíveis baseado em seus critérios pessoais.</p>
+                    <button class="btn btn-secondary" style="margin-top: 15px;" onclick="searchConnections()">
+                        Buscar Conexões
+                    </button>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h3>Mensagens</h3>
+                    <p>Converse com suas conexões de forma significativa.</p>
+                    <button class="btn btn-primary" style="margin-top: 15px;" onclick="viewMessages()">
+                        Ver Mensagens
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        // Carregar informações do usuário
+        async function loadUserInfo() {
+            const { data: { user } } = await supabase.auth.getUser();
+            
+            if (user) {
+                // Buscar dados adicionais do usuário
+                const { data: userData, error } = await supabase
+                    .from('profiles')
+                    .select('full_name, nickname')
+                    .eq('id', user.id)
+                    .single();
+                
+                if (userData && !error) {
+                    document.getElementById('userName').textContent = userData.nickname || userData.full_name;
+                    document.getElementById('userAvatar').textContent = (userData.nickname || userData.full_name).charAt(0).toUpperCase();
+                }
+            } else {
+                // Se não estiver logado, redirecionar para login
+                window.location.href = 'login.html';
+            }
+        }
+
+        function goToPanel() {
+            alert('Em breve: Painel do usuário');
+            // window.location.href = 'painel.html';
+        }
+
+        function searchConnections() {
+            alert('Em breve: Busca de conexões');
+        }
+
+        function viewMessages() {
+            alert('Em breve: Sistema de mensagens');
+        }
+
+        // Carregar informações quando a página carregar
+        document.addEventListener('DOMContentLoaded', loadUserInfo);
+    </script>
+</body>
+</html>
