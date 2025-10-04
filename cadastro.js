@@ -1,11 +1,10 @@
-// Cadastro.js - ConexãoPerfeita (COM MELHOR TRATAMENTO DE ERROS)
+// Cadastro.js - DEFINITIVO
 document.addEventListener('DOMContentLoaded', function() {
     const cadastroForm = document.getElementById('cadastroForm');
     const btnCadastrar = document.getElementById('btnCadastrar');
 
     console.log('Cadastro.js carregado');
 
-    // Verificar idade
     function calcularIdade(dataNascimento) {
         const hoje = new Date();
         const nascimento = new Date(dataNascimento);
@@ -17,28 +16,22 @@ document.addEventListener('DOMContentLoaded', function() {
         return idade;
     }
 
-    // Verificação do nickname
+    // VERIFICAÇÃO DEFINITIVA
     async function verificarNickname(nickname) {
-        try {
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('username')
-                .eq('username', nickname);
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('username', nickname);
 
-            if (error) {
-                console.error('Erro ao verificar nickname:', error);
-                return false;
-            }
-
-            return data.length === 0;
-
-        } catch (error) {
+        if (error) {
             console.error('Erro:', error);
             return false;
         }
+
+        return data.length === 0;
     }
 
-    // Validação em tempo real do nickname
+    // Validação do nickname
     const nicknameInput = document.getElementById('nickname');
     if (nicknameInput) {
         let timeout;
@@ -103,11 +96,9 @@ document.addEventListener('DOMContentLoaded', function() {
         confirmarSenhaInput.addEventListener('input', validarSenhas);
     }
 
-    // SUBMIT DO FORMULÁRIO
+    // SUBMIT DEFINITIVO
     cadastroForm.addEventListener('submit', async function(e) {
         e.preventDefault();
-        
-        console.log('🚀 Iniciando cadastro...');
         
         btnCadastrar.disabled = true;
         btnCadastrar.textContent = 'Cadastrando...';
@@ -121,9 +112,7 @@ document.addEventListener('DOMContentLoaded', function() {
             confirmarSenha: document.getElementById('confirmarSenha').value
         };
 
-        console.log('📝 Dados do formulário:', formData);
-
-        // Validações básicas
+        // Validações
         const idade = calcularIdade(formData.dataNascimento);
         if (idade < 18) {
             alert('❌ Você deve ter pelo menos 18 anos.');
@@ -149,10 +138,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Verificação final do nickname
-        console.log('🎯 Verificação final do nickname...');
+        // Verificação final
         const nicknameDisponivel = await verificarNickname(formData.nickname);
-        console.log('✅ Nickname disponível?', nicknameDisponivel);
         
         if (!nicknameDisponivel) {
             alert('❌ Este nickname já está em uso. Escolha outro.');
@@ -161,8 +148,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         try {
-            console.log('📨 Enviando para Supabase Auth...');
-            
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: formData.email,
                 password: formData.senha,
@@ -176,36 +161,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            console.log('📩 Resposta completa:', { authData, authError });
-
             if (authError) {
-                console.error('❌ Erro do Supabase:', authError);
-                
-                // Tratamento específico de erros
-                if (authError.message.includes('email')) {
-                    alert('❌ Erro com o e-mail: ' + authError.message);
-                } else if (authError.message.includes('password')) {
-                    alert('❌ Erro com a senha: ' + authError.message);
-                } else {
-                    alert('❌ Erro no cadastro: ' + authError.message);
-                }
-                
-                resetarBotao();
-                return;
+                throw new Error(authError.message);
             }
 
             if (authData.user) {
-                console.log('✅ Usuário criado:', authData.user);
-                alert('✅ Cadastro realizado com sucesso! Verifique seu e-mail para confirmar a conta.');
+                alert('✅ Cadastro realizado! Verifique seu e-mail.');
                 window.location.href = 'email.html';
-            } else {
-                alert('❌ Erro: Usuário não foi criado.');
-                resetarBotao();
             }
 
         } catch (error) {
-            console.error('💥 Erro geral:', error);
-            alert('❌ Erro inesperado no cadastro.');
+            alert('❌ Erro: ' + error.message);
             resetarBotao();
         }
     });
