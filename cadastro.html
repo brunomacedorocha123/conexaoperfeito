@@ -71,7 +71,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // CONFIGURAÇÃO
+        // CONFIGURAÇÃO SUPABASE
         const SUPABASE_URL = 'https://ivposfgebabrtpexxpko.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2cG9zZmdlYmFicnRwZXh4cGtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1ODczMzEsImV4cCI6MjA3NTE2MzMzMX0.AJU3Vt2dqATDORS4mjTW3gDWeh1MK9lNTWk-uoG5ojo';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -85,43 +85,79 @@
             setTimeout(() => alertDiv.classList.add('hidden'), 5000);
         }
 
-        // CADASTRO - APENAS EMAIL E SENHA
+        function isOver18(birthDate) {
+            const today = new Date();
+            const birth = new Date(birthDate);
+            let age = today.getFullYear() - birth.getFullYear();
+            const monthDiff = today.getMonth() - birth.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+                age--;
+            }
+            return age >= 18;
+        }
+
+        // CADASTRO
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
+            const fullName = document.getElementById('fullName').value;
+            const nickname = document.getElementById('nickname').value;
+            const birthDate = document.getElementById('birthDate').value;
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
 
-            // Validação básica
+            // VALIDAÇÕES
+            if (!isOver18(birthDate)) {
+                showAlert('Você deve ter pelo menos 18 anos para se cadastrar.');
+                return;
+            }
             if (password !== confirmPassword) {
-                showAlert('Senhas não coincidem.');
+                showAlert('As senhas não coincidem.');
+                return;
+            }
+            if (password.length < 6) {
+                showAlert('A senha deve ter pelo menos 6 caracteres.');
                 return;
             }
 
-            // Loading
+            // LOADING
             document.getElementById('registerText').classList.add('hidden');
             document.getElementById('registerSpinner').classList.remove('hidden');
             document.getElementById('registerBtn').disabled = true;
 
             try {
-                // CADASTRO SUPER SIMPLES - APENAS EMAIL E SENHA
+                // CADASTRO NO SUPABASE
                 const { data, error } = await supabase.auth.signUp({
                     email: email,
-                    password: password
+                    password: password,
+                    options: {
+                        data: {
+                            full_name: fullName,
+                            nickname: nickname,
+                            birth_date: birthDate
+                        }
+                    }
                 });
 
-                if (error) throw error;
+                if (error) {
+                    if (error.message.includes('already registered')) {
+                        showAlert('Este e-mail já está cadastrado. Faça login.');
+                    } else {
+                        showAlert('Erro: ' + error.message);
+                    }
+                    return;
+                }
 
                 // SUCESSO
-                showAlert('🎉 Cadastro realizado! Verifique seu email para confirmar.', 'success');
+                showAlert('🎉 Cadastro realizado com sucesso! Verifique seu e-mail para confirmar a conta.', 'success');
                 
                 setTimeout(() => {
                     window.location.href = 'login.html';
                 }, 3000);
 
             } catch (error) {
-                showAlert('Erro: ' + error.message);
+                showAlert('Erro inesperado: ' + error.message);
             } finally {
                 document.getElementById('registerText').classList.remove('hidden');
                 document.getElementById('registerSpinner').classList.add('hidden');

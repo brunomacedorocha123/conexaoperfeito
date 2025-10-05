@@ -3,117 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home - Conexão Perfeita</title>
+    <title>Login - Conexão Perfeita</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <div class="logo-icon">
-                        <i class="fas fa-heart"></i>
-                    </div>
-                    <div class="logo-text">Conexão Perfeita</div>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="logo" style="justify-content: center; margin-bottom: 20px;">
+                <div class="logo-icon">
+                    <i class="fas fa-heart"></i>
                 </div>
-                
-                <div class="user-menu">
-                    <div class="user-avatar" id="userAvatar">U</div>
-                    <span id="userName">Usuário</span>
-                    <button class="btn btn-secondary" onclick="logout()" style="padding: 8px 15px;">Sair</button>
-                </div>
+                <div class="logo-text">Conexão Perfeita</div>
             </div>
-        </div>
-    </header>
-
-    <div class="home-container">
-        <section class="welcome-section">
-            <div class="container">
-                <h1>Bem-vindo ao Conexão Perfeita!</h1>
-                <p>Encontre pessoas compatíveis com seus interesses e valores. Sua jornada para conexões significativas começa aqui.</p>
-            </div>
-        </section>
-
-        <div class="container">
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-user-edit"></i>
-                    </div>
-                    <h3>Complete seu Perfil</h3>
-                    <p>Adicione seus interesses, valores e o que você procura em um relacionamento.</p>
-                    <button class="btn btn-primary" style="margin-top: 15px;" onclick="goToPanel()">
-                        Completar Perfil
-                    </button>
+            
+            <h2>Entrar</h2>
+            
+            <div id="alertMessage" class="alert hidden"></div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">E-mail</label>
+                    <input type="email" id="email" class="form-control" required>
                 </div>
                 
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-search"></i>
-                    </div>
-                    <h3>Encontre Conexões</h3>
-                    <p>Busque pessoas compatíveis baseado em seus critérios pessoais.</p>
-                    <button class="btn btn-secondary" style="margin-top: 15px;" onclick="searchConnections()">
-                        Buscar Conexões
-                    </button>
+                <div class="form-group">
+                    <label for="password">Senha</label>
+                    <input type="password" id="password" class="form-control" required>
                 </div>
                 
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-comments"></i>
+                <button type="submit" class="btn btn-primary" id="loginBtn">
+                    <span id="loginText">Entrar</span>
+                    <div id="loginSpinner" class="hidden">
+                        <i class="fas fa-spinner fa-spin"></i> Entrando...
                     </div>
-                    <h3>Mensagens</h3>
-                    <p>Converse com suas conexões de forma significativa.</p>
-                    <button class="btn btn-primary" style="margin-top: 15px;" onclick="viewMessages()">
-                        Ver Mensagens
-                    </button>
-                </div>
+                </button>
+            </form>
+            
+            <div class="auth-links">
+                <p>Não tem uma conta? <a href="cadastro.html">Cadastre-se</a></p>
+                <p><a href="index.html">← Voltar para a página inicial</a></p>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase.js"></script>
-    <script src="auth.js"></script>
     <script>
-        // Carregar informações do usuário
-        async function loadUserInfo() {
-            const { data: { user } } = await supabase.auth.getUser();
+        // CONFIGURAÇÃO SUPABASE
+        const SUPABASE_URL = 'https://ivposfgebabrtpexxpko.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2cG9zZmdlYmFicnRwZXh4cGtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1ODczMzEsImV4cCI6MjA3NTE2MzMzMX0.AJU3Vt2dqATDORS4mjTW3gDWeh1MK9lNTWk-uoG5ojo';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // FUNÇÕES
+        function showAlert(message, type = 'error') {
+            const alertDiv = document.getElementById('alertMessage');
+            alertDiv.textContent = message;
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.classList.remove('hidden');
+            setTimeout(() => alertDiv.classList.add('hidden'), 5000);
+        }
+
+        // LOGIN
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
             
-            if (user) {
-                // Buscar dados adicionais do usuário
-                const { data: userData, error } = await supabase
-                    .from('profiles')
-                    .select('full_name, nickname')
-                    .eq('id', user.id)
-                    .single();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            // LOADING
+            document.getElementById('loginText').classList.add('hidden');
+            document.getElementById('loginSpinner').classList.remove('hidden');
+            document.getElementById('loginBtn').disabled = true;
+            
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
                 
-                if (userData && !error) {
-                    document.getElementById('userName').textContent = userData.nickname || userData.full_name;
-                    document.getElementById('userAvatar').textContent = (userData.nickname || userData.full_name).charAt(0).toUpperCase();
+                if (error) {
+                    if (error.message.includes('Invalid login credentials')) {
+                        showAlert('E-mail ou senha incorretos.');
+                    } else if (error.message.includes('Email not confirmed')) {
+                        showAlert('Confirme seu e-mail antes de fazer login.');
+                    } else {
+                        showAlert('Erro: ' + error.message);
+                    }
+                    return;
                 }
-            } else {
-                // Se não estiver logado, redirecionar para login
-                window.location.href = 'login.html';
+                
+                // SUCESSO
+                showAlert('Login realizado com sucesso!', 'success');
+                setTimeout(() => {
+                    window.location.href = 'home.html';
+                }, 1000);
+                
+            } catch (error) {
+                showAlert('Erro inesperado: ' + error.message);
+            } finally {
+                document.getElementById('loginText').classList.remove('hidden');
+                document.getElementById('loginSpinner').classList.add('hidden');
+                document.getElementById('loginBtn').disabled = false;
             }
-        }
-
-        function goToPanel() {
-            alert('Em breve: Painel do usuário');
-            // window.location.href = 'painel.html';
-        }
-
-        function searchConnections() {
-            alert('Em breve: Busca de conexões');
-        }
-
-        function viewMessages() {
-            alert('Em breve: Sistema de mensagens');
-        }
-
-        // Carregar informações quando a página carregar
-        document.addEventListener('DOMContentLoaded', loadUserInfo);
+        });
     </script>
 </body>
 </html>

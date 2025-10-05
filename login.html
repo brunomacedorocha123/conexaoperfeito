@@ -49,11 +49,12 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // CONFIGURAÇÃO
+        // CONFIGURAÇÃO SUPABASE
         const SUPABASE_URL = 'https://ivposfgebabrtpexxpko.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2cG9zZmdlYmFicnRwZXh4cGtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1ODczMzEsImV4cCI6MjA3NTE2MzMzMX0.AJU3Vt2dqATDORS4mjTW3gDWeh1MK9lNTWk-uoG5ojo';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        // FUNÇÕES
         function showAlert(message, type = 'error') {
             const alertDiv = document.getElementById('alertMessage');
             alertDiv.textContent = message;
@@ -69,6 +70,7 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             
+            // LOADING
             document.getElementById('loginText').classList.add('hidden');
             document.getElementById('loginSpinner').classList.remove('hidden');
             document.getElementById('loginBtn').disabled = true;
@@ -79,17 +81,25 @@
                     password: password
                 });
                 
-                if (error) throw error;
-                
-                if (data.user) {
-                    showAlert('Login realizado com sucesso!', 'success');
-                    setTimeout(() => {
-                        window.location.href = 'home.html';
-                    }, 1000);
+                if (error) {
+                    if (error.message.includes('Invalid login credentials')) {
+                        showAlert('E-mail ou senha incorretos.');
+                    } else if (error.message.includes('Email not confirmed')) {
+                        showAlert('Confirme seu e-mail antes de fazer login.');
+                    } else {
+                        showAlert('Erro: ' + error.message);
+                    }
+                    return;
                 }
                 
+                // SUCESSO
+                showAlert('Login realizado com sucesso!', 'success');
+                setTimeout(() => {
+                    window.location.href = 'home.html';
+                }, 1000);
+                
             } catch (error) {
-                showAlert(error.message || 'Erro ao fazer login.');
+                showAlert('Erro inesperado: ' + error.message);
             } finally {
                 document.getElementById('loginText').classList.remove('hidden');
                 document.getElementById('loginSpinner').classList.add('hidden');
