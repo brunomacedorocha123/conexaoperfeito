@@ -424,17 +424,11 @@
                 </div>
                 <div class="auth-body">
                     <!-- Alert Messages -->
-                    <div class="alert alert-error" id="errorAlert">
-                        E-mail ou senha incorretos. Tente novamente.
-                    </div>
+                    <div class="alert alert-error" id="errorAlert" style="display: none;"></div>
 
-                    <div class="alert alert-info" id="verificationAlert">
-                        Sua conta precisa ser verificada. Verifique seu e-mail.
-                    </div>
+                    <div class="alert alert-info" id="verificationAlert" style="display: none;"></div>
 
-                    <div class="alert alert-success" id="successAlert">
-                        Login realizado com sucesso! Redirecionando...
-                    </div>
+                    <div class="alert alert-success" id="successAlert" style="display: none;"></div>
 
                     <form id="loginForm">
                         <div class="form-group">
@@ -528,12 +522,27 @@
             const verificationAlert = document.getElementById('verificationAlert');
             const successAlert = document.getElementById('successAlert');
 
+            // ✅ VERIFICAR STATUS DE VERIFICAÇÃO (NOVA FUNÇÃO)
+            function checkVerificationStatus() {
+                const urlParams = new URLSearchParams(window.location.search);
+                
+                if (urlParams.get('verified') === 'true') {
+                    showAlert(successAlert, '✅ E-mail verificado com sucesso! Faça login para continuar.');
+                    
+                    // Limpar parâmetro da URL
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            }
+
             // Verificar se já está logado
             supabase.auth.getUser().then(({ data: { user } }) => {
                 if (user) {
                     window.location.href = 'home.html';
                 }
             });
+
+            // ✅ CHAMAR VERIFICAÇÃO DE STATUS
+            checkVerificationStatus();
 
             // Toggle password visibility
             togglePassword.addEventListener('click', function() {
@@ -600,6 +609,13 @@
                 hideAllAlerts();
                 alertElement.textContent = message;
                 alertElement.style.display = 'block';
+                
+                // Auto-esconder alertas de sucesso após 5 segundos
+                if (alertElement === successAlert) {
+                    setTimeout(() => {
+                        alertElement.style.display = 'none';
+                    }, 5000);
+                }
             }
 
             function validateForm() {
@@ -612,14 +628,16 @@
                 if (!emailValid) {
                     showError('emailError', 'Por favor, insira um e-mail válido');
                     document.getElementById('email').classList.add('error');
+                    return false;
                 }
                 
                 if (!passwordValid) {
                     showError('passwordError', 'A senha deve ter pelo menos 6 caracteres');
                     document.getElementById('password').classList.add('error');
+                    return false;
                 }
                 
-                return emailValid && passwordValid;
+                return true;
             }
 
             // Submit do formulário - AGORA COM SUPABASE REAL
@@ -648,9 +666,9 @@
                     if (data.user) {
                         // Verificar se o e-mail foi confirmado
                         if (!data.user.email_confirmed_at) {
-                            showAlert(verificationAlert, 'Sua conta precisa ser verificada. Verifique seu e-mail antes de fazer login.');
+                            showAlert(verificationAlert, '📧 Sua conta precisa ser verificada. Verifique seu e-mail antes de fazer login.');
                         } else {
-                            showAlert(successAlert, 'Login realizado com sucesso! Redirecionando...');
+                            showAlert(successAlert, '✅ Login realizado com sucesso! Redirecionando...');
                             
                             // Salvar e-mail se "Lembrar-me" estiver marcado
                             if (document.getElementById('rememberMe').checked) {
@@ -668,11 +686,11 @@
                     console.error('Erro no login:', error);
                     
                     if (error.message.includes('Invalid login credentials')) {
-                        showAlert(errorAlert, 'E-mail ou senha incorretos. Tente novamente.');
+                        showAlert(errorAlert, '❌ E-mail ou senha incorretos. Tente novamente.');
                     } else if (error.message.includes('Email not confirmed')) {
-                        showAlert(verificationAlert, 'Sua conta precisa ser verificada. Verifique seu e-mail antes de fazer login.');
+                        showAlert(verificationAlert, '📧 Sua conta precisa ser verificada. Verifique seu e-mail antes de fazer login.');
                     } else {
-                        showAlert(errorAlert, 'Erro ao fazer login: ' + error.message);
+                        showAlert(errorAlert, '❌ Erro ao fazer login: ' + error.message);
                     }
                 } finally {
                     submitBtn.disabled = false;
@@ -686,7 +704,7 @@
                 const email = document.getElementById('email').value.trim();
                 
                 if (!email) {
-                    alert('Por favor, insira seu e-mail para redefinir a senha.');
+                    showAlert(errorAlert, 'Por favor, insira seu e-mail para redefinir a senha.');
                     document.getElementById('email').focus();
                     return;
                 }
@@ -698,11 +716,11 @@
 
                     if (error) throw error;
 
-                    alert(`Instruções de redefinição de senha enviadas para: ${email}`);
+                    showAlert(successAlert, `📧 Instruções de redefinição de senha enviadas para: ${email}`);
                     
                 } catch (error) {
                     console.error('Erro ao enviar e-mail de redefinição:', error);
-                    alert('Erro ao enviar e-mail de redefinição. Verifique se o e-mail está correto.');
+                    showAlert(errorAlert, '❌ Erro ao enviar e-mail de redefinição. Verifique se o e-mail está correto.');
                 }
             });
 

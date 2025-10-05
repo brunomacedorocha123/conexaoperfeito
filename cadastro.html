@@ -297,23 +297,6 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Success Message */
-        .success-message {
-            display: none;
-            background-color: #f0fff4;
-            border: 1px solid #9ae6b4;
-            border-radius: 10px;
-            padding: 1.5rem;
-            text-align: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .success-icon {
-            font-size: 3rem;
-            color: var(--success);
-            margin-bottom: 1rem;
-        }
-
         /* Alert Messages */
         .alert {
             padding: 1rem;
@@ -733,7 +716,7 @@
                 return validations.every(validation => validation === true);
             }
 
-            // Submit do formulário - AGORA COM SUPABASE REAL
+            // Submit do formulário - CORRIGIDO PARA REDIRECIONAR
             form.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 hideAlerts();
@@ -756,7 +739,9 @@
                                 full_name: fullName.value.trim(),
                                 nickname: nickname.value.trim(),
                                 birth_date: birthDate.value
-                            }
+                            },
+                            // DESABILITAR redirecionamento automático do Supabase
+                            emailRedirectTo: 'https://conexaoperfeitaamor.netlify.app/login.html?verified=true'
                         }
                     });
 
@@ -778,16 +763,11 @@
 
                         if (profileError) {
                             console.error('Erro ao criar perfil:', profileError);
-                            // Continua mesmo com erro no perfil, o usuário pode completar depois
+                            // Continua mesmo com erro no perfil
                         }
 
-                        showAlert(successAlert, 
-                            'Cadastro realizado com sucesso! Verifique seu e-mail para ativar sua conta. ' +
-                            'Após a verificação, você poderá fazer login.',
-                            false
-                        );
-
-                        form.reset();
+                        // REDIRECIONAR PARA PÁGINA DE SUCESSO IMEDIATAMENTE
+                        window.location.href = 'cadastro-sucesso.html';
                     }
 
                 } catch (error) {
@@ -800,7 +780,7 @@
                     } else {
                         showAlert(errorAlert, 'Erro ao realizar cadastro: ' + error.message);
                     }
-                } finally {
+                    
                     submitBtn.disabled = false;
                     loading.style.display = 'none';
                 }
