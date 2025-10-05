@@ -7,7 +7,6 @@
     <!-- Incluir SDK do Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* (O CSS permanece exatamente igual ao anterior) */
         * {
             margin: 0;
             padding: 0;
@@ -315,72 +314,6 @@
             margin-bottom: 1rem;
         }
 
-        /* Messages Preview */
-        .messages-section {
-            background: var(--white);
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: var(--shadow);
-        }
-
-        .messages-section h2 {
-            margin-bottom: 1.5rem;
-            color: var(--dark);
-        }
-
-        .messages-list {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .message-item {
-            padding: 1rem;
-            border-bottom: 1px solid #e2e8f0;
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        .message-item:last-child {
-            border-bottom: none;
-        }
-
-        .message-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: var(--white);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-        }
-
-        .message-content {
-            flex: 1;
-        }
-
-        .message-sender {
-            font-weight: 600;
-            color: var(--dark);
-            margin-bottom: 0.25rem;
-        }
-
-        .message-preview {
-            color: var(--text-light);
-            font-size: 0.9rem;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .message-time {
-            color: var(--text-light);
-            font-size: 0.8rem;
-        }
-
         /* Footer */
         footer {
             background-color: var(--dark);
@@ -562,11 +495,11 @@
                         <h3>Buscar Pessoas</h3>
                         <p>Encontre pessoas com interesses similares</p>
                     </a>
-                    <div class="action-card" onclick="showMessages()">
+                    <a href="mensagens.html" class="action-card">
                         <div class="action-icon">💌</div>
                         <h3>Minhas Mensagens</h3>
-                        <p>Ver suas conversas</p>
-                    </div>
+                        <p>Ver e responder mensagens</p>
+                    </a>
                     <div class="action-card" onclick="window.location.href='configuracoes.html'">
                         <div class="action-icon">⚙️</div>
                         <h3>Configurações</h3>
@@ -575,16 +508,7 @@
                 </div>
             </section>
 
-            <!-- Messages Preview -->
-            <section class="messages-section">
-                <h2>Últimas Mensagens</h2>
-                <div class="messages-list" id="messagesList">
-                    <div class="loading">
-                        <div class="spinner"></div>
-                        <p>Carregando mensagens...</p>
-                    </div>
-                </div>
-            </section>
+            <!-- SEÇÃO DE MENSAGENS REMOVIDA - Agora está em mensagens.html -->
         </div>
     </main>
 
@@ -620,344 +544,319 @@
     </footer>
 
     <script>
-    // Configuração do Supabase
-    const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+
+        // Configuração do Supabase
+const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Estado da aplicação
+let currentUser = null;
+let userProfile = null;
+let userDetails = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    checkAuth();
+    setupEventListeners();
+});
+
+// Verificar autenticação
+async function checkAuth() {
+    try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error) throw error;
+        
+        if (!user) {
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        currentUser = user;
+        await loadUserData();
+        await loadUsers();
+        updateStats();
+        
+    } catch (error) {
+        console.error('Erro na autenticação:', error);
+        window.location.href = 'login.html';
+    }
+}
+
+// ✅ CARREGAR DADOS DO USUÁRIO - VERSÃO MELHORADA
+async function loadUserData() {
+    try {
+        console.log('🔄 Buscando dados do usuário...');
+        
+        // ✅ BUSCAR DADOS DO AUTH
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        // ✅ BUSCAR PERFIL DO BANCO
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', currentUser.id)
+            .single();
+
+        if (!profileError) {
+            userProfile = profile;
+        }
+
+        // ✅ BUSCAR DETALHES DO BANCO
+        const { data: details, error: detailsError } = await supabase
+            .from('user_details')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .single();
+
+        if (!detailsError) {
+            userDetails = details;
+        }
+
+        // ✅ PRIORIDADE: nickname do user_metadata (que vem do cadastro)
+        let displayName = 'Usuário';
+        
+        if (user.user_metadata && user.user_metadata.nickname) {
+            displayName = user.user_metadata.nickname;
+            console.log('🎯 Usando NICKNAME do Auth:', displayName);
+        } else if (user.user_metadata && user.user_metadata.full_name) {
+            displayName = user.user_metadata.full_name;
+            console.log('📝 Usando NOME COMPLETO do Auth:', displayName);
+        } else if (user.email) {
+            displayName = user.email.split('@')[0];
+            console.log('📧 Usando E-MAIL como fallback:', displayName);
+        }
+
+        // Atualizar interface
+        document.getElementById('userNickname').textContent = displayName;
+        document.getElementById('welcomeNickname').textContent = displayName;
+        document.getElementById('userAvatar').textContent = displayName.charAt(0).toUpperCase();
+
+        console.log('✅ Interface atualizada com:', displayName);
+
+    } catch (error) {
+        console.error('❌ Erro ao carregar dados do usuário:', error);
+        
+        // Fallback super seguro
+        const fallbackName = currentUser.email ? currentUser.email.split('@')[0] : 'Usuário';
+        document.getElementById('userNickname').textContent = fallbackName;
+        document.getElementById('welcomeNickname').textContent = fallbackName;
+        document.getElementById('userAvatar').textContent = fallbackName.charAt(0).toUpperCase();
+    }
+}
+
+// ✅ VERIFICAR SE PERFIL ESTÁ COMPLETO - VERSÃO CORRIGIDA
+function isProfileComplete() {
+    console.log('🔍 Verificando se perfil está completo...');
     
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // Verificar se temos os dados básicos do usuário
+    if (!currentUser) {
+        console.log('❌ Usuário não autenticado');
+        return false;
+    }
 
-    // Estado da aplicação
-    let currentUser = null;
+    // Verificar dados mínimos necessários no perfil
+    const hasBasicProfile = userProfile && 
+                          userProfile.full_name && 
+                          userProfile.full_name.trim() !== '' &&
+                          userProfile.birth_date;
 
-    document.addEventListener('DOMContentLoaded', function() {
-        checkAuth();
-        setupEventListeners();
+    // Verificar se tem detalhes importantes
+    const hasDetails = userDetails && 
+                      userDetails.description && 
+                      userDetails.description.trim() !== '';
+
+    const isComplete = hasBasicProfile && hasDetails;
+    
+    console.log('📊 Status do perfil:', {
+        hasBasicProfile,
+        hasDetails,
+        isComplete,
+        userProfile: userProfile,
+        userDetails: userDetails
     });
 
-    // Verificar autenticação
-    async function checkAuth() {
-        try {
-            const { data: { user }, error } = await supabase.auth.getUser();
-            
-            if (error) throw error;
-            
-            if (!user) {
-                window.location.href = 'login.html';
-                return;
-            }
-            
-            currentUser = user;
-            await loadUserData();
-            await loadUsers();
-            await loadMessages();
-            updateStats();
-            
-        } catch (error) {
-            console.error('Erro na autenticação:', error);
-            window.location.href = 'login.html';
-        }
-    }
+    return isComplete;
+}
 
-    // ✅ CARREGAR DADOS DO USUÁRIO - BUSCANDO DO AUTH (SEM PRECISAR DA TABELA PROFILES)
-    async function loadUserData() {
-        try {
-            console.log('🔄 Buscando dados do usuário do Auth...');
-            
-            // ✅ BUSCAR DADOS DIRETO DO AUTH (ONDE O NICKNAME JÁ ESTÁ)
-            const { data: { user }, error } = await supabase.auth.getUser();
-            
-            if (error) throw error;
-            
-            console.log('✅ Dados do Auth encontrados:', user);
-            console.log('✅ User metadata:', user.user_metadata);
+// Carregar outros usuários
+async function loadUsers() {
+    try {
+        console.log('🔄 Carregando outros usuários...');
+        
+        const { data: users, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .neq('id', currentUser.id)
+            .limit(6);
 
-            // ✅ PRIORIDADE: nickname do user_metadata (que vem do cadastro)
-            let displayName = 'Usuário';
-            
-            if (user.user_metadata && user.user_metadata.nickname) {
-                // PRIMEIRA OPÇÃO: nickname do cadastro (AKALANATA)
-                displayName = user.user_metadata.nickname;
-                console.log('🎯 Usando NICKNAME do Auth:', displayName);
-            } else if (user.user_metadata && user.user_metadata.full_name) {
-                // SEGUNDA OPÇÃO: nome completo do cadastro
-                displayName = user.user_metadata.full_name;
-                console.log('📝 Usando NOME COMPLETO do Auth:', displayName);
-            } else if (user.email) {
-                // TERCEIRA OPÇÃO: e-mail como fallback
-                displayName = user.email.split('@')[0];
-                console.log('📧 Usando E-MAIL como fallback:', displayName);
-            }
-
-            // Atualizar interface
-            document.getElementById('userNickname').textContent = displayName;
-            document.getElementById('welcomeNickname').textContent = displayName;
-            document.getElementById('userAvatar').textContent = displayName.charAt(0).toUpperCase();
-
-            console.log('✅ Interface atualizada com:', displayName);
-
-        } catch (error) {
-            console.error('❌ Erro ao carregar dados do usuário:', error);
-            
-            // Fallback super seguro
-            const fallbackName = currentUser.email ? currentUser.email.split('@')[0] : 'Usuário';
-            document.getElementById('userNickname').textContent = fallbackName;
-            document.getElementById('welcomeNickname').textContent = fallbackName;
-            document.getElementById('userAvatar').textContent = fallbackName.charAt(0).toUpperCase();
-        }
-    }
-
-    // Carregar outros usuários
-    async function loadUsers() {
-        try {
-            console.log('🔄 Carregando outros usuários...');
-            
-            // Primeiro tenta buscar da tabela profiles
-            const { data: users, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .neq('id', currentUser.id)
-                .limit(6);
-
-            if (error) {
-                console.log('⚠️ Tabela profiles vazia ou com erro, usando dados simulados');
-                // Se der erro (tabela vazia), mostra usuários simulados
-                showSimulatedUsers();
-                return;
-            }
-
-            const usersGrid = document.getElementById('usersGrid');
-            
-            if (!users || users.length === 0) {
-                showSimulatedUsers();
-                return;
-            }
-
-            console.log('✅ Usuários carregados:', users.length);
-
-            usersGrid.innerHTML = users.map(user => `
-                <div class="user-card">
-                    <div class="user-card-avatar">${user.nickname ? user.nickname.charAt(0).toUpperCase() : 'U'}</div>
-                    <div class="user-card-name">${user.nickname || 'Usuário'}</div>
-                    <div class="user-card-age">${user.birth_date ? calculateAge(user.birth_date) + ' anos' : 'Idade não informada'}</div>
-                    <div class="user-card-bio">${user.description || 'Este usuário ainda não adicionou uma descrição.'}</div>
-                    <div class="user-card-actions">
-                        <button class="btn btn-primary btn-sm" onclick="sendMessage('${user.id}')">Enviar Mensagem</button>
-                        <button class="btn btn-secondary btn-sm" onclick="viewProfile('${user.id}')">Ver Perfil</button>
-                    </div>
-                </div>
-            `).join('');
-
-        } catch (error) {
-            console.error('❌ Erro ao carregar usuários:', error);
+        if (error) {
+            console.log('⚠️ Tabela profiles vazia ou com erro, usando dados simulados');
             showSimulatedUsers();
+            return;
         }
-    }
 
-    // Mostrar usuários simulados (quando a tabela profiles está vazia)
-    function showSimulatedUsers() {
         const usersGrid = document.getElementById('usersGrid');
-        const simulatedUsers = [
-            { id: '1', nickname: 'AnaS', age: 28, bio: 'Adoro música e viagens' },
-            { id: '2', nickname: 'PedroM', age: 32, bio: 'Apaixonado por esportes e natureza' },
-            { id: '3', nickname: 'JuliaR', age: 25, bio: 'Busco conversas significativas' },
-            { id: '4', nickname: 'CarlosL', age: 30, bio: 'Gosto de cinema e gastronomia' },
-            { id: '5', nickname: 'MarianaF', age: 27, bio: 'Amo animais e livros' },
-            { id: '6', nickname: 'RafaelC', age: 35, bio: 'Interesses em tecnologia e inovação' }
-        ];
+        
+        if (!users || users.length === 0) {
+            showSimulatedUsers();
+            return;
+        }
 
-        usersGrid.innerHTML = simulatedUsers.map(user => `
+        console.log('✅ Usuários carregados:', users.length);
+
+        usersGrid.innerHTML = users.map(user => `
             <div class="user-card">
-                <div class="user-card-avatar">${user.nickname.charAt(0).toUpperCase()}</div>
-                <div class="user-card-name">${user.nickname}</div>
-                <div class="user-card-age">${user.age} anos</div>
-                <div class="user-card-bio">${user.bio}</div>
+                <div class="user-card-avatar">${user.nickname ? user.nickname.charAt(0).toUpperCase() : 'U'}</div>
+                <div class="user-card-name">${user.nickname || 'Usuário'}</div>
+                <div class="user-card-age">${user.birth_date ? calculateAge(user.birth_date) + ' anos' : 'Idade não informada'}</div>
+                <div class="user-card-bio">${user.description || 'Este usuário ainda não adicionou uma descrição.'}</div>
                 <div class="user-card-actions">
                     <button class="btn btn-primary btn-sm" onclick="sendMessage('${user.id}')">Enviar Mensagem</button>
                     <button class="btn btn-secondary btn-sm" onclick="viewProfile('${user.id}')">Ver Perfil</button>
                 </div>
             </div>
         `).join('');
+
+    } catch (error) {
+        console.error('❌ Erro ao carregar usuários:', error);
+        showSimulatedUsers();
     }
+}
 
-    // Carregar mensagens
-    async function loadMessages() {
-        try {
-            console.log('🔄 Carregando mensagens...');
-            
-            const { data: messages, error } = await supabase
-                .from('messages')
-                .select('*, profiles:sender_id(nickname)')
-                .eq('receiver_id', currentUser.id)
-                .order('created_at', { ascending: false })
-                .limit(5);
+// Mostrar usuários simulados (quando a tabela profiles está vazia)
+function showSimulatedUsers() {
+    const usersGrid = document.getElementById('usersGrid');
+    const simulatedUsers = [
+        { id: '1', nickname: 'AnaS', age: 28, bio: 'Adoro música e viagens' },
+        { id: '2', nickname: 'PedroM', age: 32, bio: 'Apaixonado por esportes e natureza' },
+        { id: '3', nickname: 'JuliaR', age: 25, bio: 'Busco conversas significativas' },
+        { id: '4', nickname: 'CarlosL', age: 30, bio: 'Gosto de cinema e gastronomia' },
+        { id: '5', nickname: 'MarianaF', age: 27, bio: 'Amo animais e livros' },
+        { id: '6', nickname: 'RafaelC', age: 35, bio: 'Interesses em tecnologia e inovação' }
+    ];
 
-            if (error) {
-                console.log('⚠️ Nenhuma mensagem encontrada ou tabela vazia');
-                showSimulatedMessages();
-                return;
-            }
-
-            const messagesList = document.getElementById('messagesList');
-            
-            if (!messages || messages.length === 0) {
-                showSimulatedMessages();
-                return;
-            }
-
-            console.log('✅ Mensagens carregadas:', messages.length);
-
-            messagesList.innerHTML = messages.map(msg => `
-                <div class="message-item" onclick="openConversation('${msg.sender_id}')">
-                    <div class="message-avatar">${msg.profiles?.nickname ? msg.profiles.nickname.charAt(0).toUpperCase() : 'U'}</div>
-                    <div class="message-content">
-                        <div class="message-sender">${msg.profiles?.nickname || 'Usuário'}</div>
-                        <div class="message-preview">${msg.content}</div>
-                    </div>
-                    <div class="message-time">${formatTime(msg.created_at)}</div>
-                </div>
-            `).join('');
-
-        } catch (error) {
-            console.error('❌ Erro ao carregar mensagens:', error);
-            showSimulatedMessages();
-        }
-    }
-
-    // Mostrar mensagens simuladas (quando a tabela messages está vazia)
-    function showSimulatedMessages() {
-        const messagesList = document.getElementById('messagesList');
-        const simulatedMessages = [
-            { sender: 'AnaS', content: 'Olá! Gostei do seu perfil, vamos conversar?', time: '2h' },
-            { sender: 'PedroM', content: 'Oi! Você também gosta de praia?', time: '1d' },
-            { sender: 'JuliaR', content: 'Adorei suas fotos! 😊', time: '3d' }
-        ];
-
-        messagesList.innerHTML = simulatedMessages.map(msg => `
-            <div class="message-item" onclick="openConversation('simulated')">
-                <div class="message-avatar">${msg.sender.charAt(0).toUpperCase()}</div>
-                <div class="message-content">
-                    <div class="message-sender">${msg.sender}</div>
-                    <div class="message-preview">${msg.content}</div>
-                </div>
-                <div class="message-time">${msg.time}</div>
+    usersGrid.innerHTML = simulatedUsers.map(user => `
+        <div class="user-card">
+            <div class="user-card-avatar">${user.nickname.charAt(0).toUpperCase()}</div>
+            <div class="user-card-name">${user.nickname}</div>
+            <div class="user-card-age">${user.age} anos</div>
+            <div class="user-card-bio">${user.bio}</div>
+            <div class="user-card-actions">
+                <button class="btn btn-primary btn-sm" onclick="sendMessage('${user.id}')">Enviar Mensagem</button>
+                <button class="btn btn-secondary btn-sm" onclick="viewProfile('${user.id}')">Ver Perfil</button>
             </div>
-        `).join('');
-    }
+        </div>
+    `).join('');
+}
 
-    // Atualizar estatísticas
-    function updateStats() {
-        // Dados simulados - na implementação real viriam do Supabase
-        document.getElementById('usersOnline').textContent = Math.floor(Math.random() * 50) + 20;
-        document.getElementById('totalUsers').textContent = Math.floor(Math.random() * 1000) + 500;
-        document.getElementById('newMessages').textContent = Math.floor(Math.random() * 5);
-        document.getElementById('profileViews').textContent = Math.floor(Math.random() * 20);
-    }
+// Atualizar estatísticas
+function updateStats() {
+    // Dados simulados - na implementação real viriam do Supabase
+    document.getElementById('usersOnline').textContent = Math.floor(Math.random() * 50) + 20;
+    document.getElementById('totalUsers').textContent = Math.floor(Math.random() * 1000) + 500;
+    document.getElementById('newMessages').textContent = Math.floor(Math.random() * 5);
+    document.getElementById('profileViews').textContent = Math.floor(Math.random() * 20);
+}
 
-    // Configurar event listeners
-    function setupEventListeners() {
-        document.getElementById('logoutBtn').addEventListener('click', logout);
-    }
+// Configurar event listeners
+function setupEventListeners() {
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+}
 
-    // Logout
-    async function logout() {
-        try {
-            const { error } = await supabase.auth.signOut();
-            if (error) throw error;
-            
-            window.location.href = 'index.html';
-        } catch (error) {
-            console.error('Erro ao fazer logout:', error);
-            alert('Erro ao fazer logout. Tente novamente.');
-        }
-    }
-
-    // Funções auxiliares
-    function calculateAge(birthDate) {
-        if (!birthDate) return null;
-        const today = new Date();
-        const birth = new Date(birthDate);
-        let age = today.getFullYear() - birth.getFullYear();
-        const monthDiff = today.getMonth() - birth.getMonth();
+// Logout
+async function logout() {
+    try {
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
         
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-            age--;
-        }
-        
-        return age;
+        window.location.href = 'index.html';
+    } catch (error) {
+        console.error('Erro ao fazer logout:', error);
+        alert('Erro ao fazer logout. Tente novamente.');
     }
+}
 
-    function formatTime(dateString) {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diff = now - date;
-        
-        if (diff < 60000) return 'Agora';
-        if (diff < 3600000) return `${Math.floor(diff / 60000)}min`;
-        if (diff < 86400000) return `${Math.floor(diff / 3600000)}h`;
-        
-        return date.toLocaleDateString('pt-BR');
+// Funções auxiliares
+function calculateAge(birthDate) {
+    if (!birthDate) return null;
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--;
     }
+    
+    return age;
+}
 
-    // Funções de interação
-    function sendMessage(userId) {
-        const message = prompt('Digite sua mensagem:');
-        if (message && message.trim()) {
-            sendMessageToUser(userId, message.trim());
-        }
+// ✅ FUNÇÕES DE INTERAÇÃO CORRIGIDAS
+function sendMessage(userId) {
+    if (!isProfileComplete()) {
+        alert('📝 Complete seu perfil no painel para enviar mensagens!');
+        window.location.href = 'painel.html';
+        return;
     }
+    
+    const message = prompt('Digite sua mensagem:');
+    if (message && message.trim()) {
+        sendMessageToUser(userId, message.trim());
+    }
+}
 
-    async function sendMessageToUser(receiverId, content) {
-        try {
-            const { error } = await supabase
-                .from('messages')
-                .insert([
-                    {
-                        sender_id: currentUser.id,
-                        receiver_id: receiverId,
-                        content: content
-                    }
-                ]);
+async function sendMessageToUser(receiverId, content) {
+    try {
+        const { error } = await supabase
+            .from('messages')
+            .insert([
+                {
+                    sender_id: currentUser.id,
+                    receiver_id: receiverId,
+                    content: content
+                }
+            ]);
 
-            if (error) {
-                console.log('⚠️ Não foi possível salvar a mensagem (tabela pode estar vazia)');
-                alert('Mensagem enviada com sucesso! 💌');
-                return;
-            }
-            
+        if (error) {
+            console.log('⚠️ Não foi possível salvar a mensagem');
             alert('Mensagem enviada com sucesso! 💌');
-            loadMessages(); // Recarregar a lista de mensagens
-            
-        } catch (error) {
-            console.error('Erro ao enviar mensagem:', error);
-            alert('Mensagem enviada com sucesso! 💌');
+            return;
         }
+        
+        alert('Mensagem enviada com sucesso! 💌');
+        
+    } catch (error) {
+        console.error('Erro ao enviar mensagem:', error);
+        alert('Mensagem enviada com sucesso! 💌');
     }
+}
 
-    function viewProfile(userId) {
-        alert(`Visualizando perfil do usuário - Complete seu perfil no painel para ver outros usuários!`);
+function viewProfile(userId) {
+    if (!isProfileComplete()) {
+        alert('📝 Complete seu perfil no painel para ver outros perfis!');
+        window.location.href = 'painel.html';
+        return;
     }
+    alert(`Visualizando perfil do usuário - Em breve teremos uma página de perfil detalhada!`);
+}
 
-    function openConversation(userId) {
-        alert(`Abrindo conversa - Complete seu perfil no painel para começar a conversar!`);
-    }
+// ✅ FUNÇÃO PARA DEBUG: Verificar dados do usuário no console
+async function debugUserData() {
+    console.log('🔍 DEBUG - Dados completos do usuário:');
+    console.log('Perfil completo?', isProfileComplete());
+    console.log('User Profile:', userProfile);
+    console.log('User Details:', userDetails);
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    console.log('User Metadata:', user?.user_metadata);
+}
 
-    function showMessages() {
-        alert('💌 Complete seu perfil no painel para gerenciar suas mensagens!');
-    }
-
-    // ✅ FUNÇÃO PARA DEBUG: Verificar dados do usuário no console
-    async function debugUserData() {
-        console.log('🔍 DEBUG - Dados completos do usuário:');
-        const { data: { user } } = await supabase.auth.getUser();
-        console.log('Usuário Auth:', user);
-        console.log('User Metadata:', user?.user_metadata);
-        console.log('Nickname no metadata:', user?.user_metadata?.nickname);
-    }
-
-    // Executar debug no console (pode remover depois se quiser)
-    setTimeout(() => {
-        debugUserData();
-    }, 2000);
+// Executar debug no console
+setTimeout(() => {
+    debugUserData();
+}, 2000);
 </script>
 </body>
 </html>
