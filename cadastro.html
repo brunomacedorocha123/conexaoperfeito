@@ -69,107 +69,78 @@
         </div>
     </div>
 
-    <!-- SCRIPTS - TODOS JUNTOS NO FINAL -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <!-- SUPABASE CONFIG -->
     <script>
-        console.log('🔧 Carregando Supabase...');
+        // CONFIGURAÇÃO SUPABASE
         const SUPABASE_URL = 'https://ivposfgebabrtpexxpko.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2cG9zZmdlYmFicnRwZXh4cGtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1ODczMzEsImV4cCI6MjA3NTE2MzMzMX0.AJU3Vt2dqATDORS4mjTW3gDWeh1MK9lNTWk-uoG5ojo';
-        window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        console.log('✅ Supabase carregado!');
-    </script>
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    <!-- AUTH LOGIC -->
-    <script>
-        console.log('🔧 Iniciando auth logic...');
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🏁 DOM carregado!');
-            console.log('📝 registerForm:', document.getElementById('registerForm'));
+        // CADASTRO SIMPLES
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
             
-            const registerForm = document.getElementById('registerForm');
-            if (!registerForm) {
-                console.error('❌ FORMULÁRIO NÃO ENCONTRADO!');
+            const fullName = document.getElementById('fullName').value;
+            const nickname = document.getElementById('nickname').value;
+            const birthDate = document.getElementById('birthDate').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // Validações
+            if (password !== confirmPassword) {
+                alert('Senhas não coincidem!');
                 return;
             }
             
-            registerForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                console.log('🎯 FORMULÁRIO ENVIADO!');
-                
-                // Coletar dados
-                const fullName = document.getElementById('fullName').value;
-                const nickname = document.getElementById('nickname').value;
-                const birthDate = document.getElementById('birthDate').value;
-                const email = document.getElementById('email').value;
-                const password = document.getElementById('password').value;
-                const confirmPassword = document.getElementById('confirmPassword').value;
-                
-                console.log('📧 Dados:', { email, fullName });
-                
-                // Validações
-                if (password !== confirmPassword) {
-                    alert('Senhas não coincidem!');
-                    return;
-                }
-                
-                // Loading
-                document.getElementById('registerText').classList.add('hidden');
-                document.getElementById('registerSpinner').classList.remove('hidden');
-                document.getElementById('registerBtn').disabled = true;
-                
-                try {
-                    console.log('🚀 Chamando Supabase...');
-                    
-                    // CADASTRO
-                    const { data, error } = await supabase.auth.signUp({
-                        email: email,
-                        password: password,
-                        options: {
-                            data: {
-                                full_name: fullName,
-                                nickname: nickname
-                            },
-                            emailRedirectTo: 'https://conexaoperfeitaamor.netlify.app/login.html'
-                        }
-                    });
-                    
-                    console.log('📨 Resposta:', data);
-                    console.log('❌ Erro:', error);
-                    
-                    if (error) throw error;
-                    
-                    if (data.user) {
-                        // CRIAR PERFIL
-                        const { error: profileError } = await supabase
-                            .from('profiles')
-                            .insert([{
-                                id: data.user.id,
-                                full_name: fullName,
-                                nickname: nickname,
-                                birth_date: birthDate,
-                                email: email
-                            }]);
-                        
-                        if (profileError) {
-                            console.error('Erro no perfil:', profileError);
-                        }
-                        
-                        alert('🎉 CADASTRO REALIZADO! Verifique seu email.');
-                        window.location.href = 'login.html';
+            // Loading
+            document.getElementById('registerText').classList.add('hidden');
+            document.getElementById('registerSpinner').classList.remove('hidden');
+            document.getElementById('registerBtn').disabled = true;
+            
+            try {
+                // 1. CADASTRO NO AUTH
+                const { data, error } = await supabase.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: {
+                            full_name: fullName,
+                            nickname: nickname
+                        },
+                        emailRedirectTo: 'https://conexaoperfeitaamor.netlify.app/login.html'
                     }
+                });
+                
+                if (error) throw error;
+                
+                // 2. CRIAR PERFIL
+                if (data.user) {
+                    const { error: profileError } = await supabase
+                        .from('profiles')
+                        .insert([{
+                            id: data.user.id,
+                            full_name: fullName,
+                            nickname: nickname,
+                            birth_date: birthDate,
+                            email: email
+                        }]);
                     
-                } catch (error) {
-                    console.error('💥 ERRO:', error);
-                    alert('ERRO: ' + error.message);
-                } finally {
-                    document.getElementById('registerText').classList.remove('hidden');
-                    document.getElementById('registerSpinner').classList.add('hidden');
-                    document.getElementById('registerBtn').disabled = false;
+                    if (profileError) throw profileError;
+                    
+                    alert('✅ Cadastro realizado! Verifique seu email.');
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 2000);
                 }
-            });
+                
+            } catch (error) {
+                alert('Erro: ' + error.message);
+            } finally {
+                document.getElementById('registerText').classList.remove('hidden');
+                document.getElementById('registerSpinner').classList.add('hidden');
+                document.getElementById('registerBtn').disabled = false;
+            }
         });
     </script>
 </body>
