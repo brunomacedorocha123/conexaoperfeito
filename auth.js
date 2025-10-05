@@ -1,22 +1,10 @@
-// auth.js - VERSÃO QUE FUNCIONA COM EMAIL
+// auth.js - VERSÃO COM DEBUG
 console.log('🚀 auth.js carregado!');
 
 const SUPABASE_URL = 'https://ivposfgebabrtpexxpko.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2cG9zZmdlYmFicnRwZXh4cGtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1ODczMzEsImV4cCI6MjA3NTE2MzMzMX0.AJU3Vt2dqATDORS4mjTW3gDWeh1MK9lNTWk-uoG5ojo';
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// Funções
-function isOver18(birthDate) {
-    const today = new Date();
-    const birth = new Date(birthDate);
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-        age--;
-    }
-    return age >= 18;
-}
 
 function showAlert(message, type = 'error') {
     const alertDiv = document.getElementById('alertMessage');
@@ -26,10 +14,11 @@ function showAlert(message, type = 'error') {
     setTimeout(() => alertDiv.classList.add('hidden'), 5000);
 }
 
-// CADASTRO - COM EMAIL DE CONFIRMAÇÃO
+// CADASTRO - COM DEBUG
 if (document.getElementById('registerForm')) {
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
         e.preventDefault();
+        console.log('1️⃣ Formulário enviado');
         
         const fullName = document.getElementById('fullName').value;
         const nickname = document.getElementById('nickname').value;
@@ -38,17 +27,11 @@ if (document.getElementById('registerForm')) {
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
         
-        // Validações
-        if (!isOver18(birthDate)) {
-            showAlert('Você deve ter pelo menos 18 anos para se cadastrar.');
-            return;
-        }
+        console.log('2️⃣ Dados coletados:', { email, fullName });
+        
+        // Validações básicas
         if (password !== confirmPassword) {
             showAlert('As senhas não coincidem.');
-            return;
-        }
-        if (password.length < 6) {
-            showAlert('A senha deve ter pelo menos 6 caracteres.');
             return;
         }
         
@@ -58,9 +41,9 @@ if (document.getElementById('registerForm')) {
         document.getElementById('registerBtn').disabled = true;
         
         try {
-            console.log('📧 Tentando cadastrar:', email);
+            console.log('3️⃣ Tentando cadastrar no Supabase Auth...');
             
-            // CADASTRO COM CONFIRMAÇÃO DE EMAIL - IGUAL À LOJA VIRTUAL
+            // CADASTRO SIMPLES - SEM COMPLICAÇÃO
             const { data, error } = await supabase.auth.signUp({
                 email: email,
                 password: password,
@@ -69,53 +52,59 @@ if (document.getElementById('registerForm')) {
                         full_name: fullName,
                         nickname: nickname
                     },
-                    // 🔑 ISSO É O QUE ESTAVA FALTANDO - URL DE REDIRECIONAMENTO
                     emailRedirectTo: 'https://conexaoperfeitaamor.netlify.app/login.html'
                 }
             });
             
+            console.log('4️⃣ Resposta do Supabase:', data);
+            console.log('5️⃣ Erro do Supabase:', error);
+            
             if (error) {
-                console.error('❌ Erro no cadastro:', error);
                 throw error;
             }
             
-            console.log('✅ Resposta do Supabase:', data);
-            
             if (data.user) {
-                // CRIAR PERFIL NA TABELA
-                const { error: profileError } = await supabase
-                    .from('profiles')
-                    .insert([
-                        {
-                            id: data.user.id,
-                            full_name: fullName,
-                            nickname: nickname,
-                            birth_date: birthDate,
-                            email: email
-                        }
-                    ]);
+                console.log('6️⃣ Usuário criado, tentando criar perfil...');
                 
-                if (profileError) {
-                    console.error('❌ Erro ao criar perfil:', profileError);
-                    // Mesmo com erro no perfil, o usuário foi criado no Auth
+                // TENTAR CRIAR PERFIL
+                try {
+                    const { error: profileError } = await supabase
+                        .from('profiles')
+                        .insert([
+                            {
+                                id: data.user.id,
+                                full_name: fullName,
+                                nickname: nickname,
+                                birth_date: birthDate,
+                                email: email
+                            }
+                        ]);
+                    
+                    if (profileError) {
+                        console.log('7️⃣ Erro no perfil (mas auth ok):', profileError);
+                    } else {
+                        console.log('8️⃣ Perfil criado com sucesso!');
+                    }
+                } catch (profileError) {
+                    console.log('9️⃣ Erro ao criar perfil:', profileError);
                 }
                 
-                // 🎉 SUCESSO - EMAIL ENVIADO
-                showAlert('✅ Cadastro realizado! Verifique seu email para confirmar a conta.', 'success');
+                // SUCESSO MESMO COM ERRO NO PERFIL
+                showAlert('✅ Cadastro realizado! Verifique seu email para confirmar.', 'success');
                 
                 setTimeout(() => {
                     window.location.href = 'login.html';
-                }, 4000);
+                }, 3000);
+                
+            } else {
+                throw new Error('Usuário não foi criado');
             }
             
         } catch (error) {
-            console.error('💥 ERRO:', error);
-            if (error.message.includes('already registered')) {
-                showAlert('Este email já está cadastrado. Faça login.');
-            } else {
-                showAlert('Erro: ' + error.message);
-            }
+            console.error('💥 ERRO FINAL:', error);
+            showAlert('Erro: ' + error.message);
         } finally {
+            console.log('🔚 Finalizando...');
             document.getElementById('registerText').classList.remove('hidden');
             document.getElementById('registerSpinner').classList.add('hidden');
             document.getElementById('registerBtn').disabled = false;
@@ -123,7 +112,7 @@ if (document.getElementById('registerForm')) {
     });
 }
 
-// LOGIN
+// LOGIN (mantenha o seu)
 if (document.getElementById('loginForm')) {
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
