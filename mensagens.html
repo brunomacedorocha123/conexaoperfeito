@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minhas Mensagens - Conexão Perfeita Amor</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="mensagens.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="home.html">
+                        <span class="logo-icon">💑</span>
+                        <h1>Conexão Perfeita</h1>
+                    </a>
+                </div>
+                <div class="user-menu">
+                    <div class="user-info">
+                        <div class="user-avatar" id="userAvatar">U</div>
+                        <span id="userNickname">Usuário</span>
+                    </div>
+                    <a href="busca.html" class="btn btn-outline">🔍 Buscar</a>
+                    <a href="home.html" class="btn btn-outline">🏠 Home</a>
+                    <button class="btn btn-outline" id="logoutBtn">🚪 Sair</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Page Header -->
+            <section class="page-header">
+                <h1>💌 Minhas Mensagens</h1>
+                <p>Gerencie suas conversas e responda às mensagens recebidas</p>
+            </section>
+
+            <!-- Messages Stats -->
+            <div class="user-stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalMessages">0</div>
+                    <div class="stat-label">Total de Mensagens</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="unreadMessages">0</div>
+                    <div class="stat-label">Não Lidas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="conversationsCount">0</div>
+                    <div class="stat-label">Conversas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="sentMessages">0</div>
+                    <div class="stat-label">Enviadas</div>
+                </div>
+            </div>
+
+            <!-- Conversations List -->
+            <section class="results-section">
+                <div class="results-header">
+                    <h2>📋 Minhas Conversas</h2>
+                    <div class="results-info">
+                        <span id="conversationsInfo">Carregando...</span>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div class="loading" id="loadingConversations">
+                    <div class="spinner"></div>
+                    <p>Carregando suas conversas...</p>
+                </div>
+
+                <!-- Conversations Grid -->
+                <div class="users-grid" id="conversationsGrid">
+                    <!-- As conversas serão inseridas aqui via JavaScript -->
+                </div>
+
+                <!-- No Conversations -->
+                <div class="no-results hidden" id="noConversations">
+                    <div class="no-results-content">
+                        <div class="no-results-icon">💬</div>
+                        <h3>Nenhuma conversa ainda</h3>
+                        <p>Envie mensagens para outras pessoas para começar conversas!</p>
+                        <a href="busca.html" class="btn btn-primary" style="margin-top: 1rem;">
+                            🔍 Buscar Pessoas
+                        </a>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Conexão Perfeita</h3>
+                    <p>Uma plataforma segura e discreta para conectar corações e construir relacionamentos genuínos.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Links Rápidos</h3>
+                    <ul>
+                        <li><a href="index.html">Página Inicial</a></li>
+                        <li><a href="home.html">Home</a></li>
+                        <li><a href="busca.html">Buscar Pessoas</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Suporte</h3>
+                    <ul>
+                        <li><a href="#">Central de Ajuda</a></li>
+                        <li><a href="#">Política de Privacidade</a></li>
+                        <li><a href="#">Termos de Uso</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2023 Conexão Perfeita Amor. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="mensagens.js"></script>
+</body>
+</html>
