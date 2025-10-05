@@ -612,7 +612,7 @@
     </footer>
 
     <script>
-    // Configuração do Supabase
+   // Configuração do Supabase
 const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 
@@ -696,6 +696,9 @@ async function loadConversations() {
             return;
         }
 
+        // REMOVIDO: Não mostra loading state
+        // showLoadingState();
+
         // Buscar todas as mensagens do usuário
         const { data: allMessages, error } = await supabase
             .from('messages')
@@ -766,9 +769,12 @@ function organizeConversations(allMessages) {
 function displayConversations(conversations) {
     const conversationsList = document.getElementById('conversationsList');
     const noConversations = document.getElementById('noConversations');
+    const loadingConversations = document.getElementById('loadingConversations');
 
-    // REMOVIDO: Não mostra mais loading state
-    // loadingConversations.classList.add('hidden');
+    // REMOVIDO: Esconde completamente o loading
+    if (loadingConversations) {
+        loadingConversations.style.display = 'none';
+    }
 
     if (!conversations || conversations.length === 0) {
         conversationsList.innerHTML = '';
@@ -821,6 +827,13 @@ function displayConversations(conversations) {
 // Mostrar estado de perfil incompleto
 function showProfileIncomplete() {
     const conversationsList = document.getElementById('conversationsList');
+    const loadingConversations = document.getElementById('loadingConversations');
+    
+    // REMOVIDO: Esconde completamente o loading
+    if (loadingConversations) {
+        loadingConversations.style.display = 'none';
+    }
+    
     conversationsList.innerHTML = `
         <div class="no-results">
             <div class="no-results-content">
@@ -839,6 +852,12 @@ function showProfileIncomplete() {
 function showNoConversations() {
     const conversationsList = document.getElementById('conversationsList');
     const noConversations = document.getElementById('noConversations');
+    const loadingConversations = document.getElementById('loadingConversations');
+    
+    // REMOVIDO: Esconde completamente o loading
+    if (loadingConversations) {
+        loadingConversations.style.display = 'none';
+    }
     
     conversationsList.innerHTML = '';
     noConversations.classList.remove('hidden');
