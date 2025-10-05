@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificar E-mail - Conexão Perfeita Amor</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #ff6b8b, #a78bfa);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .container {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #4a044e;
+            margin-bottom: 1rem;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #ff6b8b, #a78bfa);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin: 1rem 0;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .alert {
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+        }
+        
+        .alert-success {
+            background: #f0fff4;
+            border: 1px solid #9ae6b4;
+            color: #276749;
+        }
+        
+        .alert-error {
+            background: #fed7d7;
+            border: 1px solid #feb2b2;
+            color: #c53030;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Verificação de E-mail</h1>
+        
+        <div id="autoVerification">
+            <p>Verificando automaticamente...</p>
+            <div class="spinner"></div>
+        </div>
+        
+        <div id="manualVerification" style="display: none;">
+            <p>⚠️ Verificação automática falhou.</p>
+            <p>Copie o token do e-mail e cole abaixo:</p>
+            <input type="text" id="tokenInput" placeholder="Cole o token aqui" style="width: 100%; padding: 1rem; margin: 1rem 0; border: 2px solid #e2e8f0; border-radius: 10px;">
+            <button class="btn" onclick="verifyManual()">Verificar E-mail</button>
+        </div>
+        
+        <div id="successMessage" class="alert alert-success" style="display: none;">
+            ✅ E-mail verificado com sucesso! <a href="login.html" class="btn">Fazer Login</a>
+        </div>
+        
+        <div id="errorMessage" class="alert alert-error" style="display: none;">
+            ❌ Erro na verificação
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Tentar verificação automática pela URL
+        async function attemptAutoVerification() {
+            const urlParams = new URLSearchParams(window.location.hash.substring(1));
+            const accessToken = urlParams.get('access_token');
+            const type = urlParams.get('type');
+            
+            if (accessToken && type === 'email') {
+                try {
+                    const { data, error } = await supabase.auth.verifyOtp({
+                        token_hash: accessToken,
+                        type: 'email'
+                    });
+                    
+                    if (error) throw error;
+                    
+                    document.getElementById('autoVerification').style.display = 'none';
+                    document.getElementById('successMessage').style.display = 'block';
+                    
+                } catch (error) {
+                    console.error('Erro verificação automática:', error);
+                    showManualVerification();
+                }
+            } else {
+                showManualVerification();
+            }
+        }
+
+        function showManualVerification() {
+            document.getElementById('autoVerification').style.display = 'none';
+            document.getElementById('manualVerification').style.display = 'block';
+        }
+
+        async function verifyManual() {
+            const token = document.getElementById('tokenInput').value.trim();
+            
+            if (!token) {
+                alert('Por favor, cole o token do e-mail');
+                return;
+            }
+            
+            try {
+                const { data, error } = await supabase.auth.verifyOtp({
+                    token_hash: token,
+                    type: 'email'
+                });
+                
+                if (error) throw error;
+                
+                document.getElementById('manualVerification').style.display = 'none';
+                document.getElementById('successMessage').style.display = 'block';
+                
+            } catch (error) {
+                document.getElementById('errorMessage').style.display = 'block';
+                document.getElementById('errorMessage').textContent = '❌ Erro: ' + error.message;
+            }
+        }
+
+        // Iniciar verificação quando página carregar
+        document.addEventListener('DOMContentLoaded', attemptAutoVerification);
+    </script>
+</body>
+</html>
