@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste Final - Conexão Perfeita</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>🧪 Teste Final do Sistema</h1>
+    <div id="resultado" style="padding: 20px;"></div>
+
+    <script>
+        const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const resultado = document.getElementById('resultado');
+
+        async function testeCompleto() {
+            let html = '<h2>🔍 Verificação Completa do Sistema</h2>';
+            
+            // 1. Teste de Conexão
+            html += '<h3>1. 🔌 Conexão com Supabase:</h3>';
+            try {
+                const { data, error } = await supabase.from('profiles').select('count').limit(1);
+                html += error ? 
+                    `<p style="color: red;">❌ Falha: ${error.message}</p>` :
+                    `<p style="color: green;">✅ Conexão OK</p>`;
+            } catch (e) {
+                html += `<p style="color: red;">❌ Erro: ${e.message}</p>`;
+            }
+
+            // 2. Teste de Configuração de Auth
+            html += '<h3>2. 🔐 Configuração de Autenticação:</h3>';
+            try {
+                const { data: { settings }, error } = await supabase.auth.getSettings();
+                html += `<p>✅ Site URL: ${settings?.site_url || 'Não configurada'}</p>`;
+                html += `<p>✅ Redirect URLs: ${settings?.redirect_urls?.join(', ') || 'Não configuradas'}</p>`;
+            } catch (e) {
+                html += `<p style="color: red;">❌ Erro: ${e.message}</p>`;
+            }
+
+            // 3. Teste de Templates de E-mail
+            html += '<h3>3. 📧 Configuração de E-mail:</h3>';
+            html += `<p>📩 Template de confirmação deve apontar para:<br>
+                     <strong>https://conexaoperfeitaamor.netlify.app/login.html?verified=true</strong></p>`;
+
+            // 4. Verificar Arquivos
+            html += '<h3>4. 📁 Arquivos do Sistema:</h3>';
+            const arquivos = [
+                'index.html', 'cadastro.html', 'cadastro-sucesso.html', 
+                'login.html', 'home.html', 'painel.html'
+            ];
+            
+            for (let arquivo of arquivos) {
+                const exists = await verificarArquivo(arquivo);
+                html += exists ? 
+                    `<p style="color: green;">✅ ${arquivo}</p>` :
+                    `<p style="color: orange;">⚠️ ${arquivo} (não encontrado)</p>`;
+            }
+
+            // 5. Verificar Tabelas
+            html += '<h3>5. 🗃️ Tabelas do Banco:</h3>';
+            const tabelas = ['profiles', 'user_details', 'messages'];
+            for (let tabela of tabelas) {
+                const exists = await verificarTabela(tabela);
+                html += exists ? 
+                    `<p style="color: green;">✅ ${tabela}</p>` :
+                    `<p style="color: red;">❌ ${tabela} (não existe)</p>`;
+            }
+
+            resultado.innerHTML = html;
+        }
+
+        async function verificarArquivo(arquivo) {
+            try {
+                const response = await fetch(arquivo, { method: 'HEAD' });
+                return response.ok;
+            } catch {
+                return false;
+            }
+        }
+
+        async function verificarTabela(tabela) {
+            try {
+                const { error } = await supabase.from(tabela).select('*').limit(1);
+                return !error || error.code !== '42P01'; // 42P01 = tabela não existe
+            } catch {
+                return false;
+            }
+        }
+
+        testeCompleto();
+    </script>
+</body>
+</html>
