@@ -612,7 +612,7 @@
     </footer>
 
     <script>
-        // Configuração do Supabase
+    // Configuração do Supabase
 const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 
@@ -687,7 +687,7 @@ function isProfileComplete() {
     return userProfile && userProfile.full_name && userProfile.full_name.trim() !== '' && userProfile.birth_date;
 }
 
-// Carregar conversas
+// Carregar conversas - VERSÃO SIMPLIFICADA
 async function loadConversations() {
     try {
         // Verificar se perfil está completo
@@ -707,13 +707,7 @@ async function loadConversations() {
             .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
             .order('created_at', { ascending: false });
 
-        if (error) {
-            console.log('Nenhuma mensagem encontrada');
-            showNoConversations();
-            return;
-        }
-
-        if (!allMessages || allMessages.length === 0) {
+        if (error || !allMessages || allMessages.length === 0) {
             showNoConversations();
             return;
         }
@@ -725,7 +719,7 @@ async function loadConversations() {
 
     } catch (error) {
         console.error('Erro ao carregar conversas:', error);
-        showError('Erro ao carregar mensagens.');
+        showNoConversations(); // Mostra estado vazio em caso de erro
     }
 }
 
@@ -772,10 +766,9 @@ function organizeConversations(allMessages) {
 function displayConversations(conversations) {
     const conversationsList = document.getElementById('conversationsList');
     const noConversations = document.getElementById('noConversations');
-    const loadingConversations = document.getElementById('loadingConversations');
 
-    // Esconder loading
-    loadingConversations.classList.add('hidden');
+    // REMOVIDO: Não mostra mais loading state
+    // loadingConversations.classList.add('hidden');
 
     if (!conversations || conversations.length === 0) {
         conversationsList.innerHTML = '';
@@ -828,9 +821,6 @@ function displayConversations(conversations) {
 // Mostrar estado de perfil incompleto
 function showProfileIncomplete() {
     const conversationsList = document.getElementById('conversationsList');
-    const loadingConversations = document.getElementById('loadingConversations');
-    
-    loadingConversations.classList.add('hidden');
     conversationsList.innerHTML = `
         <div class="no-results">
             <div class="no-results-content">
@@ -848,10 +838,8 @@ function showProfileIncomplete() {
 // Mostrar nenhuma conversa
 function showNoConversations() {
     const conversationsList = document.getElementById('conversationsList');
-    const loadingConversations = document.getElementById('loadingConversations');
     const noConversations = document.getElementById('noConversations');
     
-    loadingConversations.classList.add('hidden');
     conversationsList.innerHTML = '';
     noConversations.classList.remove('hidden');
 }
@@ -970,26 +958,6 @@ function viewProfile(userId) {
         return;
     }
     alert(`🔍 Visualizando perfil - Em breve teremos uma página de perfil detalhada!`);
-}
-
-// Mostrar erro
-function showError(message) {
-    const conversationsList = document.getElementById('conversationsList');
-    const loadingConversations = document.getElementById('loadingConversations');
-    
-    loadingConversations.classList.add('hidden');
-    conversationsList.innerHTML = `
-        <div class="no-results">
-            <div class="no-results-content">
-                <div class="no-results-icon">❌</div>
-                <h3>Erro</h3>
-                <p>${message}</p>
-                <button class="btn btn-primary" onclick="location.reload()" style="margin-top: 1rem;">
-                    🔄 Tentar Novamente
-                </button>
-            </div>
-        </div>
-    `;
 }
 
 // Configurar event listeners
