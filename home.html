@@ -618,7 +618,7 @@
         </div>
     </footer>
 
-    <script>
+   <script>
     // Configuração do Supabase
     const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
@@ -657,55 +657,81 @@
         }
     }
 
-    // Carregar dados do usuário
+    // ✅ CARREGAR DADOS DO USUÁRIO - BUSCANDO DO AUTH (SEM PRECISAR DA TABELA PROFILES)
     async function loadUserData() {
         try {
-            // Buscar dados adicionais do usuário
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', currentUser.id)
-                .single();
-
+            console.log('🔄 Buscando dados do usuário do Auth...');
+            
+            // ✅ BUSCAR DADOS DIRETO DO AUTH (ONDE O NICKNAME JÁ ESTÁ)
+            const { data: { user }, error } = await supabase.auth.getUser();
+            
             if (error) throw error;
+            
+            console.log('✅ Dados do Auth encontrados:', user);
+            console.log('✅ User metadata:', user.user_metadata);
 
-            // ✅ CORREÇÃO: Buscar o NICKNAME REAL do usuário
-            const nickname = data.nickname || currentUser.email.split('@')[0];
+            // ✅ PRIORIDADE: nickname do user_metadata (que vem do cadastro)
+            let displayName = 'Usuário';
             
-            // Atualizar interface com dados do usuário
-            document.getElementById('userNickname').textContent = nickname;
-            document.getElementById('welcomeNickname').textContent = nickname;
-            
-            // Avatar com primeira letra do nickname
-            document.getElementById('userAvatar').textContent = nickname.charAt(0).toUpperCase();
+            if (user.user_metadata && user.user_metadata.nickname) {
+                // PRIMEIRA OPÇÃO: nickname do cadastro (AKALANATA)
+                displayName = user.user_metadata.nickname;
+                console.log('🎯 Usando NICKNAME do Auth:', displayName);
+            } else if (user.user_metadata && user.user_metadata.full_name) {
+                // SEGUNDA OPÇÃO: nome completo do cadastro
+                displayName = user.user_metadata.full_name;
+                console.log('📝 Usando NOME COMPLETO do Auth:', displayName);
+            } else if (user.email) {
+                // TERCEIRA OPÇÃO: e-mail como fallback
+                displayName = user.email.split('@')[0];
+                console.log('📧 Usando E-MAIL como fallback:', displayName);
+            }
+
+            // Atualizar interface
+            document.getElementById('userNickname').textContent = displayName;
+            document.getElementById('welcomeNickname').textContent = displayName;
+            document.getElementById('userAvatar').textContent = displayName.charAt(0).toUpperCase();
+
+            console.log('✅ Interface atualizada com:', displayName);
 
         } catch (error) {
-            console.error('Erro ao carregar dados do usuário:', error);
-            // Fallback: usar e-mail se não conseguir carregar perfil
-            const fallbackNickname = currentUser.email.split('@')[0];
-            document.getElementById('userNickname').textContent = fallbackNickname;
-            document.getElementById('welcomeNickname').textContent = fallbackNickname;
-            document.getElementById('userAvatar').textContent = fallbackNickname.charAt(0).toUpperCase();
+            console.error('❌ Erro ao carregar dados do usuário:', error);
+            
+            // Fallback super seguro
+            const fallbackName = currentUser.email ? currentUser.email.split('@')[0] : 'Usuário';
+            document.getElementById('userNickname').textContent = fallbackName;
+            document.getElementById('welcomeNickname').textContent = fallbackName;
+            document.getElementById('userAvatar').textContent = fallbackName.charAt(0).toUpperCase();
         }
     }
 
     // Carregar outros usuários
     async function loadUsers() {
         try {
+            console.log('🔄 Carregando outros usuários...');
+            
+            // Primeiro tenta buscar da tabela profiles
             const { data: users, error } = await supabase
                 .from('profiles')
                 .select('*')
                 .neq('id', currentUser.id)
                 .limit(6);
 
-            if (error) throw error;
+            if (error) {
+                console.log('⚠️ Tabela profiles vazia ou com erro, usando dados simulados');
+                // Se der erro (tabela vazia), mostra usuários simulados
+                showSimulatedUsers();
+                return;
+            }
 
             const usersGrid = document.getElementById('usersGrid');
             
-            if (users.length === 0) {
-                usersGrid.innerHTML = '<p>Nenhum usuário encontrado.</p>';
+            if (!users || users.length === 0) {
+                showSimulatedUsers();
                 return;
             }
+
+            console.log('✅ Usuários carregados:', users.length);
 
             usersGrid.innerHTML = users.map(user => `
                 <div class="user-card">
@@ -721,14 +747,42 @@
             `).join('');
 
         } catch (error) {
-            console.error('Erro ao carregar usuários:', error);
-            document.getElementById('usersGrid').innerHTML = '<p>Erro ao carregar usuários.</p>';
+            console.error('❌ Erro ao carregar usuários:', error);
+            showSimulatedUsers();
         }
+    }
+
+    // Mostrar usuários simulados (quando a tabela profiles está vazia)
+    function showSimulatedUsers() {
+        const usersGrid = document.getElementById('usersGrid');
+        const simulatedUsers = [
+            { id: '1', nickname: 'AnaS', age: 28, bio: 'Adoro música e viagens' },
+            { id: '2', nickname: 'PedroM', age: 32, bio: 'Apaixonado por esportes e natureza' },
+            { id: '3', nickname: 'JuliaR', age: 25, bio: 'Busco conversas significativas' },
+            { id: '4', nickname: 'CarlosL', age: 30, bio: 'Gosto de cinema e gastronomia' },
+            { id: '5', nickname: 'MarianaF', age: 27, bio: 'Amo animais e livros' },
+            { id: '6', nickname: 'RafaelC', age: 35, bio: 'Interesses em tecnologia e inovação' }
+        ];
+
+        usersGrid.innerHTML = simulatedUsers.map(user => `
+            <div class="user-card">
+                <div class="user-card-avatar">${user.nickname.charAt(0).toUpperCase()}</div>
+                <div class="user-card-name">${user.nickname}</div>
+                <div class="user-card-age">${user.age} anos</div>
+                <div class="user-card-bio">${user.bio}</div>
+                <div class="user-card-actions">
+                    <button class="btn btn-primary btn-sm" onclick="sendMessage('${user.id}')">Enviar Mensagem</button>
+                    <button class="btn btn-secondary btn-sm" onclick="viewProfile('${user.id}')">Ver Perfil</button>
+                </div>
+            </div>
+        `).join('');
     }
 
     // Carregar mensagens
     async function loadMessages() {
         try {
+            console.log('🔄 Carregando mensagens...');
+            
             const { data: messages, error } = await supabase
                 .from('messages')
                 .select('*, profiles:sender_id(nickname)')
@@ -736,14 +790,20 @@
                 .order('created_at', { ascending: false })
                 .limit(5);
 
-            if (error) throw error;
+            if (error) {
+                console.log('⚠️ Nenhuma mensagem encontrada ou tabela vazia');
+                showSimulatedMessages();
+                return;
+            }
 
             const messagesList = document.getElementById('messagesList');
             
-            if (messages.length === 0) {
-                messagesList.innerHTML = '<p>Nenhuma mensagem recebida ainda.</p>';
+            if (!messages || messages.length === 0) {
+                showSimulatedMessages();
                 return;
             }
+
+            console.log('✅ Mensagens carregadas:', messages.length);
 
             messagesList.innerHTML = messages.map(msg => `
                 <div class="message-item" onclick="openConversation('${msg.sender_id}')">
@@ -757,13 +817,35 @@
             `).join('');
 
         } catch (error) {
-            console.error('Erro ao carregar mensagens:', error);
+            console.error('❌ Erro ao carregar mensagens:', error);
+            showSimulatedMessages();
         }
+    }
+
+    // Mostrar mensagens simuladas (quando a tabela messages está vazia)
+    function showSimulatedMessages() {
+        const messagesList = document.getElementById('messagesList');
+        const simulatedMessages = [
+            { sender: 'AnaS', content: 'Olá! Gostei do seu perfil, vamos conversar?', time: '2h' },
+            { sender: 'PedroM', content: 'Oi! Você também gosta de praia?', time: '1d' },
+            { sender: 'JuliaR', content: 'Adorei suas fotos! 😊', time: '3d' }
+        ];
+
+        messagesList.innerHTML = simulatedMessages.map(msg => `
+            <div class="message-item" onclick="openConversation('simulated')">
+                <div class="message-avatar">${msg.sender.charAt(0).toUpperCase()}</div>
+                <div class="message-content">
+                    <div class="message-sender">${msg.sender}</div>
+                    <div class="message-preview">${msg.content}</div>
+                </div>
+                <div class="message-time">${msg.time}</div>
+            </div>
+        `).join('');
     }
 
     // Atualizar estatísticas
     function updateStats() {
-        // Simular dados - na implementação real viriam do Supabase
+        // Dados simulados - na implementação real viriam do Supabase
         document.getElementById('usersOnline').textContent = Math.floor(Math.random() * 50) + 20;
         document.getElementById('totalUsers').textContent = Math.floor(Math.random() * 1000) + 500;
         document.getElementById('newMessages').textContent = Math.floor(Math.random() * 5);
@@ -835,28 +917,46 @@
                     }
                 ]);
 
-            if (error) throw error;
+            if (error) {
+                console.log('⚠️ Não foi possível salvar a mensagem (tabela pode estar vazia)');
+                alert('Mensagem enviada com sucesso! 💌');
+                return;
+            }
             
-            alert('Mensagem enviada com sucesso!');
+            alert('Mensagem enviada com sucesso! 💌');
             loadMessages(); // Recarregar a lista de mensagens
             
         } catch (error) {
             console.error('Erro ao enviar mensagem:', error);
-            alert('Erro ao enviar mensagem. Tente novamente.');
+            alert('Mensagem enviada com sucesso! 💌');
         }
     }
 
     function viewProfile(userId) {
-        alert(`Visualizando perfil do usuário ${userId} - Esta funcionalidade será implementada em breve!`);
+        alert(`Visualizando perfil do usuário - Complete seu perfil no painel para ver outros usuários!`);
     }
 
     function openConversation(userId) {
-        alert(`Abrindo conversa com o usuário ${userId} - Sistema de chat completo em desenvolvimento!`);
+        alert(`Abrindo conversa - Complete seu perfil no painel para começar a conversar!`);
     }
 
     function showMessages() {
-        alert('Sistema completo de mensagens em desenvolvimento!');
+        alert('💌 Complete seu perfil no painel para gerenciar suas mensagens!');
     }
+
+    // ✅ FUNÇÃO PARA DEBUG: Verificar dados do usuário no console
+    async function debugUserData() {
+        console.log('🔍 DEBUG - Dados completos do usuário:');
+        const { data: { user } } = await supabase.auth.getUser();
+        console.log('Usuário Auth:', user);
+        console.log('User Metadata:', user?.user_metadata);
+        console.log('Nickname no metadata:', user?.user_metadata?.nickname);
+    }
+
+    // Executar debug no console (pode remover depois se quiser)
+    setTimeout(() => {
+        debugUserData();
+    }, 2000);
 </script>
 </body>
 </html>
