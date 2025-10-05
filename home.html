@@ -619,303 +619,244 @@
     </footer>
 
     <script>
-        // Configuração do Supabase COM SUAS CREDENCIAIS REAIS
-        const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
-        
-        // Inicializar Supabase
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // Configuração do Supabase
+    const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+    
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Estado da aplicação
-        let currentUser = null;
+    // Estado da aplicação
+    let currentUser = null;
 
-        document.addEventListener('DOMContentLoaded', function() {
-            checkAuth();
-            setupEventListeners();
-        });
+    document.addEventListener('DOMContentLoaded', function() {
+        checkAuth();
+        setupEventListeners();
+    });
 
-        // Verificar autenticação
-        async function checkAuth() {
-            try {
-                showLoading('usersGrid', 'Carregando usuários...');
-                showLoading('messagesList', 'Carregando mensagens...');
-                
-                const { data: { user }, error } = await supabase.auth.getUser();
-                
-                if (error) throw error;
-                
-                if (!user) {
-                    window.location.href = 'login.html';
-                    return;
-                }
-                
-                currentUser = user;
-                await loadUserData();
-                await loadUsers();
-                await loadMessages();
-                updateStats();
-                
-            } catch (error) {
-                console.error('Erro na autenticação:', error);
+    // Verificar autenticação
+    async function checkAuth() {
+        try {
+            const { data: { user }, error } = await supabase.auth.getUser();
+            
+            if (error) throw error;
+            
+            if (!user) {
                 window.location.href = 'login.html';
+                return;
             }
+            
+            currentUser = user;
+            await loadUserData();
+            await loadUsers();
+            await loadMessages();
+            updateStats();
+            
+        } catch (error) {
+            console.error('Erro na autenticação:', error);
+            window.location.href = 'login.html';
         }
+    }
 
-        // Carregar dados do usuário
-        async function loadUserData() {
-            try {
-                // Buscar dados do perfil
-                const { data, error } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', currentUser.id)
-                    .single();
+    // Carregar dados do usuário
+    async function loadUserData() {
+        try {
+            // Buscar dados adicionais do usuário
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', currentUser.id)
+                .single();
 
-                if (error) {
-                    // Se o perfil não existe, criar um básico
-                    if (error.code === 'PGRST116') {
-                        await createUserProfile();
-                        return await loadUserData(); // Recarregar após criar
-                    }
-                    throw error;
-                }
+            if (error) throw error;
 
-                // Atualizar interface
-                const nickname = data.nickname || currentUser.email.split('@')[0];
-                updateUserInterface(nickname);
-
-            } catch (error) {
-                console.error('Erro ao carregar dados do usuário:', error);
-            }
-        }
-
-        // Criar perfil do usuário se não existir
-        async function createUserProfile() {
-            try {
-                const { error } = await supabase
-                    .from('profiles')
-                    .insert([
-                        {
-                            id: currentUser.id,
-                            nickname: currentUser.email.split('@')[0],
-                            full_name: '',
-                            created_at: new Date()
-                        }
-                    ]);
-
-                if (error) throw error;
-                
-            } catch (error) {
-                console.error('Erro ao criar perfil:', error);
-            }
-        }
-
-        // Atualizar interface com dados do usuário
-        function updateUserInterface(nickname) {
+            // ✅ CORREÇÃO: Buscar o NICKNAME REAL do usuário
+            const nickname = data.nickname || currentUser.email.split('@')[0];
+            
+            // Atualizar interface com dados do usuário
             document.getElementById('userNickname').textContent = nickname;
             document.getElementById('welcomeNickname').textContent = nickname;
+            
+            // Avatar com primeira letra do nickname
             document.getElementById('userAvatar').textContent = nickname.charAt(0).toUpperCase();
+
+        } catch (error) {
+            console.error('Erro ao carregar dados do usuário:', error);
+            // Fallback: usar e-mail se não conseguir carregar perfil
+            const fallbackNickname = currentUser.email.split('@')[0];
+            document.getElementById('userNickname').textContent = fallbackNickname;
+            document.getElementById('welcomeNickname').textContent = fallbackNickname;
+            document.getElementById('userAvatar').textContent = fallbackNickname.charAt(0).toUpperCase();
         }
+    }
 
-        // Carregar outros usuários
-        async function loadUsers() {
-            try {
-                const { data: users, error } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .neq('id', currentUser.id)
-                    .limit(6);
+    // Carregar outros usuários
+    async function loadUsers() {
+        try {
+            const { data: users, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .neq('id', currentUser.id)
+                .limit(6);
 
-                if (error) throw error;
+            if (error) throw error;
 
-                const usersGrid = document.getElementById('usersGrid');
-                
-                if (!users || users.length === 0) {
-                    usersGrid.innerHTML = '<div class="alert alert-info">Nenhum usuário encontrado. Seja o primeiro a se cadastrar!</div>';
-                    return;
-                }
+            const usersGrid = document.getElementById('usersGrid');
+            
+            if (users.length === 0) {
+                usersGrid.innerHTML = '<p>Nenhum usuário encontrado.</p>';
+                return;
+            }
 
-                usersGrid.innerHTML = users.map(user => `
-                    <div class="user-card">
-                        <div class="user-card-avatar">${user.nickname ? user.nickname.charAt(0).toUpperCase() : 'U'}</div>
-                        <div class="user-card-name">${user.nickname || 'Usuário'}</div>
-                        <div class="user-card-age">${calculateAge(user.birth_date) || 'Idade não informada'}</div>
-                        <div class="user-card-bio">${getUserDescription(user) || 'Este usuário ainda não adicionou uma descrição.'}</div>
-                        <div class="user-card-actions">
-                            <button class="btn btn-primary btn-sm" onclick="sendMessage('${user.id}')">Enviar Mensagem</button>
-                            <button class="btn btn-secondary btn-sm" onclick="viewProfile('${user.id}')">Ver Perfil</button>
-                        </div>
+            usersGrid.innerHTML = users.map(user => `
+                <div class="user-card">
+                    <div class="user-card-avatar">${user.nickname ? user.nickname.charAt(0).toUpperCase() : 'U'}</div>
+                    <div class="user-card-name">${user.nickname || 'Usuário'}</div>
+                    <div class="user-card-age">${user.birth_date ? calculateAge(user.birth_date) + ' anos' : 'Idade não informada'}</div>
+                    <div class="user-card-bio">${user.description || 'Este usuário ainda não adicionou uma descrição.'}</div>
+                    <div class="user-card-actions">
+                        <button class="btn btn-primary btn-sm" onclick="sendMessage('${user.id}')">Enviar Mensagem</button>
+                        <button class="btn btn-secondary btn-sm" onclick="viewProfile('${user.id}')">Ver Perfil</button>
                     </div>
-                `).join('');
-
-            } catch (error) {
-                console.error('Erro ao carregar usuários:', error);
-                document.getElementById('usersGrid').innerHTML = '<div class="alert alert-info">Erro ao carregar usuários. Tente novamente.</div>';
-            }
-        }
-
-        // Carregar mensagens
-        async function loadMessages() {
-            try {
-                const { data: messages, error } = await supabase
-                    .from('messages')
-                    .select('*, profiles:sender_id(nickname)')
-                    .eq('receiver_id', currentUser.id)
-                    .order('created_at', { ascending: false })
-                    .limit(5);
-
-                if (error) throw error;
-
-                const messagesList = document.getElementById('messagesList');
-                
-                if (!messages || messages.length === 0) {
-                    messagesList.innerHTML = '<div class="alert alert-info">Nenhuma mensagem recebida ainda. Envie uma mensagem para alguém!</div>';
-                    return;
-                }
-
-                messagesList.innerHTML = messages.map(msg => `
-                    <div class="message-item" onclick="openConversation('${msg.sender_id}')">
-                        <div class="message-avatar">${msg.profiles?.nickname ? msg.profiles.nickname.charAt(0).toUpperCase() : 'U'}</div>
-                        <div class="message-content">
-                            <div class="message-sender">${msg.profiles?.nickname || 'Usuário'}</div>
-                            <div class="message-preview">${msg.content}</div>
-                        </div>
-                        <div class="message-time">${formatTime(msg.created_at)}</div>
-                    </div>
-                `).join('');
-
-            } catch (error) {
-                console.error('Erro ao carregar mensagens:', error);
-                document.getElementById('messagesList').innerHTML = '<div class="alert alert-info">Erro ao carregar mensagens.</div>';
-            }
-        }
-
-        // Funções auxiliares
-        function calculateAge(birthDate) {
-            if (!birthDate) return null;
-            const today = new Date();
-            const birth = new Date(birthDate);
-            let age = today.getFullYear() - birth.getFullYear();
-            const monthDiff = today.getMonth() - birth.getMonth();
-            
-            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-                age--;
-            }
-            
-            return age + ' anos';
-        }
-
-        function getUserDescription(user) {
-            // Esta função será expandida quando tivermos a tabela user_details
-            return user.description || null;
-        }
-
-        function formatTime(dateString) {
-            const date = new Date(dateString);
-            const now = new Date();
-            const diff = now - date;
-            
-            if (diff < 60000) return 'Agora';
-            if (diff < 3600000) return `${Math.floor(diff / 60000)}min`;
-            if (diff < 86400000) return `${Math.floor(diff / 3600000)}h`;
-            
-            return date.toLocaleDateString('pt-BR');
-        }
-
-        function showLoading(elementId, message = 'Carregando...') {
-            const element = document.getElementById(elementId);
-            element.innerHTML = `
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p>${message}</p>
                 </div>
-            `;
+            `).join('');
+
+        } catch (error) {
+            console.error('Erro ao carregar usuários:', error);
+            document.getElementById('usersGrid').innerHTML = '<p>Erro ao carregar usuários.</p>';
         }
+    }
 
-        // Atualizar estatísticas
-        async function updateStats() {
-            try {
-                // Buscar dados reais do Supabase
-                const { count: totalUsers } = await supabase
-                    .from('profiles')
-                    .select('*', { count: 'exact', head: true });
+    // Carregar mensagens
+    async function loadMessages() {
+        try {
+            const { data: messages, error } = await supabase
+                .from('messages')
+                .select('*, profiles:sender_id(nickname)')
+                .eq('receiver_id', currentUser.id)
+                .order('created_at', { ascending: false })
+                .limit(5);
 
-                const { count: newMessages } = await supabase
-                    .from('messages')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('receiver_id', currentUser.id)
-                    .eq('is_read', false);
+            if (error) throw error;
 
-                document.getElementById('totalUsers').textContent = totalUsers || 0;
-                document.getElementById('newMessages').textContent = newMessages || 0;
-                document.getElementById('usersOnline').textContent = Math.floor(Math.random() * 20) + 5; // Simulado
-                document.getElementById('profileViews').textContent = Math.floor(Math.random() * 15); // Simulado
-
-            } catch (error) {
-                console.error('Erro ao carregar estatísticas:', error);
+            const messagesList = document.getElementById('messagesList');
+            
+            if (messages.length === 0) {
+                messagesList.innerHTML = '<p>Nenhuma mensagem recebida ainda.</p>';
+                return;
             }
-        }
 
-        // Configurar event listeners
-        function setupEventListeners() {
-            document.getElementById('logoutBtn').addEventListener('click', logout);
-        }
+            messagesList.innerHTML = messages.map(msg => `
+                <div class="message-item" onclick="openConversation('${msg.sender_id}')">
+                    <div class="message-avatar">${msg.profiles?.nickname ? msg.profiles.nickname.charAt(0).toUpperCase() : 'U'}</div>
+                    <div class="message-content">
+                        <div class="message-sender">${msg.profiles?.nickname || 'Usuário'}</div>
+                        <div class="message-preview">${msg.content}</div>
+                    </div>
+                    <div class="message-time">${formatTime(msg.created_at)}</div>
+                </div>
+            `).join('');
 
-        // Logout
-        async function logout() {
-            try {
-                const { error } = await supabase.auth.signOut();
-                if (error) throw error;
-                
-                window.location.href = 'index.html';
-            } catch (error) {
-                console.error('Erro ao fazer logout:', error);
-                alert('Erro ao fazer logout. Tente novamente.');
-            }
+        } catch (error) {
+            console.error('Erro ao carregar mensagens:', error);
         }
+    }
 
-        // Funções de interação
-        function sendMessage(userId) {
-            const message = prompt('Digite sua mensagem:');
-            if (message && message.trim()) {
-                sendMessageToUser(userId, message.trim());
-            }
+    // Atualizar estatísticas
+    function updateStats() {
+        // Simular dados - na implementação real viriam do Supabase
+        document.getElementById('usersOnline').textContent = Math.floor(Math.random() * 50) + 20;
+        document.getElementById('totalUsers').textContent = Math.floor(Math.random() * 1000) + 500;
+        document.getElementById('newMessages').textContent = Math.floor(Math.random() * 5);
+        document.getElementById('profileViews').textContent = Math.floor(Math.random() * 20);
+    }
+
+    // Configurar event listeners
+    function setupEventListeners() {
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+    }
+
+    // Logout
+    async function logout() {
+        try {
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
+            
+            window.location.href = 'index.html';
+        } catch (error) {
+            console.error('Erro ao fazer logout:', error);
+            alert('Erro ao fazer logout. Tente novamente.');
         }
+    }
 
-        async function sendMessageToUser(receiverId, content) {
-            try {
-                const { error } = await supabase
-                    .from('messages')
-                    .insert([
-                        {
-                            sender_id: currentUser.id,
-                            receiver_id: receiverId,
-                            content: content
-                        }
-                    ]);
-
-                if (error) throw error;
-                
-                alert('Mensagem enviada com sucesso!');
-                loadMessages(); // Recarregar a lista de mensagens
-                
-            } catch (error) {
-                console.error('Erro ao enviar mensagem:', error);
-                alert('Erro ao enviar mensagem. Tente novamente.');
-            }
+    // Funções auxiliares
+    function calculateAge(birthDate) {
+        if (!birthDate) return null;
+        const today = new Date();
+        const birth = new Date(birthDate);
+        let age = today.getFullYear() - birth.getFullYear();
+        const monthDiff = today.getMonth() - birth.getMonth();
+        
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+            age--;
         }
+        
+        return age;
+    }
 
-        function viewProfile(userId) {
-            alert(`Visualizando perfil do usuário ${userId} - Esta funcionalidade será implementada em breve!`);
-        }
+    function formatTime(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diff = now - date;
+        
+        if (diff < 60000) return 'Agora';
+        if (diff < 3600000) return `${Math.floor(diff / 60000)}min`;
+        if (diff < 86400000) return `${Math.floor(diff / 3600000)}h`;
+        
+        return date.toLocaleDateString('pt-BR');
+    }
 
-        function openConversation(userId) {
-            alert(`Abrindo conversa com o usuário ${userId} - Sistema de chat completo em desenvolvimento!`);
+    // Funções de interação
+    function sendMessage(userId) {
+        const message = prompt('Digite sua mensagem:');
+        if (message && message.trim()) {
+            sendMessageToUser(userId, message.trim());
         }
+    }
 
-        function showMessages() {
-            alert('Sistema completo de mensagens em desenvolvimento!');
+    async function sendMessageToUser(receiverId, content) {
+        try {
+            const { error } = await supabase
+                .from('messages')
+                .insert([
+                    {
+                        sender_id: currentUser.id,
+                        receiver_id: receiverId,
+                        content: content
+                    }
+                ]);
+
+            if (error) throw error;
+            
+            alert('Mensagem enviada com sucesso!');
+            loadMessages(); // Recarregar a lista de mensagens
+            
+        } catch (error) {
+            console.error('Erro ao enviar mensagem:', error);
+            alert('Erro ao enviar mensagem. Tente novamente.');
         }
-    </script>
+    }
+
+    function viewProfile(userId) {
+        alert(`Visualizando perfil do usuário ${userId} - Esta funcionalidade será implementada em breve!`);
+    }
+
+    function openConversation(userId) {
+        alert(`Abrindo conversa com o usuário ${userId} - Sistema de chat completo em desenvolvimento!`);
+    }
+
+    function showMessages() {
+        alert('Sistema completo de mensagens em desenvolvimento!');
+    }
+</script>
 </body>
 </html>
