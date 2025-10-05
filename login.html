@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Encontros</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase.js"></script>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <h2>Bem-vindo de volta</h2>
+            <p class="auth-subtitle">Entre na sua conta</p>
+            <form id="login-form">
+                <input type="email" placeholder="Seu e-mail" required>
+                <input type="password" placeholder="Sua senha" required>
+                <button type="submit">Entrar</button>
+            </form>
+            <div id="login-message" class="message" style="display: none;"></div>
+            <p>Não tem conta? <a href="cadastro.html">Cadastre-se aqui</a></p>
+            <p><a href="index.html">← Voltar para o site</a></p>
+        </div>
+    </div>
+    <script src="auth.js"></script>
+</body>
+</html>
