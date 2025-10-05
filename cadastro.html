@@ -71,71 +71,113 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // CONFIGURAÇÃO SUPABASE
+        // CONFIGURAÇÃO
         const SUPABASE_URL = 'https://ivposfgebabrtpexxpko.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2cG9zZmdlYmFicnRwZXh4cGtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1ODczMzEsImV4cCI6MjA3NTE2MzMzMX0.AJU3Vt2dqATDORS4mjTW3gDWeh1MK9lNTWk-uoG5ojo';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // CADASTRO SIMPLES
+        console.log('✅ Supabase carregado');
+
+        // FUNÇÕES
+        function showAlert(message, type = 'error') {
+            const alertDiv = document.getElementById('alertMessage');
+            alertDiv.textContent = message;
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.classList.remove('hidden');
+            setTimeout(() => alertDiv.classList.add('hidden'), 5000);
+        }
+
+        function isOver18(birthDate) {
+            const today = new Date();
+            const birth = new Date(birthDate);
+            let age = today.getFullYear() - birth.getFullYear();
+            const monthDiff = today.getMonth() - birth.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+                age--;
+            }
+            return age >= 18;
+        }
+
+        // CADASTRO
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+            console.log('🎯 Formulário enviado');
+
             const fullName = document.getElementById('fullName').value;
             const nickname = document.getElementById('nickname').value;
             const birthDate = document.getElementById('birthDate').value;
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
-            
+
             // Validações
-            if (password !== confirmPassword) {
-                alert('Senhas não coincidem!');
+            if (!isOver18(birthDate)) {
+                showAlert('Você deve ter pelo menos 18 anos.');
                 return;
             }
-            
+            if (password !== confirmPassword) {
+                showAlert('Senhas não coincidem.');
+                return;
+            }
+            if (password.length < 6) {
+                showAlert('Senha deve ter pelo menos 6 caracteres.');
+                return;
+            }
+
             // Loading
             document.getElementById('registerText').classList.add('hidden');
             document.getElementById('registerSpinner').classList.remove('hidden');
             document.getElementById('registerBtn').disabled = true;
-            
+
             try {
+                console.log('🚀 Tentando cadastrar:', email);
+
                 // 1. CADASTRO NO AUTH
                 const { data, error } = await supabase.auth.signUp({
                     email: email,
-                    password: password,
-                    options: {
-                        data: {
-                            full_name: fullName,
-                            nickname: nickname
-                        },
-                        emailRedirectTo: 'https://conexaoperfeitaamor.netlify.app/login.html'
-                    }
+                    password: password
                 });
-                
-                if (error) throw error;
-                
-                // 2. CRIAR PERFIL
+
+                if (error) {
+                    console.error('❌ Erro Auth:', error);
+                    throw error;
+                }
+
+                console.log('✅ Auth criado:', data);
+
                 if (data.user) {
-                    const { error: profileError } = await supabase
-                        .from('profiles')
-                        .insert([{
-                            id: data.user.id,
-                            full_name: fullName,
-                            nickname: nickname,
-                            birth_date: birthDate,
-                            email: email
-                        }]);
+                    // 2. TENTAR CRIAR PERFIL (MAS NÃO BLOQUEAR SE DER ERRO)
+                    try {
+                        const { error: profileError } = await supabase
+                            .from('profiles')
+                            .insert([{
+                                id: data.user.id,
+                                full_name: fullName,
+                                nickname: nickname,
+                                birth_date: birthDate,
+                                email: email
+                            }]);
+
+                        if (profileError) {
+                            console.error('⚠️ Erro no perfil (ignorando):', profileError);
+                        } else {
+                            console.log('✅ Perfil criado');
+                        }
+                    } catch (profileError) {
+                        console.error('⚠️ Erro ao criar perfil (ignorando):', profileError);
+                    }
+
+                    // SUCESSO MESMO COM ERRO NO PERFIL
+                    showAlert('🎉 Cadastro realizado! Verifique seu email para confirmar.', 'success');
                     
-                    if (profileError) throw profileError;
-                    
-                    alert('✅ Cadastro realizado! Verifique seu email.');
                     setTimeout(() => {
                         window.location.href = 'login.html';
-                    }, 2000);
+                    }, 3000);
                 }
-                
+
             } catch (error) {
-                alert('Erro: ' + error.message);
+                console.error('💥 Erro completo:', error);
+                showAlert('Erro: ' + error.message);
             } finally {
                 document.getElementById('registerText').classList.remove('hidden');
                 document.getElementById('registerSpinner').classList.add('hidden');

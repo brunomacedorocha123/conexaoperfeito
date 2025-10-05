@@ -48,7 +48,54 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase.js"></script>
-    <script src="auth.js"></script>
+    <script>
+        // CONFIGURAÇÃO
+        const SUPABASE_URL = 'https://ivposfgebabrtpexxpko.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2cG9zZmdlYmFicnRwZXh4cGtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1ODczMzEsImV4cCI6MjA3NTE2MzMzMX0.AJU3Vt2dqATDORS4mjTW3gDWeh1MK9lNTWk-uoG5ojo';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function showAlert(message, type = 'error') {
+            const alertDiv = document.getElementById('alertMessage');
+            alertDiv.textContent = message;
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.classList.remove('hidden');
+            setTimeout(() => alertDiv.classList.add('hidden'), 5000);
+        }
+
+        // LOGIN
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            document.getElementById('loginText').classList.add('hidden');
+            document.getElementById('loginSpinner').classList.remove('hidden');
+            document.getElementById('loginBtn').disabled = true;
+            
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) throw error;
+                
+                if (data.user) {
+                    showAlert('Login realizado com sucesso!', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'home.html';
+                    }, 1000);
+                }
+                
+            } catch (error) {
+                showAlert(error.message || 'Erro ao fazer login.');
+            } finally {
+                document.getElementById('loginText').classList.remove('hidden');
+                document.getElementById('loginSpinner').classList.add('hidden');
+                document.getElementById('loginBtn').disabled = false;
+            }
+        });
+    </script>
 </body>
 </html>
