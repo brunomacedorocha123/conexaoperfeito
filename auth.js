@@ -1,7 +1,9 @@
-// auth.js - Sistema Profissional de Autenticação - COMPLETO E CORRIGIDO
+// auth.js - Sistema Corrigido com URLs do Netlify
 
-// Configuração
+// Configuração - URLs ABSOLUTAS do Netlify
 const SITE_URL = 'https://conexaoperfeitaamor.netlify.app';
+const REDIRECT_URL = 'https://conexaoperfeitaamor.netlify.app/home.html';
+const PASSWORD_REDIRECT_URL = 'https://conexaoperfeitaamor.netlify.app/update-password.html';
 
 // Verificar autenticação
 async function checkAuthState() {
@@ -20,7 +22,6 @@ async function checkAuthState() {
                 window.location.href = 'home.html';
             }
             
-            // Atualizar interface se estiver na home
             if (currentPage === 'home.html') {
                 updateUserInterface(session.user);
             }
@@ -44,7 +45,6 @@ function updateUserInterface(user) {
     if (welcomeElement) welcomeElement.textContent = `Bem-vindo, ${userName}!`;
     if (userInfoElement) userInfoElement.textContent = `Email: ${user.email}`;
     
-    // Atualizar saudação no header
     const userNameElement = document.getElementById('user-name');
     const userWelcomeElement = document.getElementById('user-welcome');
     if (userNameElement && userWelcomeElement) {
@@ -53,7 +53,7 @@ function updateUserInterface(user) {
     }
 }
 
-// Cadastro PROFISSIONAL
+// Cadastro PROFISSIONAL - COM URL CORRETA
 async function handleRegister(formData) {
     const submitBtn = document.getElementById('submit-btn');
     const originalText = submitBtn ? submitBtn.textContent : 'Criar Minha Conta';
@@ -66,7 +66,6 @@ async function handleRegister(formData) {
             return false;
         }
 
-        // Desabilitar botão
         if (submitBtn) {
             submitBtn.disabled = true;
             submitBtn.textContent = 'Criando conta...';
@@ -74,7 +73,7 @@ async function handleRegister(formData) {
 
         showMessage('register-message', 'Criando sua conta...', 'success');
 
-        // Fazer cadastro no Supabase
+        // CADASTRO COM URL ABSOLUTA DO NETLIFY
         const { data, error } = await supabase.auth.signUp({
             email: formData.email.trim(),
             password: formData.password,
@@ -86,7 +85,8 @@ async function handleRegister(formData) {
                     gender: formData.gender,
                     interested_in: formData.interestedIn
                 },
-                emailRedirectTo: `${SITE_URL}/home.html`
+                // URL ABSOLUTA - CORRIGIDA
+                emailRedirectTo: REDIRECT_URL
             }
         });
 
@@ -112,7 +112,6 @@ async function handleRegister(formData) {
             'success'
         );
 
-        // Limpar formulário
         const registerForm = document.getElementById('register-form');
         if (registerForm) registerForm.reset();
 
@@ -122,7 +121,6 @@ async function handleRegister(formData) {
         showMessage('register-message', error.message, 'error');
         return false;
     } finally {
-        // Reabilitar botão
         if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.textContent = originalText;
@@ -152,7 +150,7 @@ async function handleLogin(email, password) {
             throw new Error(getAuthErrorMessage(error));
         }
 
-        // Verificar se email foi confirmado - CORREÇÃO SIMPLES
+        // Verificar se email foi confirmado
         if (data.user && !data.user.email_confirmed_at) {
             showMessage('login-message', 
                 `❌ <strong>E-mail não confirmado</strong><br><br>
@@ -185,7 +183,44 @@ async function handleLogin(email, password) {
     }
 }
 
-// Funções de validação
+// Recuperação de senha - COM URL CORRETA
+async function handlePasswordReset(email) {
+    try {
+        showMessage('reset-message', 'Enviando link de recuperação...', 'success');
+        
+        // URL ABSOLUTA - CORRIGIDA
+        const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+            redirectTo: PASSWORD_REDIRECT_URL,
+        });
+        
+        if (error) {
+            throw new Error(getAuthErrorMessage(error));
+        }
+        
+        showMessage('reset-message', 
+            '✅ E-mail de recuperação enviado! Verifique sua caixa de entrada.', 
+            'success'
+        );
+        return true;
+    } catch (error) {
+        showMessage('reset-message', error.message, 'error');
+        return false;
+    }
+}
+
+// Logout
+async function handleLogout() {
+    try {
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+        window.location.href = 'index.html';
+    } catch (error) {
+        console.error('Erro no logout:', error);
+        showMessage('logout-message', '❌ Erro ao sair', 'error');
+    }
+}
+
+// Funções de validação (mantidas iguais)
 function validateRegisterData(formData) {
     const errors = [];
 
@@ -266,42 +301,6 @@ function getAuthErrorMessage(error) {
     }
 }
 
-// Recuperação de senha
-async function handlePasswordReset(email) {
-    try {
-        showMessage('reset-message', 'Enviando link de recuperação...', 'success');
-        
-        const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-            redirectTo: `${SITE_URL}/update-password.html`,
-        });
-        
-        if (error) {
-            throw new Error(getAuthErrorMessage(error));
-        }
-        
-        showMessage('reset-message', 
-            '✅ E-mail de recuperação enviado! Verifique sua caixa de entrada.', 
-            'success'
-        );
-        return true;
-    } catch (error) {
-        showMessage('reset-message', error.message, 'error');
-        return false;
-    }
-}
-
-// Logout
-async function handleLogout() {
-    try {
-        const { error } = await supabase.auth.signOut();
-        if (error) throw error;
-        window.location.href = 'index.html';
-    } catch (error) {
-        console.error('Erro no logout:', error);
-        showMessage('logout-message', '❌ Erro ao sair', 'error');
-    }
-}
-
 // Mostrar mensagens
 function showMessage(elementId, message, type) {
     const element = document.getElementById(elementId);
@@ -311,7 +310,6 @@ function showMessage(elementId, message, type) {
         element.style.display = 'block';
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         
-        // Auto-esconder mensagens de sucesso após 8 segundos
         if (type === 'success') {
             setTimeout(() => {
                 element.style.display = 'none';
@@ -320,23 +318,10 @@ function showMessage(elementId, message, type) {
     }
 }
 
-// Obter usuário atual
-async function getCurrentUser() {
-    try {
-        const { data: { user }, error } = await supabase.auth.getUser();
-        if (error) throw error;
-        return user;
-    } catch (error) {
-        console.error('Erro ao obter usuário:', error);
-        return null;
-    }
-}
-
-// Event Listeners - CORRIGIDOS
+// Event Listeners (mantidos iguais)
 document.addEventListener('DOMContentLoaded', function() {
     checkAuthState();
 
-    // Login Form
     const loginForm = document.getElementById('login-form');
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
@@ -357,7 +342,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Register Form
     const registerForm = document.getElementById('register-form');
     if (registerForm) {
         registerForm.addEventListener('submit', async (e) => {
@@ -379,7 +363,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Reset Password Form
     const resetForm = document.getElementById('reset-form');
     if (resetForm) {
         resetForm.addEventListener('submit', async (e) => {
@@ -397,7 +380,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Logout
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', (e) => {
@@ -417,7 +399,6 @@ supabase.auth.onAuthStateChange((event, session) => {
         console.log('Usuário logado:', session.user.email);
         updateUserInterface(session.user);
         
-        // Redirecionar se estiver em páginas de auth
         const currentPage = window.location.pathname.split('/').pop();
         if (['login.html', 'cadastro.html', 'esqueci-senha.html'].includes(currentPage)) {
             setTimeout(() => {
@@ -426,16 +407,7 @@ supabase.auth.onAuthStateChange((event, session) => {
         }
     } else if (event === 'SIGNED_OUT') {
         console.log('Usuário deslogado');
-    } else if (event === 'USER_UPDATED') {
-        console.log('Usuário atualizado');
     }
 });
 
-// Funções globais para uso em outras páginas
-window.authUtils = {
-    getCurrentUser,
-    handleLogout,
-    showMessage
-};
-
-console.log('✅ Auth.js carregado - Sistema Profissional e Corrigido');
+console.log('✅ Auth.js carregado - URLs do Netlify configuradas');
