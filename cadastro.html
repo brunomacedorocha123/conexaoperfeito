@@ -521,278 +521,320 @@
         </div>
     </footer>
 
-    <script>
-        // Configuração do Supabase COM SUAS CREDENCIAIS REAIS
-        const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+   <script>
+    // Configuração do Supabase
+    const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+    
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('registerForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+        const errorAlert = document.getElementById('errorAlert');
+        const successAlert = document.getElementById('successAlert');
         
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Elementos dos campos
+        const fullName = document.getElementById('fullName');
+        const email = document.getElementById('email');
+        const birthDate = document.getElementById('birthDate');
+        const nickname = document.getElementById('nickname');
+        const password = document.getElementById('password');
+        const confirmPassword = document.getElementById('confirmPassword');
+        const terms = document.getElementById('terms');
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('registerForm');
-            const submitBtn = document.getElementById('submitBtn');
-            const loading = document.getElementById('loading');
-            const errorAlert = document.getElementById('errorAlert');
-            const successAlert = document.getElementById('successAlert');
+        // Configurar data máxima (18 anos atrás)
+        const today = new Date();
+        const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+        birthDate.max = maxDate.toISOString().split('T')[0];
+
+        // Validação em tempo real
+        fullName.addEventListener('blur', validateFullName);
+        email.addEventListener('blur', validateEmail);
+        birthDate.addEventListener('change', validateBirthDate);
+        nickname.addEventListener('blur', validateNickname);
+        password.addEventListener('input', validatePassword);
+        confirmPassword.addEventListener('blur', validateConfirmPassword);
+
+        // Força da senha
+        password.addEventListener('input', updatePasswordStrength);
+
+        function validateFullName() {
+            const value = fullName.value.trim();
+            const isValid = value.length >= 2 && value.includes(' ');
             
-            // Elementos dos campos
-            const fullName = document.getElementById('fullName');
-            const email = document.getElementById('email');
-            const birthDate = document.getElementById('birthDate');
-            const nickname = document.getElementById('nickname');
-            const password = document.getElementById('password');
-            const confirmPassword = document.getElementById('confirmPassword');
-            const terms = document.getElementById('terms');
+            if (!isValid) {
+                showError('fullNameError', 'Por favor, insira seu nome completo');
+                fullName.classList.add('error');
+            } else {
+                hideError('fullNameError');
+                fullName.classList.remove('error');
+            }
+            
+            return isValid;
+        }
 
-            // Configurar data máxima (18 anos atrás)
-            const today = new Date();
-            const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
-            birthDate.max = maxDate.toISOString().split('T')[0];
+        function validateEmail() {
+            const value = email.value.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const isValid = emailRegex.test(value);
+            
+            if (!isValid) {
+                showError('emailError', 'Por favor, insira um e-mail válido');
+                email.classList.add('error');
+            } else {
+                hideError('emailError');
+                email.classList.remove('error');
+            }
+            
+            return isValid;
+        }
 
-            // Validação em tempo real
-            fullName.addEventListener('blur', validateFullName);
-            email.addEventListener('blur', validateEmail);
-            birthDate.addEventListener('change', validateBirthDate);
-            nickname.addEventListener('blur', validateNickname);
-            password.addEventListener('input', validatePassword);
-            confirmPassword.addEventListener('blur', validateConfirmPassword);
+        function validateBirthDate() {
+            const selectedDate = new Date(birthDate.value);
+            const isValid = selectedDate <= maxDate;
+            
+            if (!isValid) {
+                showError('birthDateError', 'Você deve ter pelo menos 18 anos');
+                birthDate.classList.add('error');
+            } else {
+                hideError('birthDateError');
+                birthDate.classList.remove('error');
+            }
+            
+            return isValid;
+        }
 
-            // Força da senha
-            password.addEventListener('input', updatePasswordStrength);
+        function validateNickname() {
+            const value = nickname.value.trim();
+            const isValid = value.length >= 3;
+            
+            if (!isValid) {
+                showError('nicknameError', 'O nickname deve ter pelo menos 3 caracteres');
+                nickname.classList.add('error');
+            } else {
+                hideError('nicknameError');
+                nickname.classList.remove('error');
+            }
+            
+            return isValid;
+        }
 
-            function validateFullName() {
-                const value = fullName.value.trim();
-                const isValid = value.length >= 2 && value.includes(' ');
+        function validatePassword() {
+            const value = password.value;
+            const isValid = value.length >= 6;
+            
+            if (!isValid) {
+                showError('passwordError', 'A senha deve ter pelo menos 6 caracteres');
+                password.classList.add('error');
+            } else {
+                hideError('passwordError');
+                password.classList.remove('error');
+            }
+            
+            return isValid;
+        }
+
+        function validateConfirmPassword() {
+            const value = confirmPassword.value;
+            const isValid = value === password.value;
+            
+            if (!isValid) {
+                showError('confirmPasswordError', 'As senhas não coincidem');
+                confirmPassword.classList.add('error');
+            } else {
+                hideError('confirmPasswordError');
+                confirmPassword.classList.remove('error');
+            }
+            
+            return isValid;
+        }
+
+        function updatePasswordStrength() {
+            const value = password.value;
+            const strengthBar = document.getElementById('passwordStrength');
+            
+            let strength = 0;
+            if (value.length >= 6) strength++;
+            if (value.length >= 8) strength++;
+            if (/[A-Z]/.test(value)) strength++;
+            if (/[0-9]/.test(value)) strength++;
+            if (/[^A-Za-z0-9]/.test(value)) strength++;
+            
+            strengthBar.className = 'strength-bar';
+            if (value.length === 0) {
+                strengthBar.style.width = '0%';
+            } else if (strength <= 2) {
+                strengthBar.classList.add('strength-weak');
+            } else if (strength <= 4) {
+                strengthBar.classList.add('strength-medium');
+            } else {
+                strengthBar.classList.add('strength-strong');
+            }
+        }
+
+        function showError(elementId, message) {
+            const errorElement = document.getElementById(elementId);
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+
+        function hideError(elementId) {
+            const errorElement = document.getElementById(elementId);
+            errorElement.style.display = 'none';
+        }
+
+        function showAlert(alertElement, message, isError = true) {
+            alertElement.textContent = message;
+            alertElement.style.display = 'block';
+            alertElement.className = isError ? 'alert alert-error' : 'alert alert-success';
+            
+            if (!isError) {
+                setTimeout(() => {
+                    alertElement.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        function hideAlerts() {
+            errorAlert.style.display = 'none';
+            successAlert.style.display = 'none';
+        }
+
+        function validateForm() {
+            const validations = [
+                validateFullName(),
+                validateEmail(),
+                validateBirthDate(),
+                validateNickname(),
+                validatePassword(),
+                validateConfirmPassword(),
+                terms.checked
+            ];
+            
+            return validations.every(validation => validation === true);
+        }
+
+        // ✅ SUBMIT CORRIGIDO - SOLUÇÃO DEFINITIVA
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            hideAlerts();
+            
+            if (!validateForm()) {
+                showAlert(errorAlert, 'Por favor, corrija os erros no formulário antes de enviar.');
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            loading.style.display = 'block';
+            
+            try {
+                console.log('🔄 Iniciando cadastro...');
                 
-                if (!isValid) {
-                    showError('fullNameError', 'Por favor, insira seu nome completo');
-                    fullName.classList.add('error');
-                } else {
-                    hideError('fullNameError');
-                    fullName.classList.remove('error');
+                // 1. Registrar usuário no Auth do Supabase
+                const { data: authData, error: authError } = await supabase.auth.signUp({
+                    email: email.value.trim(),
+                    password: password.value,
+                    options: {
+                        data: {
+                            full_name: fullName.value.trim(),
+                            nickname: nickname.value.trim(),
+                            birth_date: birthDate.value
+                        },
+                        // ✅ CORREÇÃO: URL ABSOLUTA E EXPLÍCITA
+                        emailRedirectTo: 'https://conexaoperfeitaamor.netlify.app/login.html?verified=true'
+                    }
+                });
+
+                if (authError) {
+                    console.error('❌ Erro no Auth:', authError);
+                    throw authError;
                 }
-                
-                return isValid;
-            }
 
-            function validateEmail() {
-                const value = email.value.trim();
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                const isValid = emailRegex.test(value);
-                
-                if (!isValid) {
-                    showError('emailError', 'Por favor, insira um e-mail válido');
-                    email.classList.add('error');
-                } else {
-                    hideError('emailError');
-                    email.classList.remove('error');
-                }
-                
-                return isValid;
-            }
+                console.log('✅ Auth criado:', authData);
 
-            function validateBirthDate() {
-                const selectedDate = new Date(birthDate.value);
-                const isValid = selectedDate <= maxDate;
-                
-                if (!isValid) {
-                    showError('birthDateError', 'Você deve ter pelo menos 18 anos');
-                    birthDate.classList.add('error');
-                } else {
-                    hideError('birthDateError');
-                    birthDate.classList.remove('error');
-                }
-                
-                return isValid;
-            }
-
-            function validateNickname() {
-                const value = nickname.value.trim();
-                const isValid = value.length >= 3;
-                
-                if (!isValid) {
-                    showError('nicknameError', 'O nickname deve ter pelo menos 3 caracteres');
-                    nickname.classList.add('error');
-                } else {
-                    hideError('nicknameError');
-                    nickname.classList.remove('error');
-                }
-                
-                return isValid;
-            }
-
-            function validatePassword() {
-                const value = password.value;
-                const isValid = value.length >= 6;
-                
-                if (!isValid) {
-                    showError('passwordError', 'A senha deve ter pelo menos 6 caracteres');
-                    password.classList.add('error');
-                } else {
-                    hideError('passwordError');
-                    password.classList.remove('error');
-                }
-                
-                return isValid;
-            }
-
-            function validateConfirmPassword() {
-                const value = confirmPassword.value;
-                const isValid = value === password.value;
-                
-                if (!isValid) {
-                    showError('confirmPasswordError', 'As senhas não coincidem');
-                    confirmPassword.classList.add('error');
-                } else {
-                    hideError('confirmPasswordError');
-                    confirmPassword.classList.remove('error');
-                }
-                
-                return isValid;
-            }
-
-            function updatePasswordStrength() {
-                const value = password.value;
-                const strengthBar = document.getElementById('passwordStrength');
-                
-                let strength = 0;
-                if (value.length >= 6) strength++;
-                if (value.length >= 8) strength++;
-                if (/[A-Z]/.test(value)) strength++;
-                if (/[0-9]/.test(value)) strength++;
-                if (/[^A-Za-z0-9]/.test(value)) strength++;
-                
-                strengthBar.className = 'strength-bar';
-                if (value.length === 0) {
-                    strengthBar.style.width = '0%';
-                } else if (strength <= 2) {
-                    strengthBar.classList.add('strength-weak');
-                } else if (strength <= 4) {
-                    strengthBar.classList.add('strength-medium');
-                } else {
-                    strengthBar.classList.add('strength-strong');
-                }
-            }
-
-            function showError(elementId, message) {
-                const errorElement = document.getElementById(elementId);
-                errorElement.textContent = message;
-                errorElement.style.display = 'block';
-            }
-
-            function hideError(elementId) {
-                const errorElement = document.getElementById(elementId);
-                errorElement.style.display = 'none';
-            }
-
-            function showAlert(alertElement, message, isError = true) {
-                alertElement.textContent = message;
-                alertElement.style.display = 'block';
-                alertElement.className = isError ? 'alert alert-error' : 'alert alert-success';
-                
-                if (!isError) {
-                    setTimeout(() => {
-                        alertElement.style.display = 'none';
-                    }, 5000);
-                }
-            }
-
-            function hideAlerts() {
-                errorAlert.style.display = 'none';
-                successAlert.style.display = 'none';
-            }
-
-            function validateForm() {
-                const validations = [
-                    validateFullName(),
-                    validateEmail(),
-                    validateBirthDate(),
-                    validateNickname(),
-                    validatePassword(),
-                    validateConfirmPassword(),
-                    terms.checked
-                ];
-                
-                return validations.every(validation => validation === true);
-            }
-
-            // Submit do formulário - CORRIGIDO PARA REDIRECIONAR
-            form.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                hideAlerts();
-                
-                if (!validateForm()) {
-                    showAlert(errorAlert, 'Por favor, corrija os erros no formulário antes de enviar.');
-                    return;
-                }
-                
-                submitBtn.disabled = true;
-                loading.style.display = 'block';
-                
-                try {
-                    // 1. Registrar usuário no Auth do Supabase
-                    const { data: authData, error: authError } = await supabase.auth.signUp({
-                        email: email.value.trim(),
-                        password: password.value,
-                        options: {
-                            data: {
-                                full_name: fullName.value.trim(),
+                if (authData.user) {
+                    // 2. Criar perfil na tabela profiles
+                    console.log('🔄 Criando perfil...');
+                    const { error: profileError } = await supabase
+                        .from('profiles')
+                        .insert([
+                            {
+                                id: authData.user.id,
                                 nickname: nickname.value.trim(),
-                                birth_date: birthDate.value
-                            },
-                            // DESABILITAR redirecionamento automático do Supabase
-                            emailRedirectTo: 'https://conexaoperfeitaamor.netlify.app/login.html?verified=true'
-                        }
-                    });
+                                full_name: fullName.value.trim(),
+                                birth_date: birthDate.value,
+                                created_at: new Date().toISOString()
+                            }
+                        ]);
 
-                    if (authError) throw authError;
-
-                    if (authData.user) {
-                        // 2. Criar perfil na tabela profiles
-                        const { error: profileError } = await supabase
-                            .from('profiles')
-                            .insert([
-                                {
-                                    id: authData.user.id,
-                                    nickname: nickname.value.trim(),
-                                    full_name: fullName.value.trim(),
-                                    birth_date: birthDate.value,
-                                    created_at: new Date()
-                                }
-                            ]);
-
-                        if (profileError) {
-                            console.error('Erro ao criar perfil:', profileError);
-                            // Continua mesmo com erro no perfil
-                        }
-
-                        // REDIRECIONAR PARA PÁGINA DE SUCESSO IMEDIATAMENTE
-                        window.location.href = 'cadastro-sucesso.html';
-                    }
-
-                } catch (error) {
-                    console.error('Erro no cadastro:', error);
-                    
-                    if (error.message.includes('already registered')) {
-                        showAlert(errorAlert, 'Este e-mail já está cadastrado. Tente fazer login ou use outro e-mail.');
-                    } else if (error.message.includes('password')) {
-                        showAlert(errorAlert, 'A senha deve ter pelo menos 6 caracteres.');
+                    if (profileError) {
+                        console.error('⚠️ Erro ao criar perfil:', profileError);
+                        // Continua mesmo com erro no perfil - usuário pode completar depois
                     } else {
-                        showAlert(errorAlert, 'Erro ao realizar cadastro: ' + error.message);
+                        console.log('✅ Perfil criado com sucesso');
                     }
-                    
-                    submitBtn.disabled = false;
-                    loading.style.display = 'none';
-                }
-            });
 
-            // Verificar se o usuário já está logado
-            supabase.auth.getUser().then(({ data: { user } }) => {
-                if (user) {
-                    window.location.href = 'home.html';
+                    // ✅ CORREÇÃO: VERIFICAR SE O E-MAIL FOI ENVIADO
+                    if (authData.user.identities && authData.user.identities.length === 0) {
+                        showAlert(errorAlert, '❌ Este e-mail já está cadastrado. Tente fazer login.');
+                        submitBtn.disabled = false;
+                        loading.style.display = 'none';
+                        return;
+                    }
+
+                    // ✅ REDIRECIONAMENTO COM FALLBACK
+                    console.log('✅ Cadastro completo! Redirecionando...');
+                    setTimeout(() => {
+                        window.location.href = 'cadastro-sucesso.html';
+                    }, 1000);
+
+                } else {
+                    throw new Error('Falha ao criar usuário');
                 }
-            });
+
+            } catch (error) {
+                console.error('❌ Erro completo no cadastro:', error);
+                
+                // ✅ TRATAMENTO ESPECÍFICO DE ERROS
+                if (error.message.includes('already registered') || error.message.includes('user already exists')) {
+                    showAlert(errorAlert, '❌ Este e-mail já está cadastrado. Tente fazer login ou use outro e-mail.');
+                } else if (error.message.includes('password')) {
+                    showAlert(errorAlert, '❌ A senha deve ter pelo menos 6 caracteres.');
+                } else if (error.message.includes('email')) {
+                    showAlert(errorAlert, '❌ Por favor, insira um e-mail válido.');
+                } else if (error.message.includes('rate limit')) {
+                    showAlert(errorAlert, '⏰ Muitas tentativas. Aguarde alguns minutos e tente novamente.');
+                } else {
+                    showAlert(errorAlert, '❌ Erro ao realizar cadastro: ' + error.message);
+                }
+                
+                submitBtn.disabled = false;
+                loading.style.display = 'none';
+            }
         });
-    </script>
+
+        // Verificar se o usuário já está logado
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            if (user) {
+                console.log('👤 Usuário já logado, redirecionando...');
+                window.location.href = 'home.html';
+            }
+        });
+
+        // ✅ VERIFICAÇÃO DE CONEXÃO
+        console.log('🔗 Testando conexão com Supabase...');
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+                console.log('✅ Sessão ativa detectada');
+            } else {
+                console.log('✅ Conexão com Supabase: OK (sem sessão)');
+            }
+        }).catch(error => {
+            console.error('❌ Erro na conexão:', error);
+        });
+    });
+</script>
 </body>
 </html>

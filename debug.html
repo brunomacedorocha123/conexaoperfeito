@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Supabase</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>🔧 Debug Conexão Perfeita</h1>
+    <div id="debug-info" style="padding: 20px; background: #f5f5f5; border-radius: 10px;"></div>
+    
+    <script>
+        const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const debug = document.getElementById('debug-info');
+
+        async function runDiagnostics() {
+            let html = '<h2>📊 Diagnóstico do Sistema</h2>';
+            
+            // 1. Testar conexão básica
+            html += '<h3>1. 🔌 Teste de Conexão:</h3>';
+            try {
+                const { data, error } = await supabase.from('profiles').select('count').limit(1);
+                if (error) throw error;
+                html += '<p style="color: green;">✅ Conexão com Supabase: OK</p>';
+            } catch (error) {
+                html += `<p style="color: red;">❌ Erro na conexão: ${error.message}</p>`;
+            }
+
+            // 2. Testar configuração de Auth
+            html += '<h3>2. 🔐 Teste de Autenticação:</h3>';
+            try {
+                const { data: { user }, error } = await supabase.auth.getUser();
+                if (error) throw error;
+                html += `<p>✅ Auth configurado - Usuário: ${user ? 'Logado' : 'Deslogado'}</p>`;
+            } catch (error) {
+                html += `<p style="color: red;">❌ Erro no Auth: ${error.message}</p>`;
+            }
+
+            // 3. Verificar configuração de URLs
+            html += '<h3>3. 🌐 Configuração de URLs:</h3>';
+            html += `<p>📧 Email Redirect To: https://conexaoperfeitaamor.netlify.app/login.html?verified=true</p>`;
+            html += `<p>🔗 Site URL atual: ${window.location.href}</p>`;
+
+            // 4. Verificar tabelas
+            html += '<h3>4. 🗃️ Verificação de Tabelas:</h3>';
+            const tables = ['profiles', 'user_details', 'messages'];
+            
+            for (let table of tables) {
+                try {
+                    const { data, error } = await supabase.from(table).select('*').limit(1);
+                    if (error && error.code === '42P01') {
+                        html += `<p style="color: orange;">⚠️ Tabela "${table}": NÃO EXISTE</p>`;
+                    } else if (error) {
+                        html += `<p style="color: red;">❌ Erro na tabela "${table}": ${error.message}</p>`;
+                    } else {
+                        html += `<p style="color: green;">✅ Tabela "${table}": OK</p>`;
+                    }
+                } catch (error) {
+                    html += `<p style="color: red;">❌ Erro verificação "${table}": ${error.message}</p>`;
+                }
+            }
+
+            debug.innerHTML = html;
+        }
+
+        runDiagnostics();
+    </script>
+</body>
+</html>
