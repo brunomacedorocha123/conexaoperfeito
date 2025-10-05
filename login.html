@@ -17,9 +17,12 @@
             
             <form id="login-form">
                 <div class="form-group">
-                    <input type="email" placeholder="Seu e-mail" required>
+                    <label>E-mail *</label>
+                    <input type="email" placeholder="seu@email.com" required>
                 </div>
+                
                 <div class="form-group">
+                    <label>Senha *</label>
                     <input type="password" placeholder="Sua senha" required>
                 </div>
                 
@@ -31,7 +34,9 @@
                     <a href="esqueci-senha.html" class="forgot-password">Esqueci minha senha</a>
                 </div>
                 
-                <button type="submit" class="btn-primary large">Entrar na Minha Conta</button>
+                <button type="submit" class="btn-primary large" id="login-btn">
+                    Entrar na Minha Conta
+                </button>
             </form>
             
             <div id="login-message" class="message" style="display: none;"></div>
