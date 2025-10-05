@@ -482,7 +482,7 @@
                 grid-template-columns: 1fr;
             }
         }
-    </style>
+   </style>
 </head>
 <body>
     <!-- Header -->
@@ -498,8 +498,9 @@
                         <div class="user-avatar" id="userAvatar">U</div>
                         <span id="userNickname">Usuário</span>
                     </div>
-                    <a href="painel.html" class="btn btn-outline">Meu Perfil</a>
-                    <button class="btn btn-outline" id="logoutBtn">Sair</button>
+                    <a href="busca.html" class="btn btn-outline">🔍 Buscar</a>
+                    <a href="painel.html" class="btn btn-outline">👤 Perfil</a>
+                    <button class="btn btn-outline" id="logoutBtn">🚪 Sair</button>
                 </div>
             </div>
         </div>
@@ -556,11 +557,11 @@
                         <h3>Completar Perfil</h3>
                         <p>Adicione mais informações ao seu perfil</p>
                     </div>
-                    <div class="action-card" onclick="window.location.href='busca.html'">
+                    <a href="busca.html" class="action-card">
                         <div class="action-icon">🔍</div>
                         <h3>Buscar Pessoas</h3>
                         <p>Encontre pessoas com interesses similares</p>
-                    </div>
+                    </a>
                     <div class="action-card" onclick="showMessages()">
                         <div class="action-icon">💌</div>
                         <h3>Minhas Mensagens</h3>
@@ -618,7 +619,7 @@
         </div>
     </footer>
 
-   <script>
+    <script>
     // Configuração do Supabase
     const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
