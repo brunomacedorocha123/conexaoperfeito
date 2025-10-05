@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Perfil - Conexão Perfeita Amor</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #ff6b8b;
+            --primary-light: #ffb6c1;
+            --secondary: #a78bfa;
+            --accent: #67e8f9;
+            --light: #fdf2f8;
+            --dark: #4a044e;
+            --text: #444;
+            --text-light: #666;
+            --white: #fff;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+            --error: #e53e3e;
+            --success: #38a169;
+        }
+
+        body {
+            background-color: var(--light);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white);
+            padding: 1rem 0;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo a {
+            text-decoration: none;
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--white);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1.5rem;
+            border-radius: 30px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--white);
+            color: var(--white);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white);
+            border: none;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem 0;
+        }
+
+        .profile-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: var(--white);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 0 auto 1rem;
+        }
+
+        .profile-header h2 {
+            font-size: 2rem;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-badge {
+            display: inline-block;
+            background: var(--primary-light);
+            color: var(--dark);
+            padding: 0.25rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Profile Sections */
+        .profile-sections {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .profile-sections {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .profile-section {
+            background: var(--white);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--light);
+        }
+
+        .section-header h3 {
+            font-size: 1.5rem;
+            color: var(--dark);
+        }
+
+        .edit-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .edit-btn:hover {
+            color: var(--secondary);
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: var(--transition);
+            background-color: var(--light);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            background-color: var(--white);
+        }
+
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
+        }
+
+        .form-text {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-top: 0.25rem;
+        }
+
+        .char-count {
+            text-align: right;
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-top: 0.25rem;
+        }
+
+        .char-count.warning {
+            color: var(--error);
+        }
+
+        /* Checkbox Group */
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+
+        .checkbox-item label {
+            margin: 0;
+            font-weight: normal;
+        }
+
+        /* Profile Info Display */
+        .info-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: var(--light);
+            border-radius: 10px;
+        }
+
+        .info-label {
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .info-value {
+            color: var(--text);
+        }
+
+        .info-value.empty {
+            color: var(--text-light);
+            font-style: italic;
+        }
+
+        /* Actions Section */
+        .profile-actions {
+            background: var(--white);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .action-card {
+            background: var(--light);
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+            transition: var(--transition);
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .action-card:hover {
+            background: var(--primary-light);
+            transform: translateY(-3px);
+        }
+
+        .action-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .alert-success {
+            background-color: #f0fff4;
+            border: 1px solid #9ae6b4;
+            color: #276749;
+        }
+
+        .alert-error {
+            background-color: #fed7d7;
+            border: 1px solid #feb2b2;
+            color: #c53030;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--light);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--dark);
+            color: var(--white);
+            padding: 3rem 0 1.5rem;
+            margin-top: 3rem;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-column h3 {
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-column a {
+            color: var(--light);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-column a:hover {
+            color: var(--primary-light);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Hidden class for toggling */
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="home.html">
+                        <span class="logo-icon">💑</span>
+                        <h1>Conexão Perfeita</h1>
+                    </a>
+                </div>
+                <div class="user-menu">
+                    <div class="user-info">
+                        <div class="user-avatar" id="userAvatar">U</div>
+                        <span id="userNickname">Usuário</span>
+                    </div>
+                    <a href="home.html" class="btn btn-outline">Voltar para Home</a>
+                    <button class="btn btn-outline" id="logoutBtn">Sair</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Alert Messages -->
+            <div class="alert alert-success" id="successAlert" style="display: none;"></div>
+            <div class="alert alert-error" id="errorAlert" style="display: none;"></div>
+
+            <!-- Profile Header -->
+            <section class="profile-header">
+                <div class="profile-avatar" id="profileAvatar">U</div>
+                <h2 id="profileName">Carregando...</h2>
+                <div class="profile-badge" id="profileBadge">Perfil em Andamento</div>
+                <p>Complete seu perfil para aumentar suas conexões</p>
+            </section>
+
+            <!-- Profile Sections -->
+            <div class="profile-sections">
+                <!-- Informações Básicas -->
+                <section class="profile-section">
+                    <div class="section-header">
+                        <h3>Informações Básicas</h3>
+                        <button class="edit-btn" onclick="toggleEdit('basicInfo')">
+                            <span>✏️</span> Editar
+                        </button>
+                    </div>
+
+                    <!-- Display Mode -->
+                    <div id="basicInfoDisplay">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Nome Completo</span>
+                                <span class="info-value" id="displayFullName">Não informado</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">E-mail</span>
+                                <span class="info-value" id="displayEmail">Carregando...</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Data de Nascimento</span>
+                                <span class="info-value" id="displayBirthDate">Não informada</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Idade</span>
+                                <span class="info-value" id="displayAge">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Edit Mode -->
+                    <div id="basicInfoEdit" class="hidden">
+                        <form id="basicInfoForm">
+                            <div class="form-group">
+                                <label for="fullName">Nome Completo</label>
+                                <input type="text" id="fullName" class="form-control" value="">
+                            </div>
+                            <div class="form-group">
+                                <label for="birthDate">Data de Nascimento</label>
+                                <input type="date" id="birthDate" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                                <button type="button" class="btn btn-secondary" onclick="toggleEdit('basicInfo')">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- Informações de Contato -->
+                <section class="profile-section">
+                    <div class="section-header">
+                        <h3>Informações de Contato</h3>
+                        <button class="edit-btn" onclick="toggleEdit('contactInfo')">
+                            <span>✏️</span> Editar
+                        </button>
+                    </div>
+
+                    <!-- Display Mode -->
+                    <div id="contactInfoDisplay">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Telefone</span>
+                                <span class="info-value" id="displayPhone">Não informado</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Endereço</span>
+                                <span class="info-value" id="displayAddress">Não informado</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Edit Mode -->
+                    <div id="contactInfoEdit" class="hidden">
+                        <form id="contactInfoForm">
+                            <div class="form-group">
+                                <label for="phone">Telefone</label>
+                                <input type="tel" id="phone" class="form-control" placeholder="(11) 99999-9999">
+                            </div>
+                            <div class="form-group">
+                                <label for="address">Endereço</label>
+                                <input type="text" id="address" class="form-control" placeholder="Cidade, Estado">
+                                <div class="form-text">Apenas cidade e estado para sua segurança</div>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                                <button type="button" class="btn btn-secondary" onclick="toggleEdit('contactInfo')">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- Interesses e Preferências -->
+                <section class="profile-section">
+                    <div class="section-header">
+                        <h3>Interesses e Preferências</h3>
+                        <button class="edit-btn" onclick="toggleEdit('preferencesInfo')">
+                            <span>✏️</span> Editar
+                        </button>
+                    </div>
+
+                    <!-- Display Mode -->
+                    <div id="preferencesInfoDisplay">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Gênero</span>
+                                <span class="info-value" id="displayGender">Não informado</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Interesses</span>
+                                <span class="info-value" id="displayInterests">Não informados</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Procuro por</span>
+                                <span class="info-value" id="displayLookingFor">Não informado</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Edit Mode -->
+                    <div id="preferencesInfoEdit" class="hidden">
+                        <form id="preferencesInfoForm">
+                            <div class="form-group">
+                                <label for="gender">Gênero</label>
+                                <select id="gender" class="form-control">
+                                    <option value="">Selecione...</option>
+                                    <option value="feminino">Feminino</option>
+                                    <option value="masculino">Masculino</option>
+                                    <option value="nao_informar">Prefiro não informar</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Interesses</label>
+                                <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="interest_movies" value="Cinema">
+                                        <label for="interest_movies">Cinema</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="interest_music" value="Música">
+                                        <label for="interest_music">Música</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="interest_sports" value="Esportes">
+                                        <label for="interest_sports">Esportes</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="interest_travel" value="Viagens">
+                                        <label for="interest_travel">Viagens</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="interest_reading" value="Leitura">
+                                        <label for="interest_reading">Leitura</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="interest_cooking" value="Culinária">
+                                        <label for="interest_cooking">Culinária</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="interest_games" value="Jogos">
+                                        <label for="interest_games">Jogos</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="interest_art" value="Arte">
+                                        <label for="interest_art">Arte</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="lookingFor">O que procuro</label>
+                                <select id="lookingFor" class="form-control">
+                                    <option value="">Selecione...</option>
+                                    <option value="amizade">Amizade</option>
+                                    <option value="namoro">Namoro</option>
+                                    <option value="relacionamento_serio">Relacionamento Sério</option>
+                                    <option value="conversa">Apenas Conversa</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                                <button type="button" class="btn btn-secondary" onclick="toggleEdit('preferencesInfo')">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- Descrição Pessoal -->
+                <section class="profile-section">
+                    <div class="section-header">
+                        <h3>Descrição Pessoal</h3>
+                        <button class="edit-btn" onclick="toggleEdit('descriptionInfo')">
+                            <span>✏️</span> Editar
+                        </button>
+                    </div>
+
+                    <!-- Display Mode -->
+                    <div id="descriptionInfoDisplay">
+                        <div class="info-item">
+                            <span class="info-label">Sobre mim</span>
+                            <span class="info-value" id="displayDescription">Nenhuma descrição adicionada ainda.</span>
+                        </div>
+                    </div>
+
+                    <!-- Edit Mode -->
+                    <div id="descriptionInfoEdit" class="hidden">
+                        <form id="descriptionInfoForm">
+                            <div class="form-group">
+                                <label for="description">Descreva-se brevemente</label>
+                                <textarea id="description" class="form-control" rows="4" placeholder="Conte um pouco sobre você, seus hobbies, objetivos... (máximo 100 caracteres)"></textarea>
+                                <div class="char-count" id="charCount">0/100 caracteres</div>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">Salvar Descrição</button>
+                                <button type="button" class="btn btn-secondary" onclick="toggleEdit('descriptionInfo')">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Profile Actions -->
+            <section class="profile-actions">
+                <h3>Ações do Perfil</h3>
+                <div class="actions-grid">
+                    <a href="home.html" class="action-card">
+                        <div class="action-icon">🏠</div>
+                        <h4>Voltar para Home</h4>
+                        <p>Retornar à página principal</p>
+                    </a>
+                    <a href="#" class="action-card" onclick="exportProfileData()">
+                        <div class="action-icon">📥</div>
+                        <h4>Exportar Dados</h4>
+                        <p>Baixar suas informações</p>
+                    </a>
+                    <a href="#" class="action-card" onclick="deleteAccount()">
+                        <div class="action-icon">🗑️</div>
+                        <h4>Excluir Conta</h4>
+                        <p>Remover permanentemente</p>
+                    </a>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Conexão Perfeita</h3>
+                    <p>Uma plataforma segura e discreta para conectar corações e construir relacionamentos genuínos.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Links Rápidos</h3>
+                    <ul>
+                        <li><a href="index.html">Página Inicial</a></li>
+                        <li><a href="home.html">Home</a></li>
+                        <li><a href="#depoimentos">Depoimentos</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Suporte</h3>
+                    <ul>
+                        <li><a href="#">Central de Ajuda</a></li>
+                        <li><a href="#">Política de Privacidade</a></li>
+                        <li><a href="#">Termos de Uso</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2023 Conexão Perfeita Amor. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Configuração do Supabase
+        const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Estado da aplicação
+        let currentUser = null;
+        let userProfile = null;
+        let userDetails = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            setupEventListeners();
+            setupDescriptionCounter();
+        });
+
+        // Verificar autenticação
+        async function checkAuth() {
+            try {
+                const { data: { user }, error } = await supabase.auth.getUser();
+                
+                if (error) throw error;
+                
+                if (!user) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                currentUser = user;
+                await loadUserData();
+                
+            } catch (error) {
+                console.error('Erro na autenticação:', error);
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Carregar dados do usuário
+        async function loadUserData() {
+            try {
+                // Buscar perfil básico
+                const { data: profile, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', currentUser.id)
+                    .single();
+
+                if (profileError) throw profileError;
+                userProfile = profile;
+
+                // Buscar detalhes complementares
+                const { data: details, error: detailsError } = await supabase
+                    .from('user_details')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .single();
+
+                userDetails = details || {};
+
+                updateProfileDisplay();
+                updateProfileForms();
+
+            } catch (error) {
+                console.error('Erro ao carregar dados do usuário:', error);
+                showAlert('errorAlert', 'Erro ao carregar dados do perfil.');
+            }
+        }
+
+        // Atualizar display do perfil
+        function updateProfileDisplay() {
+            // Header
+            const nickname = userProfile.nickname || currentUser.email.split('@')[0];
+            document.getElementById('userNickname').textContent = nickname;
+            document.getElementById('userAvatar').textContent = nickname.charAt(0).toUpperCase();
+            document.getElementById('profileAvatar').textContent = nickname.charAt(0).toUpperCase();
+            document.getElementById('profileName').textContent = nickname;
+
+            // Informações básicas
+            document.getElementById('displayFullName').textContent = userProfile.full_name || 'Não informado';
+            document.getElementById('displayFullName').className = userProfile.full_name ? 'info-value' : 'info-value empty';
+            
+            document.getElementById('displayEmail').textContent = currentUser.email;
+            document.getElementById('displayBirthDate').textContent = userProfile.birth_date ? 
+                new Date(userProfile.birth_date).toLocaleDateString('pt-BR') : 'Não informada';
+            document.getElementById('displayBirthDate').className = userProfile.birth_date ? 'info-value' : 'info-value empty';
+            
+            document.getElementById('displayAge').textContent = userProfile.birth_date ? 
+                calculateAge(userProfile.birth_date) + ' anos' : '-';
+
+            // Informações de contato
+            document.getElementById('displayPhone').textContent = userDetails.phone || 'Não informado';
+            document.getElementById('displayPhone').className = userDetails.phone ? 'info-value' : 'info-value empty';
+            
+            document.getElementById('displayAddress').textContent = userDetails.address || 'Não informado';
+            document.getElementById('displayAddress').className = userDetails.address ? 'info-value' : 'info-value empty';
+
+            // Preferências
+            document.getElementById('displayGender').textContent = formatGender(userDetails.gender) || 'Não informado';
+            document.getElementById('displayGender').className = userDetails.gender ? 'info-value' : 'info-value empty';
+            
+            document.getElementById('displayInterests').textContent = userDetails.interests ? 
+                userDetails.interests.join(', ') : 'Não informados';
+            document.getElementById('displayInterests').className = userDetails.interests ? 'info-value' : 'info-value empty';
+            
+            document.getElementById('displayLookingFor').textContent = formatLookingFor(userDetails.looking_for) || 'Não informado';
+            document.getElementById('displayLookingFor').className = userDetails.looking_for ? 'info-value' : 'info-value empty';
+
+            // Descrição
+            document.getElementById('displayDescription').textContent = userDetails.description || 'Nenhuma descrição adicionada ainda.';
+            document.getElementById('displayDescription').className = userDetails.description ? 'info-value' : 'info-value empty';
+
+            // Atualizar badge do perfil
+            updateProfileBadge();
+        }
+
+        // Atualizar formulários com dados existentes
+        function updateProfileForms() {
+            // Formulário de informações básicas
+            document.getElementById('fullName').value = userProfile.full_name || '';
+            document.getElementById('birthDate').value = userProfile.birth_date || '';
+
+            // Formulário de contato
+            document.getElementById('phone').value = userDetails.phone || '';
+            document.getElementById('address').value = userDetails.address || '';
+
+            // Formulário de preferências
+            document.getElementById('gender').value = userDetails.gender || '';
+            document.getElementById('lookingFor').value = userDetails.looking_for || '';
+
+            // Checkboxes de interesses
+            const interests = userDetails.interests || [];
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = interests.includes(checkbox.value);
+            });
+
+            // Descrição
+            document.getElementById('description').value = userDetails.description || '';
+            updateCharCount();
+        }
+
+        // Configurar contador de caracteres
+        function setupDescriptionCounter() {
+            const description = document.getElementById('description');
+            description.addEventListener('input', updateCharCount);
+        }
+
+        function updateCharCount() {
+            const description = document.getElementById('description');
+            const charCount = document.getElementById('charCount');
+            const count = description.value.length;
+            
+            charCount.textContent = `${count}/100 caracteres`;
+            charCount.className = count > 100 ? 'char-count warning' : 'char-count';
+        }
+
+        // Funções auxiliares
+        function calculateAge(birthDate) {
+            const today = new Date();
+            const birth = new Date(birthDate);
+            let age = today.getFullYear() - birth.getFullYear();
+            const monthDiff = today.getMonth() - birth.getMonth();
+            
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+                age--;
+            }
+            
+            return age;
+        }
+
+        function formatGender(gender) {
+            const genders = {
+                'feminino': 'Feminino',
+                'masculino': 'Masculino',
+                'nao_informar': 'Prefiro não informar'
+            };
+            return genders[gender] || gender;
+        }
+
+        function formatLookingFor(lookingFor) {
+            const options = {
+                'amizade': 'Amizade',
+                'namoro': 'Namoro',
+                'relacionamento_serio': 'Relacionamento Sério',
+                'conversa': 'Apenas Conversa'
+            };
+            return options[lookingFor] || lookingFor;
+        }
+
+        function updateProfileBadge() {
+            const badge = document.getElementById('profileBadge');
+            const completedFields = calculateProfileCompletion();
+            
+            if (completedFields >= 80) {
+                badge.textContent = 'Perfil Completo';
+                badge.style.background = 'var(--success)';
+                badge.style.color = 'white';
+            } else if (completedFields >= 50) {
+                badge.textContent = 'Perfil em Andamento';
+                badge.style.background = 'var(--primary-light)';
+            } else {
+                badge.textContent = 'Perfil Básico';
+                badge.style.background = '#e2e8f0';
+            }
+        }
+
+        function calculateProfileCompletion() {
+            let completed = 0;
+            let total = 0;
+
+            // Perfil básico
+            if (userProfile.full_name) completed++;
+            total++;
+            if (userProfile.birth_date) completed++;
+            total++;
+
+            // Detalhes
+            if (userDetails.phone) completed++;
+            total++;
+            if (userDetails.address) completed++;
+            total++;
+            if (userDetails.gender) completed++;
+            total++;
+            if (userDetails.interests && userDetails.interests.length > 0) completed++;
+            total++;
+            if (userDetails.looking_for) completed++;
+            total++;
+            if (userDetails.description) completed++;
+            total++;
+
+            return Math.round((completed / total) * 100);
+        }
+
+        // Toggle entre display e edit mode
+        function toggleEdit(section) {
+            const display = document.getElementById(section + 'Display');
+            const edit = document.getElementById(section + 'Edit');
+            
+            if (display.classList.contains('hidden')) {
+                display.classList.remove('hidden');
+                edit.classList.add('hidden');
+            } else {
+                display.classList.add('hidden');
+                edit.classList.remove('hidden');
+            }
+        }
+
+        // Configurar event listeners
+        function setupEventListeners() {
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+            
+            // Form submissions
+            document.getElementById('basicInfoForm').addEventListener('submit', saveBasicInfo);
+            document.getElementById('contactInfoForm').addEventListener('submit', saveContactInfo);
+            document.getElementById('preferencesInfoForm').addEventListener('submit', savePreferencesInfo);
+            document.getElementById('descriptionInfoForm').addEventListener('submit', saveDescriptionInfo);
+        }
+
+        // Salvar informações básicas
+        async function saveBasicInfo(e) {
+            e.preventDefault();
+            
+            try {
+                const { error } = await supabase
+                    .from('profiles')
+                    .update({
+                        full_name: document.getElementById('fullName').value,
+                        birth_date: document.getElementById('birthDate').value,
+                        updated_at: new Date()
+                    })
+                    .eq('id', currentUser.id);
+
+                if (error) throw error;
+
+                await loadUserData();
+                toggleEdit('basicInfo');
+                showAlert('successAlert', 'Informações básicas atualizadas com sucesso!');
+                
+            } catch (error) {
+                console.error('Erro ao salvar informações básicas:', error);
+                showAlert('errorAlert', 'Erro ao salvar informações básicas.');
+            }
+        }
+
+        // Salvar informações de contato
+        async function saveContactInfo(e) {
+            e.preventDefault();
+            
+            try {
+                const phone = document.getElementById('phone').value;
+                const address = document.getElementById('address').value;
+
+                if (userDetails.id) {
+                    // Atualizar
+                    const { error } = await supabase
+                        .from('user_details')
+                        .update({
+                            phone: phone,
+                            address: address,
+                            updated_at: new Date()
+                        })
+                        .eq('id', userDetails.id);
+
+                    if (error) throw error;
+                } else {
+                    // Criar
+                    const { error } = await supabase
+                        .from('user_details')
+                        .insert([
+                            {
+                                user_id: currentUser.id,
+                                phone: phone,
+                                address: address
+                            }
+                        ]);
+
+                    if (error) throw error;
+                }
+
+                await loadUserData();
+                toggleEdit('contactInfo');
+                showAlert('successAlert', 'Informações de contato atualizadas com sucesso!');
+                
+            } catch (error) {
+                console.error('Erro ao salvar informações de contato:', error);
+                showAlert('errorAlert', 'Erro ao salvar informações de contato.');
+            }
+        }
+
+        // Salvar preferências
+        async function savePreferencesInfo(e) {
+            e.preventDefault();
+            
+            try {
+                const gender = document.getElementById('gender').value;
+                const lookingFor = document.getElementById('lookingFor').value;
+                
+                // Coletar interesses selecionados
+                const interests = [];
+                document.querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
+                    interests.push(checkbox.value);
+                });
+
+                if (userDetails.id) {
+                    // Atualizar
+                    const { error } = await supabase
+                        .from('user_details')
+                        .update({
+                            gender: gender,
+                            interests: interests,
+                            looking_for: lookingFor,
+                            updated_at: new Date()
+                        })
+                        .eq('id', userDetails.id);
+
+                    if (error) throw error;
+                } else {
+                    // Criar
+                    const { error } = await supabase
+                        .from('user_details')
+                        .insert([
+                            {
+                                user_id: currentUser.id,
+                                gender: gender,
+                                interests: interests,
+                                looking_for: lookingFor
+                            }
+                        ]);
+
+                    if (error) throw error;
+                }
+
+                await loadUserData();
+                toggleEdit('preferencesInfo');
+                showAlert('successAlert', 'Preferências atualizadas com sucesso!');
+                
+            } catch (error) {
+                console.error('Erro ao salvar preferências:', error);
+                showAlert('errorAlert', 'Erro ao salvar preferências.');
+            }
+        }
+
+        // Salvar descrição
+        async function saveDescriptionInfo(e) {
+            e.preventDefault();
+            
+            try {
+                const description = document.getElementById('description').value;
+                
+                if (description.length > 100) {
+                    showAlert('errorAlert', 'A descrição deve ter no máximo 100 caracteres.');
+                    return;
+                }
+
+                if (userDetails.id) {
+                    // Atualizar
+                    const { error } = await supabase
+                        .from('user_details')
+                        .update({
+                            description: description,
+                            updated_at: new Date()
+                        })
+                        .eq('id', userDetails.id);
+
+                    if (error) throw error;
+                } else {
+                    // Criar
+                    const { error } = await supabase
+                        .from('user_details')
+                        .insert([
+                            {
+                                user_id: currentUser.id,
+                                description: description
+                            }
+                        ]);
+
+                    if (error) throw error;
+                }
+
+                await loadUserData();
+                toggleEdit('descriptionInfo');
+                showAlert('successAlert', 'Descrição atualizada com sucesso!');
+                
+            } catch (error) {
+                console.error('Erro ao salvar descrição:', error);
+                showAlert('errorAlert', 'Erro ao salvar descrição.');
+            }
+        }
+
+        // Logout
+        async function logout() {
+            try {
+                const { error } = await supabase.auth.signOut();
+                if (error) throw error;
+                
+                window.location.href = 'index.html';
+            } catch (error) {
+                console.error('Erro ao fazer logout:', error);
+                showAlert('errorAlert', 'Erro ao fazer logout. Tente novamente.');
+            }
+        }
+
+        // Funções auxiliares de alerta
+        function showAlert(alertId, message) {
+            const alert = document.getElementById(alertId);
+            alert.textContent = message;
+            alert.style.display = 'block';
+            
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+
+        // Funções de ação
+        function exportProfileData() {
+            const profileData = {
+                perfil: userProfile,
+                detalhes: userDetails,
+                exportado_em: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(profileData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `perfil-${userProfile.nickname || 'usuario'}-${new Date().getTime()}.json`;
+            link.click();
+            
+            showAlert('successAlert', 'Dados exportados com sucesso!');
+        }
+
+        function deleteAccount() {
+            if (confirm('Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita e todos os seus dados serão perdidos.')) {
+                showAlert('errorAlert', 'Funcionalidade de exclusão de conta em desenvolvimento.');
+                // Implementar exclusão de conta no futuro
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Conexão Perfeita Amor</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* (MANTIDO O MESMO CSS ORIGINAL DO LOGIN) */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #ff6b8b;
+            --primary-light: #ffb6c1;
+            --secondary: #a78bfa;
+            --accent: #67e8f9;
+            --light: #fdf2f8;
+            --dark: #4a044e;
+            --text: #444;
+            --text-light: #666;
+            --white: #fff;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+            --error: #e53e3e;
+            --success: #38a169;
+        }
+
+        body {
+            background-color: var(--light);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white);
+            padding: 1rem 0;
+            box-shadow: var(--shadow);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo a {
+            text-decoration: none;
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+        }
+
+        nav a {
+            color: var(--white);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            padding: 0.5rem 1rem;
+            border-radius: 30px;
+        }
+
+        nav a:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 0;
+        }
+
+        .auth-container {
+            background: var(--white);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 450px;
+            overflow: hidden;
+        }
+
+        .auth-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white);
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .auth-header h2 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .auth-header p {
+            opacity: 0.9;
+        }
+
+        .auth-body {
+            padding: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: var(--transition);
+            background-color: var(--light);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            background-color: var(--white);
+        }
+
+        .form-control.error {
+            border-color: var(--error);
+        }
+
+        .error-message {
+            color: var(--error);
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+
+        .password-container {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .remember-forgot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .remember-me label {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin: 0;
+        }
+
+        .forgot-password {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 30px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            width: 100%;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .auth-footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Loading State */
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid var(--light);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+
+        .alert-error {
+            background-color: #fed7d7;
+            border: 1px solid #feb2b2;
+            color: #c53030;
+        }
+
+        .alert-success {
+            background-color: #f0fff4;
+            border: 1px solid #9ae6b4;
+            color: #276749;
+        }
+
+        .alert-info {
+            background-color: #bee3f8;
+            border: 1px solid #90cdf4;
+            color: #2c5aa0;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--dark);
+            color: var(--white);
+            padding: 2rem 0 1.5rem;
+            margin-top: auto;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-column h3 {
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-column a {
+            color: var(--light);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-column a:hover {
+            color: var(--primary-light);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .auth-container {
+                margin: 1rem;
+            }
+
+            .auth-header {
+                padding: 1.5rem;
+            }
+
+            .auth-body {
+                padding: 1.5rem;
+            }
+
+            .remember-forgot {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .auth-header h2 {
+                font-size: 1.5rem;
+            }
+
+            .auth-body {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="index.html">
+                        <span class="logo-icon">💑</span>
+                        <h1>Conexão Perfeita</h1>
+                    </a>
+                </div>
+                <nav>
+                    <a href="index.html">Voltar para Home</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="auth-container">
+                <div class="auth-header">
+                    <h2>Bem-vindo de volta</h2>
+                    <p>Faça login para continuar sua jornada</p>
+                </div>
+                <div class="auth-body">
+                    <!-- Alert Messages -->
+                    <div class="alert alert-error" id="errorAlert">
+                        E-mail ou senha incorretos. Tente novamente.
+                    </div>
+
+                    <div class="alert alert-info" id="verificationAlert">
+                        Sua conta precisa ser verificada. Verifique seu e-mail.
+                    </div>
+
+                    <div class="alert alert-success" id="successAlert">
+                        Login realizado com sucesso! Redirecionando...
+                    </div>
+
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label for="email">E-mail</label>
+                            <input type="email" id="email" class="form-control" placeholder="seu@email.com" required>
+                            <div class="error-message" id="emailError">Por favor, insira um e-mail válido</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password">Senha</label>
+                            <div class="password-container">
+                                <input type="password" id="password" class="form-control" placeholder="Sua senha" required>
+                                <button type="button" class="toggle-password" id="togglePassword">👁️</button>
+                            </div>
+                            <div class="error-message" id="passwordError">Por favor, insira sua senha</div>
+                        </div>
+
+                        <div class="remember-forgot">
+                            <div class="remember-me">
+                                <input type="checkbox" id="rememberMe">
+                                <label for="rememberMe">Lembrar-me</label>
+                            </div>
+                            <a href="#" class="forgot-password" id="forgotPassword">Esqueci minha senha</a>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            Entrar
+                        </button>
+
+                        <div class="loading" id="loading">
+                            <div class="spinner"></div>
+                            <p>Autenticando...</p>
+                        </div>
+                    </form>
+
+                    <div class="auth-footer">
+                        <p>Não tem uma conta? <a href="cadastro.html">Cadastre-se aqui</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Conexão Perfeita</h3>
+                    <p>Uma plataforma segura e discreta para conectar corações e construir relacionamentos genuínos.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Links Rápidos</h3>
+                    <ul>
+                        <li><a href="index.html">Página Inicial</a></li>
+                        <li><a href="#como-funciona">Como Funciona</a></li>
+                        <li><a href="#depoimentos">Depoimentos</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Suporte</h3>
+                    <ul>
+                        <li><a href="#">Central de Ajuda</a></li>
+                        <li><a href="#">Política de Privacidade</a></li>
+                        <li><a href="#">Termos de Uso</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2023 Conexão Perfeita Amor. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Configuração do Supabase COM SUAS CREDENCIAIS REAIS
+        const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('loginForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const loading = document.getElementById('loading');
+            const togglePassword = document.getElementById('togglePassword');
+            const passwordInput = document.getElementById('password');
+            
+            // Elementos de alerta
+            const errorAlert = document.getElementById('errorAlert');
+            const verificationAlert = document.getElementById('verificationAlert');
+            const successAlert = document.getElementById('successAlert');
+
+            // Verificar se já está logado
+            supabase.auth.getUser().then(({ data: { user } }) => {
+                if (user) {
+                    window.location.href = 'home.html';
+                }
+            });
+
+            // Toggle password visibility
+            togglePassword.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                togglePassword.textContent = type === 'password' ? '👁️' : '🔒';
+            });
+
+            // Validação em tempo real
+            document.getElementById('email').addEventListener('blur', validateEmail);
+            document.getElementById('password').addEventListener('blur', validatePassword);
+
+            function validateEmail() {
+                const email = document.getElementById('email');
+                const value = email.value.trim();
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                const isValid = emailRegex.test(value);
+                
+                if (!isValid && value !== '') {
+                    showError('emailError', 'Por favor, insira um e-mail válido');
+                    email.classList.add('error');
+                } else {
+                    hideError('emailError');
+                    email.classList.remove('error');
+                }
+                
+                return isValid || value === '';
+            }
+
+            function validatePassword() {
+                const password = document.getElementById('password');
+                const value = password.value;
+                const isValid = value.length >= 1;
+                
+                if (!isValid && value !== '') {
+                    showError('passwordError', 'A senha deve ter pelo menos 6 caracteres');
+                    password.classList.add('error');
+                } else {
+                    hideError('passwordError');
+                    password.classList.remove('error');
+                }
+                
+                return isValid || value === '';
+            }
+
+            function showError(elementId, message) {
+                const errorElement = document.getElementById(elementId);
+                errorElement.textContent = message;
+                errorElement.style.display = 'block';
+            }
+
+            function hideError(elementId) {
+                const errorElement = document.getElementById(elementId);
+                errorElement.style.display = 'none';
+            }
+
+            function hideAllAlerts() {
+                errorAlert.style.display = 'none';
+                verificationAlert.style.display = 'none';
+                successAlert.style.display = 'none';
+            }
+
+            function showAlert(alertElement, message) {
+                hideAllAlerts();
+                alertElement.textContent = message;
+                alertElement.style.display = 'block';
+            }
+
+            function validateForm() {
+                const email = document.getElementById('email').value.trim();
+                const password = document.getElementById('password').value;
+                
+                const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+                const passwordValid = password.length >= 6;
+                
+                if (!emailValid) {
+                    showError('emailError', 'Por favor, insira um e-mail válido');
+                    document.getElementById('email').classList.add('error');
+                }
+                
+                if (!passwordValid) {
+                    showError('passwordError', 'A senha deve ter pelo menos 6 caracteres');
+                    document.getElementById('password').classList.add('error');
+                }
+                
+                return emailValid && passwordValid;
+            }
+
+            // Submit do formulário - AGORA COM SUPABASE REAL
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                hideAllAlerts();
+                
+                if (!validateForm()) {
+                    return;
+                }
+                
+                submitBtn.disabled = true;
+                loading.style.display = 'block';
+                
+                try {
+                    const email = document.getElementById('email').value.trim();
+                    const password = document.getElementById('password').value;
+
+                    const { data, error } = await supabase.auth.signInWithPassword({
+                        email: email,
+                        password: password
+                    });
+
+                    if (error) throw error;
+
+                    if (data.user) {
+                        // Verificar se o e-mail foi confirmado
+                        if (!data.user.email_confirmed_at) {
+                            showAlert(verificationAlert, 'Sua conta precisa ser verificada. Verifique seu e-mail antes de fazer login.');
+                        } else {
+                            showAlert(successAlert, 'Login realizado com sucesso! Redirecionando...');
+                            
+                            // Salvar e-mail se "Lembrar-me" estiver marcado
+                            if (document.getElementById('rememberMe').checked) {
+                                localStorage.setItem('rememberedEmail', email);
+                            }
+                            
+                            // Redirecionar para home após 2 segundos
+                            setTimeout(() => {
+                                window.location.href = 'home.html';
+                            }, 2000);
+                        }
+                    }
+                    
+                } catch (error) {
+                    console.error('Erro no login:', error);
+                    
+                    if (error.message.includes('Invalid login credentials')) {
+                        showAlert(errorAlert, 'E-mail ou senha incorretos. Tente novamente.');
+                    } else if (error.message.includes('Email not confirmed')) {
+                        showAlert(verificationAlert, 'Sua conta precisa ser verificada. Verifique seu e-mail antes de fazer login.');
+                    } else {
+                        showAlert(errorAlert, 'Erro ao fazer login: ' + error.message);
+                    }
+                } finally {
+                    submitBtn.disabled = false;
+                    loading.style.display = 'none';
+                }
+            });
+
+            // Esqueci minha senha - AGORA COM SUPABASE REAL
+            document.getElementById('forgotPassword').addEventListener('click', async function(e) {
+                e.preventDefault();
+                const email = document.getElementById('email').value.trim();
+                
+                if (!email) {
+                    alert('Por favor, insira seu e-mail para redefinir a senha.');
+                    document.getElementById('email').focus();
+                    return;
+                }
+                
+                try {
+                    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                        redirectTo: 'https://conexaoperfeitaamor.netlify.app/reset-password.html'
+                    });
+
+                    if (error) throw error;
+
+                    alert(`Instruções de redefinição de senha enviadas para: ${email}`);
+                    
+                } catch (error) {
+                    console.error('Erro ao enviar e-mail de redefinição:', error);
+                    alert('Erro ao enviar e-mail de redefinição. Verifique se o e-mail está correto.');
+                }
+            });
+
+            // Lembrar dados de login se a opção estiver marcada
+            const rememberMe = document.getElementById('rememberMe');
+            const savedEmail = localStorage.getItem('rememberedEmail');
+            
+            if (savedEmail) {
+                document.getElementById('email').value = savedEmail;
+                rememberMe.checked = true;
+            }
+            
+            rememberMe.addEventListener('change', function() {
+                if (this.checked) {
+                    localStorage.setItem('rememberedEmail', document.getElementById('email').value);
+                } else {
+                    localStorage.removeItem('rememberedEmail');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

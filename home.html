@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - Conexão Perfeita Amor</title>
+    <!-- Incluir SDK do Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* (O CSS permanece exatamente igual ao anterior) */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #ff6b8b;
+            --primary-light: #ffb6c1;
+            --secondary: #a78bfa;
+            --accent: #67e8f9;
+            --light: #fdf2f8;
+            --dark: #4a044e;
+            --text: #444;
+            --text-light: #666;
+            --white: #fff;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+            --error: #e53e3e;
+            --success: #38a169;
+        }
+
+        body {
+            background-color: var(--light);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white);
+            padding: 1rem 0;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--white);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1.5rem;
+            border-radius: 30px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--white);
+            color: var(--white);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem 0;
+        }
+
+        .welcome-section {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: var(--white);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+        }
+
+        .welcome-section h2 {
+            font-size: 2.5rem;
+            color: var(--dark);
+            margin-bottom: 1rem;
+        }
+
+        .welcome-section p {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+
+        .user-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        /* Users Grid */
+        .users-section {
+            margin-bottom: 3rem;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .section-header h2 {
+            font-size: 2rem;
+            color: var(--dark);
+        }
+
+        .users-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .user-card {
+            background: var(--white);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            text-align: center;
+        }
+
+        .user-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .user-card-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0 auto 1rem;
+        }
+
+        .user-card-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .user-card-age {
+            color: var(--text-light);
+            margin-bottom: 1rem;
+        }
+
+        .user-card-bio {
+            font-size: 0.9rem;
+            color: var(--text);
+            margin-bottom: 1.5rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .user-card-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white);
+            border: none;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            margin-bottom: 3rem;
+        }
+
+        .quick-actions h2 {
+            margin-bottom: 1.5rem;
+            color: var(--dark);
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .action-card {
+            background: var(--light);
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .action-card:hover {
+            background: var(--primary-light);
+            transform: translateY(-3px);
+        }
+
+        .action-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Messages Preview */
+        .messages-section {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+        }
+
+        .messages-section h2 {
+            margin-bottom: 1.5rem;
+            color: var(--dark);
+        }
+
+        .messages-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .message-item {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .message-item:last-child {
+            border-bottom: none;
+        }
+
+        .message-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .message-content {
+            flex: 1;
+        }
+
+        .message-sender {
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .message-preview {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .message-time {
+            color: var(--text-light);
+            font-size: 0.8rem;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--dark);
+            color: var(--white);
+            padding: 3rem 0 1.5rem;
+            margin-top: 3rem;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-column h3 {
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-column a {
+            color: var(--light);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-column a:hover {
+            color: var(--primary-light);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--light);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Alertas */
+        .alert {
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .alert-info {
+            background-color: #bee3f8;
+            border: 1px solid #90cdf4;
+            color: #2c5aa0;
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .user-menu {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .welcome-section h2 {
+                font-size: 2rem;
+            }
+
+            .users-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="logo-icon">💑</span>
+                    <h1>Conexão Perfeita</h1>
+                </div>
+                <div class="user-menu">
+                    <div class="user-info">
+                        <div class="user-avatar" id="userAvatar">U</div>
+                        <span id="userNickname">Usuário</span>
+                    </div>
+                    <a href="painel.html" class="btn btn-outline">Meu Perfil</a>
+                    <button class="btn btn-outline" id="logoutBtn">Sair</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Welcome Section -->
+            <section class="welcome-section">
+                <h2>Olá, <span id="welcomeNickname">Amoroso</span>! 👋</h2>
+                <p>Encontre conexões genuínas e construa relacionamentos significativos</p>
+            </section>
+
+            <!-- User Stats -->
+            <div class="user-stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="usersOnline">0</div>
+                    <div class="stat-label">Pessoas Online</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalUsers">0</div>
+                    <div class="stat-label">Usuários na Plataforma</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="newMessages">0</div>
+                    <div class="stat-label">Novas Mensagens</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="profileViews">0</div>
+                    <div class="stat-label">Visualizações do Perfil</div>
+                </div>
+            </div>
+
+            <!-- Users Grid -->
+            <section class="users-section">
+                <div class="section-header">
+                    <h2>Conheça Novas Pessoas</h2>
+                </div>
+                <div class="users-grid" id="usersGrid">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Carregando usuários...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quick Actions -->
+            <section class="quick-actions">
+                <h2>Ações Rápidas</h2>
+                <div class="actions-grid">
+                    <div class="action-card" onclick="window.location.href='painel.html'">
+                        <div class="action-icon">👤</div>
+                        <h3>Completar Perfil</h3>
+                        <p>Adicione mais informações ao seu perfil</p>
+                    </div>
+                    <div class="action-card" onclick="window.location.href='busca.html'">
+                        <div class="action-icon">🔍</div>
+                        <h3>Buscar Pessoas</h3>
+                        <p>Encontre pessoas com interesses similares</p>
+                    </div>
+                    <div class="action-card" onclick="showMessages()">
+                        <div class="action-icon">💌</div>
+                        <h3>Minhas Mensagens</h3>
+                        <p>Ver suas conversas</p>
+                    </div>
+                    <div class="action-card" onclick="window.location.href='configuracoes.html'">
+                        <div class="action-icon">⚙️</div>
+                        <h3>Configurações</h3>
+                        <p>Ajuste suas preferências</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Messages Preview -->
+            <section class="messages-section">
+                <h2>Últimas Mensagens</h2>
+                <div class="messages-list" id="messagesList">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Carregando mensagens...</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Conexão Perfeita</h3>
+                    <p>Uma plataforma segura e discreta para conectar corações e construir relacionamentos genuínos.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Links Rápidos</h3>
+                    <ul>
+                        <li><a href="index.html">Página Inicial</a></li>
+                        <li><a href="#como-funciona">Como Funciona</a></li>
+                        <li><a href="#depoimentos">Depoimentos</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Suporte</h3>
+                    <ul>
+                        <li><a href="#">Central de Ajuda</a></li>
+                        <li><a href="#">Política de Privacidade</a></li>
+                        <li><a href="#">Termos de Uso</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2023 Conexão Perfeita Amor. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Configuração do Supabase COM SUAS CREDENCIAIS REAIS
+        const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+        
+        // Inicializar Supabase
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Estado da aplicação
+        let currentUser = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            setupEventListeners();
+        });
+
+        // Verificar autenticação
+        async function checkAuth() {
+            try {
+                showLoading('usersGrid', 'Carregando usuários...');
+                showLoading('messagesList', 'Carregando mensagens...');
+                
+                const { data: { user }, error } = await supabase.auth.getUser();
+                
+                if (error) throw error;
+                
+                if (!user) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                currentUser = user;
+                await loadUserData();
+                await loadUsers();
+                await loadMessages();
+                updateStats();
+                
+            } catch (error) {
+                console.error('Erro na autenticação:', error);
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Carregar dados do usuário
+        async function loadUserData() {
+            try {
+                // Buscar dados do perfil
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', currentUser.id)
+                    .single();
+
+                if (error) {
+                    // Se o perfil não existe, criar um básico
+                    if (error.code === 'PGRST116') {
+                        await createUserProfile();
+                        return await loadUserData(); // Recarregar após criar
+                    }
+                    throw error;
+                }
+
+                // Atualizar interface
+                const nickname = data.nickname || currentUser.email.split('@')[0];
+                updateUserInterface(nickname);
+
+            } catch (error) {
+                console.error('Erro ao carregar dados do usuário:', error);
+            }
+        }
+
+        // Criar perfil do usuário se não existir
+        async function createUserProfile() {
+            try {
+                const { error } = await supabase
+                    .from('profiles')
+                    .insert([
+                        {
+                            id: currentUser.id,
+                            nickname: currentUser.email.split('@')[0],
+                            full_name: '',
+                            created_at: new Date()
+                        }
+                    ]);
+
+                if (error) throw error;
+                
+            } catch (error) {
+                console.error('Erro ao criar perfil:', error);
+            }
+        }
+
+        // Atualizar interface com dados do usuário
+        function updateUserInterface(nickname) {
+            document.getElementById('userNickname').textContent = nickname;
+            document.getElementById('welcomeNickname').textContent = nickname;
+            document.getElementById('userAvatar').textContent = nickname.charAt(0).toUpperCase();
+        }
+
+        // Carregar outros usuários
+        async function loadUsers() {
+            try {
+                const { data: users, error } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .neq('id', currentUser.id)
+                    .limit(6);
+
+                if (error) throw error;
+
+                const usersGrid = document.getElementById('usersGrid');
+                
+                if (!users || users.length === 0) {
+                    usersGrid.innerHTML = '<div class="alert alert-info">Nenhum usuário encontrado. Seja o primeiro a se cadastrar!</div>';
+                    return;
+                }
+
+                usersGrid.innerHTML = users.map(user => `
+                    <div class="user-card">
+                        <div class="user-card-avatar">${user.nickname ? user.nickname.charAt(0).toUpperCase() : 'U'}</div>
+                        <div class="user-card-name">${user.nickname || 'Usuário'}</div>
+                        <div class="user-card-age">${calculateAge(user.birth_date) || 'Idade não informada'}</div>
+                        <div class="user-card-bio">${getUserDescription(user) || 'Este usuário ainda não adicionou uma descrição.'}</div>
+                        <div class="user-card-actions">
+                            <button class="btn btn-primary btn-sm" onclick="sendMessage('${user.id}')">Enviar Mensagem</button>
+                            <button class="btn btn-secondary btn-sm" onclick="viewProfile('${user.id}')">Ver Perfil</button>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                console.error('Erro ao carregar usuários:', error);
+                document.getElementById('usersGrid').innerHTML = '<div class="alert alert-info">Erro ao carregar usuários. Tente novamente.</div>';
+            }
+        }
+
+        // Carregar mensagens
+        async function loadMessages() {
+            try {
+                const { data: messages, error } = await supabase
+                    .from('messages')
+                    .select('*, profiles:sender_id(nickname)')
+                    .eq('receiver_id', currentUser.id)
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+
+                if (error) throw error;
+
+                const messagesList = document.getElementById('messagesList');
+                
+                if (!messages || messages.length === 0) {
+                    messagesList.innerHTML = '<div class="alert alert-info">Nenhuma mensagem recebida ainda. Envie uma mensagem para alguém!</div>';
+                    return;
+                }
+
+                messagesList.innerHTML = messages.map(msg => `
+                    <div class="message-item" onclick="openConversation('${msg.sender_id}')">
+                        <div class="message-avatar">${msg.profiles?.nickname ? msg.profiles.nickname.charAt(0).toUpperCase() : 'U'}</div>
+                        <div class="message-content">
+                            <div class="message-sender">${msg.profiles?.nickname || 'Usuário'}</div>
+                            <div class="message-preview">${msg.content}</div>
+                        </div>
+                        <div class="message-time">${formatTime(msg.created_at)}</div>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                console.error('Erro ao carregar mensagens:', error);
+                document.getElementById('messagesList').innerHTML = '<div class="alert alert-info">Erro ao carregar mensagens.</div>';
+            }
+        }
+
+        // Funções auxiliares
+        function calculateAge(birthDate) {
+            if (!birthDate) return null;
+            const today = new Date();
+            const birth = new Date(birthDate);
+            let age = today.getFullYear() - birth.getFullYear();
+            const monthDiff = today.getMonth() - birth.getMonth();
+            
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+                age--;
+            }
+            
+            return age + ' anos';
+        }
+
+        function getUserDescription(user) {
+            // Esta função será expandida quando tivermos a tabela user_details
+            return user.description || null;
+        }
+
+        function formatTime(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 60000) return 'Agora';
+            if (diff < 3600000) return `${Math.floor(diff / 60000)}min`;
+            if (diff < 86400000) return `${Math.floor(diff / 3600000)}h`;
+            
+            return date.toLocaleDateString('pt-BR');
+        }
+
+        function showLoading(elementId, message = 'Carregando...') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+
+        // Atualizar estatísticas
+        async function updateStats() {
+            try {
+                // Buscar dados reais do Supabase
+                const { count: totalUsers } = await supabase
+                    .from('profiles')
+                    .select('*', { count: 'exact', head: true });
+
+                const { count: newMessages } = await supabase
+                    .from('messages')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('receiver_id', currentUser.id)
+                    .eq('is_read', false);
+
+                document.getElementById('totalUsers').textContent = totalUsers || 0;
+                document.getElementById('newMessages').textContent = newMessages || 0;
+                document.getElementById('usersOnline').textContent = Math.floor(Math.random() * 20) + 5; // Simulado
+                document.getElementById('profileViews').textContent = Math.floor(Math.random() * 15); // Simulado
+
+            } catch (error) {
+                console.error('Erro ao carregar estatísticas:', error);
+            }
+        }
+
+        // Configurar event listeners
+        function setupEventListeners() {
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+        }
+
+        // Logout
+        async function logout() {
+            try {
+                const { error } = await supabase.auth.signOut();
+                if (error) throw error;
+                
+                window.location.href = 'index.html';
+            } catch (error) {
+                console.error('Erro ao fazer logout:', error);
+                alert('Erro ao fazer logout. Tente novamente.');
+            }
+        }
+
+        // Funções de interação
+        function sendMessage(userId) {
+            const message = prompt('Digite sua mensagem:');
+            if (message && message.trim()) {
+                sendMessageToUser(userId, message.trim());
+            }
+        }
+
+        async function sendMessageToUser(receiverId, content) {
+            try {
+                const { error } = await supabase
+                    .from('messages')
+                    .insert([
+                        {
+                            sender_id: currentUser.id,
+                            receiver_id: receiverId,
+                            content: content
+                        }
+                    ]);
+
+                if (error) throw error;
+                
+                alert('Mensagem enviada com sucesso!');
+                loadMessages(); // Recarregar a lista de mensagens
+                
+            } catch (error) {
+                console.error('Erro ao enviar mensagem:', error);
+                alert('Erro ao enviar mensagem. Tente novamente.');
+            }
+        }
+
+        function viewProfile(userId) {
+            alert(`Visualizando perfil do usuário ${userId} - Esta funcionalidade será implementada em breve!`);
+        }
+
+        function openConversation(userId) {
+            alert(`Abrindo conversa com o usuário ${userId} - Sistema de chat completo em desenvolvimento!`);
+        }
+
+        function showMessages() {
+            alert('Sistema completo de mensagens em desenvolvimento!');
+        }
+    </script>
+</body>
+</html>
