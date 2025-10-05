@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscar Pessoas - Conexão Perfeita Amor</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="css/busca.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="home.html">
+                        <span class="logo-icon">💑</span>
+                        <h1>Conexão Perfeita</h1>
+                    </a>
+                </div>
+                <div class="user-menu">
+                    <div class="user-info">
+                        <div class="user-avatar" id="userAvatar">U</div>
+                        <span id="userNickname">Usuário</span>
+                    </div>
+                    <a href="home.html" class="btn btn-outline">Voltar para Home</a>
+                    <button class="btn btn-outline" id="logoutBtn">Sair</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Page Header -->
+            <section class="page-header">
+                <h1>Encontrar Pessoas Incríveis</h1>
+                <p>Conheça pessoas com interesses similares aos seus</p>
+            </section>
+
+            <!-- Search Filters -->
+            <section class="filters-section">
+                <div class="filters-card">
+                    <h3>🔍 Filtros de Busca</h3>
+                    
+                    <div class="filters-grid">
+                        <!-- Idade -->
+                        <div class="filter-group">
+                            <label for="ageMin">Idade</label>
+                            <div class="range-inputs">
+                                <input type="number" id="ageMin" placeholder="18" min="18" max="100">
+                                <span>até</span>
+                                <input type="number" id="ageMax" placeholder="60" min="18" max="100">
+                            </div>
+                        </div>
+
+                        <!-- Gênero -->
+                        <div class="filter-group">
+                            <label for="gender">Gênero</label>
+                            <select id="gender" class="form-control">
+                                <option value="">Todos</option>
+                                <option value="feminino">Feminino</option>
+                                <option value="masculino">Masculino</option>
+                            </select>
+                        </div>
+
+                        <!-- Interesses -->
+                        <div class="filter-group">
+                            <label for="interests">Interesses</label>
+                            <select id="interests" class="form-control" multiple>
+                                <option value="Cinema">Cinema</option>
+                                <option value="Música">Música</option>
+                                <option value="Esportes">Esportes</option>
+                                <option value="Viagens">Viagens</option>
+                                <option value="Leitura">Leitura</option>
+                                <option value="Culinária">Culinária</option>
+                                <option value="Jogos">Jogos</option>
+                                <option value="Arte">Arte</option>
+                            </select>
+                        </div>
+
+                        <!-- Procura por -->
+                        <div class="filter-group">
+                            <label for="lookingFor">Procura por</label>
+                            <select id="lookingFor" class="form-control">
+                                <option value="">Todos</option>
+                                <option value="amizade">Amizade</option>
+                                <option value="namoro">Namoro</option>
+                                <option value="relacionamento_serio">Relacionamento Sério</option>
+                                <option value="conversa">Conversa</option>
+                            </select>
+                        </div>
+
+                        <!-- Localização -->
+                        <div class="filter-group">
+                            <label for="location">Localização</label>
+                            <input type="text" id="location" class="form-control" placeholder="Cidade ou Estado">
+                        </div>
+                    </div>
+
+                    <div class="filter-actions">
+                        <button class="btn btn-primary" onclick="applyFilters()">
+                            🔍 Aplicar Filtros
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearFilters()">
+                            🗑️ Limpar Filtros
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results-section">
+                <div class="results-header">
+                    <h2>Pessoas Encontradas</h2>
+                    <div class="results-info">
+                        <span id="resultsCount">0 resultados</span>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div class="loading" id="loadingResults">
+                    <div class="spinner"></div>
+                    <p>Buscando pessoas...</p>
+                </div>
+
+                <!-- Results Grid -->
+                <div class="users-grid" id="usersGrid">
+                    <!-- Os cards serão inseridos aqui via JavaScript -->
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination" id="pagination">
+                    <!-- Paginação será inserida aqui -->
+                </div>
+
+                <!-- No Results -->
+                <div class="no-results hidden" id="noResults">
+                    <div class="no-results-content">
+                        <div class="no-results-icon">🔍</div>
+                        <h3>Nenhuma pessoa encontrada</h3>
+                        <p>Tente ajustar os filtros de busca para encontrar mais pessoas.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Conexão Perfeita</h3>
+                    <p>Uma plataforma segura e discreta para conectar corações e construir relacionamentos genuínos.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Links Rápidos</h3>
+                    <ul>
+                        <li><a href="index.html">Página Inicial</a></li>
+                        <li><a href="home.html">Home</a></li>
+                        <li><a href="#depoimentos">Depoimentos</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Suporte</h3>
+                    <ul>
+                        <li><a href="#">Central de Ajuda</a></li>
+                        <li><a href="#">Política de Privacidade</a></li>
+                        <li><a href="#">Termos de Uso</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2023 Conexão Perfeita Amor. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/busca.js"></script>
+</body>
+</html>
