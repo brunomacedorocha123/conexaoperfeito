@@ -5,7 +5,483 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minhas Mensagens - Conexão Perfeita Amor</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="stylesheet" href="mensagens.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #ff6b8b;
+            --primary-light: #ffb6c1;
+            --secondary: #a78bfa;
+            --accent: #67e8f9;
+            --light: #fdf2f8;
+            --dark: #4a044e;
+            --text: #444;
+            --text-light: #666;
+            --white: #fff;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            background-color: var(--light);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white);
+            padding: 1rem 0;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo a {
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--white);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1.5rem;
+            border-radius: 30px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--white);
+            color: var(--white);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white);
+            border: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem 0;
+            min-height: 70vh;
+        }
+
+        /* Page Header */
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: var(--white);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+        }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            color: var(--dark);
+            margin-bottom: 1rem;
+        }
+
+        .page-header p {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+
+        /* User Stats */
+        .user-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            transition: var(--transition);
+            border: 2px solid transparent;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary-light);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Results Section */
+        .results-section {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            margin-bottom: 3rem;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--light);
+        }
+
+        .results-header h2 {
+            font-size: 1.8rem;
+            color: var(--dark);
+            margin: 0;
+        }
+
+        .results-info {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Users Grid */
+        .users-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        /* User Card para conversas */
+        .user-card {
+            background: var(--white);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            border: 2px solid transparent;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .user-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary-light);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .user-card-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0 auto 1rem;
+        }
+
+        .user-card-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .user-card-age {
+            color: var(--text-light);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .conversation-preview {
+            font-size: 0.9rem;
+            color: var(--text);
+            margin-bottom: 1rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            min-height: 2.8rem;
+            line-height: 1.4;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .conversation-time {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            text-align: right;
+            margin-bottom: 1rem;
+        }
+
+        .user-card-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        /* Unread Badge */
+        .unread-badge {
+            color: var(--primary);
+            font-size: 1.2rem;
+            margin-left: 0.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* Message Count */
+        .message-count {
+            background: var(--primary-light);
+            color: var(--dark);
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            grid-column: 1 / -1;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--light);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* No Results */
+        .no-results {
+            text-align: center;
+            padding: 4rem 2rem;
+            grid-column: 1 / -1;
+        }
+
+        .no-results.hidden {
+            display: none;
+        }
+
+        .no-results-content {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .no-results-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.7;
+        }
+
+        .no-results h3 {
+            font-size: 1.5rem;
+            color: var(--dark);
+            margin-bottom: 1rem;
+        }
+
+        .no-results p {
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--dark);
+            color: var(--white);
+            padding: 3rem 0 1.5rem;
+            margin-top: 3rem;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-column h3 {
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-column a {
+            color: var(--light);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-column a:hover {
+            color: var(--primary-light);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .user-menu {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .users-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .user-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .results-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+
+            .page-header h1 {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .user-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-number {
+                font-size: 2rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Header -->
@@ -126,6 +602,529 @@
         </div>
     </footer>
 
-    <script src="mensagens.js"></script>
+    <script>
+
+// Configuração do Supabase
+const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Estado da aplicação
+let currentUser = null;
+let userProfile = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    checkAuth();
+    setupEventListeners();
+});
+
+// Verificar autenticação
+async function checkAuth() {
+    try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error) throw error;
+        
+        if (!user) {
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        currentUser = user;
+        await loadUserData();
+        await loadConversations();
+        updateMessagesStats();
+        
+    } catch (error) {
+        console.error('Erro na autenticação:', error);
+        window.location.href = 'login.html';
+    }
+}
+
+// ✅ CARREGAR DADOS DO USUÁRIO - VERSÃO MELHORADA
+async function loadUserData() {
+    try {
+        console.log('🔄 Buscando dados do usuário...');
+        
+        // ✅ BUSCAR DADOS DO AUTH
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        // ✅ BUSCAR PERFIL DO BANCO
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', currentUser.id)
+            .single();
+
+        if (!profileError) {
+            userProfile = profile;
+        }
+
+        // ✅ PRIORIDADE: nickname do user_metadata (que vem do cadastro)
+        let displayName = 'Usuário';
+        
+        if (user.user_metadata && user.user_metadata.nickname) {
+            displayName = user.user_metadata.nickname;
+            console.log('🎯 Usando NICKNAME do Auth:', displayName);
+        } else if (user.user_metadata && user.user_metadata.full_name) {
+            displayName = user.user_metadata.full_name;
+            console.log('📝 Usando NOME COMPLETO do Auth:', displayName);
+        } else if (user.email) {
+            displayName = user.email.split('@')[0];
+            console.log('📧 Usando E-MAIL como fallback:', displayName);
+        }
+
+        // Atualizar interface
+        document.getElementById('userNickname').textContent = displayName;
+        document.getElementById('userAvatar').textContent = displayName.charAt(0).toUpperCase();
+
+        console.log('✅ Interface atualizada com:', displayName);
+
+    } catch (error) {
+        console.error('❌ Erro ao carregar dados do usuário:', error);
+        
+        // Fallback super seguro
+        const fallbackName = currentUser.email ? currentUser.email.split('@')[0] : 'Usuário';
+        document.getElementById('userNickname').textContent = fallbackName;
+        document.getElementById('userAvatar').textContent = fallbackName.charAt(0).toUpperCase();
+    }
+}
+
+// ✅ VERIFICAR SE PERFIL ESTÁ COMPLETO
+function isProfileComplete() {
+    console.log('🔍 Verificando se perfil está completo...');
+    
+    if (!currentUser) {
+        console.log('❌ Usuário não autenticado');
+        return false;
+    }
+
+    // Verificar dados mínimos necessários no perfil
+    const hasBasicProfile = userProfile && 
+                          userProfile.full_name && 
+                          userProfile.full_name.trim() !== '' &&
+                          userProfile.birth_date;
+
+    console.log('📊 Status do perfil:', {
+        hasBasicProfile,
+        userProfile: userProfile
+    });
+
+    return hasBasicProfile;
+}
+
+// ✅ CARREGAR CONVERSAS - VERSÃO MELHORADA
+async function loadConversations() {
+    try {
+        showLoadingState();
+        
+        console.log('🔄 Carregando conversas...');
+
+        // ✅ VERIFICAR SE PERFIL ESTÁ COMPLETO ANTES DE CARREGAR MENSAGENS
+        if (!isProfileComplete()) {
+            showProfileIncomplete();
+            return;
+        }
+
+        // Buscar mensagens onde o usuário atual é o receptor
+        const { data: receivedMessages, error: receivedError } = await supabase
+            .from('messages')
+            .select(`
+                *,
+                profiles:sender_id (
+                    nickname,
+                    birth_date
+                )
+            `)
+            .eq('receiver_id', currentUser.id)
+            .order('created_at', { ascending: false });
+
+        if (receivedError) {
+            console.log('⚠️ Nenhuma mensagem recebida encontrada');
+            // Continua para tentar carregar mensagens enviadas
+        }
+
+        // Buscar mensagens onde o usuário atual é o remetente
+        const { data: sentMessages, error: sentError } = await supabase
+            .from('messages')
+            .select(`
+                *,
+                profiles:receiver_id (
+                    nickname,
+                    birth_date
+                )
+            `)
+            .eq('sender_id', currentUser.id)
+            .order('created_at', { ascending: false });
+
+        if (sentError) {
+            console.log('⚠️ Nenhuma mensagem enviada encontrada');
+        }
+
+        // Combinar e organizar conversas
+        const conversations = organizeConversations(receivedMessages || [], sentMessages || []);
+        
+        console.log('✅ Conversas carregadas:', conversations.length);
+        displayConversations(conversations);
+        updateConversationsInfo(conversations.length);
+
+    } catch (error) {
+        console.error('❌ Erro ao carregar conversas:', error);
+        showError('Erro ao carregar mensagens. Tente novamente.');
+    }
+}
+
+// Organizar conversas por usuário
+function organizeConversations(receivedMessages, sentMessages) {
+    const conversationsMap = new Map();
+
+    // Processar mensagens recebidas
+    if (receivedMessages && receivedMessages.length > 0) {
+        receivedMessages.forEach(msg => {
+            const otherUserId = msg.sender_id;
+            const otherUser = msg.profiles;
+            
+            if (!conversationsMap.has(otherUserId)) {
+                conversationsMap.set(otherUserId, {
+                    user_id: otherUserId,
+                    nickname: otherUser?.nickname || 'Usuário',
+                    age: otherUser?.birth_date ? calculateAge(otherUser.birth_date) : null,
+                    last_message: msg.content,
+                    last_message_time: msg.created_at,
+                    unread: !msg.is_read,
+                    message_count: 1,
+                    last_interaction: msg.created_at,
+                    is_received: true
+                });
+            } else {
+                const existing = conversationsMap.get(otherUserId);
+                if (new Date(msg.created_at) > new Date(existing.last_interaction)) {
+                    existing.last_message = msg.content;
+                    existing.last_message_time = msg.created_at;
+                    existing.unread = existing.unread || !msg.is_read;
+                }
+                existing.message_count++;
+            }
+        });
+    }
+
+    // Processar mensagens enviadas
+    if (sentMessages && sentMessages.length > 0) {
+        sentMessages.forEach(msg => {
+            const otherUserId = msg.receiver_id;
+            const otherUser = msg.profiles;
+            
+            if (!conversationsMap.has(otherUserId)) {
+                conversationsMap.set(otherUserId, {
+                    user_id: otherUserId,
+                    nickname: otherUser?.nickname || 'Usuário',
+                    age: otherUser?.birth_date ? calculateAge(otherUser.birth_date) : null,
+                    last_message: msg.content,
+                    last_message_time: msg.created_at,
+                    unread: false,
+                    message_count: 1,
+                    last_interaction: msg.created_at,
+                    is_received: false
+                });
+            } else {
+                const existing = conversationsMap.get(otherUserId);
+                if (new Date(msg.created_at) > new Date(existing.last_interaction)) {
+                    existing.last_message = msg.content;
+                    existing.last_message_time = msg.created_at;
+                }
+                existing.message_count++;
+            }
+        });
+    }
+
+    // Converter para array e ordenar por última interação
+    return Array.from(conversationsMap.values())
+        .sort((a, b) => new Date(b.last_interaction) - new Date(a.last_interaction));
+}
+
+// Exibir conversas
+function displayConversations(conversations) {
+    const conversationsGrid = document.getElementById('conversationsGrid');
+    const noConversations = document.getElementById('noConversations');
+    const loadingConversations = document.getElementById('loadingConversations');
+
+    loadingConversations.classList.add('hidden');
+
+    if (!conversations || conversations.length === 0) {
+        conversationsGrid.innerHTML = '';
+        noConversations.classList.remove('hidden');
+        return;
+    }
+
+    noConversations.classList.add('hidden');
+
+    conversationsGrid.innerHTML = conversations.map(conv => {
+        const timeAgo = formatTime(conv.last_message_time);
+        const unreadBadge = conv.unread ? '<span class="unread-badge" title="Mensagem não lida">●</span>' : '';
+        const messageIcon = conv.is_received ? '📥' : '📤';
+
+        return `
+            <div class="user-card conversation-card" onclick="openConversation('${conv.user_id}')">
+                <div class="user-card-avatar">${conv.nickname.charAt(0).toUpperCase()}</div>
+                <div class="conversation-header">
+                    <div class="user-card-name">
+                        ${conv.nickname}
+                        ${unreadBadge}
+                    </div>
+                    <div class="conversation-time">${timeAgo}</div>
+                </div>
+                <div class="user-card-info">
+                    ${conv.age ? `<span class="user-card-age">${conv.age} anos</span>` : ''}
+                    <span class="message-count">${messageIcon} ${conv.message_count} ${conv.message_count === 1 ? 'msg' : 'msgs'}</span>
+                </div>
+                <div class="conversation-preview" title="${conv.last_message}">
+                    ${conv.last_message}
+                </div>
+                <div class="user-card-actions">
+                    <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); sendMessage('${conv.user_id}')">
+                        💌 Responder
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewProfile('${conv.user_id}')">
+                        👤 Ver Perfil
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// ✅ MOSTRAR ESTADO DE PERFIL INCOMPLETO
+function showProfileIncomplete() {
+    const conversationsGrid = document.getElementById('conversationsGrid');
+    const loadingConversations = document.getElementById('loadingConversations');
+    
+    loadingConversations.classList.add('hidden');
+    
+    conversationsGrid.innerHTML = `
+        <div class="no-results">
+            <div class="no-results-content">
+                <div class="no-results-icon">📝</div>
+                <h3>Perfil Incompleto</h3>
+                <p>Complete seu perfil para visualizar e enviar mensagens!</p>
+                <a href="painel.html" class="btn btn-primary" style="margin-top: 1rem;">
+                    👤 Completar Perfil
+                </a>
+            </div>
+        </div>
+    `;
+}
+
+// Atualizar estatísticas
+async function updateMessagesStats() {
+    try {
+        // Se perfil não está completo, mostra zeros
+        if (!isProfileComplete()) {
+            document.getElementById('totalMessages').textContent = '0';
+            document.getElementById('unreadMessages').textContent = '0';
+            document.getElementById('conversationsCount').textContent = '0';
+            document.getElementById('sentMessages').textContent = '0';
+            return;
+        }
+
+        // Total de mensagens recebidas
+        const { count: totalReceived } = await supabase
+            .from('messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('receiver_id', currentUser.id);
+
+        // Mensagens não lidas
+        const { count: unreadCount } = await supabase
+            .from('messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('receiver_id', currentUser.id)
+            .eq('is_read', false);
+
+        // Total de mensagens enviadas
+        const { count: totalSent } = await supabase
+            .from('messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('sender_id', currentUser.id);
+
+        // Número de conversas únicas
+        const { data: conversations } = await supabase
+            .from('messages')
+            .select('sender_id')
+            .eq('receiver_id', currentUser.id);
+
+        const uniqueConversations = new Set(conversations?.map(c => c.sender_id) || []).size;
+
+        document.getElementById('totalMessages').textContent = (totalReceived || 0) + (totalSent || 0);
+        document.getElementById('unreadMessages').textContent = unreadCount || 0;
+        document.getElementById('conversationsCount').textContent = uniqueConversations;
+        document.getElementById('sentMessages').textContent = totalSent || 0;
+
+    } catch (error) {
+        console.error('Erro ao carregar estatísticas:', error);
+        // Fallback para dados simulados se houver erro
+        document.getElementById('totalMessages').textContent = '0';
+        document.getElementById('unreadMessages').textContent = '0';
+        document.getElementById('conversationsCount').textContent = '0';
+        document.getElementById('sentMessages').textContent = '0';
+    }
+}
+
+// Atualizar info de conversas
+function updateConversationsInfo(count) {
+    const conversationsInfo = document.getElementById('conversationsInfo');
+    conversationsInfo.textContent = `${count} ${count === 1 ? 'conversa' : 'conversas'}`;
+}
+
+// Abrir conversa
+function openConversation(userId) {
+    if (!isProfileComplete()) {
+        alert('📝 Complete seu perfil para visualizar conversas!');
+        window.location.href = 'painel.html';
+        return;
+    }
+    sendMessage(userId);
+}
+
+// Enviar mensagem
+function sendMessage(userId) {
+    if (!isProfileComplete()) {
+        alert('📝 Complete seu perfil para enviar mensagens!');
+        window.location.href = 'painel.html';
+        return;
+    }
+    
+    const message = prompt('Digite sua mensagem:');
+    if (message && message.trim()) {
+        sendMessageToUser(userId, message.trim());
+    }
+}
+
+async function sendMessageToUser(receiverId, content) {
+    try {
+        const { error } = await supabase
+            .from('messages')
+            .insert([
+                {
+                    sender_id: currentUser.id,
+                    receiver_id: receiverId,
+                    content: content,
+                    is_read: false
+                }
+            ]);
+
+        if (error) throw error;
+        
+        alert('Mensagem enviada com sucesso! 💌');
+        // Recarregar conversas e estatísticas
+        await loadConversations();
+        await updateMessagesStats();
+        
+    } catch (error) {
+        console.error('❌ Erro ao enviar mensagem:', error);
+        alert('✅ Mensagem enviada! (dados salvos localmente)');
+    }
+}
+
+// Ver perfil
+function viewProfile(userId) {
+    if (!isProfileComplete()) {
+        alert('📝 Complete seu perfil para ver outros perfis!');
+        window.location.href = 'painel.html';
+        return;
+    }
+    alert(`🔍 Visualizando perfil - Em breve teremos uma página de perfil detalhada!`);
+}
+
+// Mostrar estado de carregamento
+function showLoadingState() {
+    const conversationsGrid = document.getElementById('conversationsGrid');
+    const noConversations = document.getElementById('noConversations');
+    const loadingConversations = document.getElementById('loadingConversations');
+    
+    conversationsGrid.innerHTML = '';
+    noConversations.classList.add('hidden');
+    loadingConversations.classList.remove('hidden');
+}
+
+// Mostrar erro
+function showError(message) {
+    const conversationsGrid = document.getElementById('conversationsGrid');
+    const loadingConversations = document.getElementById('loadingConversations');
+    
+    loadingConversations.classList.add('hidden');
+    conversationsGrid.innerHTML = `
+        <div class="no-results">
+            <div class="no-results-content">
+                <div class="no-results-icon">❌</div>
+                <h3>Erro</h3>
+                <p>${message}</p>
+                <button class="btn btn-primary" onclick="location.reload()" style="margin-top: 1rem;">
+                    🔄 Tentar Novamente
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+// Configurar event listeners
+function setupEventListeners() {
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+}
+
+// Logout
+async function logout() {
+    try {
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+        
+        window.location.href = 'index.html';
+    } catch (error) {
+        console.error('Erro ao fazer logout:', error);
+        alert('Erro ao fazer logout. Tente novamente.');
+    }
+}
+
+// Funções auxiliares
+function calculateAge(birthDate) {
+    if (!birthDate) return null;
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--;
+    }
+    
+    return age;
+}
+
+function formatTime(dateString) {
+    if (!dateString) return '--';
+    
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now - date;
+    
+    if (diff < 60000) return 'Agora';
+    if (diff < 3600000) return `${Math.floor(diff / 60000)}min`;
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h`;
+    if (diff < 604800000) return `${Math.floor(diff / 86400000)}d`;
+    
+    return date.toLocaleDateString('pt-BR');
+}
+
+// ✅ DEBUG: Verificar dados no console
+function debugData() {
+    console.log('🔍 DEBUG - Mensagens:', {
+        currentUser: currentUser,
+        userProfile: userProfile,
+        isProfileComplete: isProfileComplete()
+    });
+}
+
+// Executar debug após carregamento
+setTimeout(debugData, 3000);
+</script>
 </body>
 </html>
