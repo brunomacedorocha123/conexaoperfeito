@@ -716,7 +716,7 @@
             return validations.every(validation => validation === true);
         }
 
-        // ✅ SUBMIT CORRIGIDO - SOLUÇÃO DEFINITIVA
+        // ✅ SUBMIT COMPLETAMENTE CORRIGIDO
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             hideAlerts();
@@ -742,8 +742,8 @@
                             nickname: nickname.value.trim(),
                             birth_date: birthDate.value
                         },
-                        // ✅ CORREÇÃO: URL ABSOLUTA E EXPLÍCITA
-                        emailRedirectTo: 'https://conexaoperfeitaamor.netlify.app/login.html?verified=true'
+                        // ✅ CORREÇÃO: URL CORRETA SEM DUPLICAÇÃO
+                        emailRedirectTo: 'https://conexaoperfeitaamor.netlify.app'
                     }
                 });
 
@@ -776,7 +776,7 @@
                         console.log('✅ Perfil criado com sucesso');
                     }
 
-                    // ✅ CORREÇÃO: VERIFICAR SE O E-MAIL FOI ENVIADO
+                    // ✅ VERIFICAR SE O E-MAIL FOI ENVIADO
                     if (authData.user.identities && authData.user.identities.length === 0) {
                         showAlert(errorAlert, '❌ Este e-mail já está cadastrado. Tente fazer login.');
                         submitBtn.disabled = false;
@@ -784,7 +784,7 @@
                         return;
                     }
 
-                    // ✅ REDIRECIONAMENTO COM FALLBACK
+                    // ✅ REDIRECIONAMENTO PARA PÁGINA DE SUCESSO
                     console.log('✅ Cadastro completo! Redirecionando...');
                     setTimeout(() => {
                         window.location.href = 'cadastro-sucesso.html';
