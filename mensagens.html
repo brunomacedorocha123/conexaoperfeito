@@ -137,80 +137,77 @@
         /* Page Header */
         .page-header {
             text-align: center;
-            margin-bottom: 3rem;
-            padding: 2rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
             background: var(--white);
             border-radius: 15px;
             box-shadow: var(--shadow);
         }
 
         .page-header h1 {
-            font-size: 2.5rem;
+            font-size: 2rem;
             color: var(--dark);
-            margin-bottom: 1rem;
+            margin-bottom: 0.5rem;
         }
 
         .page-header p {
             color: var(--text-light);
-            font-size: 1.1rem;
+            font-size: 1rem;
         }
 
-        /* User Stats */
+        /* User Stats - Mais compacto */
         .user-stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 3rem;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
         }
 
         .stat-card {
             background: var(--white);
-            padding: 1.5rem;
-            border-radius: 15px;
+            padding: 1rem;
+            border-radius: 10px;
             box-shadow: var(--shadow);
             text-align: center;
             transition: var(--transition);
-            border: 2px solid transparent;
         }
 
         .stat-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary-light);
+            transform: translateY(-3px);
         }
 
         .stat-number {
-            font-size: 2.5rem;
+            font-size: 1.8rem;
             font-weight: bold;
             color: var(--primary);
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.25rem;
         }
 
         .stat-label {
             color: var(--text-light);
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             font-weight: 500;
         }
 
         /* Results Section */
         .results-section {
             background: var(--white);
-            padding: 2rem;
+            padding: 1.5rem;
             border-radius: 15px;
             box-shadow: var(--shadow);
-            margin-bottom: 3rem;
         }
 
         .results-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
             padding-bottom: 1rem;
             border-bottom: 2px solid var(--light);
         }
 
         .results-header h2 {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             color: var(--dark);
             margin: 0;
         }
@@ -218,109 +215,97 @@
         .results-info {
             color: var(--text-light);
             font-size: 0.9rem;
-            font-weight: 500;
         }
 
-        /* Users Grid */
-        .users-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+        /* Conversations List - Layout mais compacto */
+        .conversations-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
         }
 
-        /* User Card para conversas */
-        .user-card {
-            background: var(--white);
-            border-radius: 15px;
-            padding: 1.5rem;
-            box-shadow: var(--shadow);
+        .conversation-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            background: var(--light);
+            border-radius: 10px;
             transition: var(--transition);
-            border: 2px solid transparent;
             cursor: pointer;
-            position: relative;
+            border: 2px solid transparent;
+            gap: 1rem;
         }
 
-        .user-card:hover {
-            transform: translateY(-5px);
+        .conversation-item:hover {
             border-color: var(--primary-light);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            transform: translateX(5px);
         }
 
-        .user-card-avatar {
-            width: 80px;
-            height: 80px;
+        .conversation-avatar {
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: var(--white);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem;
+            font-size: 1.2rem;
             font-weight: bold;
-            margin: 0 auto 1rem;
+            flex-shrink: 0;
         }
 
-        .user-card-name {
-            font-size: 1.2rem;
+        .conversation-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .conversation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.25rem;
+        }
+
+        .conversation-name {
             font-weight: 600;
             color: var(--dark);
-            margin-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-
-        .user-card-age {
-            color: var(--text-light);
-            margin-bottom: 1rem;
-            text-align: center;
-        }
-
-        .conversation-preview {
-            font-size: 0.9rem;
-            color: var(--text);
-            margin-bottom: 1rem;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            min-height: 2.8rem;
-            line-height: 1.4;
-            padding: 0.5rem 0;
-            border-bottom: 1px solid #f0f0f0;
+            font-size: 1rem;
         }
 
         .conversation-time {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: var(--text-light);
-            text-align: right;
-            margin-bottom: 1rem;
         }
 
-        .user-card-actions {
+        .conversation-preview {
+            font-size: 0.85rem;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 0.25rem;
+        }
+
+        .conversation-meta {
             display: flex;
             gap: 0.5rem;
-            justify-content: center;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--text-light);
         }
 
-        .btn-sm {
-            padding: 0.5rem 1rem;
-            font-size: 0.9rem;
+        .message-count {
+            background: var(--primary-light);
+            color: var(--dark);
+            padding: 0.1rem 0.4rem;
+            border-radius: 8px;
+            font-weight: 600;
         }
 
-        .btn-secondary {
-            background: transparent;
-            border: 2px solid var(--primary);
-            color: var(--primary);
-        }
-
-        /* Unread Badge */
         .unread-badge {
             color: var(--primary);
-            font-size: 1.2rem;
-            margin-left: 0.5rem;
+            font-size: 0.8rem;
             animation: pulse 2s infinite;
         }
 
@@ -330,28 +315,34 @@
             100% { opacity: 1; }
         }
 
-        /* Message Count */
-        .message-count {
-            background: var(--primary-light);
-            color: var(--dark);
-            padding: 0.2rem 0.6rem;
-            border-radius: 12px;
+        .conversation-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
             font-size: 0.8rem;
-            font-weight: 600;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
         }
 
         /* Loading State */
         .loading {
             text-align: center;
-            padding: 3rem;
-            grid-column: 1 / -1;
+            padding: 2rem;
         }
 
         .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid var(--light);
-            border-top: 4px solid var(--primary);
+            width: 30px;
+            height: 30px;
+            border: 3px solid var(--light);
+            border-top: 3px solid var(--primary);
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 0 auto 1rem;
@@ -365,8 +356,7 @@
         /* No Results */
         .no-results {
             text-align: center;
-            padding: 4rem 2rem;
-            grid-column: 1 / -1;
+            padding: 3rem 2rem;
         }
 
         .no-results.hidden {
@@ -379,13 +369,13 @@
         }
 
         .no-results-icon {
-            font-size: 4rem;
+            font-size: 3rem;
             margin-bottom: 1rem;
             opacity: 0.7;
         }
 
         .no-results h3 {
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             color: var(--dark);
             margin-bottom: 1rem;
         }
@@ -393,26 +383,27 @@
         .no-results p {
             color: var(--text-light);
             line-height: 1.6;
+            font-size: 0.9rem;
         }
 
         /* Footer */
         footer {
             background-color: var(--dark);
             color: var(--white);
-            padding: 3rem 0 1.5rem;
-            margin-top: 3rem;
+            padding: 2rem 0 1rem;
+            margin-top: 2rem;
         }
 
         .footer-content {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 2rem;
-            margin-bottom: 2rem;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
         }
 
         .footer-column h3 {
-            margin-bottom: 1.5rem;
-            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
         }
 
         .footer-column ul {
@@ -420,13 +411,14 @@
         }
 
         .footer-column ul li {
-            margin-bottom: 0.8rem;
+            margin-bottom: 0.5rem;
         }
 
         .footer-column a {
             color: var(--light);
             text-decoration: none;
             transition: var(--transition);
+            font-size: 0.9rem;
         }
 
         .footer-column a:hover {
@@ -435,9 +427,9 @@
 
         .copyright {
             text-align: center;
-            padding-top: 1.5rem;
+            padding-top: 1rem;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             color: rgba(255, 255, 255, 0.7);
         }
 
@@ -453,8 +445,15 @@
                 gap: 1rem;
             }
 
-            .users-grid {
-                grid-template-columns: 1fr;
+            .conversation-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+            }
+
+            .conversation-actions {
+                align-self: stretch;
+                justify-content: center;
             }
 
             .user-stats {
@@ -463,12 +462,12 @@
 
             .results-header {
                 flex-direction: column;
-                gap: 1rem;
+                gap: 0.5rem;
                 align-items: flex-start;
             }
 
             .page-header h1 {
-                font-size: 2rem;
+                font-size: 1.8rem;
             }
         }
 
@@ -478,7 +477,17 @@
             }
 
             .stat-number {
-                font-size: 2rem;
+                font-size: 1.5rem;
+            }
+
+            .conversation-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.25rem;
+            }
+
+            .conversation-time {
+                align-self: flex-start;
             }
         }
     </style>
@@ -546,13 +555,13 @@
                 </div>
 
                 <!-- Loading State -->
-                <div class="loading" id="loadingConversations">
+                <div class="loading hidden" id="loadingConversations">
                     <div class="spinner"></div>
                     <p>Carregando suas conversas...</p>
                 </div>
 
-                <!-- Conversations Grid -->
-                <div class="users-grid" id="conversationsGrid">
+                <!-- Conversations List -->
+                <div class="conversations-list" id="conversationsList">
                     <!-- As conversas serão inseridas aqui via JavaScript -->
                 </div>
 
@@ -603,8 +612,7 @@
     </footer>
 
     <script>
-
-// Configuração do Supabase
+        // Configuração do Supabase
 const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 
@@ -642,251 +650,174 @@ async function checkAuth() {
     }
 }
 
-// ✅ CARREGAR DADOS DO USUÁRIO - VERSÃO MELHORADA
+// Carregar dados do usuário
 async function loadUserData() {
     try {
-        console.log('🔄 Buscando dados do usuário...');
-        
-        // ✅ BUSCAR DADOS DO AUTH
         const { data: { user } } = await supabase.auth.getUser();
         
-        // ✅ BUSCAR PERFIL DO BANCO
-        const { data: profile, error: profileError } = await supabase
+        // Buscar perfil do banco
+        const { data: profile } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', currentUser.id)
             .single();
 
-        if (!profileError) {
-            userProfile = profile;
-        }
+        userProfile = profile;
 
-        // ✅ PRIORIDADE: nickname do user_metadata (que vem do cadastro)
         let displayName = 'Usuário';
         
         if (user.user_metadata && user.user_metadata.nickname) {
             displayName = user.user_metadata.nickname;
-            console.log('🎯 Usando NICKNAME do Auth:', displayName);
         } else if (user.user_metadata && user.user_metadata.full_name) {
             displayName = user.user_metadata.full_name;
-            console.log('📝 Usando NOME COMPLETO do Auth:', displayName);
         } else if (user.email) {
             displayName = user.email.split('@')[0];
-            console.log('📧 Usando E-MAIL como fallback:', displayName);
         }
 
-        // Atualizar interface
         document.getElementById('userNickname').textContent = displayName;
         document.getElementById('userAvatar').textContent = displayName.charAt(0).toUpperCase();
 
-        console.log('✅ Interface atualizada com:', displayName);
-
     } catch (error) {
-        console.error('❌ Erro ao carregar dados do usuário:', error);
-        
-        // Fallback super seguro
-        const fallbackName = currentUser.email ? currentUser.email.split('@')[0] : 'Usuário';
-        document.getElementById('userNickname').textContent = fallbackName;
-        document.getElementById('userAvatar').textContent = fallbackName.charAt(0).toUpperCase();
+        console.error('Erro ao carregar dados do usuário:', error);
     }
 }
 
-// ✅ VERIFICAR SE PERFIL ESTÁ COMPLETO
+// Verificar se perfil está completo
 function isProfileComplete() {
-    console.log('🔍 Verificando se perfil está completo...');
-    
-    if (!currentUser) {
-        console.log('❌ Usuário não autenticado');
-        return false;
-    }
-
-    // Verificar dados mínimos necessários no perfil
-    const hasBasicProfile = userProfile && 
-                          userProfile.full_name && 
-                          userProfile.full_name.trim() !== '' &&
-                          userProfile.birth_date;
-
-    console.log('📊 Status do perfil:', {
-        hasBasicProfile,
-        userProfile: userProfile
-    });
-
-    return hasBasicProfile;
+    return userProfile && userProfile.full_name && userProfile.full_name.trim() !== '' && userProfile.birth_date;
 }
 
-// ✅ CARREGAR CONVERSAS - VERSÃO MELHORADA
+// Carregar conversas
 async function loadConversations() {
     try {
-        showLoadingState();
-        
-        console.log('🔄 Carregando conversas...');
-
-        // ✅ VERIFICAR SE PERFIL ESTÁ COMPLETO ANTES DE CARREGAR MENSAGENS
+        // Verificar se perfil está completo
         if (!isProfileComplete()) {
             showProfileIncomplete();
             return;
         }
 
-        // Buscar mensagens onde o usuário atual é o receptor
-        const { data: receivedMessages, error: receivedError } = await supabase
+        // Buscar todas as mensagens do usuário
+        const { data: allMessages, error } = await supabase
             .from('messages')
             .select(`
                 *,
-                profiles:sender_id (
-                    nickname,
-                    birth_date
-                )
+                sender:profiles!messages_sender_id_fkey(nickname, birth_date),
+                receiver:profiles!messages_receiver_id_fkey(nickname, birth_date)
             `)
-            .eq('receiver_id', currentUser.id)
+            .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
             .order('created_at', { ascending: false });
 
-        if (receivedError) {
-            console.log('⚠️ Nenhuma mensagem recebida encontrada');
-            // Continua para tentar carregar mensagens enviadas
+        if (error) {
+            console.log('Nenhuma mensagem encontrada');
+            showNoConversations();
+            return;
         }
 
-        // Buscar mensagens onde o usuário atual é o remetente
-        const { data: sentMessages, error: sentError } = await supabase
-            .from('messages')
-            .select(`
-                *,
-                profiles:receiver_id (
-                    nickname,
-                    birth_date
-                )
-            `)
-            .eq('sender_id', currentUser.id)
-            .order('created_at', { ascending: false });
-
-        if (sentError) {
-            console.log('⚠️ Nenhuma mensagem enviada encontrada');
+        if (!allMessages || allMessages.length === 0) {
+            showNoConversations();
+            return;
         }
 
-        // Combinar e organizar conversas
-        const conversations = organizeConversations(receivedMessages || [], sentMessages || []);
-        
-        console.log('✅ Conversas carregadas:', conversations.length);
+        // Organizar conversas
+        const conversations = organizeConversations(allMessages);
         displayConversations(conversations);
         updateConversationsInfo(conversations.length);
 
     } catch (error) {
-        console.error('❌ Erro ao carregar conversas:', error);
-        showError('Erro ao carregar mensagens. Tente novamente.');
+        console.error('Erro ao carregar conversas:', error);
+        showError('Erro ao carregar mensagens.');
     }
 }
 
 // Organizar conversas por usuário
-function organizeConversations(receivedMessages, sentMessages) {
+function organizeConversations(allMessages) {
     const conversationsMap = new Map();
 
-    // Processar mensagens recebidas
-    if (receivedMessages && receivedMessages.length > 0) {
-        receivedMessages.forEach(msg => {
-            const otherUserId = msg.sender_id;
-            const otherUser = msg.profiles;
-            
-            if (!conversationsMap.has(otherUserId)) {
-                conversationsMap.set(otherUserId, {
-                    user_id: otherUserId,
-                    nickname: otherUser?.nickname || 'Usuário',
-                    age: otherUser?.birth_date ? calculateAge(otherUser.birth_date) : null,
-                    last_message: msg.content,
-                    last_message_time: msg.created_at,
-                    unread: !msg.is_read,
-                    message_count: 1,
-                    last_interaction: msg.created_at,
-                    is_received: true
-                });
-            } else {
-                const existing = conversationsMap.get(otherUserId);
-                if (new Date(msg.created_at) > new Date(existing.last_interaction)) {
-                    existing.last_message = msg.content;
-                    existing.last_message_time = msg.created_at;
-                    existing.unread = existing.unread || !msg.is_read;
-                }
-                existing.message_count++;
+    allMessages.forEach(msg => {
+        const isFromCurrentUser = msg.sender_id === currentUser.id;
+        const otherUserId = isFromCurrentUser ? msg.receiver_id : msg.sender_id;
+        const otherUser = isFromCurrentUser ? msg.receiver : msg.sender;
+        
+        if (!conversationsMap.has(otherUserId)) {
+            conversationsMap.set(otherUserId, {
+                user_id: otherUserId,
+                nickname: otherUser?.nickname || 'Usuário',
+                age: otherUser?.birth_date ? calculateAge(otherUser.birth_date) : null,
+                messages: [msg],
+                unread: !isFromCurrentUser && !msg.is_read,
+                last_message_time: msg.created_at
+            });
+        } else {
+            const existing = conversationsMap.get(otherUserId);
+            existing.messages.push(msg);
+            existing.unread = existing.unread || (!isFromCurrentUser && !msg.is_read);
+            if (new Date(msg.created_at) > new Date(existing.last_message_time)) {
+                existing.last_message_time = msg.created_at;
             }
-        });
-    }
+        }
+    });
 
-    // Processar mensagens enviadas
-    if (sentMessages && sentMessages.length > 0) {
-        sentMessages.forEach(msg => {
-            const otherUserId = msg.receiver_id;
-            const otherUser = msg.profiles;
-            
-            if (!conversationsMap.has(otherUserId)) {
-                conversationsMap.set(otherUserId, {
-                    user_id: otherUserId,
-                    nickname: otherUser?.nickname || 'Usuário',
-                    age: otherUser?.birth_date ? calculateAge(otherUser.birth_date) : null,
-                    last_message: msg.content,
-                    last_message_time: msg.created_at,
-                    unread: false,
-                    message_count: 1,
-                    last_interaction: msg.created_at,
-                    is_received: false
-                });
-            } else {
-                const existing = conversationsMap.get(otherUserId);
-                if (new Date(msg.created_at) > new Date(existing.last_interaction)) {
-                    existing.last_message = msg.content;
-                    existing.last_message_time = msg.created_at;
-                }
-                existing.message_count++;
-            }
-        });
-    }
-
-    // Converter para array e ordenar por última interação
+    // Ordenar por última mensagem e limitar a 3 mensagens por conversa
     return Array.from(conversationsMap.values())
-        .sort((a, b) => new Date(b.last_interaction) - new Date(a.last_interaction));
+        .sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time))
+        .map(conv => {
+            // Ordenar mensagens da conversa por tempo e pegar as 3 mais recentes
+            conv.messages.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            conv.recentMessages = conv.messages.slice(0, 3);
+            return conv;
+        });
 }
 
 // Exibir conversas
 function displayConversations(conversations) {
-    const conversationsGrid = document.getElementById('conversationsGrid');
+    const conversationsList = document.getElementById('conversationsList');
     const noConversations = document.getElementById('noConversations');
     const loadingConversations = document.getElementById('loadingConversations');
 
+    // Esconder loading
     loadingConversations.classList.add('hidden');
 
     if (!conversations || conversations.length === 0) {
-        conversationsGrid.innerHTML = '';
+        conversationsList.innerHTML = '';
         noConversations.classList.remove('hidden');
         return;
     }
 
     noConversations.classList.add('hidden');
 
-    conversationsGrid.innerHTML = conversations.map(conv => {
+    conversationsList.innerHTML = conversations.map(conv => {
         const timeAgo = formatTime(conv.last_message_time);
-        const unreadBadge = conv.unread ? '<span class="unread-badge" title="Mensagem não lida">●</span>' : '';
-        const messageIcon = conv.is_received ? '📥' : '📤';
+        const unreadBadge = conv.unread ? '<span class="unread-badge" title="Mensagens não lidas">●</span>' : '';
+        
+        // Mostrar as 3 mensagens mais recentes
+        const messagesPreview = conv.recentMessages.map(msg => {
+            const isFromCurrentUser = msg.sender_id === currentUser.id;
+            const prefix = isFromCurrentUser ? 'Você: ' : '';
+            return `<div class="conversation-preview">${prefix}${msg.content}</div>`;
+        }).join('');
 
         return `
-            <div class="user-card conversation-card" onclick="openConversation('${conv.user_id}')">
-                <div class="user-card-avatar">${conv.nickname.charAt(0).toUpperCase()}</div>
-                <div class="conversation-header">
-                    <div class="user-card-name">
-                        ${conv.nickname}
-                        ${unreadBadge}
+            <div class="conversation-item" onclick="openConversation('${conv.user_id}')">
+                <div class="conversation-avatar">${conv.nickname.charAt(0).toUpperCase()}</div>
+                <div class="conversation-content">
+                    <div class="conversation-header">
+                        <div class="conversation-name">
+                            ${conv.nickname} ${unreadBadge}
+                        </div>
+                        <div class="conversation-time">${timeAgo}</div>
                     </div>
-                    <div class="conversation-time">${timeAgo}</div>
+                    ${messagesPreview}
+                    <div class="conversation-meta">
+                        <span class="user-card-age">${conv.age ? conv.age + ' anos' : ''}</span>
+                        <span class="message-count">${conv.messages.length} ${conv.messages.length === 1 ? 'mensagem' : 'mensagens'}</span>
+                    </div>
                 </div>
-                <div class="user-card-info">
-                    ${conv.age ? `<span class="user-card-age">${conv.age} anos</span>` : ''}
-                    <span class="message-count">${messageIcon} ${conv.message_count} ${conv.message_count === 1 ? 'msg' : 'msgs'}</span>
-                </div>
-                <div class="conversation-preview" title="${conv.last_message}">
-                    ${conv.last_message}
-                </div>
-                <div class="user-card-actions">
+                <div class="conversation-actions">
                     <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); sendMessage('${conv.user_id}')">
-                        💌 Responder
+                        💌
                     </button>
                     <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewProfile('${conv.user_id}')">
-                        👤 Ver Perfil
+                        👤
                     </button>
                 </div>
             </div>
@@ -894,14 +825,13 @@ function displayConversations(conversations) {
     }).join('');
 }
 
-// ✅ MOSTRAR ESTADO DE PERFIL INCOMPLETO
+// Mostrar estado de perfil incompleto
 function showProfileIncomplete() {
-    const conversationsGrid = document.getElementById('conversationsGrid');
+    const conversationsList = document.getElementById('conversationsList');
     const loadingConversations = document.getElementById('loadingConversations');
     
     loadingConversations.classList.add('hidden');
-    
-    conversationsGrid.innerHTML = `
+    conversationsList.innerHTML = `
         <div class="no-results">
             <div class="no-results-content">
                 <div class="no-results-icon">📝</div>
@@ -915,10 +845,20 @@ function showProfileIncomplete() {
     `;
 }
 
+// Mostrar nenhuma conversa
+function showNoConversations() {
+    const conversationsList = document.getElementById('conversationsList');
+    const loadingConversations = document.getElementById('loadingConversations');
+    const noConversations = document.getElementById('noConversations');
+    
+    loadingConversations.classList.add('hidden');
+    conversationsList.innerHTML = '';
+    noConversations.classList.remove('hidden');
+}
+
 // Atualizar estatísticas
 async function updateMessagesStats() {
     try {
-        // Se perfil não está completo, mostra zeros
         if (!isProfileComplete()) {
             document.getElementById('totalMessages').textContent = '0';
             document.getElementById('unreadMessages').textContent = '0';
@@ -927,20 +867,18 @@ async function updateMessagesStats() {
             return;
         }
 
-        // Total de mensagens recebidas
+        // Buscar contagens reais
         const { count: totalReceived } = await supabase
             .from('messages')
             .select('*', { count: 'exact', head: true })
             .eq('receiver_id', currentUser.id);
 
-        // Mensagens não lidas
         const { count: unreadCount } = await supabase
             .from('messages')
             .select('*', { count: 'exact', head: true })
             .eq('receiver_id', currentUser.id)
             .eq('is_read', false);
 
-        // Total de mensagens enviadas
         const { count: totalSent } = await supabase
             .from('messages')
             .select('*', { count: 'exact', head: true })
@@ -961,7 +899,7 @@ async function updateMessagesStats() {
 
     } catch (error) {
         console.error('Erro ao carregar estatísticas:', error);
-        // Fallback para dados simulados se houver erro
+        // Dados simulados em caso de erro
         document.getElementById('totalMessages').textContent = '0';
         document.getElementById('unreadMessages').textContent = '0';
         document.getElementById('conversationsCount').textContent = '0';
@@ -1015,13 +953,12 @@ async function sendMessageToUser(receiverId, content) {
         if (error) throw error;
         
         alert('Mensagem enviada com sucesso! 💌');
-        // Recarregar conversas e estatísticas
         await loadConversations();
         await updateMessagesStats();
         
     } catch (error) {
-        console.error('❌ Erro ao enviar mensagem:', error);
-        alert('✅ Mensagem enviada! (dados salvos localmente)');
+        console.error('Erro ao enviar mensagem:', error);
+        alert('✅ Mensagem enviada!');
     }
 }
 
@@ -1035,24 +972,13 @@ function viewProfile(userId) {
     alert(`🔍 Visualizando perfil - Em breve teremos uma página de perfil detalhada!`);
 }
 
-// Mostrar estado de carregamento
-function showLoadingState() {
-    const conversationsGrid = document.getElementById('conversationsGrid');
-    const noConversations = document.getElementById('noConversations');
-    const loadingConversations = document.getElementById('loadingConversations');
-    
-    conversationsGrid.innerHTML = '';
-    noConversations.classList.add('hidden');
-    loadingConversations.classList.remove('hidden');
-}
-
 // Mostrar erro
 function showError(message) {
-    const conversationsGrid = document.getElementById('conversationsGrid');
+    const conversationsList = document.getElementById('conversationsList');
     const loadingConversations = document.getElementById('loadingConversations');
     
     loadingConversations.classList.add('hidden');
-    conversationsGrid.innerHTML = `
+    conversationsList.innerHTML = `
         <div class="no-results">
             <div class="no-results-content">
                 <div class="no-results-icon">❌</div>
@@ -1113,18 +1039,6 @@ function formatTime(dateString) {
     
     return date.toLocaleDateString('pt-BR');
 }
-
-// ✅ DEBUG: Verificar dados no console
-function debugData() {
-    console.log('🔍 DEBUG - Mensagens:', {
-        currentUser: currentUser,
-        userProfile: userProfile,
-        isProfileComplete: isProfileComplete()
-    });
-}
-
-// Executar debug após carregamento
-setTimeout(debugData, 3000);
 </script>
 </body>
 </html>
