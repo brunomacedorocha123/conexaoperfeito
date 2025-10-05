@@ -1,9 +1,27 @@
-// auth.js - Sistema Corrigido com URLs do Netlify
+// auth.js - Sistema Corrigido com Detecção de Ambiente
 
-// Configuração - URLs ABSOLUTAS do Netlify
-const SITE_URL = 'https://conexaoperfeitaamor.netlify.app';
-const REDIRECT_URL = 'https://conexaoperfeitaamor.netlify.app/home.html';
-const PASSWORD_REDIRECT_URL = 'https://conexaoperfeitaamor.netlify.app/update-password.html';
+// Configuração - Detecção automática do ambiente
+function getSiteUrl() {
+    // Se estiver no Netlify, usa a URL do Netlify
+    if (window.location.hostname.includes('netlify.app')) {
+        return 'https://conexaoperfeitaamor.netlify.app';
+    }
+    // Se estiver em localhost, usa localhost (para desenvolvimento)
+    else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        return `http://${window.location.hostname}:${window.location.port || '3000'}`;
+    }
+    // Para outros ambientes, usa a URL atual
+    else {
+        return window.location.origin;
+    }
+}
+
+const SITE_URL = getSiteUrl();
+const REDIRECT_URL = `${SITE_URL}/home.html`;
+const PASSWORD_REDIRECT_URL = `${SITE_URL}/update-password.html`;
+
+console.log('🔧 Ambiente detectado:', SITE_URL);
+console.log('🔧 URL de redirecionamento:', REDIRECT_URL);
 
 // Verificar autenticação
 async function checkAuthState() {
@@ -53,7 +71,7 @@ function updateUserInterface(user) {
     }
 }
 
-// Cadastro PROFISSIONAL - COM URL CORRETA
+// Cadastro PROFISSIONAL - COM DETECÇÃO DE AMBIENTE
 async function handleRegister(formData) {
     const submitBtn = document.getElementById('submit-btn');
     const originalText = submitBtn ? submitBtn.textContent : 'Criar Minha Conta';
@@ -73,7 +91,10 @@ async function handleRegister(formData) {
 
         showMessage('register-message', 'Criando sua conta...', 'success');
 
-        // CADASTRO COM URL ABSOLUTA DO NETLIFY
+        console.log('📧 Enviando cadastro para:', formData.email);
+        console.log('🔗 URL de redirecionamento:', REDIRECT_URL);
+
+        // CADASTRO COM URL DINÂMICA
         const { data, error } = await supabase.auth.signUp({
             email: formData.email.trim(),
             password: formData.password,
@@ -85,14 +106,16 @@ async function handleRegister(formData) {
                     gender: formData.gender,
                     interested_in: formData.interestedIn
                 },
-                // URL ABSOLUTA - CORRIGIDA
                 emailRedirectTo: REDIRECT_URL
             }
         });
 
         if (error) {
+            console.error('Erro no cadastro:', error);
             throw new Error(getAuthErrorMessage(error));
         }
+
+        console.log('Resposta do cadastro:', data);
 
         // Verificar se usuário já existe
         if (data.user && data.user.identities && data.user.identities.length === 0) {
@@ -108,7 +131,8 @@ async function handleRegister(formData) {
             `✅ <strong>Cadastro realizado com sucesso!</strong><br><br>
             Enviamos um e-mail de confirmação para <strong>${formData.email}</strong>.<br>
             <strong>Verifique sua caixa de entrada</strong> e clique no link para ativar sua conta.<br><br>
-            💡 <em>Dica: Verifique também sua pasta de spam.</em>`, 
+            💡 <em>Dica: Verifique também sua pasta de spam.</em><br><br>
+            🔗 <small>URL de confirmação: ${REDIRECT_URL}</small>`, 
             'success'
         );
 
@@ -118,6 +142,7 @@ async function handleRegister(formData) {
         return true;
 
     } catch (error) {
+        console.error('Erro completo no cadastro:', error);
         showMessage('register-message', error.message, 'error');
         return false;
     } finally {
@@ -156,7 +181,8 @@ async function handleLogin(email, password) {
                 `❌ <strong>E-mail não confirmado</strong><br><br>
                 Verifique sua caixa de entrada e confirme seu e-mail para fazer login.<br>
                 <br>
-                <strong>Dica:</strong> Verifique também sua pasta de spam/lixo eletrônico.`, 
+                <strong>Dica:</strong> Verifique também sua pasta de spam/lixo eletrônico.<br>
+                🔗 <small>URL esperada: ${REDIRECT_URL}</small>`, 
                 'error'
             );
             await supabase.auth.signOut();
@@ -183,12 +209,14 @@ async function handleLogin(email, password) {
     }
 }
 
-// Recuperação de senha - COM URL CORRETA
+// Recuperação de senha - COM DETECÇÃO DE AMBIENTE
 async function handlePasswordReset(email) {
     try {
         showMessage('reset-message', 'Enviando link de recuperação...', 'success');
         
-        // URL ABSOLUTA - CORRIGIDA
+        console.log('🔗 Enviando recuperação para:', email);
+        console.log('🔗 URL de redirecionamento:', PASSWORD_REDIRECT_URL);
+        
         const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
             redirectTo: PASSWORD_REDIRECT_URL,
         });
@@ -198,7 +226,8 @@ async function handlePasswordReset(email) {
         }
         
         showMessage('reset-message', 
-            '✅ E-mail de recuperação enviado! Verifique sua caixa de entrada.', 
+            `✅ E-mail de recuperação enviado! Verifique sua caixa de entrada.<br>
+            🔗 <small>URL de redirecionamento: ${PASSWORD_REDIRECT_URL}</small>`, 
             'success'
         );
         return true;
@@ -220,7 +249,7 @@ async function handleLogout() {
     }
 }
 
-// Funções de validação (mantidas iguais)
+// Funções de validação (mantidas)
 function validateRegisterData(formData) {
     const errors = [];
 
@@ -313,12 +342,12 @@ function showMessage(elementId, message, type) {
         if (type === 'success') {
             setTimeout(() => {
                 element.style.display = 'none';
-            }, 8000);
+            }, 10000);
         }
     }
 }
 
-// Event Listeners (mantidos iguais)
+// Event Listeners (mantidos)
 document.addEventListener('DOMContentLoaded', function() {
     checkAuthState();
 
@@ -410,4 +439,4 @@ supabase.auth.onAuthStateChange((event, session) => {
     }
 });
 
-console.log('✅ Auth.js carregado - URLs do Netlify configuradas');
+console.log('✅ Auth.js carregado - Detecção de ambiente ativa');
