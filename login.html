@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Encontros</title>
+    <title>Login - Conexão Perfeita Amor</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase.js"></script>
@@ -11,16 +11,35 @@
 <body>
     <div class="auth-container">
         <div class="auth-card">
+            <div class="logo">💖 Conexão Perfeita</div>
             <h2>Bem-vindo de volta</h2>
             <p class="auth-subtitle">Entre na sua conta</p>
+            
             <form id="login-form">
-                <input type="email" placeholder="Seu e-mail" required>
-                <input type="password" placeholder="Sua senha" required>
-                <button type="submit">Entrar</button>
+                <div class="form-group">
+                    <input type="email" placeholder="Seu e-mail" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" placeholder="Sua senha" required>
+                </div>
+                
+                <div class="form-options">
+                    <label class="remember-me">
+                        <input type="checkbox" id="remember">
+                        Lembrar de mim
+                    </label>
+                    <a href="esqueci-senha.html" class="forgot-password">Esqueci minha senha</a>
+                </div>
+                
+                <button type="submit" class="btn-primary large">Entrar na Minha Conta</button>
             </form>
+            
             <div id="login-message" class="message" style="display: none;"></div>
-            <p>Não tem conta? <a href="cadastro.html">Cadastre-se aqui</a></p>
-            <p><a href="index.html">← Voltar para o site</a></p>
+            
+            <div class="auth-footer">
+                <p>Não tem uma conta? <a href="cadastro.html">Cadastre-se aqui</a></p>
+                <p><a href="index.html">← Voltar para o site</a></p>
+            </div>
         </div>
     </div>
     <script src="auth.js"></script>
