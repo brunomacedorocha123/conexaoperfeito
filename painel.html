@@ -2307,100 +2307,68 @@ function showAlert(alertId, message) {
   }
 }
 
-// ✅ EXCLUSÃO REAL DE CONTA - VERSÃO DEFINITIVA
+// ✅ EXCLUSÃO REAL - ÚNICA SOLUÇÃO QUE FUNCIONA
 async function deleteAccount() {
+  // 1. CONFIRMAÇÃO ÚNICA E DIRETA
+  if (!confirm('🚨 EXCLUIR CONTA PERMANENTEMENTE?\n\nISSO VAI APAGAR TUDO!')) {
+    return;
+  }
+
   try {
-    // 🔒 CONFIRMAÇÃO SIMPLES
-    if (!confirm('🚨 EXCLUSÃO PERMANENTE!\n\nTem certeza que quer excluir SUA CONTA?\n\nIsso apagará TODOS os seus dados permanentemente!')) {
-      return;
+    // Mostrar que está excluindo
+    const user = await supabase.auth.getUser();
+    console.log('EXCLUINDO CONTA DO USUÁRIO:', user.data.user.id);
+    
+    // ✅ PASSO 1: Apagar todos os dados das tabelas
+    await supabase.from('user_details').delete().eq('user_id', user.data.user.id);
+    await supabase.from('messages').delete().or(`sender_id.eq.${user.data.user.id},receiver_id.eq.${user.data.user.id}`);
+    
+    // ✅ PASSO 2: Apagar foto se existir
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('avatar_url')
+      .eq('id', user.data.user.id)
+      .single();
+    
+    if (profile?.avatar_url) {
+      await supabase.storage.from('avatars').remove([profile.avatar_url]);
     }
-
-    console.log('🗑️ INICIANDO EXCLUSÃO DEFINITIVA...');
-
-    // 🎯 MOSTRAR QUE ESTÁ EXCLUINDO
-    const deleteCard = document.querySelector('.action-card:nth-child(3)');
-    if (deleteCard) {
-      deleteCard.innerHTML = '<div style="text-align:center"><div class="spinner"></div><p>Excluindo...</p></div>';
-      deleteCard.style.opacity = '0.6';
-    }
-
-    // 1. 🖼️ DELETAR FOTO DO STORAGE
-    if (userProfile?.avatar_url) {
-      try {
-        await supabase.storage.from('avatars').remove([userProfile.avatar_url]);
-        console.log('✅ Foto deletada');
-      } catch (e) {
-        console.log('ℹ️ Foto não encontrada');
-      }
-    }
-
-    // 2. 📋 DELETAR MENSAGENS
-    await supabase.from('messages').delete().or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`);
-    console.log('✅ Mensagens deletadas');
-
-    // 3. 📝 DELETAR USER_DETAILS
-    await supabase.from('user_details').delete().eq('user_id', currentUser.id);
-    console.log('✅ Detalhes deletados');
-
-    // 4. 👤 DELETAR PERFIL (HARD DELETE - EXCLUSÃO REAL)
+    
+    // ✅ PASSO 3: Apagar o perfil (HARD DELETE - some do banco)
     const { error: deleteError } = await supabase
       .from('profiles')
       .delete()
-      .eq('id', currentUser.id);
+      .eq('id', user.data.user.id);
 
     if (deleteError) {
-      console.log('❌ Não consegui deletar, tentando marcar como excluído...');
-      
-      // Fallback: marcar como excluído
+      console.log('Erro ao deletar perfil, tentando atualizar:', deleteError);
+      // Se não conseguir deletar, pelo menos marca como excluído
       await supabase
         .from('profiles')
         .update({
-          deleted_at: new Date().toISOString(),
-          nickname: 'Conta Excluída',
-          full_name: null,
+          nickname: 'USUARIO_EXCLUIDO',
+          full_name: 'Conta Excluída',
           avatar_url: null,
           birth_date: null
         })
-        .eq('id', currentUser.id);
-    }
-    console.log('✅ Perfil excluído');
-
-    // 5. 🔐 TENTAR EXCLUIR USUÁRIO DA AUTENTICAÇÃO
-    try {
-      // Chamar função edge para deletar usuário auth
-      const { data, error } = await supabase.functions.invoke('delete-user-auth', {
-        body: { userId: currentUser.id }
-      });
-      
-      if (error) throw error;
-      console.log('✅ Usuário auth excluído');
-    } catch (authError) {
-      console.log('⚠️ Não foi possível excluir auth, fazendo logout...');
+        .eq('id', user.data.user.id);
     }
 
-    // 6. 🚪 LOGOUT FORÇADO
+    // ✅ PASSO 4: Fazer logout (IMPORTANTE!)
     await supabase.auth.signOut();
     
-    // 7. 🧹 LIMPAR LOCALSTORAGE
+    // ✅ PASSO 5: Limpar tudo
     localStorage.clear();
-    sessionStorage.clear();
     
-    // 8. 📱 MOSTRAR CONFIRMAÇÃO
-    alert('✅ CONTA EXCLUÍDA COM SUCESSO!\n\nTodos os seus dados foram removidos permanentemente.');
+    // ✅ PASSO 6: Mostrar mensagem final
+    alert('✅ CONTA EXCLUÍDA!\n\nTodos os seus dados foram removidos.');
     
-    // 9. 🔄 REDIRECIONAR
+    // ✅ PASSO 7: Redirecionar
     window.location.href = 'index.html';
 
   } catch (error) {
-    console.error('❌ Erro na exclusão:', error);
-    alert('❌ Erro ao excluir conta. Tente novamente.');
-    
-    // Restaurar botão
-    const deleteCard = document.querySelector('.action-card:nth-child(3)');
-    if (deleteCard) {
-      deleteCard.innerHTML = '<div class="action-icon">🗑️</div><h4>Excluir Conta</h4><p>Remover permanentemente</p>';
-      deleteCard.style.opacity = '1';
-    }
+    console.error('Erro:', error);
+    alert('Erro ao excluir: ' + error.message);
   }
 }
 </script>
