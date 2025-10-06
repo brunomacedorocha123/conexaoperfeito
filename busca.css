@@ -97,6 +97,20 @@ header {
     justify-content: center;
     font-weight: bold;
     font-size: 1.2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.user-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: none;
+}
+
+.user-avatar-fallback {
+    font-size: 1.2rem;
 }
 
 .btn {
@@ -313,6 +327,7 @@ select.form-control[multiple] option:checked {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
+/* ✅ AVATAR COM FOTO - ESTILOS ATUALIZADOS */
 .user-card-avatar {
     width: 80px;
     height: 80px;
@@ -325,6 +340,21 @@ select.form-control[multiple] option:checked {
     font-size: 2rem;
     font-weight: bold;
     margin: 0 auto 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.user-card-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: none;
+}
+
+.user-card-avatar-fallback {
+    font-size: 2rem;
+    font-weight: bold;
 }
 
 .user-card-name {

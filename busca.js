@@ -54,10 +54,72 @@ async function loadUserData() {
         }
 
         document.getElementById('userNickname').textContent = displayName;
-        document.getElementById('userAvatar').textContent = displayName.charAt(0).toUpperCase();
+        
+        // ✅ CARREGAR FOTO DO USUÁRIO LOGADO
+        await loadCurrentUserAvatar();
 
     } catch (error) {
         console.error('Erro ao carregar dados do usuário:', error);
+    }
+}
+
+// ✅ CARREGAR FOTO DO USUÁRIO LOGADO
+async function loadCurrentUserAvatar() {
+    try {
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('avatar_url, nickname')
+            .eq('id', currentUser.id)
+            .single();
+
+        if (error || !profile) return;
+
+        const userAvatar = document.getElementById('userAvatar');
+        const userAvatarFallback = userAvatar.querySelector('.user-avatar-fallback') || userAvatar;
+        
+        if (profile.avatar_url) {
+            const photoUrl = await loadUserPhoto(profile.avatar_url);
+            if (photoUrl) {
+                // Criar elemento img se não existir
+                let imgElement = userAvatar.querySelector('.user-avatar-img');
+                if (!imgElement) {
+                    imgElement = document.createElement('img');
+                    imgElement.className = 'user-avatar-img';
+                    userAvatar.appendChild(imgElement);
+                }
+                imgElement.src = photoUrl;
+                imgElement.style.display = 'block';
+                if (userAvatarFallback.style) {
+                    userAvatarFallback.style.display = 'none';
+                }
+            }
+        }
+
+    } catch (error) {
+        console.error('Erro ao carregar avatar do usuário:', error);
+    }
+}
+
+// ✅ CARREGAR FOTO DO USUÁRIO PARA O CARD
+async function loadUserPhoto(avatarUrl) {
+    try {
+        if (!avatarUrl) {
+            return null;
+        }
+
+        const { data, error } = await supabase.storage
+            .from('avatars')
+            .download(avatarUrl);
+
+        if (error) {
+            return null;
+        }
+
+        return URL.createObjectURL(data);
+
+    } catch (error) {
+        console.error('Erro ao carregar foto:', error);
+        return null;
     }
 }
 
@@ -127,7 +189,6 @@ function getCurrentFilters() {
     const selectedInterests = [];
     for (let option of interestsSelect.options) {
         if (option.selected) {
-            // Se selecionou "Não importa", ignora os outros interesses
             if (option.value === 'nao_importa') {
                 return {
                     ageMin: ageMin ? parseInt(ageMin) : null,
@@ -136,7 +197,7 @@ function getCurrentFilters() {
                     lookingFor: lookingFor || null,
                     location: location || null,
                     zodiac: zodiac || null,
-                    interests: null // null significa "não importa"
+                    interests: null
                 };
             }
             selectedInterests.push(option.value);
@@ -159,7 +220,6 @@ async function searchUsers() {
     try {
         console.log('🔍 Aplicando filtros:', currentFilters);
         
-        // Buscar todos os usuários com dados completos
         let query = supabase
             .from('profiles')
             .select(`
@@ -201,31 +261,25 @@ async function searchUsers() {
         if (currentFilters.gender) {
             filteredUsers = filteredUsers.filter(user => {
                 const userGender = user.user_details?.gender;
-                // COMPARAÇÃO EXATA - só passa se for IGUAL
                 return userGender === currentFilters.gender;
             });
-            console.log(`⚧️ Após filtro de gênero (${currentFilters.gender}):`, filteredUsers.length);
         }
 
         if (currentFilters.lookingFor) {
             filteredUsers = filteredUsers.filter(user => {
                 const userLookingFor = user.user_details?.looking_for;
-                // COMPARAÇÃO EXATA
                 return userLookingFor === currentFilters.lookingFor;
             });
-            console.log(`🎯 Após filtro "procura por":`, filteredUsers.length);
         }
 
         if (currentFilters.zodiac) {
             filteredUsers = filteredUsers.filter(user => {
                 const userZodiac = user.user_details?.zodiac;
-                // COMPARAÇÃO EXATA  
                 return userZodiac === currentFilters.zodiac;
             });
-            console.log(`⭐ Após filtro de signo:`, filteredUsers.length);
         }
 
-        // Filtro de idade - APENAS se tiver data de nascimento
+        // Filtro de idade
         if (currentFilters.ageMin || currentFilters.ageMax) {
             filteredUsers = filteredUsers.filter(user => {
                 if (!user.birth_date) return false;
@@ -236,32 +290,26 @@ async function searchUsers() {
                 
                 return age >= minAge && age <= maxAge;
             });
-            console.log(`🎂 Após filtro de idade:`, filteredUsers.length);
         }
 
-        // Filtro de localização - busca parcial mas RESTRITIVA
+        // Filtro de localização
         if (currentFilters.location && currentFilters.location.trim() !== '') {
             filteredUsers = filteredUsers.filter(user => {
                 const userLocation = user.user_details?.address;
                 if (!userLocation) return false;
                 return userLocation.toLowerCase().includes(currentFilters.location.toLowerCase());
             });
-            console.log(`📍 Após filtro de localização:`, filteredUsers.length);
         }
 
-        // Filtro de interesses - CORREÇÃO: "Não importa" ignora filtro de interesses
+        // Filtro de interesses
         if (currentFilters.interests) {
-            // Se interests é null, significa que selecionou "Não importa" - não filtra por interesses
             filteredUsers = filteredUsers.filter(user => {
                 const userInterests = user.user_details?.interests || [];
-                // Usuário deve ter PELO MENOS UM dos interesses selecionados
                 return currentFilters.interests.some(interest => 
                     userInterests.includes(interest)
                 );
             });
-            console.log(`🎨 Após filtro de interesses:`, filteredUsers.length);
         }
-        // Se interests é null (não importa), simplesmente não aplica o filtro
 
         console.log('🎉 RESULTADO FINAL:', filteredUsers.length, 'usuários');
 
@@ -271,7 +319,8 @@ async function searchUsers() {
         const endIndex = startIndex + usersPerPage;
         const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
 
-        displayUsers(paginatedUsers);
+        // ✅ CARREGAR FOTOS ASSINCRONAMENTE
+        await displayUsersWithPhotos(paginatedUsers);
         updatePagination();
         updateResultsCount(paginatedUsers.length, totalUsers);
 
@@ -281,69 +330,35 @@ async function searchUsers() {
     }
 }
 
-// Exibir usuários
-function displayUsers(users) {
+// ✅ EXIBIR USUÁRIOS COM FOTOS - ASSÍNCRONO
+async function displayUsersWithPhotos(users) {
     const usersGrid = document.getElementById('usersGrid');
     const noResults = document.getElementById('noResults');
     const loadingResults = document.getElementById('loadingResults');
 
     loadingResults.classList.add('hidden');
 
-    // SE não há usuários OU se a array está vazia → mostrar "sem resultados"
     if (!users || users.length === 0) {
         usersGrid.innerHTML = '';
         noResults.classList.remove('hidden');
-        
-        // Mensagem personalizada baseada nos filtros
         const message = getNoResultsMessage();
         document.querySelector('#noResults h3').textContent = message.title;
         document.querySelector('#noResults p').textContent = message.description;
-        
         return;
     }
 
     noResults.classList.add('hidden');
 
-    // Só criar cards para usuários VÁLIDOS
-    usersGrid.innerHTML = users.map(user => createUserCard(user)).join('');
+    // ✅ CARREGAR FOTOS PARA CADA USUÁRIO
+    const userCards = await Promise.all(
+        users.map(async user => await createUserCardWithPhoto(user))
+    );
+    
+    usersGrid.innerHTML = userCards.join('');
 }
 
-// Mensagem personalizada quando não há resultados
-function getNoResultsMessage() {
-    const filters = currentFilters;
-    
-    if (filters.gender) {
-        return {
-            title: `Nenhum ${filters.gender === 'masculino' ? 'homem' : 'mulher'} encontrado`,
-            description: 'Tente ajustar os filtros ou buscar por outro gênero.'
-        };
-    }
-    
-    if (filters.lookingFor) {
-        const lookingForText = formatLookingFor(filters.lookingFor);
-        return {
-            title: `Ninguém procurando por ${lookingForText.toLowerCase()}`,
-            description: 'Talvez outras pessoas estejam buscando algo diferente.'
-        };
-    }
-    
-    if (filters.zodiac) {
-        const zodiacText = formatZodiac(filters.zodiac);
-        return {
-            title: `Nenhum ${zodiacText} encontrado`,
-            description: 'Tente buscar por outro signo ou remover este filtro.'
-        };
-    }
-    
-    return {
-        title: 'Nenhuma pessoa encontrada',
-        description: 'Tente ajustar os filtros de busca para encontrar mais pessoas.'
-    };
-}
-
-// Criar card de usuário - GARANTINDO que todos os dados existem
-function createUserCard(user) {
-    // VALIDAÇÃO: Só cria card se tiver dados mínimos
+// ✅ CRIAR CARD DE USUÁRIO COM FOTO - ASSÍNCRONO
+async function createUserCardWithPhoto(user) {
     if (!user.user_details || !user.nickname) {
         console.warn('⚠️ Usuário sem dados suficientes:', user);
         return '';
@@ -353,6 +368,32 @@ function createUserCard(user) {
     const age = user.birth_date ? calculateAge(user.birth_date) : null;
     const details = user.user_details;
     
+    // ✅ CARREGAR FOTO DO USUÁRIO
+    let avatarHtml = '';
+    if (user.avatar_url) {
+        const photoUrl = await loadUserPhoto(user.avatar_url);
+        if (photoUrl) {
+            avatarHtml = `
+                <div class="user-card-avatar" style="background: none;">
+                    <img src="${photoUrl}" alt="${nickname}" class="user-card-avatar-img" style="display: block;">
+                    <div class="user-card-avatar-fallback" style="display: none;">${nickname.charAt(0).toUpperCase()}</div>
+                </div>
+            `;
+        } else {
+            avatarHtml = `
+                <div class="user-card-avatar">
+                    <div class="user-card-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
+                </div>
+            `;
+        }
+    } else {
+        avatarHtml = `
+            <div class="user-card-avatar">
+                <div class="user-card-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
+            </div>
+        `;
+    }
+
     // Informações públicas para mostrar
     const zodiac = details.zodiac ? getZodiacIcon(details.zodiac) + ' ' + formatZodiac(details.zodiac) : null;
     const profession = details.profession || null;
@@ -364,7 +405,7 @@ function createUserCard(user) {
 
     return `
         <div class="user-card" onclick="viewProfile('${user.id}')">
-            <div class="user-card-avatar">${nickname.charAt(0).toUpperCase()}</div>
+            ${avatarHtml}
             <div class="user-card-name">${nickname}${age ? `, ${age}` : ''}</div>
             
             <div class="user-card-info">
@@ -496,6 +537,39 @@ function showLoadingState() {
     usersGrid.innerHTML = '';
     noResults.classList.add('hidden');
     loadingResults.classList.remove('hidden');
+}
+
+// Mensagem personalizada quando não há resultados
+function getNoResultsMessage() {
+    const filters = currentFilters;
+    
+    if (filters.gender) {
+        return {
+            title: `Nenhum ${filters.gender === 'masculino' ? 'homem' : 'mulher'} encontrado`,
+            description: 'Tente ajustar os filtros ou buscar por outro gênero.'
+        };
+    }
+    
+    if (filters.lookingFor) {
+        const lookingForText = formatLookingFor(filters.lookingFor);
+        return {
+            title: `Ninguém procurando por ${lookingForText.toLowerCase()}`,
+            description: 'Talvez outras pessoas estejam buscando algo diferente.'
+        };
+    }
+    
+    if (filters.zodiac) {
+        const zodiacText = formatZodiac(filters.zodiac);
+        return {
+            title: `Nenhum ${zodiacText} encontrado`,
+            description: 'Tente buscar por outro signo ou remover este filtro.'
+        };
+    }
+    
+    return {
+        title: 'Nenhuma pessoa encontrada',
+        description: 'Tente ajustar os filtros de busca para encontrar mais pessoas.'
+    };
 }
 
 // Funções auxiliares
