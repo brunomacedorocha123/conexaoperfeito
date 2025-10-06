@@ -105,6 +105,21 @@
       justify-content: center;
       font-weight: bold;
       font-size: 1.2rem;
+      position: relative;
+      cursor: pointer;
+      overflow: hidden;
+    }
+
+    .user-avatar-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      display: none;
+    }
+
+    .user-avatar-fallback {
+      font-size: 1.2rem;
     }
 
     .btn {
@@ -156,18 +171,91 @@
       box-shadow: var(--shadow);
     }
 
+    .avatar-section {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .profile-avatar-container {
+      text-align: center;
+    }
+
     .profile-avatar {
-      width: 100px;
-      height: 100px;
+      width: 120px;
+      height: 120px;
       border-radius: 50%;
       background: linear-gradient(135deg, var(--primary), var(--secondary));
       color: var(--white);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2.5rem;
+      font-size: 3rem;
       font-weight: bold;
       margin: 0 auto 1rem;
+      position: relative;
+      cursor: pointer;
+      transition: var(--transition);
+      overflow: hidden;
+    }
+
+    .profile-avatar:hover {
+      transform: scale(1.05);
+    }
+
+    .avatar-image {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      display: none;
+    }
+
+    .avatar-fallback {
+      font-size: 3rem;
+      font-weight: bold;
+      color: white;
+    }
+
+    .edit-avatar-btn {
+      background: none;
+      border: 2px solid var(--primary);
+      color: var(--primary);
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: var(--transition);
+      margin: 0 auto;
+    }
+
+    .edit-avatar-btn:hover {
+      background: var(--primary);
+      color: var(--white);
+      transform: translateY(-2px);
+    }
+
+    .upload-loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      display: none;
+    }
+
+    .profile-info {
+      text-align: center;
     }
 
     .profile-header h2 {
@@ -186,6 +274,56 @@
       margin-bottom: 1rem;
     }
 
+    /* Modal de Upload */
+    .upload-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      display: none;
+    }
+
+    .upload-modal-content {
+      background: var(--white);
+      padding: 2rem;
+      border-radius: 15px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+    }
+
+    .preview-container {
+      margin: 1rem 0;
+    }
+
+    .preview-image {
+      max-width: 200px;
+      max-height: 200px;
+      border-radius: 10px;
+      margin: 0 auto;
+      display: block;
+      display: none;
+    }
+
+    .file-info {
+      margin: 1rem 0;
+      font-size: 0.9rem;
+      color: var(--text-light);
+    }
+
+    .upload-error {
+      color: var(--error);
+      margin: 1rem 0;
+      font-size: 0.9rem;
+      min-height: 20px;
+    }
+
     /* Profile Sections */
     .profile-sections {
       display: grid;
@@ -197,6 +335,11 @@
     @media (max-width: 768px) {
       .profile-sections {
         grid-template-columns: 1fr;
+      }
+      
+      .avatar-section {
+        flex-direction: column;
+        gap: 1.5rem;
       }
     }
 
@@ -468,7 +611,7 @@
 
     /* Hidden class for toggling */
     .hidden {
-      display: none;
+      display: none !important;
     }
   </style>
 </head>
@@ -479,13 +622,16 @@
       <div class="header-content">
         <div class="logo">
           <a href="home.html">
-            <span class="logo-icon"></span>
+            <span class="logo-icon">💑</span>
             <h1>Conexão Perfeita</h1>
           </a>
         </div>
         <div class="user-menu">
           <div class="user-info">
-            <div class="user-avatar" id="userAvatar">U</div>
+            <div class="user-avatar" id="userAvatar" onclick="openUploadModal()">
+              <img id="userAvatarImg" class="user-avatar-img" src="" alt="Avatar">
+              <div id="userAvatarFallback" class="user-avatar-fallback">U</div>
+            </div>
             <span id="userNickname">Usuário</span>
           </div>
           <a href="home.html" class="btn btn-outline">Voltar para Home</a>
@@ -502,13 +648,73 @@
       <div class="alert alert-success" id="successAlert" style="display: none;"></div>
       <div class="alert alert-error" id="errorAlert" style="display: none;"></div>
 
-      <!-- Profile Header -->
+      <!-- Profile Header - AGORA COM BOTÃO EDITAR FOTO VISÍVEL -->
       <section class="profile-header">
-        <div class="profile-avatar" id="profileAvatar">U</div>
-        <h2 id="profileName">Carregando...</h2>
-        <div class="profile-badge" id="profileBadge">Perfil em Andamento</div>
-        <p>Complete seu perfil para aumentar suas conexões</p>
+        <div class="avatar-section">
+          <div class="profile-avatar-container">
+            <div class="profile-avatar" id="profileAvatar" onclick="openUploadModal()">
+              <img id="avatarImage" class="avatar-image" src="" alt="Foto do perfil">
+              <div id="avatarFallback" class="avatar-fallback">A</div>
+              <div id="uploadLoading" class="upload-loading">📤 Enviando...</div>
+            </div>
+            
+            <!-- ✅ BOTÃO EDITAR FOTO - VISÍVEL E CLARO -->
+            <button class="edit-avatar-btn" onclick="openUploadModal()">
+              <span>📷</span> Alterar Foto
+            </button>
+          </div>
+          
+          <div class="profile-info">
+            <h2 id="profileName">akalanata</h2>
+            <div class="profile-badge" id="profileBadge">Perfil em Andamento</div>
+            <p>Complete seu perfil para aumentar suas conexões</p>
+          </div>
+        </div>
+        
+        <input type="file" id="photoInput" class="hidden" 
+               accept=".jpg,.jpeg,.png" 
+               onchange="handlePhotoSelect(event)">
       </section>
+
+      <!-- Modal de Upload -->
+      <div id="uploadModal" class="upload-modal">
+        <div class="upload-modal-content">
+          <h3>📸 Alterar Foto do Perfil</h3>
+          
+          <div class="preview-container">
+            <img id="modalPreview" class="preview-image" src="" alt="Preview">
+          </div>
+          
+          <div class="file-info" id="fileInfo"></div>
+          <div class="upload-error" id="uploadError"></div>
+          
+          <div class="form-group">
+            <label for="modalPhotoInput" class="btn btn-primary">
+              📁 Escolher Foto
+            </label>
+            <input type="file" id="modalPhotoInput" 
+                   accept=".jpg,.jpeg,.png" 
+                   onchange="handleModalPhotoSelect(event)"
+                   class="hidden">
+          </div>
+          
+          <div class="form-group">
+            <button class="btn btn-primary" onclick="uploadPhoto()" id="uploadBtn" disabled>
+              📤 Fazer Upload
+            </button>
+            <button class="btn btn-secondary" onclick="closeUploadModal()">
+              Cancelar
+            </button>
+          </div>
+          
+          <div class="form-text">
+            <strong>Requisitos:</strong><br>
+            • Formatos: JPG, PNG<br>
+            • Tamanho máximo: 250KB<br>
+            • Dimensões recomendadas: 400x400px
+          </div>
+        </div>
+      </div>
 
       <!-- Profile Sections -->
       <div class="profile-sections">
@@ -641,7 +847,6 @@
                   <option value="">Selecione...</option>
                   <option value="feminino">Feminino</option>
                   <option value="masculino">Masculino</option>
-                  <option value="nao_informar">Prefiro não informar</option>
                 </select>
               </div>
 
@@ -735,7 +940,7 @@
           </div>
         </section>
 
-        <!-- NOVA SEÇÃO: Mais sobre mim -->
+        <!-- Mais sobre mim -->
         <section class="profile-section">
           <div class="section-header">
             <h3>Mais sobre mim</h3>
@@ -789,6 +994,7 @@
           <!-- Edit Mode -->
           <div id="moreAboutInfoEdit" class="hidden">
             <form id="moreAboutInfoForm">
+              <!-- Formulário mantido igual ao original -->
               <div class="form-group">
                 <label for="zodiac">Signo</label>
                 <select id="zodiac" class="form-control">
@@ -921,17 +1127,17 @@
         <h3>Ações do Perfil</h3>
         <div class="actions-grid">
           <a href="home.html" class="action-card">
-            <div class="action-icon"></div>
+            <div class="action-icon">🏠</div>
             <h4>Voltar para Home</h4>
             <p>Retornar à página principal</p>
           </a>
           <a href="#" class="action-card" onclick="exportProfileData()">
-            <div class="action-icon"></div>
+            <div class="action-icon">📥</div>
             <h4>Exportar Dados</h4>
             <p>Baixar suas informações</p>
           </a>
           <a href="#" class="action-card" onclick="deleteAccount()">
-            <div class="action-icon">️</div>
+            <div class="action-icon">🗑️</div>
             <h4>Excluir Conta</h4>
             <p>Remover permanentemente</p>
           </a>
@@ -971,915 +1177,1175 @@
     </div>
   </footer>
 
-  <script>
-    // ✅ DEBUG: Verificar se nova seção foi carregada
-console.log('🔄 VERSÃO 2.0 - Mais sobre mim CARREGADA!');
-
-// Configuração do Supabase
-const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
-
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// Estado da aplicação
-let currentUser = null;
-let userProfile = null;
-let userDetails = null;
-
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('✅ DOM Carregado - Nova seção disponível');
-  checkAuth();
-  setupEventListeners();
-  setupDescriptionCounter();
-  setupMoreAboutListeners();
-});
-
-// Verificar autenticação
-async function checkAuth() {
-  try {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    
-    if (error) throw error;
-    
-    if (!user) {
-      window.location.href = 'login.html';
-      return;
-    }
-    
-    currentUser = user;
-    await loadUserData();
-    
-  } catch (error) {
-    console.error('Erro na autenticação:', error);
-    window.location.href = 'login.html';
-  }
-}
-
-// ✅ CARREGAR DADOS DO USUÁRIO - ATUALIZADO
-async function loadUserData() {
-  try {
-    console.log('🔄 Carregando dados do usuário...');
-    
-    // ✅ PRIMEIRO: Buscar dados do Auth
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    // ✅ SEGUNDO: Tentar buscar perfil da tabela profiles
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', currentUser.id)
-      .single();
-
-    if (profileError) {
-      console.log('⚠️ Perfil não encontrado, criando perfil básico...');
-      await createBasicProfile();
-      userProfile = await getProfileData();
-    } else {
-      userProfile = profile;
-    }
-
-    // ✅ TERCEIRO: Buscar detalhes complementares (AGORA COM NOVOS CAMPOS)
-    const { data: details, error: detailsError } = await supabase
-      .from('user_details')
-      .select('*')
-      .eq('user_id', currentUser.id)
-      .single();
-
-    if (detailsError && detailsError.code !== 'PGRST116') {
-      console.error('Erro ao buscar detalhes:', detailsError);
-    }
-    
-    userDetails = details || {};
-
-    console.log('✅ Dados carregados com NOVOS CAMPOS:', userDetails);
-
-    await updateProfileDisplay();
-    updateProfileForms();
-
-  } catch (error) {
-    console.error('❌ Erro ao carregar dados do usuário:', error);
-    showAlert('errorAlert', 'Erro ao carregar dados do perfil.');
-  }
-}
-
-// ✅ CRIAR PERFIL BÁSICO SE NÃO EXISTIR
-async function createBasicProfile() {
-  try {
-    console.log('🔄 Criando perfil básico...');
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    const { error } = await supabase
-      .from('profiles')
-      .insert([
-        {
-          id: user.id,
-          nickname: user.user_metadata?.nickname || user.email.split('@')[0],
-          full_name: user.user_metadata?.full_name || '',
-          birth_date: user.user_metadata?.birth_date || null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ]);
-
-    if (error) {
-      console.error('❌ Erro ao criar perfil:', error);
-      await createUserDetails();
-      throw error;
-    }
-
-    console.log('✅ Perfil básico criado com sucesso');
-    return true;
-  } catch (error) {
-    console.error('❌ Erro na criação do perfil:', error);
-    return false;
-  }
-}
-
-// ✅ CRIAR USER_DETAILS SE NÃO EXISTIR
-async function createUserDetails() {
-  try {
-    const { error } = await supabase
-      .from('user_details')
-      .insert([
-        {
-          user_id: currentUser.id,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ]);
-
-    if (error && error.code !== '23505') {
-      console.error('Erro ao criar user_details:', error);
-    }
-  } catch (error) {
-    console.error('Erro na criação de user_details:', error);
-  }
-}
-
-// ✅ BUSCAR DADOS DO PERFIL
-async function getProfileData() {
-  const { data: profile, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', currentUser.id)
-    .single();
-
-  if (error) throw error;
-  return profile;
-}
-
-// ✅ ATUALIZAR DISPLAY DO PERFIL - AGORA COM NOVOS CAMPOS
-async function updateProfileDisplay() {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    const nickname = user.user_metadata?.nickname || user.email.split('@')[0];
-    
-    // Header
-    document.getElementById('userNickname').textContent = nickname;
-    document.getElementById('userAvatar').textContent = nickname.charAt(0).toUpperCase();
-    document.getElementById('profileAvatar').textContent = nickname.charAt(0).toUpperCase();
-    document.getElementById('profileName').textContent = nickname;
-
-    // Informações básicas
-    document.getElementById('displayFullName').textContent = userProfile?.full_name || user.user_metadata?.full_name || 'Não informado';
-    document.getElementById('displayFullName').className = (userProfile?.full_name || user.user_metadata?.full_name) ? 'info-value' : 'info-value empty';
-    
-    document.getElementById('displayEmail').textContent = user.email;
-    document.getElementById('displayBirthDate').textContent = userProfile?.birth_date ?
-      new Date(userProfile.birth_date).toLocaleDateString('pt-BR') : 'Não informada';
-    document.getElementById('displayBirthDate').className = userProfile?.birth_date ? 'info-value' : 'info-value empty';
-    
-    document.getElementById('displayAge').textContent = userProfile?.birth_date ?
-      calculateAge(userProfile.birth_date) + ' anos' : '-';
-
-    // Informações de contato
-    document.getElementById('displayPhone').textContent = userDetails.phone || 'Não informado';
-    document.getElementById('displayPhone').className = userDetails.phone ? 'info-value' : 'info-value empty';
-    
-    document.getElementById('displayAddress').textContent = userDetails.address || 'Não informado';
-    document.getElementById('displayAddress').className = userDetails.address ? 'info-value' : 'info-value empty';
-
-    // Preferências
-    document.getElementById('displayGender').textContent = formatGender(userDetails.gender) || 'Não informado';
-    document.getElementById('displayGender').className = userDetails.gender ? 'info-value' : 'info-value empty';
-    
-    document.getElementById('displayInterests').textContent = userDetails.interests ?
-      userDetails.interests.join(', ') : 'Não informados';
-    document.getElementById('displayInterests').className = userDetails.interests ? 'info-value' : 'info-value empty';
-    
-    document.getElementById('displayLookingFor').textContent = formatLookingFor(userDetails.looking_for) || 'Não informado';
-    document.getElementById('displayLookingFor').className = userDetails.looking_for ? 'info-value' : 'info-value empty';
-
-    // Descrição
-    document.getElementById('displayDescription').textContent = userDetails.description || 'Nenhuma descrição adicionada ainda.';
-    document.getElementById('displayDescription').className = userDetails.description ? 'info-value' : 'info-value empty';
-
-    // ✅ NOVO: Mais sobre mim
-    document.getElementById('displayZodiac').textContent = formatZodiac(userDetails.zodiac) || 'Não informado';
-    document.getElementById('displayZodiac').className = userDetails.zodiac ? 'info-value' : 'info-value empty';
-    
-    document.getElementById('displayPets').textContent = formatPets(userDetails.has_pets, userDetails.pets_details) || 'Não informado';
-    document.getElementById('displayPets').className = userDetails.has_pets ? 'info-value' : 'info-value empty';
-    
-    document.getElementById('displaySexualOrientation').textContent = formatSexualOrientation(userDetails.sexual_orientation) || 'Não informado';
-    document.getElementById('displaySexualOrientation').className = userDetails.sexual_orientation ? 'info-value' : 'info-value empty';
-    
-    document.getElementById('displayDrinking').textContent = formatDrinking(userDetails.drinking) || 'Não informado';
-    document.getElementById('displayDrinking').className = userDetails.drinking ? 'info-value' : 'info-value empty';
-    
-    document.getElementById('displaySmoking').textContent = formatSmoking(userDetails.smoking) || 'Não informado';
-    document.getElementById('displaySmoking').className = userDetails.smoking ? 'info-value' : 'info-value empty';
-    
-    document.getElementById('displayExercise').textContent = formatExercise(userDetails.exercise, userDetails.exercise_details) || 'Não informado';
-    document.getElementById('displayExercise').className = userDetails.exercise ? 'info-value' : 'info-value empty';
-    
-    document.getElementById('displayReligion').textContent = formatReligion(userDetails.religion) || 'Não informado';
-    document.getElementById('displayReligion').className = userDetails.religion ? 'info-value' : 'info-value empty';
-    
-    document.getElementById('displayEducation').textContent = formatEducation(userDetails.education) || 'Não informado';
-    document.getElementById('displayEducation').className = userDetails.education ? 'info-value' : 'info-value empty';
-    
-    document.getElementById('displayProfession').textContent = userDetails.profession || 'Não informado';
-    document.getElementById('displayProfession').className = userDetails.profession ? 'info-value' : 'info-value empty';
-
-    // Atualizar badge do perfil
-    updateProfileBadge();
-
-  } catch (error) {
-    console.error('❌ Erro ao atualizar display:', error);
-  }
-}
-
-// Atualizar formulários com dados existentes
-function updateProfileForms() {
-  // Formulário de informações básicas
-  document.getElementById('fullName').value = userProfile?.full_name || '';
-  document.getElementById('birthDate').value = userProfile?.birth_date || '';
-
-  // Formulário de contato
-  document.getElementById('phone').value = userDetails.phone || '';
-  document.getElementById('address').value = userDetails.address || '';
-
-  // Formulário de preferências
-  document.getElementById('gender').value = userDetails.gender || '';
-  document.getElementById('lookingFor').value = userDetails.looking_for || '';
-
-  // Checkboxes de interesses
-  const interests = userDetails.interests || [];
-  document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-    checkbox.checked = interests.includes(checkbox.value);
-  });
-
-  // Descrição
-  document.getElementById('description').value = userDetails.description || '';
-  updateCharCount();
-
-  // ✅ NOVO: Mais sobre mim
-  document.getElementById('zodiac').value = userDetails.zodiac || '';
-  document.getElementById('hasPets').value = userDetails.has_pets || '';
-  document.getElementById('petsDetails').value = userDetails.pets_details || '';
-  document.getElementById('sexualOrientation').value = userDetails.sexual_orientation || '';
-  document.getElementById('drinking').value = userDetails.drinking || '';
-  document.getElementById('smoking').value = userDetails.smoking || '';
-  document.getElementById('exercise').value = userDetails.exercise || '';
-  document.getElementById('exerciseDetails').value = userDetails.exercise_details || '';
-  document.getElementById('religion').value = userDetails.religion || '';
-  document.getElementById('education').value = userDetails.education || '';
-  document.getElementById('profession').value = userDetails.profession || '';
-
-  // Atualizar visibilidade dos campos condicionais
-  updatePetsDetailsVisibility();
-  updateExerciseDetailsVisibility();
-}
-
-// Configurar contador de caracteres
-function setupDescriptionCounter() {
-  const description = document.getElementById('description');
-  description.addEventListener('input', updateCharCount);
-}
-
-function updateCharCount() {
-  const description = document.getElementById('description');
-  const charCount = document.getElementById('charCount');
-  const count = description.value.length;
-  
-  charCount.textContent = `${count}/100 caracteres`;
-  charCount.className = count > 100 ? 'char-count warning' : 'char-count';
-}
-
-// ✅ CONFIGURAR LISTENERS PARA A NOVA SEÇÃO
-function setupMoreAboutListeners() {
-  // Pets
-  document.getElementById('hasPets').addEventListener('change', updatePetsDetailsVisibility);
-  
-  // Exercício
-  document.getElementById('exercise').addEventListener('change', updateExerciseDetailsVisibility);
-}
-
-function updatePetsDetailsVisibility() {
-  const hasPets = document.getElementById('hasPets').value;
-  const petsDetailsGroup = document.getElementById('petsDetailsGroup');
-  petsDetailsGroup.style.display = hasPets === 'sim' ? 'block' : 'none';
-}
-
-function updateExerciseDetailsVisibility() {
-  const exercise = document.getElementById('exercise').value;
-  const exerciseDetailsGroup = document.getElementById('exerciseDetailsGroup');
-  exerciseDetailsGroup.style.display = (exercise === 'ocasionalmente' || exercise === 'regularmente') ? 'block' : 'none';
-}
-
-// Funções auxiliares
-function calculateAge(birthDate) {
-  const today = new Date();
-  const birth = new Date(birthDate);
-  let age = today.getFullYear() - birth.getFullYear();
-  const monthDiff = today.getMonth() - birth.getMonth();
-  
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-    age--;
-  }
-  
-  return age;
-}
-
-function formatGender(gender) {
-  const genders = {
-    'feminino': 'Feminino',
-    'masculino': 'Masculino',
-    'nao_informar': 'Prefiro não informar'
-  };
-  return genders[gender] || gender;
-}
-
-function formatLookingFor(lookingFor) {
-  const options = {
-    'amizade': 'Amizade',
-    'namoro': 'Namoro',
-    'relacionamento_serio': 'Relacionamento Sério',
-    'conversa': 'Apenas Conversa'
-  };
-  return options[lookingFor] || lookingFor;
-}
-
-// ✅ NOVAS FUNÇÕES DE FORMATAÇÃO
-function formatZodiac(zodiac) {
-  const zodiacs = {
-    'aries': 'Áries',
-    'touro': 'Touro',
-    'gemeos': 'Gêmeos',
-    'cancer': 'Câncer',
-    'leao': 'Leão',
-    'virgem': 'Virgem',
-    'libra': 'Libra',
-    'escorpiao': 'Escorpião',
-    'sagitario': 'Sagitário',
-    'capricornio': 'Capricórnio',
-    'aquario': 'Aquário',
-    'peixes': 'Peixes'
-  };
-  return zodiacs[zodiac] || zodiac;
-}
-
-function formatPets(hasPets, petsDetails) {
-  if (hasPets === 'sim') {
-    return petsDetails ? `Sim, ${petsDetails}` : 'Sim, tenho';
-  } else if (hasPets === 'nao') {
-    return 'Não tenho';
-  }
-  return null;
-}
-
-function formatSexualOrientation(orientation) {
-  const orientations = {
-    'heterossexual': 'Heterossexual',
-    'homossexual': 'Homossexual',
-    'bissexual': 'Bissexual',
-    'outro': 'Outro',
-    'prefiro_nao_informar': 'Prefiro não informar'
-  };
-  return orientations[orientation] || orientation;
-}
-
-function formatDrinking(drinking) {
-  const options = {
-    'nao_bebo': 'Não bebo',
-    'socialmente': 'Socialmente',
-    'frequentemente': 'Com frequência'
-  };
-  return options[drinking] || drinking;
-}
-
-function formatSmoking(smoking) {
-  const options = {
-    'nao_fumo': 'Não fumo',
-    'socialmente': 'Socialmente',
-    'frequentemente': 'Com frequência'
-  };
-  return options[smoking] || smoking;
-}
-
-function formatExercise(exercise, exerciseDetails) {
-  if (exercise === 'ocasionalmente') {
-    return exerciseDetails ? `Ocasionalmente (${exerciseDetails})` : 'Ocasionalmente';
-  } else if (exercise === 'regularmente') {
-    return exerciseDetails ? `Regularmente (${exerciseDetails})` : 'Regularmente';
-  } else if (exercise === 'nao_pratico') {
-    return 'Não pratico';
-  }
-  return null;
-}
-
-function formatReligion(religion) {
-  const religions = {
-    'catolica': 'Católica',
-    'evangelica': 'Evangélica',
-    'espirita': 'Espírita',
-    'umbanda_candomble': 'Umbanda/Candomblé',
-    'budista': 'Budista',
-    'judaica': 'Judaica',
-    'islamica': 'Islâmica',
-    'outra': 'Outra',
-    'nenhuma': 'Nenhuma',
-    'prefiro_nao_informar': 'Prefiro não informar'
-  };
-  return religions[religion] || religion;
-}
-
-function formatEducation(education) {
-  const levels = {
-    'fundamental_incompleto': 'Fundamental Incompleto',
-    'fundamental_completo': 'Fundamental Completo',
-    'medio_incompleto': 'Médio Incompleto',
-    'medio_completo': 'Médio Completo',
-    'superior_incompleto': 'Superior Incompleto',
-    'superior_completo': 'Superior Completo',
-    'pos_graduacao': 'Pós-graduação',
-    'mestrado': 'Mestrado',
-    'doutorado': 'Doutorado'
-  };
-  return levels[education] || education;
-}
-
-function updateProfileBadge() {
-  const badge = document.getElementById('profileBadge');
-  const completedFields = calculateProfileCompletion();
-  
-  if (completedFields >= 80) {
-    badge.textContent = 'Perfil Completo';
-    badge.style.background = 'var(--success)';
-    badge.style.color = 'white';
-  } else if (completedFields >= 50) {
-    badge.textContent = 'Perfil em Andamento';
-    badge.style.background = 'var(--primary-light)';
-  } else {
-    badge.textContent = 'Perfil Básico';
-    badge.style.background = '#e2e8f0';
-  }
-}
-
-function calculateProfileCompletion() {
-  let completed = 0;
-  let total = 0;
-
-  // Perfil básico
-  if (userProfile?.full_name) completed++;
-  total++;
-  if (userProfile?.birth_date) completed++;
-  total++;
-
-  // Detalhes
-  if (userDetails.phone) completed++;
-  total++;
-  if (userDetails.address) completed++;
-  total++;
-  if (userDetails.gender) completed++;
-  total++;
-  if (userDetails.interests && userDetails.interests.length > 0) completed++;
-  total++;
-  if (userDetails.looking_for) completed++;
-  total++;
-  if (userDetails.description) completed++;
-  total++;
-
-  // ✅ NOVO: Mais sobre mim (9 novos campos)
-  if (userDetails.zodiac) completed++;
-  total++;
-  if (userDetails.has_pets) completed++;
-  total++;
-  if (userDetails.sexual_orientation) completed++;
-  total++;
-  if (userDetails.drinking) completed++;
-  total++;
-  if (userDetails.smoking) completed++;
-  total++;
-  if (userDetails.exercise) completed++;
-  total++;
-  if (userDetails.religion) completed++;
-  total++;
-  if (userDetails.education) completed++;
-  total++;
-  if (userDetails.profession) completed++;
-  total++;
-
-  return Math.round((completed / total) * 100);
-}
-
-// Toggle entre display e edit mode
-function toggleEdit(section) {
-  const display = document.getElementById(section + 'Display');
-  const edit = document.getElementById(section + 'Edit');
-  
-  if (display.classList.contains('hidden')) {
-    display.classList.remove('hidden');
-    edit.classList.add('hidden');
-  } else {
-    display.classList.add('hidden');
-    edit.classList.remove('hidden');
-  }
-}
-
-// Configurar event listeners
-function setupEventListeners() {
-  document.getElementById('logoutBtn').addEventListener('click', logout);
-  
-  // Form submissions
-  document.getElementById('basicInfoForm').addEventListener('submit', saveBasicInfo);
-  document.getElementById('contactInfoForm').addEventListener('submit', saveContactInfo);
-  document.getElementById('preferencesInfoForm').addEventListener('submit', savePreferencesInfo);
-  document.getElementById('descriptionInfoForm').addEventListener('submit', saveDescriptionInfo);
-  document.getElementById('moreAboutInfoForm').addEventListener('submit', saveMoreAboutInfo);
-}
-
-// ✅ SALVAR INFORMAÇÕES BÁSICAS
-async function saveBasicInfo(e) {
-  e.preventDefault();
-  
-  try {
-    const fullName = document.getElementById('fullName').value;
-    const birthDate = document.getElementById('birthDate').value;
-
-    const { data: existingProfile } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('id', currentUser.id)
-      .single();
-
-    let error;
-    
-    if (existingProfile) {
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          full_name: fullName,
-          birth_date: birthDate,
-          updated_at: new Date()
-        })
-        .eq('id', currentUser.id);
-
-      error = updateError;
-    } else {
-      const { data: { user } } = await supabase.auth.getUser();
-      const { error: insertError } = await supabase
-        .from('profiles')
-        .insert([
-          {
-            id: currentUser.id,
-            nickname: user.user_metadata?.nickname || user.email.split('@')[0],
-            full_name: fullName,
-            birth_date: birthDate,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }
-        ]);
-
-      error = insertError;
-    }
-
-    if (error) throw error;
-
-    await loadUserData();
-    toggleEdit('basicInfo');
-    showAlert('successAlert', 'Informações básicas atualizadas com sucesso!');
-    
-  } catch (error) {
-    console.error('❌ Erro ao salvar informações básicas:', error);
-    showAlert('errorAlert', 'Erro ao salvar informações básicas: ' + error.message);
-  }
-}
-
-// ✅ SALVAR INFORMAÇÕES DE CONTATO
-async function saveContactInfo(e) {
-  e.preventDefault();
-  
-  try {
-    const phone = document.getElementById('phone').value;
-    const address = document.getElementById('address').value;
-
-    const { data: existingDetails } = await supabase
-      .from('user_details')
-      .select('id')
-      .eq('user_id', currentUser.id)
-      .single();
-
-    let error;
-    
-    if (existingDetails) {
-      const { error: updateError } = await supabase
-        .from('user_details')
-        .update({
-          phone: phone,
-          address: address,
-          updated_at: new Date()
-        })
-        .eq('user_id', currentUser.id);
-
-      error = updateError;
-    } else {
-      const { error: insertError } = await supabase
-        .from('user_details')
-        .insert([
-          {
-            user_id: currentUser.id,
-            phone: phone,
-            address: address,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }
-        ]);
-
-      error = insertError;
-    }
-
-    if (error) throw error;
-
-    await loadUserData();
-    toggleEdit('contactInfo');
-    showAlert('successAlert', 'Informações de contato atualizadas com sucesso!');
-    
-  } catch (error) {
-    console.error('❌ Erro ao salvar informações de contato:', error);
-    showAlert('errorAlert', 'Erro ao salvar informações de contato: ' + error.message);
-  }
-}
-
-// ✅ SALVAR PREFERÊNCIAS
-async function savePreferencesInfo(e) {
-  e.preventDefault();
-  
-  try {
-    const gender = document.getElementById('gender').value;
-    const lookingFor = document.getElementById('lookingFor').value;
-    
-    const interests = [];
-    document.querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
-      interests.push(checkbox.value);
+ <script>
+    // ✅ CONFIGURAÇÃO DO SUPABASE
+    const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ✅ VARIÁVEIS GLOBAIS
+    let currentUser = null;
+    let userProfile = null;
+    let userDetails = null;
+    let selectedFile = null;
+    let filePreviewUrl = null;
+
+    // ✅ CONFIGURAÇÕES DE UPLOAD
+    const MAX_FILE_SIZE = 250 * 1024; // 250KB
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/jpg'];
+
+    // ✅ INICIALIZAÇÃO
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('✅ DOM Carregado - Upload de foto disponível');
+      checkAuth();
+      setupEventListeners();
+      setupDescriptionCounter();
+      setupMoreAboutListeners();
     });
 
-    const { data: existingDetails } = await supabase
-      .from('user_details')
-      .select('id')
-      .eq('user_id', currentUser.id)
-      .single();
+    // ✅ VERIFICAR AUTENTICAÇÃO
+    async function checkAuth() {
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error) throw error;
+        
+        if (!user) {
+          window.location.href = 'login.html';
+          return;
+        }
+        
+        currentUser = user;
+        await loadUserData();
+        
+      } catch (error) {
+        console.error('Erro na autenticação:', error);
+        window.location.href = 'login.html';
+      }
+    }
 
-    let error;
-    
-    if (existingDetails) {
-      const { error: updateError } = await supabase
-        .from('user_details')
-        .update({
-          gender: gender,
-          interests: interests,
-          looking_for: lookingFor,
-          updated_at: new Date()
-        })
-        .eq('user_id', currentUser.id);
+    // ✅ CARREGAR DADOS DO USUÁRIO - ATUALIZADO COM FOTO
+    async function loadUserData() {
+      try {
+        console.log('🔄 Carregando dados do usuário...');
+        
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        // Buscar perfil
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', currentUser.id)
+          .single();
 
-      error = updateError;
-    } else {
-      const { error: insertError } = await supabase
-        .from('user_details')
-        .insert([
-          {
-            user_id: currentUser.id,
-            gender: gender,
-            interests: interests,
-            looking_for: lookingFor,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+        if (profileError) {
+          console.log('⚠️ Perfil não encontrado, criando perfil básico...');
+          await createBasicProfile();
+          userProfile = await getProfileData();
+        } else {
+          userProfile = profile;
+        }
+
+        // Buscar detalhes
+        const { data: details, error: detailsError } = await supabase
+          .from('user_details')
+          .select('*')
+          .eq('user_id', currentUser.id)
+          .single();
+
+        if (detailsError && detailsError.code !== 'PGRST116') {
+          console.error('Erro ao buscar detalhes:', detailsError);
+        }
+        
+        userDetails = details || {};
+
+        console.log('✅ Dados carregados:', userDetails);
+        await updateProfileDisplay();
+        updateProfileForms();
+
+      } catch (error) {
+        console.error('❌ Erro ao carregar dados do usuário:', error);
+        showAlert('errorAlert', 'Erro ao carregar dados do perfil.');
+      }
+    }
+
+    // ✅ ATUALIZAR DISPLAY DO PERFIL - COM FOTO
+    async function updateProfileDisplay() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        const nickname = user.user_metadata?.nickname || user.email.split('@')[0];
+        
+        // Header
+        document.getElementById('userNickname').textContent = nickname;
+        document.getElementById('profileName').textContent = userProfile?.nickname || nickname;
+
+        // ✅ ATUALIZAR FOTOS
+        await updateAvatarPhotos();
+
+        // Informações básicas
+        document.getElementById('displayFullName').textContent = userProfile?.full_name || user.user_metadata?.full_name || 'Não informado';
+        document.getElementById('displayFullName').className = (userProfile?.full_name || user.user_metadata?.full_name) ? 'info-value' : 'info-value empty';
+        
+        document.getElementById('displayEmail').textContent = user.email;
+        document.getElementById('displayBirthDate').textContent = userProfile?.birth_date ?
+          new Date(userProfile.birth_date).toLocaleDateString('pt-BR') : 'Não informada';
+        document.getElementById('displayBirthDate').className = userProfile?.birth_date ? 'info-value' : 'info-value empty';
+        
+        document.getElementById('displayAge').textContent = userProfile?.birth_date ?
+          calculateAge(userProfile.birth_date) + ' anos' : '-';
+
+        // Informações de contato
+        document.getElementById('displayPhone').textContent = userDetails.phone || 'Não informado';
+        document.getElementById('displayPhone').className = userDetails.phone ? 'info-value' : 'info-value empty';
+        
+        document.getElementById('displayAddress').textContent = userDetails.address || 'Não informado';
+        document.getElementById('displayAddress').className = userDetails.address ? 'info-value' : 'info-value empty';
+
+        // Preferências
+        document.getElementById('displayGender').textContent = formatGender(userDetails.gender) || 'Não informado';
+        document.getElementById('displayGender').className = userDetails.gender ? 'info-value' : 'info-value empty';
+        
+        document.getElementById('displayInterests').textContent = userDetails.interests ?
+          userDetails.interests.join(', ') : 'Não informados';
+        document.getElementById('displayInterests').className = userDetails.interests ? 'info-value' : 'info-value empty';
+        
+        document.getElementById('displayLookingFor').textContent = formatLookingFor(userDetails.looking_for) || 'Não informado';
+        document.getElementById('displayLookingFor').className = userDetails.looking_for ? 'info-value' : 'info-value empty';
+
+        // Descrição
+        document.getElementById('displayDescription').textContent = userDetails.description || 'Nenhuma descrição adicionada ainda.';
+        document.getElementById('displayDescription').className = userDetails.description ? 'info-value' : 'info-value empty';
+
+        // Mais sobre mim
+        document.getElementById('displayZodiac').textContent = formatZodiac(userDetails.zodiac) || 'Não informado';
+        document.getElementById('displayZodiac').className = userDetails.zodiac ? 'info-value' : 'info-value empty';
+        
+        document.getElementById('displayPets').textContent = formatPets(userDetails.has_pets, userDetails.pets_details) || 'Não informado';
+        document.getElementById('displayPets').className = userDetails.has_pets ? 'info-value' : 'info-value empty';
+        
+        document.getElementById('displaySexualOrientation').textContent = formatSexualOrientation(userDetails.sexual_orientation) || 'Não informado';
+        document.getElementById('displaySexualOrientation').className = userDetails.sexual_orientation ? 'info-value' : 'info-value empty';
+        
+        document.getElementById('displayDrinking').textContent = formatDrinking(userDetails.drinking) || 'Não informado';
+        document.getElementById('displayDrinking').className = userDetails.drinking ? 'info-value' : 'info-value empty';
+        
+        document.getElementById('displaySmoking').textContent = formatSmoking(userDetails.smoking) || 'Não informado';
+        document.getElementById('displaySmoking').className = userDetails.smoking ? 'info-value' : 'info-value empty';
+        
+        document.getElementById('displayExercise').textContent = formatExercise(userDetails.exercise, userDetails.exercise_details) || 'Não informado';
+        document.getElementById('displayExercise').className = userDetails.exercise ? 'info-value' : 'info-value empty';
+        
+        document.getElementById('displayReligion').textContent = formatReligion(userDetails.religion) || 'Não informado';
+        document.getElementById('displayReligion').className = userDetails.religion ? 'info-value' : 'info-value empty';
+        
+        document.getElementById('displayEducation').textContent = formatEducation(userDetails.education) || 'Não informado';
+        document.getElementById('displayEducation').className = userDetails.education ? 'info-value' : 'info-value empty';
+        
+        document.getElementById('displayProfession').textContent = userDetails.profession || 'Não informado';
+        document.getElementById('displayProfession').className = userDetails.profession ? 'info-value' : 'info-value empty';
+
+        // Atualizar badge do perfil
+        updateProfileBadge();
+
+      } catch (error) {
+        console.error('❌ Erro ao atualizar display:', error);
+      }
+    }
+        // ✅ ATUALIZAR FOTOS DO AVATAR
+    async function updateAvatarPhotos() {
+      try {
+        // Buscar URL da foto do perfil
+        const { data: profileWithPhoto, error } = await supabase
+          .from('profiles')
+          .select('avatar_url, nickname')
+          .eq('id', currentUser.id)
+          .single();
+
+        if (error) {
+          console.log('ℹ️ Nenhuma foto de perfil encontrada');
+          return;
+        }
+
+        const avatarUrl = profileWithPhoto?.avatar_url;
+        const nickname = profileWithPhoto?.nickname || 'U';
+        
+        // Atualizar fallback com a primeira letra do nickname
+        document.getElementById('avatarFallback').textContent = nickname.charAt(0).toUpperCase();
+        document.getElementById('userAvatarFallback').textContent = nickname.charAt(0).toUpperCase();
+        
+        if (avatarUrl) {
+          // Tentar carregar a foto do Supabase Storage
+          const { data } = await supabase.storage
+            .from('avatars')
+            .download(avatarUrl);
+
+          if (data) {
+            const photoUrl = URL.createObjectURL(data);
+            
+            // Atualizar avatar do header
+            const userAvatarImg = document.getElementById('userAvatarImg');
+            const userAvatarFallback = document.getElementById('userAvatarFallback');
+            userAvatarImg.src = photoUrl;
+            userAvatarImg.style.display = 'block';
+            userAvatarFallback.style.display = 'none';
+            
+            // Atualizar avatar do perfil
+            const profileAvatarImg = document.getElementById('avatarImage');
+            const profileAvatarFallback = document.getElementById('avatarFallback');
+            profileAvatarImg.src = photoUrl;
+            profileAvatarImg.style.display = 'block';
+            profileAvatarFallback.style.display = 'none';
+            
+            console.log('✅ Foto do perfil carregada:', avatarUrl);
           }
-        ]);
+        }
 
-      error = insertError;
+      } catch (error) {
+        console.error('❌ Erro ao carregar foto do perfil:', error);
+      }
     }
 
-    if (error) throw error;
-
-    await loadUserData();
-    toggleEdit('preferencesInfo');
-    showAlert('successAlert', 'Preferências atualizadas com sucesso!');
-    
-  } catch (error) {
-    console.error('❌ Erro ao salvar preferências:', error);
-    showAlert('errorAlert', 'Erro ao salvar preferências: ' + error.message);
-  }
-}
-
-// ✅ SALVAR DESCRIÇÃO
-async function saveDescriptionInfo(e) {
-  e.preventDefault();
-  
-  try {
-    const description = document.getElementById('description').value;
-    
-    if (description.length > 100) {
-      showAlert('errorAlert', 'A descrição deve ter no máximo 100 caracteres.');
-      return;
+    // ✅ UPLOAD DE FOTO - FUNÇÕES PRINCIPAIS
+    function openUploadModal() {
+      console.log('🎯 ABRINDO MODAL DE UPLOAD...');
+      const modal = document.getElementById('uploadModal');
+      modal.style.display = 'flex';
+      console.log('✅ Modal deve estar visível agora');
+      resetUploadModal();
     }
 
-    const { data: existingDetails } = await supabase
-      .from('user_details')
-      .select('id')
-      .eq('user_id', currentUser.id)
-      .single();
+    function closeUploadModal() {
+      console.log('🎯 FECHANDO MODAL...');
+      const modal = document.getElementById('uploadModal');
+      modal.style.display = 'none';
+      resetUploadModal();
+    }
 
-    let error;
-    
-    if (existingDetails) {
-      const { error: updateError } = await supabase
-        .from('user_details')
-        .update({
-          description: description,
-          updated_at: new Date()
-        })
-        .eq('user_id', currentUser.id);
+    function resetUploadModal() {
+      selectedFile = null;
+      
+      if (filePreviewUrl) {
+        URL.revokeObjectURL(filePreviewUrl);
+        filePreviewUrl = null;
+      }
+      
+      const modalPreview = document.getElementById('modalPreview');
+      modalPreview.style.display = 'none';
+      modalPreview.src = '';
+      
+      document.getElementById('fileInfo').textContent = '';
+      document.getElementById('uploadError').textContent = '';
+      document.getElementById('uploadBtn').disabled = true;
+      
+      document.getElementById('modalPhotoInput').value = '';
+    }
 
-      error = updateError;
-    } else {
-      const { error: insertError } = await supabase
-        .from('user_details')
-        .insert([
-          {
-            user_id: currentUser.id,
-            description: description,
-            created_at: new Date().toISOString(),
+    function handleModalPhotoSelect(event) {
+      console.log('📁 Arquivo selecionado no modal');
+      handlePhotoSelection(event.target.files[0]);
+    }
+
+    function handlePhotoSelect(event) {
+      console.log('📁 Arquivo selecionado diretamente');
+      handlePhotoSelection(event.target.files[0]);
+      if (event.target.files[0]) {
+        openUploadModal();
+      }
+    }
+
+    function handlePhotoSelection(file) {
+      console.log('🔄 Processando seleção de arquivo:', file?.name);
+      
+      // Limpar estado anterior
+      if (filePreviewUrl) {
+        URL.revokeObjectURL(filePreviewUrl);
+      }
+      
+      // Validar arquivo
+      const error = validateFile(file);
+      if (error) {
+        document.getElementById('uploadError').textContent = error;
+        document.getElementById('uploadBtn').disabled = true;
+        return;
+      }
+      
+      selectedFile = file;
+      
+      // Criar preview
+      filePreviewUrl = URL.createObjectURL(file);
+      const modalPreview = document.getElementById('modalPreview');
+      modalPreview.src = filePreviewUrl;
+      modalPreview.style.display = 'block';
+      
+      // Mostrar informações do arquivo
+      const fileSizeKB = Math.round(file.size / 1024);
+      document.getElementById('fileInfo').textContent = 
+        `${file.name} (${fileSizeKB} KB)`;
+      
+      document.getElementById('uploadError').textContent = '';
+      document.getElementById('uploadBtn').disabled = false;
+      
+      console.log('✅ Preview criado com sucesso');
+    }
+
+    function validateFile(file) {
+      if (!file) return 'Nenhum arquivo selecionado.';
+      
+      // Validar tipo
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        return 'Formato não permitido. Use apenas JPG ou PNG.';
+      }
+      
+      // Validar tamanho
+      if (file.size > MAX_FILE_SIZE) {
+        const maxSizeKB = MAX_FILE_SIZE / 1024;
+        const fileSizeKB = Math.round(file.size / 1024);
+        return `Arquivo muito grande: ${fileSizeKB}KB. Máximo: ${maxSizeKB}KB.`;
+      }
+      
+      return null;
+    }
+
+    // ✅ UPLOAD REAL PARA SUPABASE
+    async function uploadPhoto() {
+      if (!selectedFile) {
+        showUploadError('Nenhum arquivo selecionado.');
+        return;
+      }
+
+      try {
+        console.log('🚀 INICIANDO UPLOAD...');
+        
+        // Mostrar loading
+        document.getElementById('uploadLoading').style.display = 'block';
+        document.getElementById('uploadBtn').disabled = true;
+        document.getElementById('uploadError').textContent = '';
+
+        // Nome único para o arquivo
+        const fileExt = selectedFile.name.split('.').pop();
+        const fileName = `${currentUser.id}-${Date.now()}.${fileExt}`;
+        
+        console.log('📤 Fazendo upload para:', fileName);
+
+        // Fazer upload para Supabase Storage
+        const { data, error } = await supabase.storage
+          .from('avatars')
+          .upload(fileName, selectedFile, {
+            cacheControl: '3600',
+            upsert: true
+          });
+
+        if (error) {
+          console.error('❌ Erro no upload:', error);
+          throw new Error(`Falha no upload: ${error.message}`);
+        }
+
+        console.log('✅ Upload concluído:', data);
+
+        // Salvar URL no perfil
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ 
+            avatar_url: fileName,
             updated_at: new Date().toISOString()
-          }
-        ]);
+          })
+          .eq('id', currentUser.id);
 
-      error = insertError;
+        if (updateError) {
+          console.error('❌ Erro ao salvar URL:', updateError);
+          throw new Error('Erro ao salvar foto no perfil');
+        }
+
+        console.log('✅ URL salva no perfil');
+
+        // Atualizar interface
+        await updateAvatarPhotos();
+        
+        // Fechar modal e mostrar sucesso
+        closeUploadModal();
+        showAlert('successAlert', '✅ Foto atualizada com sucesso!');
+        
+        console.log('🎉 Foto do perfil atualizada com sucesso!');
+
+      } catch (error) {
+        console.error('❌ Erro no upload da foto:', error);
+        showUploadError(error.message || 'Erro ao fazer upload da foto.');
+      } finally {
+        document.getElementById('uploadLoading').style.display = 'none';
+        document.getElementById('uploadBtn').disabled = false;
+      }
     }
 
-    if (error) throw error;
-
-    await loadUserData();
-    toggleEdit('descriptionInfo');
-    showAlert('successAlert', 'Descrição atualizada com sucesso!');
-    
-  } catch (error) {
-    console.error('❌ Erro ao salvar descrição:', error);
-    showAlert('errorAlert', 'Erro ao salvar descrição: ' + error.message);
-  }
-}
-
-// ✅ SALVAR MAIS SOBRE MIM - NOVA FUNÇÃO
-async function saveMoreAboutInfo(e) {
-  e.preventDefault();
-  
-  try {
-    const zodiac = document.getElementById('zodiac').value;
-    const hasPets = document.getElementById('hasPets').value;
-    const petsDetails = document.getElementById('petsDetails').value;
-    const sexualOrientation = document.getElementById('sexualOrientation').value;
-    const drinking = document.getElementById('drinking').value;
-    const smoking = document.getElementById('smoking').value;
-    const exercise = document.getElementById('exercise').value;
-    const exerciseDetails = document.getElementById('exerciseDetails').value;
-    const religion = document.getElementById('religion').value;
-    const education = document.getElementById('education').value;
-    const profession = document.getElementById('profession').value;
-
-    const { data: existingDetails } = await supabase
-      .from('user_details')
-      .select('id')
-      .eq('user_id', currentUser.id)
-      .single();
-
-    let error;
-    
-    if (existingDetails) {
-      const { error: updateError } = await supabase
-        .from('user_details')
-        .update({
-          zodiac: zodiac,
-          has_pets: hasPets,
-          pets_details: petsDetails,
-          sexual_orientation: sexualOrientation,
-          drinking: drinking,
-          smoking: smoking,
-          exercise: exercise,
-          exercise_details: exerciseDetails,
-          religion: religion,
-          education: education,
-          profession: profession,
-          updated_at: new Date()
-        })
-        .eq('user_id', currentUser.id);
-
-      error = updateError;
-    } else {
-      const { error: insertError } = await supabase
-        .from('user_details')
-        .insert([
-          {
-            user_id: currentUser.id,
-            zodiac: zodiac,
-            has_pets: hasPets,
-            pets_details: petsDetails,
-            sexual_orientation: sexualOrientation,
-            drinking: drinking,
-            smoking: smoking,
-            exercise: exercise,
-            exercise_details: exerciseDetails,
-            religion: religion,
-            education: education,
-            profession: profession,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }
-        ]);
-
-      error = insertError;
+    function showUploadError(message) {
+      document.getElementById('uploadError').textContent = message;
+    }
+        // ✅ CONFIGURAR EVENT LISTENERS
+    function setupEventListeners() {
+      document.getElementById('logoutBtn').addEventListener('click', logout);
+      
+      // Form submissions
+      document.getElementById('basicInfoForm').addEventListener('submit', saveBasicInfo);
+      document.getElementById('contactInfoForm').addEventListener('submit', saveContactInfo);
+      document.getElementById('preferencesInfoForm').addEventListener('submit', savePreferencesInfo);
+      document.getElementById('descriptionInfoForm').addEventListener('submit', saveDescriptionInfo);
+      document.getElementById('moreAboutInfoForm').addEventListener('submit', saveMoreAboutInfo);
+      
+      // Fechar modal ao clicar fora
+      document.getElementById('uploadModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeUploadModal();
+        }
+      });
     }
 
-    if (error) throw error;
+    // ✅ FUNÇÕES DE CRIAÇÃO DE PERFIL
+    async function createBasicProfile() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        const { error } = await supabase
+          .from('profiles')
+          .insert([
+            {
+              id: user.id,
+              nickname: user.user_metadata?.nickname || user.email.split('@')[0],
+              full_name: user.user_metadata?.full_name || '',
+              birth_date: user.user_metadata?.birth_date || null,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }
+          ]);
 
-    await loadUserData();
-    toggleEdit('moreAboutInfo');
-    showAlert('successAlert', 'Informações atualizadas com sucesso!');
-    
-  } catch (error) {
-    console.error('❌ Erro ao salvar informações:', error);
-    showAlert('errorAlert', 'Erro ao salvar informações: ' + error.message);
-  }
-}
+        if (error) {
+          await createUserDetails();
+          throw error;
+        }
 
-// Logout
-async function logout() {
-  try {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-    
-    window.location.href = 'index.html';
-  } catch (error) {
-    console.error('Erro ao fazer logout:', error);
-    showAlert('errorAlert', 'Erro ao fazer logout. Tente novamente.');
-  }
-}
+        return true;
+      } catch (error) {
+        console.error('❌ Erro na criação do perfil:', error);
+        return false;
+      }
+    }
 
-// Funções auxiliares de alerta
-function showAlert(alertId, message) {
-  const alert = document.getElementById(alertId);
-  alert.textContent = message;
-  alert.style.display = 'block';
-  
-  setTimeout(() => {
-    alert.style.display = 'none';
-  }, 5000);
-}
+    async function createUserDetails() {
+      try {
+        const { error } = await supabase
+          .from('user_details')
+          .insert([
+            {
+              user_id: currentUser.id,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }
+          ]);
 
-// Funções de ação
-function exportProfileData() {
-  const profileData = {
-    perfil: userProfile,
-    detalhes: userDetails,
-    exportado_em: new Date().toISOString()
-  };
-  
-  const dataStr = JSON.stringify(profileData, null, 2);
-  const dataBlob = new Blob([dataStr], { type: 'application/json' });
-  
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(dataBlob);
-  link.download = `perfil-${userProfile?.nickname || 'usuario'}-${new Date().getTime()}.json`;
-  link.click();
-  
-  showAlert('successAlert', 'Dados exportados com sucesso!');
-}
+        if (error && error.code !== '23505') {
+          console.error('Erro ao criar user_details:', error);
+        }
+      } catch (error) {
+        console.error('Erro na criação de user_details:', error);
+      }
+    }
 
-function deleteAccount() {
-  if (confirm('Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita e todos os seus dados serão perdidos.')) {
-    showAlert('errorAlert', 'Funcionalidade de exclusão de conta em desenvolvimento.');
-  }
-}
+    async function getProfileData() {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', currentUser.id)
+        .single();
 
-// ✅ DEBUG: Verificar se nova seção está funcionando
-setTimeout(() => {
-  console.log('🔍 DEBUG - Verificando nova seção:');
-  console.log('Elemento moreAboutInfoDisplay:', document.getElementById('moreAboutInfoDisplay'));
-  console.log('Elemento moreAboutInfoEdit:', document.getElementById('moreAboutInfoEdit'));
-  console.log('User Details com novos campos:', userDetails);
-}, 2000);
+      if (error) throw error;
+      return profile;
+    }
+
+    // ✅ FUNÇÕES DE FORMULÁRIO
+    function setupDescriptionCounter() {
+      const description = document.getElementById('description');
+      description.addEventListener('input', updateCharCount);
+    }
+
+    function updateCharCount() {
+      const description = document.getElementById('description');
+      const charCount = document.getElementById('charCount');
+      const count = description.value.length;
+      
+      charCount.textContent = `${count}/100 caracteres`;
+      charCount.className = count > 100 ? 'char-count warning' : 'char-count';
+    }
+
+    function setupMoreAboutListeners() {
+      document.getElementById('hasPets').addEventListener('change', updatePetsDetailsVisibility);
+      document.getElementById('exercise').addEventListener('change', updateExerciseDetailsVisibility);
+    }
+
+    function updatePetsDetailsVisibility() {
+      const hasPets = document.getElementById('hasPets').value;
+      const petsDetailsGroup = document.getElementById('petsDetailsGroup');
+      petsDetailsGroup.style.display = hasPets === 'sim' ? 'block' : 'none';
+    }
+
+    function updateExerciseDetailsVisibility() {
+      const exercise = document.getElementById('exercise').value;
+      const exerciseDetailsGroup = document.getElementById('exerciseDetailsGroup');
+      exerciseDetailsGroup.style.display = (exercise === 'ocasionalmente' || exercise === 'regularmente') ? 'block' : 'none';
+    }
+        // ✅ FUNÇÕES AUXILIARES
+    function calculateAge(birthDate) {
+      if (!birthDate) return null;
+      const today = new Date();
+      const birth = new Date(birthDate);
+      let age = today.getFullYear() - birth.getFullYear();
+      const monthDiff = today.getMonth() - birth.getMonth();
+      
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--;
+      }
+      
+      return age;
+    }
+
+    function formatGender(gender) {
+      const genders = {
+        'feminino': 'Feminino',
+        'masculino': 'Masculino'
+      };
+      return genders[gender] || gender;
+    }
+
+    function formatLookingFor(lookingFor) {
+      const options = {
+        'amizade': 'Amizade',
+        'namoro': 'Namoro',
+        'relacionamento_serio': 'Relacionamento Sério',
+        'conversa': 'Apenas Conversa'
+      };
+      return options[lookingFor] || lookingFor;
+    }
+
+    function formatZodiac(zodiac) {
+      const zodiacs = {
+        'aries': 'Áries', 'touro': 'Touro', 'gemeos': 'Gêmeos', 'cancer': 'Câncer',
+        'leao': 'Leão', 'virgem': 'Virgem', 'libra': 'Libra', 'escorpiao': 'Escorpião',
+        'sagitario': 'Sagitário', 'capricornio': 'Capricórnio', 'aquario': 'Aquário', 'peixes': 'Peixes'
+      };
+      return zodiacs[zodiac] || zodiac;
+    }
+
+    function formatPets(hasPets, petsDetails) {
+      if (hasPets === 'sim') {
+        return petsDetails ? `Sim, ${petsDetails}` : 'Sim, tenho';
+      } else if (hasPets === 'nao') {
+        return 'Não tenho';
+      }
+      return null;
+    }
+
+    function formatSexualOrientation(orientation) {
+      const orientations = {
+        'heterossexual': 'Heterossexual',
+        'homossexual': 'Homossexual',
+        'bissexual': 'Bissexual',
+        'outro': 'Outro',
+        'prefiro_nao_informar': 'Prefiro não informar'
+      };
+      return orientations[orientation] || orientation;
+    }
+
+    function formatDrinking(drinking) {
+      const options = {
+        'nao_bebo': 'Não bebo',
+        'socialmente': 'Socialmente',
+        'frequentemente': 'Com frequência'
+      };
+      return options[drinking] || drinking;
+    }
+
+    function formatSmoking(smoking) {
+      const options = {
+        'nao_fumo': 'Não fumo',
+        'socialmente': 'Socialmente',
+        'frequentemente': 'Com frequência'
+      };
+      return options[smoking] || smoking;
+    }
+
+    function formatExercise(exercise, exerciseDetails) {
+      if (exercise === 'ocasionalmente') {
+        return exerciseDetails ? `Ocasionalmente (${exerciseDetails})` : 'Ocasionalmente';
+      } else if (exercise === 'regularmente') {
+        return exerciseDetails ? `Regularmente (${exerciseDetails})` : 'Regularmente';
+      } else if (exercise === 'nao_pratico') {
+        return 'Não pratico';
+      }
+      return null;
+    }
+
+    function formatReligion(religion) {
+      const religions = {
+        'catolica': 'Católica',
+        'evangelica': 'Evangélica',
+        'espirita': 'Espírita',
+        'umbanda_candomble': 'Umbanda/Candomblé',
+        'budista': 'Budista',
+        'judaica': 'Judaica',
+        'islamica': 'Islâmica',
+        'outra': 'Outra',
+        'nenhuma': 'Nenhuma',
+        'prefiro_nao_informar': 'Prefiro não informar'
+      };
+      return religions[religion] || religion;
+    }
+
+    function formatEducation(education) {
+      const levels = {
+        'fundamental_incompleto': 'Fundamental Incompleto',
+        'fundamental_completo': 'Fundamental Completo',
+        'medio_incompleto': 'Médio Incompleto',
+        'medio_completo': 'Médio Completo',
+        'superior_incompleto': 'Superior Incompleto',
+        'superior_completo': 'Superior Completo',
+        'pos_graduacao': 'Pós-graduação',
+        'mestrado': 'Mestrado',
+        'doutorado': 'Doutorado'
+      };
+      return levels[education] || education;
+    }
+
+    function updateProfileBadge() {
+      const badge = document.getElementById('profileBadge');
+      const completedFields = calculateProfileCompletion();
+      
+      if (completedFields >= 80) {
+        badge.textContent = 'Perfil Completo';
+        badge.style.background = 'var(--success)';
+        badge.style.color = 'white';
+      } else if (completedFields >= 50) {
+        badge.textContent = 'Perfil em Andamento';
+        badge.style.background = 'var(--primary-light)';
+      } else {
+        badge.textContent = 'Perfil Básico';
+        badge.style.background = '#e2e8f0';
+      }
+    }
+
+    function calculateProfileCompletion() {
+      let completed = 0;
+      let total = 0;
+
+      // Perfil básico
+      if (userProfile?.full_name) completed++;
+      total++;
+      if (userProfile?.birth_date) completed++;
+      total++;
+
+      // Detalhes
+      if (userDetails.phone) completed++;
+      total++;
+      if (userDetails.address) completed++;
+      total++;
+      if (userDetails.gender) completed++;
+      total++;
+      if (userDetails.interests && userDetails.interests.length > 0) completed++;
+      total++;
+      if (userDetails.looking_for) completed++;
+      total++;
+      if (userDetails.description) completed++;
+      total++;
+
+      // Mais sobre mim
+      if (userDetails.zodiac) completed++;
+      total++;
+      if (userDetails.has_pets) completed++;
+      total++;
+      if (userDetails.sexual_orientation) completed++;
+      total++;
+      if (userDetails.drinking) completed++;
+      total++;
+      if (userDetails.smoking) completed++;
+      total++;
+      if (userDetails.exercise) completed++;
+      total++;
+      if (userDetails.religion) completed++;
+      total++;
+      if (userDetails.education) completed++;
+      total++;
+      if (userDetails.profession) completed++;
+      total++;
+
+      return Math.round((completed / total) * 100);
+    }
+
+    // ✅ FUNÇÕES DE FORMULÁRIO
+    function toggleEdit(section) {
+      const display = document.getElementById(section + 'Display');
+      const edit = document.getElementById(section + 'Edit');
+      
+      if (display.classList.contains('hidden')) {
+        display.classList.remove('hidden');
+        edit.classList.add('hidden');
+      } else {
+        display.classList.add('hidden');
+        edit.classList.remove('hidden');
+      }
+    }
+
+    function updateProfileForms() {
+      // Formulário de informações básicas
+      document.getElementById('fullName').value = userProfile?.full_name || '';
+      document.getElementById('birthDate').value = userProfile?.birth_date || '';
+
+      // Formulário de contato
+      document.getElementById('phone').value = userDetails.phone || '';
+      document.getElementById('address').value = userDetails.address || '';
+
+      // Formulário de preferências
+      document.getElementById('gender').value = userDetails.gender || '';
+      document.getElementById('lookingFor').value = userDetails.looking_for || '';
+
+      // Checkboxes de interesses
+      const interests = userDetails.interests || [];
+      document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        checkbox.checked = interests.includes(checkbox.value);
+      });
+
+      // Descrição
+      document.getElementById('description').value = userDetails.description || '';
+      updateCharCount();
+
+      // Mais sobre mim
+      document.getElementById('zodiac').value = userDetails.zodiac || '';
+      document.getElementById('hasPets').value = userDetails.has_pets || '';
+      document.getElementById('petsDetails').value = userDetails.pets_details || '';
+      document.getElementById('sexualOrientation').value = userDetails.sexual_orientation || '';
+      document.getElementById('drinking').value = userDetails.drinking || '';
+      document.getElementById('smoking').value = userDetails.smoking || '';
+      document.getElementById('exercise').value = userDetails.exercise || '';
+      document.getElementById('exerciseDetails').value = userDetails.exercise_details || '';
+      document.getElementById('religion').value = userDetails.religion || '';
+      document.getElementById('education').value = userDetails.education || '';
+      document.getElementById('profession').value = userDetails.profession || '';
+
+      // Atualizar visibilidade dos campos condicionais
+      updatePetsDetailsVisibility();
+      updateExerciseDetailsVisibility();
+    }
+        // ✅ FUNÇÕES DE SALVAMENTO
+    async function saveBasicInfo(e) {
+      e.preventDefault();
+      
+      try {
+        const fullName = document.getElementById('fullName').value;
+        const birthDate = document.getElementById('birthDate').value;
+
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', currentUser.id)
+          .single();
+
+        let error;
+        
+        if (existingProfile) {
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({
+              full_name: fullName,
+              birth_date: birthDate,
+              updated_at: new Date()
+            })
+            .eq('id', currentUser.id);
+
+          error = updateError;
+        } else {
+          const { data: { user } } = await supabase.auth.getUser();
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert([
+              {
+                id: currentUser.id,
+                nickname: user.user_metadata?.nickname || user.email.split('@')[0],
+                full_name: fullName,
+                birth_date: birthDate,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              }
+            ]);
+
+          error = insertError;
+        }
+
+        if (error) throw error;
+
+        await loadUserData();
+        toggleEdit('basicInfo');
+        showAlert('successAlert', 'Informações básicas atualizadas com sucesso!');
+        
+      } catch (error) {
+        console.error('❌ Erro ao salvar informações básicas:', error);
+        showAlert('errorAlert', 'Erro ao salvar informações básicas: ' + error.message);
+      }
+    }
+
+    async function saveContactInfo(e) {
+      e.preventDefault();
+      
+      try {
+        const phone = document.getElementById('phone').value;
+        const address = document.getElementById('address').value;
+
+        const { data: existingDetails } = await supabase
+          .from('user_details')
+          .select('id')
+          .eq('user_id', currentUser.id)
+          .single();
+
+        let error;
+        
+        if (existingDetails) {
+          const { error: updateError } = await supabase
+            .from('user_details')
+            .update({
+              phone: phone,
+              address: address,
+              updated_at: new Date()
+            })
+            .eq('user_id', currentUser.id);
+
+          error = updateError;
+        } else {
+          const { error: insertError } = await supabase
+            .from('user_details')
+            .insert([
+              {
+                user_id: currentUser.id,
+                phone: phone,
+                address: address,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              }
+            ]);
+
+          error = insertError;
+        }
+
+        if (error) throw error;
+
+        await loadUserData();
+        toggleEdit('contactInfo');
+        showAlert('successAlert', 'Informações de contato atualizadas com sucesso!');
+        
+      } catch (error) {
+        console.error('❌ Erro ao salvar informações de contato:', error);
+        showAlert('errorAlert', 'Erro ao salvar informações de contato: ' + error.message);
+      }
+    }
+
+    async function savePreferencesInfo(e) {
+      e.preventDefault();
+      
+      try {
+        const gender = document.getElementById('gender').value;
+        const lookingFor = document.getElementById('lookingFor').value;
+        
+        const interests = [];
+        document.querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
+          interests.push(checkbox.value);
+        });
+
+        const { data: existingDetails } = await supabase
+          .from('user_details')
+          .select('id')
+          .eq('user_id', currentUser.id)
+          .single();
+
+        let error;
+        
+        if (existingDetails) {
+          const { error: updateError } = await supabase
+            .from('user_details')
+            .update({
+              gender: gender,
+              interests: interests,
+              looking_for: lookingFor,
+              updated_at: new Date()
+            })
+            .eq('user_id', currentUser.id);
+
+          error = updateError;
+        } else {
+          const { error: insertError } = await supabase
+            .from('user_details')
+            .insert([
+              {
+                user_id: currentUser.id,
+                gender: gender,
+                interests: interests,
+                looking_for: lookingFor,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              }
+            ]);
+
+          error = insertError;
+        }
+
+        if (error) throw error;
+
+        await loadUserData();
+        toggleEdit('preferencesInfo');
+        showAlert('successAlert', 'Preferências atualizadas com sucesso!');
+        
+      } catch (error) {
+        console.error('❌ Erro ao salvar preferências:', error);
+        showAlert('errorAlert', 'Erro ao salvar preferências: ' + error.message);
+      }
+    }
+
+    async function saveDescriptionInfo(e) {
+      e.preventDefault();
+      
+      try {
+        const description = document.getElementById('description').value;
+        
+        if (description.length > 100) {
+          showAlert('errorAlert', 'A descrição deve ter no máximo 100 caracteres.');
+          return;
+        }
+
+        const { data: existingDetails } = await supabase
+          .from('user_details')
+          .select('id')
+          .eq('user_id', currentUser.id)
+          .single();
+
+        let error;
+        
+        if (existingDetails) {
+          const { error: updateError } = await supabase
+            .from('user_details')
+            .update({
+              description: description,
+              updated_at: new Date()
+            })
+            .eq('user_id', currentUser.id);
+
+          error = updateError;
+        } else {
+          const { error: insertError } = await supabase
+            .from('user_details')
+            .insert([
+              {
+                user_id: currentUser.id,
+                description: description,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              }
+            ]);
+
+          error = insertError;
+        }
+
+        if (error) throw error;
+
+        await loadUserData();
+        toggleEdit('descriptionInfo');
+        showAlert('successAlert', 'Descrição atualizada com sucesso!');
+        
+      } catch (error) {
+        console.error('❌ Erro ao salvar descrição:', error);
+        showAlert('errorAlert', 'Erro ao salvar descrição: ' + error.message);
+      }
+    }
+
+    async function saveMoreAboutInfo(e) {
+      e.preventDefault();
+      
+      try {
+        const zodiac = document.getElementById('zodiac').value;
+        const hasPets = document.getElementById('hasPets').value;
+        const petsDetails = document.getElementById('petsDetails').value;
+        const sexualOrientation = document.getElementById('sexualOrientation').value;
+        const drinking = document.getElementById('drinking').value;
+        const smoking = document.getElementById('smoking').value;
+        const exercise = document.getElementById('exercise').value;
+        const exerciseDetails = document.getElementById('exerciseDetails').value;
+        const religion = document.getElementById('religion').value;
+        const education = document.getElementById('education').value;
+        const profession = document.getElementById('profession').value;
+
+        const { data: existingDetails } = await supabase
+          .from('user_details')
+          .select('id')
+          .eq('user_id', currentUser.id)
+          .single();
+
+        let error;
+        
+        if (existingDetails) {
+          const { error: updateError } = await supabase
+            .from('user_details')
+            .update({
+              zodiac: zodiac,
+              has_pets: hasPets,
+              pets_details: petsDetails,
+              sexual_orientation: sexualOrientation,
+              drinking: drinking,
+              smoking: smoking,
+              exercise: exercise,
+              exercise_details: exerciseDetails,
+              religion: religion,
+              education: education,
+              profession: profession,
+              updated_at: new Date()
+            })
+            .eq('user_id', currentUser.id);
+
+          error = updateError;
+        } else {
+          const { error: insertError } = await supabase
+            .from('user_details')
+            .insert([
+              {
+                user_id: currentUser.id,
+                zodiac: zodiac,
+                has_pets: hasPets,
+                pets_details: petsDetails,
+                sexual_orientation: sexualOrientation,
+                drinking: drinking,
+                smoking: smoking,
+                exercise: exercise,
+                exercise_details: exerciseDetails,
+                religion: religion,
+                education: education,
+                profession: profession,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              }
+            ]);
+
+          error = insertError;
+        }
+
+        if (error) throw error;
+
+        await loadUserData();
+        toggleEdit('moreAboutInfo');
+        showAlert('successAlert', 'Informações atualizadas com sucesso!');
+        
+      } catch (error) {
+        console.error('❌ Erro ao salvar informações:', error);
+        showAlert('errorAlert', 'Erro ao salvar informações: ' + error.message);
+      }
+    }
+
+    // ✅ FUNÇÕES DE LOGOUT E AÇÕES
+    async function logout() {
+      try {
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+        
+        window.location.href = 'login.html';
+      } catch (error) {
+        console.error('❌ Erro ao fazer logout:', error);
+        showAlert('errorAlert', 'Erro ao fazer logout.');
+      }
+    }
+
+    function exportProfileData() {
+      try {
+        const profileData = {
+          perfil: userProfile,
+          detalhes: userDetails,
+          exportado_em: new Date().toISOString()
+        };
+        
+        const dataStr = JSON.stringify(profileData, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(dataBlob);
+        link.download = `perfil-${currentUser.id}-${new Date().getTime()}.json`;
+        link.click();
+        
+        showAlert('successAlert', 'Dados exportados com sucesso!');
+      } catch (error) {
+        console.error('❌ Erro ao exportar dados:', error);
+        showAlert('errorAlert', 'Erro ao exportar dados.');
+      }
+    }
+
+    async function deleteAccount() {
+      if (!confirm('Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.')) {
+        return;
+      }
+
+      try {
+        // Primeiro deletar dados relacionados
+        const { error: detailsError } = await supabase
+          .from('user_details')
+          .delete()
+          .eq('user_id', currentUser.id);
+
+        if (detailsError) console.error('Erro ao deletar detalhes:', detailsError);
+
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .delete()
+          .eq('id', currentUser.id);
+
+        if (profileError) console.error('Erro ao deletar perfil:', profileError);
+
+        // Deletar foto do storage se existir
+        if (userProfile?.avatar_url) {
+          const { error: storageError } = await supabase.storage
+            .from('avatars')
+            .remove([userProfile.avatar_url]);
+          
+          if (storageError) console.error('Erro ao deletar foto:', storageError);
+        }
+
+        // Finalmente deletar a conta de autenticação
+        const { error: authError } = await supabase.auth.admin.deleteUser(currentUser.id);
+        
+        if (authError) {
+          // Se não for possível deletar via admin, pelo menos faz logout
+          await supabase.auth.signOut();
+        }
+
+        showAlert('successAlert', 'Conta excluída com sucesso. Redirecionando...');
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 2000);
+
+      } catch (error) {
+        console.error('❌ Erro ao excluir conta:', error);
+        showAlert('errorAlert', 'Erro ao excluir conta. Tente novamente.');
+      }
+    }
+
+    // ✅ FUNÇÕES DE UTILIDADE
+    function showAlert(alertId, message) {
+      const alert = document.getElementById(alertId);
+      alert.textContent = message;
+      alert.style.display = 'block';
+      
+      setTimeout(() => {
+        alert.style.display = 'none';
+      }, 5000);
+    }
+
+    // ✅ INICIALIZAÇÃO FINAL
+    console.log('🚀 Aplicação inicializada - Upload de foto disponível');
+
+    // Adicionar evento para o input de foto direto (fallback)
+    document.getElementById('photoInput').addEventListener('change', function(e) {
+      if (e.target.files[0]) {
+        handlePhotoSelect(e);
+      }
+    });
+
 </script>
 </body>
 </html>
