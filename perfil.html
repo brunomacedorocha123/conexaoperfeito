@@ -108,6 +108,21 @@
             font-size: 3rem;
             font-weight: bold;
             margin: 0 auto 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: none;
+        }
+
+        .profile-avatar-fallback {
+            font-size: 3rem;
+            font-weight: bold;
         }
 
         .profile-name {
@@ -270,7 +285,7 @@
             loadProfile();
         });
 
-        // ✅ CARREGAR PERFIL DO USUÁRIO SELECIONADO
+        // ✅ CARREGAR PERFIL DO USUÁRIO SELECIONADO COM FOTO
         async function loadProfile() {
             try {
                 // Pegar o ID do perfil do localStorage (enviado da home)
@@ -283,7 +298,7 @@
 
                 console.log('🔄 Carregando perfil:', profileId);
 
-                // Buscar dados PÚBLICOS do perfil
+                // Buscar dados PÚBLICOS do perfil INCLUINDO avatar_url
                 const { data: profile, error: profileError } = await supabase
                     .from('profiles')
                     .select(`
@@ -291,6 +306,7 @@
                         nickname,
                         full_name,
                         birth_date,
+                        avatar_url,
                         user_details (
                             gender,
                             zodiac,
@@ -324,7 +340,7 @@
                 }
 
                 console.log('✅ Perfil carregado:', profile);
-                displayProfile(profile);
+                await displayProfile(profile);
 
             } catch (error) {
                 console.error('❌ Erro ao carregar perfil:', error);
@@ -332,8 +348,36 @@
             }
         }
 
-        // ✅ MOSTRAR PERFIL NA TELA (APENAS INFORMAÇÕES PÚBLICAS)
-        function displayProfile(profile) {
+        // ✅ CARREGAR FOTO DO PERFIL DO STORAGE
+        async function loadProfilePhoto(avatarUrl) {
+            try {
+                if (!avatarUrl) {
+                    return null;
+                }
+
+                console.log('🔄 Buscando foto:', avatarUrl);
+                
+                const { data, error } = await supabase.storage
+                    .from('avatars')
+                    .download(avatarUrl);
+
+                if (error) {
+                    console.log('ℹ️ Foto não encontrada no storage:', error);
+                    return null;
+                }
+
+                const photoUrl = URL.createObjectURL(data);
+                console.log('✅ Foto carregada com sucesso');
+                return photoUrl;
+
+            } catch (error) {
+                console.error('❌ Erro ao carregar foto:', error);
+                return null;
+            }
+        }
+
+        // ✅ MOSTRAR PERFIL NA TELA COM FOTO
+        async function displayProfile(profile) {
             const profileContent = document.getElementById('profileContent');
             const details = profile.user_details || {};
             
@@ -341,9 +385,37 @@
             const displayName = profile.nickname || profile.full_name?.split(' ')[0] || 'Usuário';
             const age = profile.birth_date ? calculateAge(profile.birth_date) : null;
 
+            // ✅ CARREGAR FOTO DO PERFIL
+            let avatarHtml = '';
+            if (profile.avatar_url) {
+                const photoUrl = await loadProfilePhoto(profile.avatar_url);
+                if (photoUrl) {
+                    avatarHtml = `
+                        <div class="profile-avatar" style="background: none;">
+                            <img src="${photoUrl}" alt="${displayName}" class="profile-avatar-img" style="display: block;">
+                            <div class="profile-avatar-fallback" style="display: none;">${displayName.charAt(0).toUpperCase()}</div>
+                        </div>
+                    `;
+                } else {
+                    // Fallback se não conseguir carregar a foto
+                    avatarHtml = `
+                        <div class="profile-avatar">
+                            <div class="profile-avatar-fallback">${displayName.charAt(0).toUpperCase()}</div>
+                        </div>
+                    `;
+                }
+            } else {
+                // Sem foto, mostrar apenas a letra inicial
+                avatarHtml = `
+                    <div class="profile-avatar">
+                        <div class="profile-avatar-fallback">${displayName.charAt(0).toUpperCase()}</div>
+                    </div>
+                `;
+            }
+
             profileContent.innerHTML = `
                 <div class="profile-card">
-                    <div class="profile-avatar">${displayName.charAt(0).toUpperCase()}</div>
+                    ${avatarHtml}
                     <h1 class="profile-name">${displayName}${age ? `, ${age}` : ''}</h1>
                     ${details.description ? `<p class="profile-bio">"${details.description}"</p>` : ''}
                     
