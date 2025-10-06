@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil - Conexão Perfeita Amor</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #ff6b8b;
+            --primary-light: #ffb6c1;
+            --secondary: #a78bfa;
+            --accent: #67e8f9;
+            --light: #fdf2f8;
+            --dark: #4a044e;
+            --text: #444;
+            --text-light: #666;
+            --white: #fff;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            background-color: var(--light);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white);
+            padding: 1rem 0;
+            box-shadow: var(--shadow);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1.5rem;
+            border-radius: 30px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--white);
+            color: var(--white);
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem 0;
+        }
+
+        .profile-card {
+            background: var(--white);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 0 auto 1.5rem;
+        }
+
+        .profile-name {
+            font-size: 2rem;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-age {
+            color: var(--text-light);
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .profile-bio {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            padding: 0 1rem;
+        }
+
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-card {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+        }
+
+        .info-card h3 {
+            color: var(--dark);
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--light);
+            padding-bottom: 0.5rem;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid var(--light);
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .info-value {
+            color: var(--text);
+        }
+
+        .info-value.empty {
+            color: var(--text-light);
+            font-style: italic;
+        }
+
+        /* Actions */
+        .profile-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white);
+            border: none;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--light);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Error State */
+        .error-state {
+            text-align: center;
+            padding: 3rem;
+            background: var(--white);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+        }
+
+        .error-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <span>💑</span>
+                    <h1>Conexão Perfeita</h1>
+                </div>
+                <a href="home.html" class="btn btn-outline">← Voltar para Home</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div id="profileContent">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Carregando perfil...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Configuração do Supabase
+        const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProfile();
+        });
+
+        // ✅ CARREGAR PERFIL DO USUÁRIO SELECIONADO
+        async function loadProfile() {
+            try {
+                // Pegar o ID do perfil do localStorage (enviado da home)
+                const profileId = localStorage.getItem('viewingProfileId');
+                
+                if (!profileId) {
+                    showError('Nenhum perfil selecionado');
+                    return;
+                }
+
+                console.log('🔄 Carregando perfil:', profileId);
+
+                // Buscar dados PÚBLICOS do perfil
+                const { data: profile, error: profileError } = await supabase
+                    .from('profiles')
+                    .select(`
+                        id,
+                        nickname,
+                        full_name,
+                        birth_date,
+                        user_details (
+                            gender,
+                            zodiac,
+                            has_pets,
+                            pets_details,
+                            sexual_orientation,
+                            drinking,
+                            smoking,
+                            exercise,
+                            exercise_details,
+                            religion,
+                            education,
+                            profession,
+                            interests,
+                            looking_for,
+                            description
+                        )
+                    `)
+                    .eq('id', profileId)
+                    .single();
+
+                if (profileError) {
+                    console.error('Erro ao carregar perfil:', profileError);
+                    showError('Perfil não encontrado');
+                    return;
+                }
+
+                if (!profile) {
+                    showError('Perfil não encontrado');
+                    return;
+                }
+
+                console.log('✅ Perfil carregado:', profile);
+                displayProfile(profile);
+
+            } catch (error) {
+                console.error('❌ Erro ao carregar perfil:', error);
+                showError('Erro ao carregar perfil');
+            }
+        }
+
+        // ✅ MOSTRAR PERFIL NA TELA (APENAS INFORMAÇÕES PÚBLICAS)
+        function displayProfile(profile) {
+            const profileContent = document.getElementById('profileContent');
+            const details = profile.user_details || {};
+            
+            // Nome para exibição (apenas primeiro nome por segurança)
+            const displayName = profile.nickname || profile.full_name?.split(' ')[0] || 'Usuário';
+            const age = profile.birth_date ? calculateAge(profile.birth_date) : null;
+
+            profileContent.innerHTML = `
+                <div class="profile-card">
+                    <div class="profile-avatar">${displayName.charAt(0).toUpperCase()}</div>
+                    <h1 class="profile-name">${displayName}${age ? `, ${age}` : ''}</h1>
+                    ${details.description ? `<p class="profile-bio">"${details.description}"</p>` : ''}
+                    
+                    <div class="info-grid">
+                        <!-- Informações Pessoais -->
+                        <div class="info-card">
+                            <h3>📋 Sobre</h3>
+                            ${details.gender ? `
+                                <div class="info-item">
+                                    <span class="info-label">Gênero</span>
+                                    <span class="info-value">${formatGender(details.gender)}</span>
+                                </div>
+                            ` : ''}
+                            ${details.zodiac ? `
+                                <div class="info-item">
+                                    <span class="info-label">Signo</span>
+                                    <span class="info-value">${formatZodiac(details.zodiac)}</span>
+                                </div>
+                            ` : ''}
+                            ${details.sexual_orientation ? `
+                                <div class="info-item">
+                                    <span class="info-label">Orientação</span>
+                                    <span class="info-value">${formatSexualOrientation(details.sexual_orientation)}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        <!-- Estilo de Vida -->
+                        <div class="info-card">
+                            <h3>🌟 Estilo de Vida</h3>
+                            ${details.profession ? `
+                                <div class="info-item">
+                                    <span class="info-label">Profissão</span>
+                                    <span class="info-value">${details.profession}</span>
+                                </div>
+                            ` : ''}
+                            ${details.education ? `
+                                <div class="info-item">
+                                    <span class="info-label">Escolaridade</span>
+                                    <span class="info-value">${formatEducation(details.education)}</span>
+                                </div>
+                            ` : ''}
+                            ${details.religion ? `
+                                <div class="info-item">
+                                    <span class="info-label">Religião</span>
+                                    <span class="info-value">${formatReligion(details.religion)}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        <!-- Hábitos -->
+                        <div class="info-card">
+                            <h3>💫 Hábitos</h3>
+                            ${details.drinking ? `
+                                <div class="info-item">
+                                    <span class="info-label">Bebida</span>
+                                    <span class="info-value">${formatDrinking(details.drinking)}</span>
+                                </div>
+                            ` : ''}
+                            ${details.smoking ? `
+                                <div class="info-item">
+                                    <span class="info-label">Fumo</span>
+                                    <span class="info-value">${formatSmoking(details.smoking)}</span>
+                                </div>
+                            ` : ''}
+                            ${details.exercise ? `
+                                <div class="info-item">
+                                    <span class="info-label">Exercício</span>
+                                    <span class="info-value">${formatExercise(details.exercise, details.exercise_details)}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        <!-- Interesses -->
+                        <div class="info-card">
+                            <h3>🎯 Interesses</h3>
+                            ${details.looking_for ? `
+                                <div class="info-item">
+                                    <span class="info-label">Procura</span>
+                                    <span class="info-value">${formatLookingFor(details.looking_for)}</span>
+                                </div>
+                            ` : ''}
+                            ${details.interests && details.interests.length > 0 ? `
+                                <div class="info-item">
+                                    <span class="info-label">Gosta de</span>
+                                    <span class="info-value">${details.interests.join(', ')}</span>
+                                </div>
+                            ` : ''}
+                            ${details.has_pets ? `
+                                <div class="info-item">
+                                    <span class="info-label">Animais</span>
+                                    <span class="info-value">${formatPets(details.has_pets, details.pets_details)}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <div class="profile-actions">
+                        <button class="btn btn-primary" onclick="sendMessage('${profile.id}')">
+                            💌 Enviar Mensagem
+                        </button>
+                        <button class="btn btn-secondary" onclick="window.location.href='home.html'">
+                            ← Voltar
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ✅ FUNÇÕES DE FORMATAÇÃO
+        function calculateAge(birthDate) {
+            const today = new Date();
+            const birth = new Date(birthDate);
+            let age = today.getFullYear() - birth.getFullYear();
+            const monthDiff = today.getMonth() - birth.getMonth();
+            
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+                age--;
+            }
+            
+            return age;
+        }
+
+        function formatGender(gender) {
+            const genders = {
+                'feminino': 'Feminino',
+                'masculino': 'Masculino',
+                'nao_informar': 'Prefiro não informar'
+            };
+            return genders[gender] || gender;
+        }
+
+        function formatZodiac(zodiac) {
+            const zodiacs = {
+                'aries': 'Áries', 'touro': 'Touro', 'gemeos': 'Gêmeos', 'cancer': 'Câncer',
+                'leao': 'Leão', 'virgem': 'Virgem', 'libra': 'Libra', 'escorpiao': 'Escorpião',
+                'sagitario': 'Sagitário', 'capricornio': 'Capricórnio', 'aquario': 'Aquário', 'peixes': 'Peixes'
+            };
+            return zodiacs[zodiac] || zodiac;
+        }
+
+        function formatSexualOrientation(orientation) {
+            const orientations = {
+                'heterossexual': 'Heterossexual',
+                'homossexual': 'Homossexual', 
+                'bissexual': 'Bissexual',
+                'outro': 'Outro',
+                'prefiro_nao_informar': 'Prefiro não informar'
+            };
+            return orientations[orientation] || orientation;
+        }
+
+        function formatDrinking(drinking) {
+            const options = {
+                'nao_bebo': 'Não bebo',
+                'socialmente': 'Socialmente',
+                'frequentemente': 'Com frequência'
+            };
+            return options[drinking] || drinking;
+        }
+
+        function formatSmoking(smoking) {
+            const options = {
+                'nao_fumo': 'Não fumo',
+                'socialmente': 'Socialmente', 
+                'frequentemente': 'Com frequência'
+            };
+            return options[smoking] || smoking;
+        }
+
+        function formatExercise(exercise, exerciseDetails) {
+            if (exercise === 'ocasionalmente') {
+                return exerciseDetails ? `Ocasionalmente (${exerciseDetails})` : 'Ocasionalmente';
+            } else if (exercise === 'regularmente') {
+                return exerciseDetails ? `Regularmente (${exerciseDetails})` : 'Regularmente';
+            } else if (exercise === 'nao_pratico') {
+                return 'Não pratico';
+            }
+            return null;
+        }
+
+        function formatReligion(religion) {
+            const religions = {
+                'catolica': 'Católica',
+                'evangelica': 'Evangélica',
+                'espirita': 'Espírita',
+                'umbanda_candomble': 'Umbanda/Candomblé',
+                'budista': 'Budista',
+                'judaica': 'Judaica',
+                'islamica': 'Islâmica',
+                'outra': 'Outra',
+                'nenhuma': 'Nenhuma',
+                'prefiro_nao_informar': 'Prefiro não informar'
+            };
+            return religions[religion] || religion;
+        }
+
+        function formatEducation(education) {
+            const levels = {
+                'fundamental_incompleto': 'Fundamental Incompleto',
+                'fundamental_completo': 'Fundamental Completo',
+                'medio_incompleto': 'Médio Incompleto',
+                'medio_completo': 'Médio Completo',
+                'superior_incompleto': 'Superior Incompleto',
+                'superior_completo': 'Superior Completo',
+                'pos_graduacao': 'Pós-graduação',
+                'mestrado': 'Mestrado',
+                'doutorado': 'Doutorado'
+            };
+            return levels[education] || education;
+        }
+
+        function formatLookingFor(lookingFor) {
+            const options = {
+                'amizade': 'Amizade',
+                'namoro': 'Namoro',
+                'relacionamento_serio': 'Relacionamento Sério',
+                'conversa': 'Apenas Conversa'
+            };
+            return options[lookingFor] || lookingFor;
+        }
+
+        function formatPets(hasPets, petsDetails) {
+            if (hasPets === 'sim') {
+                return petsDetails ? `Sim, ${petsDetails}` : 'Sim, tenho';
+            } else if (hasPets === 'nao') {
+                return 'Não tenho';
+            }
+            return null;
+        }
+
+        // ✅ ENVIAR MENSAGEM
+        function sendMessage(userId) {
+            const message = prompt('Digite sua mensagem para esta pessoa:');
+            if (message && message.trim()) {
+                alert('💌 Mensagem enviada com sucesso!');
+                // Aqui você pode implementar o envio real da mensagem
+            }
+        }
+
+        // ✅ MOSTRAR ERRO
+        function showError(message) {
+            const profileContent = document.getElementById('profileContent');
+            profileContent.innerHTML = `
+                <div class="error-state">
+                    <div class="error-icon">😕</div>
+                    <h3>${message}</h3>
+                    <p>Volte para a página inicial e tente novamente.</p>
+                    <button class="btn btn-primary" onclick="window.location.href='home.html'" style="margin-top: 1rem;">
+                        ← Voltar para Home
+                    </button>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
