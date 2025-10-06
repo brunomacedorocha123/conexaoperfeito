@@ -65,15 +65,13 @@ async function loadUserData() {
 function setupEventListeners() {
     document.getElementById('logoutBtn').addEventListener('click', logout);
     
-    // Event listeners para filtros em tempo real
+    // Event listeners para filtros
     document.getElementById('ageMin').addEventListener('change', applyFilters);
     document.getElementById('ageMax').addEventListener('change', applyFilters);
     document.getElementById('gender').addEventListener('change', applyFilters);
     document.getElementById('lookingFor').addEventListener('change', applyFilters);
     document.getElementById('location').addEventListener('input', applyFilters);
     document.getElementById('zodiac').addEventListener('change', applyFilters);
-    
-    // Interesses - aplicar filtro quando selecionados
     document.getElementById('interests').addEventListener('change', applyFilters);
 }
 
@@ -144,9 +142,12 @@ function getCurrentFilters() {
     };
 }
 
-// Buscar usuários com filtros
+// Buscar usuários com filtros - CORREÇÃO TOTAL
 async function searchUsers() {
     try {
+        console.log('🔍 Aplicando filtros:', currentFilters);
+        
+        // Buscar todos os usuários com dados completos
         let query = supabase
             .from('profiles')
             .select(`
@@ -164,41 +165,55 @@ async function searchUsers() {
             `, { count: 'exact' })
             .neq('id', currentUser.id);
 
-        // Aplicar filtros
-        if (currentFilters.gender) {
-            query = query.eq('user_details.gender', currentFilters.gender);
-        }
-
-        if (currentFilters.lookingFor) {
-            query = query.eq('user_details.looking_for', currentFilters.lookingFor);
-        }
-
-        if (currentFilters.location) {
-            query = query.ilike('user_details.address', `%${currentFilters.location}%`);
-        }
-
-        if (currentFilters.interests) {
-            query = query.contains('user_details.interests', currentFilters.interests);
-        }
-
-        if (currentFilters.zodiac) {
-            query = query.eq('user_details.zodiac', currentFilters.zodiac);
-        }
-
-        // Paginação
-        const from = (currentPage - 1) * usersPerPage;
-        const to = from + usersPerPage - 1;
-
-        const { data: users, error, count } = await query
-            .range(from, to)
-            .order('created_at', { ascending: false });
+        const { data: allUsers, error, count } = await query;
 
         if (error) throw error;
 
-        totalUsers = count || 0;
+        console.log('📊 Total de usuários no banco:', allUsers?.length);
+
+        // FILTRAGEM ESTRITA - CORRIGIDA
+        let filteredUsers = allUsers || [];
         
-        // Aplicar filtro de idade no frontend
-        let filteredUsers = users || [];
+        // 1. PRIMEIRO: Remover usuários sem dados básicos ESSENCIAIS
+        filteredUsers = filteredUsers.filter(user => {
+            const hasName = user.nickname || user.full_name;
+            const hasGender = user.user_details?.gender;
+            const hasBirthDate = user.birth_date;
+            
+            return hasName && hasGender && hasBirthDate;
+        });
+        
+        console.log('✅ Usuários com dados básicos:', filteredUsers.length);
+
+        // 2. APLICAR FILTROS DE FORMA ESTRITA
+        if (currentFilters.gender) {
+            filteredUsers = filteredUsers.filter(user => {
+                const userGender = user.user_details?.gender;
+                // COMPARAÇÃO EXATA - só passa se for IGUAL
+                return userGender === currentFilters.gender;
+            });
+            console.log(`⚧️ Após filtro de gênero (${currentFilters.gender}):`, filteredUsers.length);
+        }
+
+        if (currentFilters.lookingFor) {
+            filteredUsers = filteredUsers.filter(user => {
+                const userLookingFor = user.user_details?.looking_for;
+                // COMPARAÇÃO EXATA
+                return userLookingFor === currentFilters.lookingFor;
+            });
+            console.log(`🎯 Após filtro "procura por":`, filteredUsers.length);
+        }
+
+        if (currentFilters.zodiac) {
+            filteredUsers = filteredUsers.filter(user => {
+                const userZodiac = user.user_details?.zodiac;
+                // COMPARAÇÃO EXATA  
+                return userZodiac === currentFilters.zodiac;
+            });
+            console.log(`⭐ Após filtro de signo:`, filteredUsers.length);
+        }
+
+        // Filtro de idade - APENAS se tiver data de nascimento
         if (currentFilters.ageMin || currentFilters.ageMax) {
             filteredUsers = filteredUsers.filter(user => {
                 if (!user.birth_date) return false;
@@ -209,19 +224,50 @@ async function searchUsers() {
                 
                 return age >= minAge && age <= maxAge;
             });
+            console.log(`🎂 Após filtro de idade:`, filteredUsers.length);
         }
 
-        displayUsers(filteredUsers);
+        // Filtro de localização - busca parcial mas RESTRITIVA
+        if (currentFilters.location && currentFilters.location.trim() !== '') {
+            filteredUsers = filteredUsers.filter(user => {
+                const userLocation = user.user_details?.address;
+                if (!userLocation) return false;
+                return userLocation.toLowerCase().includes(currentFilters.location.toLowerCase());
+            });
+            console.log(`📍 Após filtro de localização:`, filteredUsers.length);
+        }
+
+        // Filtro de interesses - EXIGE pelo menos UM interesse em comum
+        if (currentFilters.interests && currentFilters.interests.length > 0) {
+            filteredUsers = filteredUsers.filter(user => {
+                const userInterests = user.user_details?.interests || [];
+                // Usuário deve ter PELO MENOS UM dos interesses selecionados
+                return currentFilters.interests.some(interest => 
+                    userInterests.includes(interest)
+                );
+            });
+            console.log(`🎨 Após filtro de interesses:`, filteredUsers.length);
+        }
+
+        console.log('🎉 RESULTADO FINAL:', filteredUsers.length, 'usuários');
+
+        // Paginação
+        totalUsers = filteredUsers.length;
+        const startIndex = (currentPage - 1) * usersPerPage;
+        const endIndex = startIndex + usersPerPage;
+        const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+
+        displayUsers(paginatedUsers);
         updatePagination();
-        updateResultsCount(filteredUsers.length, totalUsers);
+        updateResultsCount(paginatedUsers.length, totalUsers);
 
     } catch (error) {
-        console.error('Erro ao buscar usuários:', error);
+        console.error('❌ Erro ao buscar usuários:', error);
         showError('Erro ao carregar usuários.');
     }
 }
 
-// Exibir usuários
+// Exibir usuários - CORRIGIDO para não mostrar cards vazios
 function displayUsers(users) {
     const usersGrid = document.getElementById('usersGrid');
     const noResults = document.getElementById('noResults');
@@ -229,22 +275,69 @@ function displayUsers(users) {
 
     loadingResults.classList.add('hidden');
 
+    // SE não há usuários OU se a array está vazia → mostrar "sem resultados"
     if (!users || users.length === 0) {
         usersGrid.innerHTML = '';
         noResults.classList.remove('hidden');
+        
+        // Mensagem personalizada baseada nos filtros
+        const message = getNoResultsMessage();
+        document.querySelector('#noResults h3').textContent = message.title;
+        document.querySelector('#noResults p').textContent = message.description;
+        
         return;
     }
 
     noResults.classList.add('hidden');
 
+    // Só criar cards para usuários VÁLIDOS
     usersGrid.innerHTML = users.map(user => createUserCard(user)).join('');
 }
 
-// Criar card de usuário
+// Mensagem personalizada quando não há resultados
+function getNoResultsMessage() {
+    const filters = currentFilters;
+    
+    if (filters.gender) {
+        return {
+            title: `Nenhum ${filters.gender === 'masculino' ? 'homem' : 'mulher'} encontrado`,
+            description: 'Tente ajustar os filtros ou buscar por outro gênero.'
+        };
+    }
+    
+    if (filters.lookingFor) {
+        const lookingForText = formatLookingFor(filters.lookingFor);
+        return {
+            title: `Ninguém procurando por ${lookingForText.toLowerCase()}`,
+            description: 'Talvez outras pessoas estejam buscando algo diferente.'
+        };
+    }
+    
+    if (filters.zodiac) {
+        const zodiacText = formatZodiac(filters.zodiac);
+        return {
+            title: `Nenhum ${zodiacText} encontrado`,
+            description: 'Tente buscar por outro signo ou remover este filtro.'
+        };
+    }
+    
+    return {
+        title: 'Nenhuma pessoa encontrada',
+        description: 'Tente ajustar os filtros de busca para encontrar mais pessoas.'
+    };
+}
+
+// Criar card de usuário - GARANTINDO que todos os dados existem
 function createUserCard(user) {
+    // VALIDAÇÃO: Só cria card se tiver dados mínimos
+    if (!user.user_details || !user.nickname) {
+        console.warn('⚠️ Usuário sem dados suficientes:', user);
+        return '';
+    }
+
     const nickname = user.nickname || user.full_name?.split(' ')[0] || 'Usuário';
     const age = user.birth_date ? calculateAge(user.birth_date) : null;
-    const details = user.user_details || {};
+    const details = user.user_details;
     
     // Informações públicas para mostrar
     const zodiac = details.zodiac ? getZodiacIcon(details.zodiac) + ' ' + formatZodiac(details.zodiac) : null;
@@ -252,6 +345,7 @@ function createUserCard(user) {
     const interests = details.interests || [];
     const lookingFor = details.looking_for ? formatLookingFor(details.looking_for) : null;
     const location = details.address || null;
+    const gender = details.gender ? formatGender(details.gender) : null;
     const bio = details.description || 'Este usuário ainda não adicionou uma descrição.';
 
     return `
@@ -260,6 +354,7 @@ function createUserCard(user) {
             <div class="user-card-name">${nickname}${age ? `, ${age}` : ''}</div>
             
             <div class="user-card-info">
+                ${gender ? `<div class="user-card-detail">👤 ${gender}</div>` : ''}
                 ${zodiac ? `<div class="user-card-detail">${zodiac}</div>` : ''}
                 ${profession ? `<div class="user-card-detail">💼 ${profession}</div>` : ''}
                 ${lookingFor ? `<div class="user-card-detail">🎯 ${lookingFor}</div>` : ''}
@@ -402,6 +497,15 @@ function calculateAge(birthDate) {
     }
     
     return age;
+}
+
+function formatGender(gender) {
+    const genders = {
+        'feminino': 'Feminino',
+        'masculino': 'Masculino',
+        'nao_informar': 'Prefiro não informar'
+    };
+    return genders[gender] || gender;
 }
 
 function getZodiacIcon(zodiac) {
