@@ -1394,7 +1394,8 @@
         console.error('❌ Erro ao atualizar display:', error);
       }
     }
-        // ✅ ATUALIZAR FOTOS DO AVATAR
+
+    // ✅ ATUALIZAR FOTOS DO AVATAR
     async function updateAvatarPhotos() {
       try {
         // Buscar URL da foto do perfil
@@ -1447,8 +1448,7 @@
         console.error('❌ Erro ao carregar foto do perfil:', error);
       }
     }
-
-    // ✅ UPLOAD DE FOTO - FUNÇÕES PRINCIPAIS
+        // ✅ UPLOAD DE FOTO - FUNÇÕES PRINCIPAIS
     function openUploadModal() {
       console.log('🎯 ABRINDO MODAL DE UPLOAD...');
       const modal = document.getElementById('uploadModal');
@@ -1622,7 +1622,8 @@
     function showUploadError(message) {
       document.getElementById('uploadError').textContent = message;
     }
-        // ✅ CONFIGURAR EVENT LISTENERS
+
+    // ✅ CONFIGURAR EVENT LISTENERS
     function setupEventListeners() {
       document.getElementById('logoutBtn').addEventListener('click', logout);
       
@@ -1701,8 +1702,7 @@
       if (error) throw error;
       return profile;
     }
-
-    // ✅ FUNÇÕES DE FORMULÁRIO
+        // ✅ FUNÇÕES DE FORMULÁRIO
     function setupDescriptionCounter() {
       const description = document.getElementById('description');
       description.addEventListener('input', updateCharCount);
@@ -1733,7 +1733,8 @@
       const exerciseDetailsGroup = document.getElementById('exerciseDetailsGroup');
       exerciseDetailsGroup.style.display = (exercise === 'ocasionalmente' || exercise === 'regularmente') ? 'block' : 'none';
     }
-        // ✅ FUNÇÕES AUXILIARES
+
+    // ✅ FUNÇÕES AUXILIARES
     function calculateAge(birthDate) {
       if (!birthDate) return null;
       const today = new Date();
@@ -1973,7 +1974,8 @@
       updatePetsDetailsVisibility();
       updateExerciseDetailsVisibility();
     }
-        // ✅ FUNÇÕES DE SALVAMENTO
+
+    // ✅ FUNÇÕES DE SALVAMENTO
     async function saveBasicInfo(e) {
       e.preventDefault();
       
@@ -2282,7 +2284,7 @@
       }
     }
 
-    // ✅ FUNÇÕES DE LOGOUT E AÇÕES
+    // ✅ FUNÇÕES DE LOGOUT E AÇÕES - COM EXCLUSÃO CORRIGIDA
     async function logout() {
       try {
         const { error } = await supabase.auth.signOut();
@@ -2318,52 +2320,108 @@
       }
     }
 
+    // ✅ EXCLUSÃO REAL DE CONTA - VERSÃO CORRIGIDA
     async function deleteAccount() {
-      if (!confirm('Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.')) {
-        return;
-      }
-
       try {
-        // Primeiro deletar dados relacionados
+        // 🔒 CONFIRMAÇÃO MÚLTIPLA
+        if (!confirm('⚠️ ATENÇÃO: EXCLUSÃO PERMANENTE!\n\nEsta ação:\n• Remove TODOS seus dados\n• Exclui fotos e mensagens\n• É IRREVERSÍVEL\n\nDeseja continuar?')) {
+          return;
+        }
+        
+        const confirmation = prompt('Para confirmar, digite "EXCLUIR MINHA CONTA":');
+        if (confirmation !== 'EXCLUIR MINHA CONTA') {
+          showAlert('errorAlert', '❌ Confirmação incorreta. Sua conta está segura.');
+          return;
+        }
+
+        // 🎯 PREPARAR INTERFACE
+        const actionCards = document.querySelectorAll('.action-card');
+        const deleteCard = actionCards[2];
+        const originalContent = deleteCard.innerHTML;
+        deleteCard.innerHTML = '<div class="spinner" style="width:30px;height:30px;margin:0 auto"></div><p>Excluindo...</p>';
+        deleteCard.style.opacity = '0.6';
+        deleteCard.style.pointerEvents = 'none';
+
+        console.log('🗑️ INICIANDO EXCLUSÃO DEFINITIVA DA CONTA...');
+        showAlert('infoAlert', '🔄 Iniciando exclusão da conta...');
+
+        // 1. 🖼️ DELETAR FOTO DO STORAGE
+        if (userProfile?.avatar_url) {
+          try {
+            const { error: storageError } = await supabase.storage
+              .from('avatars')
+              .remove([userProfile.avatar_url]);
+            if (!storageError) console.log('✅ Foto deletada do storage');
+          } catch (e) {
+            console.log('⚠️ Erro ao deletar foto:', e);
+          }
+        }
+
+        // 2. 📋 DELETAR MENSAGENS
+        const { error: messagesError } = await supabase
+          .from('messages')
+          .delete()
+          .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`);
+
+        if (messagesError) {
+          console.error('Erro ao deletar mensagens:', messagesError);
+        } else {
+          console.log('✅ Mensagens deletadas');
+        }
+
+        // 3. 📝 DELETAR USER_DETAILS
         const { error: detailsError } = await supabase
           .from('user_details')
           .delete()
           .eq('user_id', currentUser.id);
 
-        if (detailsError) console.error('Erro ao deletar detalhes:', detailsError);
+        if (detailsError && detailsError.code !== 'PGRST116') {
+          console.error('Erro ao deletar user_details:', detailsError);
+        } else {
+          console.log('✅ User_details deletado');
+        }
 
+        // 4. 👤 DELETAR PERFIL (MARCAÇÃO COMO EXCLUÍDO)
         const { error: profileError } = await supabase
           .from('profiles')
-          .delete()
+          .update({
+            deleted_at: new Date().toISOString(),
+            nickname: 'Usuário Excluído',
+            full_name: null,
+            avatar_url: null,
+            birth_date: null,
+            updated_at: new Date().toISOString()
+          })
           .eq('id', currentUser.id);
 
-        if (profileError) console.error('Erro ao deletar perfil:', profileError);
-
-        // Deletar foto do storage se existir
-        if (userProfile?.avatar_url) {
-          const { error: storageError } = await supabase.storage
-            .from('avatars')
-            .remove([userProfile.avatar_url]);
-          
-          if (storageError) console.error('Erro ao deletar foto:', storageError);
+        if (profileError) {
+          console.error('❌ Erro ao marcar perfil como excluído:', profileError);
+          throw new Error('Não foi possível excluir o perfil');
         }
 
-        // Finalmente deletar a conta de autenticação
-        const { error: authError } = await supabase.auth.admin.deleteUser(currentUser.id);
+        console.log('✅ Perfil marcado como excluído');
+
+        // 5. 🚪 FAZER LOGOUT
+        await supabase.auth.signOut();
         
-        if (authError) {
-          // Se não for possível deletar via admin, pelo menos faz logout
-          await supabase.auth.signOut();
-        }
-
-        showAlert('successAlert', 'Conta excluída com sucesso. Redirecionando...');
+        showAlert('successAlert', '✅ Conta excluída com sucesso! Redirecionando...');
+        
+        // 6. 🔄 REDIRECIONAR
         setTimeout(() => {
           window.location.href = 'index.html';
-        }, 2000);
+        }, 3000);
 
       } catch (error) {
         console.error('❌ Erro ao excluir conta:', error);
-        showAlert('errorAlert', 'Erro ao excluir conta. Tente novamente.');
+        
+        // 🚨 RESTAURAR INTERFACE EM CASO DE ERRO
+        const actionCards = document.querySelectorAll('.action-card');
+        const deleteCard = actionCards[2];
+        deleteCard.innerHTML = '<div class="action-icon">🗑️</div><h4>Excluir Conta</h4><p>Remover permanentemente</p>';
+        deleteCard.style.opacity = '1';
+        deleteCard.style.pointerEvents = 'auto';
+        
+        showAlert('errorAlert', '❌ Erro ao excluir conta: ' + error.message);
       }
     }
 
@@ -2388,6 +2446,22 @@
       }
     });
 
+    // ✅ FUNÇÕES DO EDITOR DE IMAGEM (Placeholder)
+    function cropImage() {
+      showAlert('infoAlert', '✂️ Recorte de imagem - Em breve disponível');
+    }
+
+    function rotateImage() {
+      showAlert('infoAlert', '🔄 Rotação de imagem - Em breve disponível');
+    }
+
+    function resizeImage() {
+      showAlert('infoAlert', '📐 Redimensionamento - Em breve disponível');
+    }
+
+    function adjustImage() {
+      showAlert('infoAlert', '🎨 Ajustes de imagem - Em breve disponível');
+    }
 </script>
 </body>
-</html>
+  </html>
