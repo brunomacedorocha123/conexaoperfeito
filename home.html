@@ -97,6 +97,20 @@
             justify-content: center;
             font-weight: bold;
             font-size: 1.2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .user-avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: none;
+        }
+
+        .user-avatar-fallback {
+            font-size: 1.2rem;
         }
 
         .btn {
@@ -217,6 +231,7 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
 
+        /* ✅ AVATAR COM FOTO - ESTILOS ATUALIZADOS */
         .user-card-avatar {
             width: 80px;
             height: 80px;
@@ -229,6 +244,21 @@
             font-size: 2rem;
             font-weight: bold;
             margin: 0 auto 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .user-card-avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: none;
+        }
+
+        .user-card-avatar-fallback {
+            font-size: 2rem;
+            font-weight: bold;
         }
 
         .user-card-name {
@@ -458,7 +488,10 @@
                 </div>
                 <div class="user-menu">
                     <div class="user-info">
-                        <div class="user-avatar" id="userAvatar">U</div>
+                        <div class="user-avatar" id="userAvatar">
+                            <img class="user-avatar-img" src="" alt="Avatar" style="display: none;">
+                            <div class="user-avatar-fallback">U</div>
+                        </div>
                         <span id="userNickname">Usuário</span>
                     </div>
                     <a href="busca.html" class="btn btn-outline">🔍 Buscar</a>
@@ -573,328 +606,409 @@
 
     <script>
         // Configuração do Supabase
-const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+        const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Estado da aplicação
-let currentUser = null;
-let userProfile = null;
+        // Estado da aplicação
+        let currentUser = null;
+        let userProfile = null;
 
-document.addEventListener('DOMContentLoaded', function() {
-    checkAuth();
-    setupEventListeners();
-});
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            setupEventListeners();
+        });
 
-// Verificar autenticação
-async function checkAuth() {
-    try {
-        const { data: { user }, error } = await supabase.auth.getUser();
-        
-        if (error) throw error;
-        
-        if (!user) {
-            window.location.href = 'login.html';
-            return;
-        }
-        
-        currentUser = user;
-        await loadUserData();
-        await loadRealUsers();
-        updateStats();
-        
-    } catch (error) {
-        console.error('Erro na autenticação:', error);
-        window.location.href = 'login.html';
-    }
-}
-
-// Carregar dados do usuário atual
-async function loadUserData() {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        // Buscar perfil do banco
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', currentUser.id)
-            .single();
-
-        userProfile = profile;
-
-        // Definir nome de exibição
-        let displayName = 'Usuário';
-        
-        if (user.user_metadata?.nickname) {
-            displayName = user.user_metadata.nickname;
-        } else if (user.user_metadata?.full_name) {
-            displayName = user.user_metadata.full_name;
-        } else if (user.email) {
-            displayName = user.email.split('@')[0];
-        }
-
-        // Atualizar interface
-        document.getElementById('userNickname').textContent = displayName;
-        document.getElementById('welcomeNickname').textContent = displayName;
-        document.getElementById('userAvatar').textContent = displayName.charAt(0).toUpperCase();
-
-    } catch (error) {
-        console.error('Erro ao carregar dados do usuário:', error);
-    }
-}
-
-// ✅ CARREGAR USUÁRIOS REAIS DO BANCO
-async function loadRealUsers() {
-    try {
-        console.log('🔄 Buscando usuários reais do banco...');
-        
-        // Buscar perfis com detalhes públicos
-        const { data: users, error } = await supabase
-            .from('profiles')
-            .select(`
-                id,
-                nickname,
-                full_name,
-                birth_date,
-                user_details (
-                    gender,
-                    zodiac,
-                    profession,
-                    interests,
-                    looking_for,
-                    description
-                )
-            `)
-            .neq('id', currentUser.id) // Excluir próprio usuário
-            .limit(8)
-            .order('created_at', { ascending: false });
-
-        const usersGrid = document.getElementById('usersGrid');
-        
-        if (error) {
-            console.error('❌ Erro ao buscar usuários:', error);
-            showEmptyState('Erro ao carregar usuários. Tente novamente.');
-            return;
-        }
-
-        if (!users || users.length === 0) {
-            showEmptyState('Ainda não há outros usuários cadastrados. Seja o primeiro!');
-            return;
-        }
-
-        console.log(`✅ ${users.length} usuários reais carregados`);
-        
-        // Renderizar usuários reais
-        usersGrid.innerHTML = users.map(user => createUserCard(user)).join('');
-
-    } catch (error) {
-        console.error('❌ Erro ao carregar usuários:', error);
-        showEmptyState('Erro ao carregar usuários. Tente novamente.');
-    }
-}
-
-// ✅ CRIAR CARD DE USUÁRIO REAL
-function createUserCard(user) {
-    const nickname = user.nickname || user.full_name?.split(' ')[0] || 'Usuário';
-    const age = user.birth_date ? calculateAge(user.birth_date) : null;
-    const details = user.user_details || {};
-    
-    // Informações públicas para mostrar
-    const zodiac = details.zodiac ? getZodiacIcon(details.zodiac) + ' ' + formatZodiac(details.zodiac) : null;
-    const profession = details.profession || null;
-    const interests = details.interests ? details.interests.slice(0, 2).join(', ') : null;
-    const lookingFor = details.looking_for ? formatLookingFor(details.looking_for) : null;
-    const bio = details.description || 'Este usuário ainda não adicionou uma descrição.';
-
-    return `
-        <div class="user-card" onclick="viewProfile('${user.id}')">
-            <div class="user-card-avatar">${nickname.charAt(0).toUpperCase()}</div>
-            <div class="user-card-name">${nickname}${age ? `, ${age}` : ''}</div>
-            
-            <div class="user-card-info">
-                ${zodiac ? `<div class="user-card-detail">${zodiac}</div>` : ''}
-                ${profession ? `<div class="user-card-detail">💼 ${profession}</div>` : ''}
-                ${lookingFor ? `<div class="user-card-detail">🎯 ${lookingFor}</div>` : ''}
-            </div>
-            
-            <div class="user-card-bio">${bio}</div>
-            
-            <div class="user-card-actions">
-                <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); sendMessage('${user.id}')">
-                    💌 Mensagem
-                </button>
-                <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewProfile('${user.id}')">
-                    👀 Ver Perfil
-                </button>
-            </div>
-        </div>
-    `;
-}
-
-// ✅ FUNÇÃO PARA VISUALIZAR PERFIL (AGORA FUNCIONAL)
-function viewProfile(userId) {
-    if (!isProfileComplete()) {
-        alert('📝 Complete seu perfil primeiro para ver outros perfis!');
-        window.location.href = 'painel.html';
-        return;
-    }
-    
-    // Salvar o ID do perfil a ser visualizado e redirecionar
-    localStorage.setItem('viewingProfileId', userId);
-    window.location.href = 'perfil.html';
-}
-
-// ✅ VERIFICAR SE PERFIL ESTÁ COMPLETO
-function isProfileComplete() {
-    return userProfile && 
-           userProfile.full_name && 
-           userProfile.full_name.trim() !== '' &&
-           userProfile.birth_date;
-}
-
-// ✅ ATUALIZAR ESTATÍSTICAS REAIS
-async function updateStats() {
-    try {
-        // Total de usuários
-        const { count: totalUsers } = await supabase
-            .from('profiles')
-            .select('*', { count: 'exact', head: true });
-        
-        // Mensagens não lidas
-        const { count: newMessages } = await supabase
-            .from('messages')
-            .select('*', { count: 'exact', head: true })
-            .eq('receiver_id', currentUser.id)
-            .eq('is_read', false);
-
-        document.getElementById('totalUsers').textContent = totalUsers || 0;
-        document.getElementById('newMatches').textContent = newMessages || 0;
-        document.getElementById('usersOnline').textContent = Math.floor((totalUsers || 1) * 0.3); // 30% online
-        document.getElementById('profileViews').textContent = Math.floor(Math.random() * 20); // Simulado por enquanto
-
-    } catch (error) {
-        console.error('Erro ao carregar estatísticas:', error);
-        // Valores padrão
-        document.getElementById('totalUsers').textContent = '1';
-        document.getElementById('newMatches').textContent = '0';
-        document.getElementById('usersOnline').textContent = '1';
-        document.getElementById('profileViews').textContent = '0';
-    }
-}
-
-// ✅ ENVIAR MENSAGEM
-function sendMessage(userId) {
-    if (!isProfileComplete()) {
-        alert('📝 Complete seu perfil primeiro para enviar mensagens!');
-        window.location.href = 'painel.html';
-        return;
-    }
-    
-    const message = prompt('Digite sua mensagem:');
-    if (message && message.trim()) {
-        sendMessageToUser(userId, message.trim());
-    }
-}
-
-async function sendMessageToUser(receiverId, content) {
-    try {
-        const { error } = await supabase
-            .from('messages')
-            .insert([
-                {
-                    sender_id: currentUser.id,
-                    receiver_id: receiverId,
-                    content: content
+        // Verificar autenticação
+        async function checkAuth() {
+            try {
+                const { data: { user }, error } = await supabase.auth.getUser();
+                
+                if (error) throw error;
+                
+                if (!user) {
+                    window.location.href = 'login.html';
+                    return;
                 }
-            ]);
+                
+                currentUser = user;
+                await loadUserData();
+                await loadRealUsers();
+                updateStats();
+                
+            } catch (error) {
+                console.error('Erro na autenticação:', error);
+                window.location.href = 'login.html';
+            }
+        }
 
-        if (error) throw error;
-        
-        alert('Mensagem enviada com sucesso! 💌');
-        
-    } catch (error) {
-        console.error('Erro ao enviar mensagem:', error);
-        alert('✅ Mensagem registrada!');
-    }
-}
+        // ✅ CARREGAR FOTO DO USUÁRIO
+        async function loadUserPhoto(avatarUrl) {
+            try {
+                if (!avatarUrl) {
+                    return null;
+                }
 
-// ✅ MOSTRAR ESTADO VAZIO
-function showEmptyState(message) {
-    const usersGrid = document.getElementById('usersGrid');
-    usersGrid.innerHTML = `
-        <div class="empty-state">
-            <div class="empty-state-icon">👥</div>
-            <h3>Nenhum usuário encontrado</h3>
-            <p>${message}</p>
-            <button class="btn btn-primary" onclick="window.location.href='busca.html'">
-                🔍 Ir para Busca
-            </button>
-        </div>
-    `;
-}
+                const { data, error } = await supabase.storage
+                    .from('avatars')
+                    .download(avatarUrl);
 
-// ✅ FUNÇÕES AUXILIARES
-function calculateAge(birthDate) {
-    if (!birthDate) return null;
-    const today = new Date();
-    const birth = new Date(birthDate);
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-        age--;
-    }
-    
-    return age;
-}
+                if (error) {
+                    return null;
+                }
 
-function getZodiacIcon(zodiac) {
-    const icons = {
-        'aries': '♈', 'touro': '♉', 'gemeos': '♊', 'cancer': '♋',
-        'leao': '♌', 'virgem': '♍', 'libra': '♎', 'escorpiao': '♏',
-        'sagitario': '♐', 'capricornio': '♑', 'aquario': '♒', 'peixes': '♓'
-    };
-    return icons[zodiac] || '⭐';
-}
+                return URL.createObjectURL(data);
 
-function formatZodiac(zodiac) {
-    const names = {
-        'aries': 'Áries', 'touro': 'Touro', 'gemeos': 'Gêmeos', 'cancer': 'Câncer',
-        'leao': 'Leão', 'virgem': 'Virgem', 'libra': 'Libra', 'escorpiao': 'Escorpião',
-        'sagitario': 'Sagitário', 'capricornio': 'Capricórnio', 'aquario': 'Aquário', 'peixes': 'Peixes'
-    };
-    return names[zodiac] || zodiac;
-}
+            } catch (error) {
+                console.error('Erro ao carregar foto:', error);
+                return null;
+            }
+        }
 
-function formatLookingFor(lookingFor) {
-    const options = {
-        'amizade': 'Amizade',
-        'namoro': 'Namoro', 
-        'relacionamento_serio': 'Relacionamento Sério',
-        'conversa': 'Apenas Conversa'
-    };
-    return options[lookingFor] || lookingFor;
-}
+        // Carregar dados do usuário atual
+        async function loadUserData() {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                
+                // Buscar perfil do banco
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', currentUser.id)
+                    .single();
 
-// Configurar event listeners
-function setupEventListeners() {
-    document.getElementById('logoutBtn').addEventListener('click', logout);
-}
+                userProfile = profile;
 
-// Logout
-async function logout() {
-    try {
-        const { error } = await supabase.auth.signOut();
-        if (error) throw error;
-        
-        window.location.href = 'index.html';
-    } catch (error) {
-        console.error('Erro ao fazer logout:', error);
-        alert('Erro ao fazer logout. Tente novamente.');
-    }
-}
-</script>
+                // Definir nome de exibição
+                let displayName = 'Usuário';
+                
+                if (user.user_metadata?.nickname) {
+                    displayName = user.user_metadata.nickname;
+                } else if (user.user_metadata?.full_name) {
+                    displayName = user.user_metadata.full_name;
+                } else if (user.email) {
+                    displayName = user.email.split('@')[0];
+                }
+
+                // ✅ ATUALIZAR AVATAR COM FOTO
+                const userAvatar = document.getElementById('userAvatar');
+                const userAvatarFallback = userAvatar.querySelector('.user-avatar-fallback');
+                
+                if (profile?.avatar_url) {
+                    const photoUrl = await loadUserPhoto(profile.avatar_url);
+                    if (photoUrl) {
+                        const imgElement = userAvatar.querySelector('.user-avatar-img');
+                        imgElement.src = photoUrl;
+                        imgElement.style.display = 'block';
+                        userAvatarFallback.style.display = 'none';
+                    }
+                }
+
+                // Atualizar interface
+                document.getElementById('userNickname').textContent = displayName;
+                document.getElementById('welcomeNickname').textContent = displayName;
+                userAvatarFallback.textContent = displayName.charAt(0).toUpperCase();
+
+            } catch (error) {
+                console.error('Erro ao carregar dados do usuário:', error);
+            }
+        }
+
+        // ✅ CARREGAR USUÁRIOS REAIS DO BANCO COM FOTOS
+        async function loadRealUsers() {
+            try {
+                console.log('🔄 Buscando usuários reais do banco...');
+                
+                // Buscar perfis com detalhes públicos E avatar_url
+                const { data: users, error } = await supabase
+                    .from('profiles')
+                    .select(`
+                        id,
+                        nickname,
+                        full_name,
+                        birth_date,
+                        avatar_url,
+                        user_details (
+                            gender,
+                            zodiac,
+                            profession,
+                            interests,
+                            looking_for,
+                            description
+                        )
+                    `)
+                    .neq('id', currentUser.id) // Excluir próprio usuário
+                    .limit(8)
+                    .order('created_at', { ascending: false });
+
+                const usersGrid = document.getElementById('usersGrid');
+                
+                if (error) {
+                    console.error('❌ Erro ao buscar usuários:', error);
+                    showEmptyState('Erro ao carregar usuários. Tente novamente.');
+                    return;
+                }
+
+                if (!users || users.length === 0) {
+                    showEmptyState('Ainda não há outros usuários cadastrados. Seja o primeiro!');
+                    return;
+                }
+
+                console.log(`✅ ${users.length} usuários reais carregados`);
+                
+                // ✅ CARREGAR FOTOS ASSINCRONAMENTE
+                await displayUsersWithPhotos(users);
+
+            } catch (error) {
+                console.error('❌ Erro ao carregar usuários:', error);
+                showEmptyState('Erro ao carregar usuários. Tente novamente.');
+            }
+        }
+
+        // ✅ EXIBIR USUÁRIOS COM FOTOS - ASSÍNCRONO
+        async function displayUsersWithPhotos(users) {
+            const usersGrid = document.getElementById('usersGrid');
+            
+            // ✅ CARREGAR FOTOS PARA CADA USUÁRIO
+            const userCards = await Promise.all(
+                users.map(async user => await createUserCardWithPhoto(user))
+            );
+            
+            usersGrid.innerHTML = userCards.join('');
+        }
+
+        // ✅ CRIAR CARD DE USUÁRIO COM FOTO - ASSÍNCRONO
+        async function createUserCardWithPhoto(user) {
+            if (!user.user_details || !user.nickname) {
+                console.warn('⚠️ Usuário sem dados suficientes:', user);
+                return '';
+            }
+
+            const nickname = user.nickname || user.full_name?.split(' ')[0] || 'Usuário';
+            const age = user.birth_date ? calculateAge(user.birth_date) : null;
+            const details = user.user_details || {};
+            
+            // ✅ CARREGAR FOTO DO USUÁRIO
+            let avatarHtml = '';
+            if (user.avatar_url) {
+                const photoUrl = await loadUserPhoto(user.avatar_url);
+                if (photoUrl) {
+                    avatarHtml = `
+                        <div class="user-card-avatar" style="background: none;">
+                            <img src="${photoUrl}" alt="${nickname}" class="user-card-avatar-img" style="display: block;">
+                            <div class="user-card-avatar-fallback" style="display: none;">${nickname.charAt(0).toUpperCase()}</div>
+                        </div>
+                    `;
+                } else {
+                    avatarHtml = `
+                        <div class="user-card-avatar">
+                            <div class="user-card-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
+                        </div>
+                    `;
+                }
+            } else {
+                avatarHtml = `
+                    <div class="user-card-avatar">
+                        <div class="user-card-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
+                    </div>
+                `;
+            }
+
+            // Informações públicas para mostrar
+            const zodiac = details.zodiac ? getZodiacIcon(details.zodiac) + ' ' + formatZodiac(details.zodiac) : null;
+            const profession = details.profession || null;
+            const interests = details.interests ? details.interests.slice(0, 2).join(', ') : null;
+            const lookingFor = details.looking_for ? formatLookingFor(details.looking_for) : null;
+            const bio = details.description || 'Este usuário ainda não adicionou uma descrição.';
+
+            return `
+                <div class="user-card" onclick="viewProfile('${user.id}')">
+                    ${avatarHtml}
+                    <div class="user-card-name">${nickname}${age ? `, ${age}` : ''}</div>
+                    
+                    <div class="user-card-info">
+                        ${zodiac ? `<div class="user-card-detail">${zodiac}</div>` : ''}
+                        ${profession ? `<div class="user-card-detail">💼 ${profession}</div>` : ''}
+                        ${lookingFor ? `<div class="user-card-detail">🎯 ${lookingFor}</div>` : ''}
+                    </div>
+                    
+                    <div class="user-card-bio">${bio}</div>
+                    
+                    <div class="user-card-actions">
+                        <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); sendMessage('${user.id}')">
+                            💌 Mensagem
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewProfile('${user.id}')">
+                            👀 Ver Perfil
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ✅ FUNÇÃO PARA VISUALIZAR PERFIL (AGORA FUNCIONAL)
+        function viewProfile(userId) {
+            if (!isProfileComplete()) {
+                alert('📝 Complete seu perfil primeiro para ver outros perfis!');
+                window.location.href = 'painel.html';
+                return;
+            }
+            
+            // Salvar o ID do perfil a ser visualizado e redirecionar
+            localStorage.setItem('viewingProfileId', userId);
+            window.location.href = 'perfil.html';
+        }
+
+        // ✅ VERIFICAR SE PERFIL ESTÁ COMPLETO
+        function isProfileComplete() {
+            return userProfile && 
+                   userProfile.full_name && 
+                   userProfile.full_name.trim() !== '' &&
+                   userProfile.birth_date;
+        }
+
+        // ✅ ATUALIZAR ESTATÍSTICAS REAIS
+        async function updateStats() {
+            try {
+                // Total de usuários
+                const { count: totalUsers } = await supabase
+                    .from('profiles')
+                    .select('*', { count: 'exact', head: true });
+                
+                // Mensagens não lidas
+                const { count: newMessages } = await supabase
+                    .from('messages')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('receiver_id', currentUser.id)
+                    .eq('is_read', false);
+
+                document.getElementById('totalUsers').textContent = totalUsers || 0;
+                document.getElementById('newMatches').textContent = newMessages || 0;
+                document.getElementById('usersOnline').textContent = Math.floor((totalUsers || 1) * 0.3); // 30% online
+                document.getElementById('profileViews').textContent = Math.floor(Math.random() * 20); // Simulado por enquanto
+
+            } catch (error) {
+                console.error('Erro ao carregar estatísticas:', error);
+                // Valores padrão
+                document.getElementById('totalUsers').textContent = '1';
+                document.getElementById('newMatches').textContent = '0';
+                document.getElementById('usersOnline').textContent = '1';
+                document.getElementById('profileViews').textContent = '0';
+            }
+        }
+
+        // ✅ ENVIAR MENSAGEM
+        function sendMessage(userId) {
+            if (!isProfileComplete()) {
+                alert('📝 Complete seu perfil primeiro para enviar mensagens!');
+                window.location.href = 'painel.html';
+                return;
+            }
+            
+            const message = prompt('Digite sua mensagem:');
+            if (message && message.trim()) {
+                sendMessageToUser(userId, message.trim());
+            }
+        }
+
+        async function sendMessageToUser(receiverId, content) {
+            try {
+                const { error } = await supabase
+                    .from('messages')
+                    .insert([
+                        {
+                            sender_id: currentUser.id,
+                            receiver_id: receiverId,
+                            content: content
+                        }
+                    ]);
+
+                if (error) throw error;
+                
+                alert('Mensagem enviada com sucesso! 💌');
+                
+            } catch (error) {
+                console.error('Erro ao enviar mensagem:', error);
+                alert('✅ Mensagem registrada!');
+            }
+        }
+
+        // ✅ MOSTRAR ESTADO VAZIO
+        function showEmptyState(message) {
+            const usersGrid = document.getElementById('usersGrid');
+            usersGrid.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">👥</div>
+                    <h3>Nenhum usuário encontrado</h3>
+                    <p>${message}</p>
+                    <button class="btn btn-primary" onclick="window.location.href='busca.html'">
+                        🔍 Ir para Busca
+                    </button>
+                </div>
+            `;
+        }
+
+        // ✅ FUNÇÕES AUXILIARES
+        function calculateAge(birthDate) {
+            if (!birthDate) return null;
+            const today = new Date();
+            const birth = new Date(birthDate);
+            let age = today.getFullYear() - birth.getFullYear();
+            const monthDiff = today.getMonth() - birth.getMonth();
+            
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+                age--;
+            }
+            
+            return age;
+        }
+
+        function getZodiacIcon(zodiac) {
+            const icons = {
+                'aries': '♈', 'touro': '♉', 'gemeos': '♊', 'cancer': '♋',
+                'leao': '♌', 'virgem': '♍', 'libra': '♎', 'escorpiao': '♏',
+                'sagitario': '♐', 'capricornio': '♑', 'aquario': '♒', 'peixes': '♓'
+            };
+            return icons[zodiac] || '⭐';
+        }
+
+        function formatZodiac(zodiac) {
+            const names = {
+                'aries': 'Áries', 'touro': 'Touro', 'gemeos': 'Gêmeos', 'cancer': 'Câncer',
+                'leao': 'Leão', 'virgem': 'Virgem', 'libra': 'Libra', 'escorpiao': 'Escorpião',
+                'sagitario': 'Sagitário', 'capricornio': 'Capricórnio', 'aquario': 'Aquário', 'peixes': 'Peixes'
+            };
+            return names[zodiac] || zodiac;
+        }
+
+        function formatLookingFor(lookingFor) {
+            const options = {
+                'amizade': 'Amizade',
+                'namoro': 'Namoro', 
+                'relacionamento_serio': 'Relacionamento Sério',
+                'conversa': 'Apenas Conversa'
+            };
+            return options[lookingFor] || lookingFor;
+        }
+
+        // Configurar event listeners
+        function setupEventListeners() {
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+        }
+
+        // Logout
+        async function logout() {
+            try {
+                const { error } = await supabase.auth.signOut();
+                if (error) throw error;
+                
+                window.location.href = 'index.html';
+            } catch (error) {
+                console.error('Erro ao fazer logout:', error);
+                alert('Erro ao fazer logout. Tente novamente.');
+            }
+        }
+    </script>
 </body>
 </html>
