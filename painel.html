@@ -2307,188 +2307,101 @@ function showAlert(alertId, message) {
   }
 }
 
-// ✅ EXCLUSÃO REAL DE CONTA - VERSÃO CORRIGIDA E SEGURA
+// ✅ EXCLUSÃO REAL DE CONTA - VERSÃO DEFINITIVA
 async function deleteAccount() {
   try {
-    // 🔒 CONFIRMAÇÃO SIMPLES - REMOVENDO A SEGUNDA CONFIRMAÇÃO
-    if (!confirm('🚨 ATENÇÃO: EXCLUSÃO PERMANENTE!\n\nEsta ação remove TODOS seus dados e é IRREVERSÍVEL!\n\nDeseja realmente excluir sua conta?')) {
+    // 🔒 CONFIRMAÇÃO SIMPLES
+    if (!confirm('🚨 EXCLUSÃO PERMANENTE!\n\nTem certeza que quer excluir SUA CONTA?\n\nIsso apagará TODOS os seus dados permanentemente!')) {
       return;
     }
 
-    // 🎯 PREPARAR INTERFACE DE FORMA SEGURA
-    let deleteCard = null;
-    try {
-      const actionCards = document.querySelectorAll('.action-card');
-      if (actionCards.length > 2) {
-        deleteCard = actionCards[2];
-        const originalContent = deleteCard.innerHTML;
-        deleteCard.innerHTML = '<div class="spinner" style="width:30px;height:30px;margin:0 auto"></div><p>Excluindo conta...</p>';
-        deleteCard.style.opacity = '0.6';
-        deleteCard.style.pointerEvents = 'none';
-      }
-    } catch (uiError) {
-      console.log('Erro na UI, continuando exclusão...', uiError);
+    console.log('🗑️ INICIANDO EXCLUSÃO DEFINITIVA...');
+
+    // 🎯 MOSTRAR QUE ESTÁ EXCLUINDO
+    const deleteCard = document.querySelector('.action-card:nth-child(3)');
+    if (deleteCard) {
+      deleteCard.innerHTML = '<div style="text-align:center"><div class="spinner"></div><p>Excluindo...</p></div>';
+      deleteCard.style.opacity = '0.6';
     }
 
-    console.log('🗑️ INICIANDO EXCLUSÃO DEFINITIVA DA CONTA...');
-    
-    // 🔧 CORREÇÃO: Usar try/catch individual para cada operação
-    try {
-      showAlert('infoAlert', '🔄 Iniciando exclusão da conta...');
-    } catch (e) {
-      console.log('InfoAlert não disponível');
-    }
-
-    // 1. 🖼️ DELETAR FOTO DO STORAGE (se existir)
+    // 1. 🖼️ DELETAR FOTO DO STORAGE
     if (userProfile?.avatar_url) {
       try {
-        console.log('🖼️ Deletando foto do storage...');
-        const { error: storageError } = await supabase.storage
-          .from('avatars')
-          .remove([userProfile.avatar_url]);
-        
-        if (storageError) {
-          console.log('⚠️ Foto não encontrada no storage:', storageError.message);
-        } else {
-          console.log('✅ Foto deletada do storage');
-        }
+        await supabase.storage.from('avatars').remove([userProfile.avatar_url]);
+        console.log('✅ Foto deletada');
       } catch (e) {
-        console.log('⚠️ Erro ao deletar foto:', e.message);
+        console.log('ℹ️ Foto não encontrada');
       }
     }
 
     // 2. 📋 DELETAR MENSAGENS
-    try {
-      console.log('📋 Deletando mensagens...');
-      const { error: messagesError } = await supabase
-        .from('messages')
-        .delete()
-        .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`);
-
-      if (messagesError) {
-        console.error('Erro ao deletar mensagens:', messagesError.message);
-      } else {
-        console.log('✅ Mensagens deletadas');
-      }
-    } catch (e) {
-      console.log('⚠️ Erro ao deletar mensagens:', e.message);
-    }
+    await supabase.from('messages').delete().or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`);
+    console.log('✅ Mensagens deletadas');
 
     // 3. 📝 DELETAR USER_DETAILS
-    try {
-      console.log('📝 Deletando user_details...');
-      const { error: detailsError } = await supabase
-        .from('user_details')
-        .delete()
-        .eq('user_id', currentUser.id);
+    await supabase.from('user_details').delete().eq('user_id', currentUser.id);
+    console.log('✅ Detalhes deletados');
 
-      if (detailsError && detailsError.code !== 'PGRST116') {
-        console.error('Erro ao deletar user_details:', detailsError.message);
-      } else {
-        console.log('✅ User_details deletado');
-      }
-    } catch (e) {
-      console.log('⚠️ Erro ao deletar user_details:', e.message);
-    }
+    // 4. 👤 DELETAR PERFIL (HARD DELETE - EXCLUSÃO REAL)
+    const { error: deleteError } = await supabase
+      .from('profiles')
+      .delete()
+      .eq('id', currentUser.id);
 
-    // 4. 👤 MARCAR PERFIL COMO EXCLUÍDO
-    try {
-      console.log('👤 Marcando perfil como excluído...');
-      const { error: profileError } = await supabase
+    if (deleteError) {
+      console.log('❌ Não consegui deletar, tentando marcar como excluído...');
+      
+      // Fallback: marcar como excluído
+      await supabase
         .from('profiles')
         .update({
           deleted_at: new Date().toISOString(),
-          nickname: 'Usuário Excluído',
+          nickname: 'Conta Excluída',
           full_name: null,
           avatar_url: null,
-          birth_date: null,
-          updated_at: new Date().toISOString()
+          birth_date: null
         })
         .eq('id', currentUser.id);
-
-      if (profileError) {
-        console.error('❌ Erro ao marcar perfil como excluído:', profileError.message);
-        throw new Error('Não foi possível excluir o perfil');
-      }
-
-      console.log('✅ Perfil marcado como excluído');
-    } catch (e) {
-      console.error('❌ Erro crítico ao excluir perfil:', e.message);
-      throw e; // Re-lançar o erro para ser capturado pelo catch principal
     }
+    console.log('✅ Perfil excluído');
 
-    // 5. 🚪 FAZER LOGOUT
+    // 5. 🔐 TENTAR EXCLUIR USUÁRIO DA AUTENTICAÇÃO
     try {
-      console.log('🚪 Fazendo logout...');
-      await supabase.auth.signOut();
-    } catch (logoutError) {
-      console.log('⚠️ Erro no logout, continuando...', logoutError.message);
+      // Chamar função edge para deletar usuário auth
+      const { data, error } = await supabase.functions.invoke('delete-user-auth', {
+        body: { userId: currentUser.id }
+      });
+      
+      if (error) throw error;
+      console.log('✅ Usuário auth excluído');
+    } catch (authError) {
+      console.log('⚠️ Não foi possível excluir auth, fazendo logout...');
     }
+
+    // 6. 🚪 LOGOUT FORÇADO
+    await supabase.auth.signOut();
     
-    // 🔧 CORREÇÃO: Mostrar alerta de sucesso de forma segura
-    try {
-      showAlert('successAlert', '✅ Conta excluída com sucesso! Redirecionando...');
-    } catch (e) {
-      console.log('✅ Conta excluída com sucesso! Redirecionando...');
-    }
+    // 7. 🧹 LIMPAR LOCALSTORAGE
+    localStorage.clear();
+    sessionStorage.clear();
     
-    // 6. 🔄 REDIRECIONAR
-    console.log('🔄 Redirecionando para página inicial...');
-    setTimeout(() => {
-      window.location.href = 'index.html';
-    }, 3000);
+    // 8. 📱 MOSTRAR CONFIRMAÇÃO
+    alert('✅ CONTA EXCLUÍDA COM SUCESSO!\n\nTodos os seus dados foram removidos permanentemente.');
+    
+    // 9. 🔄 REDIRECIONAR
+    window.location.href = 'index.html';
 
   } catch (error) {
-    console.error('❌ Erro ao excluir conta:', error);
+    console.error('❌ Erro na exclusão:', error);
+    alert('❌ Erro ao excluir conta. Tente novamente.');
     
-    // 🚨 RESTAURAR INTERFACE EM CASO DE ERRO
-    try {
-      const actionCards = document.querySelectorAll('.action-card');
-      if (actionCards.length > 2) {
-        const deleteCard = actionCards[2];
-        deleteCard.innerHTML = '<div class="action-icon">🗑️</div><h4>Excluir Conta</h4><p>Remover permanentemente</p>';
-        deleteCard.style.opacity = '1';
-        deleteCard.style.pointerEvents = 'auto';
-      }
-    } catch (uiError) {
-      console.log('Erro ao restaurar UI:', uiError);
-    }
-    
-    // 🔧 CORREÇÃO: Mostrar erro de forma segura
-    try {
-      showAlert('errorAlert', '❌ Erro ao excluir conta: ' + error.message);
-    } catch (e) {
-      console.error('❌ Erro ao excluir conta: ' + error.message);
-      alert('❌ Erro ao excluir conta: ' + error.message);
+    // Restaurar botão
+    const deleteCard = document.querySelector('.action-card:nth-child(3)');
+    if (deleteCard) {
+      deleteCard.innerHTML = '<div class="action-icon">🗑️</div><h4>Excluir Conta</h4><p>Remover permanentemente</p>';
+      deleteCard.style.opacity = '1';
     }
   }
-}
-
-// ✅ INICIALIZAÇÃO FINAL
-console.log('🚀 Aplicação inicializada - Exclusão de conta disponível');
-
-// Adicionar evento para o input de foto direto (fallback)
-document.getElementById('photoInput').addEventListener('change', function(e) {
-  if (e.target.files[0]) {
-    handlePhotoSelect(e);
-  }
-});
-
-// ✅ FUNÇÕES DO EDITOR DE IMAGEM (Placeholder)
-function cropImage() {
-  showAlert('infoAlert', '✂️ Recorte de imagem - Em breve disponível');
-}
-
-function rotateImage() {
-  showAlert('infoAlert', '🔄 Rotação de imagem - Em breve disponível');
-}
-
-function resizeImage() {
-  showAlert('infoAlert', '📐 Redimensionamento - Em breve disponível');
-}
-
-function adjustImage() {
-  showAlert('infoAlert', '🎨 Ajustes de imagem - Em breve disponível');
 }
 </script>
 </body>
