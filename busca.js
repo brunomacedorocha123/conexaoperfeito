@@ -127,6 +127,18 @@ function getCurrentFilters() {
     const selectedInterests = [];
     for (let option of interestsSelect.options) {
         if (option.selected) {
+            // Se selecionou "Não importa", ignora os outros interesses
+            if (option.value === 'nao_importa') {
+                return {
+                    ageMin: ageMin ? parseInt(ageMin) : null,
+                    ageMax: ageMax ? parseInt(ageMax) : null,
+                    gender: gender || null,
+                    lookingFor: lookingFor || null,
+                    location: location || null,
+                    zodiac: zodiac || null,
+                    interests: null // null significa "não importa"
+                };
+            }
             selectedInterests.push(option.value);
         }
     }
@@ -142,7 +154,7 @@ function getCurrentFilters() {
     };
 }
 
-// Buscar usuários com filtros - CORREÇÃO TOTAL
+// Buscar usuários com filtros
 async function searchUsers() {
     try {
         console.log('🔍 Aplicando filtros:', currentFilters);
@@ -171,7 +183,7 @@ async function searchUsers() {
 
         console.log('📊 Total de usuários no banco:', allUsers?.length);
 
-        // FILTRAGEM ESTRITA - CORRIGIDA
+        // FILTRAGEM ESTRITA
         let filteredUsers = allUsers || [];
         
         // 1. PRIMEIRO: Remover usuários sem dados básicos ESSENCIAIS
@@ -237,8 +249,9 @@ async function searchUsers() {
             console.log(`📍 Após filtro de localização:`, filteredUsers.length);
         }
 
-        // Filtro de interesses - EXIGE pelo menos UM interesse em comum
-        if (currentFilters.interests && currentFilters.interests.length > 0) {
+        // Filtro de interesses - CORREÇÃO: "Não importa" ignora filtro de interesses
+        if (currentFilters.interests) {
+            // Se interests é null, significa que selecionou "Não importa" - não filtra por interesses
             filteredUsers = filteredUsers.filter(user => {
                 const userInterests = user.user_details?.interests || [];
                 // Usuário deve ter PELO MENOS UM dos interesses selecionados
@@ -248,6 +261,7 @@ async function searchUsers() {
             });
             console.log(`🎨 Após filtro de interesses:`, filteredUsers.length);
         }
+        // Se interests é null (não importa), simplesmente não aplica o filtro
 
         console.log('🎉 RESULTADO FINAL:', filteredUsers.length, 'usuários');
 
@@ -267,7 +281,7 @@ async function searchUsers() {
     }
 }
 
-// Exibir usuários - CORRIGIDO para não mostrar cards vazios
+// Exibir usuários
 function displayUsers(users) {
     const usersGrid = document.getElementById('usersGrid');
     const noResults = document.getElementById('noResults');
@@ -502,8 +516,7 @@ function calculateAge(birthDate) {
 function formatGender(gender) {
     const genders = {
         'feminino': 'Feminino',
-        'masculino': 'Masculino',
-        'nao_informar': 'Prefiro não informar'
+        'masculino': 'Masculino'
     };
     return genders[gender] || gender;
 }
