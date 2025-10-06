@@ -475,294 +475,7 @@
 <body>
     <!-- Header -->
     <header>
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <a href="home.html">
-                        <span class="logo-icon">💑</span>
-                        <h1>Conexão Perfeita</h1>
-                    </a>
-                </div>
-                <div class="user-menu">
-                    <div class="user-info">
-                        <div class="user-avatar" id="userAvatar">U</div>
-                        <span id="userNickname">Usuário</span>
-                    </div>
-                    <a href="home.html" class="btn btn-outline">Voltar para Home</a>
-                    <button class="btn btn-outline" id="logoutBtn">Sair</button>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="container">
-            <!-- Alert Messages -->
-            <div class="alert alert-success" id="successAlert" style="display: none;"></div>
-            <div class="alert alert-error" id="errorAlert" style="display: none;"></div>
-
-            <!-- Profile Header -->
-            <section class="profile-header">
-                <div class="profile-avatar" id="profileAvatar">U</div>
-                <h2 id="profileName">Carregando...</h2>
-                <div class="profile-badge" id="profileBadge">Perfil em Andamento</div>
-                <p>Complete seu perfil para aumentar suas conexões</p>
-            </section>
-
-            <!-- Profile Sections -->
-            <div class="profile-sections">
-                <!-- Informações Básicas -->
-                <section class="profile-section">
-                    <div class="section-header">
-                        <h3>Informações Básicas</h3>
-                        <button class="edit-btn" onclick="toggleEdit('basicInfo')">
-                            <span>✏️</span> Editar
-                        </button>
-                    </div>
-
-                    <!-- Display Mode -->
-                    <div id="basicInfoDisplay">
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <span class="info-label">Nome Completo</span>
-                                <span class="info-value" id="displayFullName">Não informado</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">E-mail</span>
-                                <span class="info-value" id="displayEmail">Carregando...</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Data de Nascimento</span>
-                                <span class="info-value" id="displayBirthDate">Não informada</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Idade</span>
-                                <span class="info-value" id="displayAge">-</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Edit Mode -->
-                    <div id="basicInfoEdit" class="hidden">
-                        <form id="basicInfoForm">
-                            <div class="form-group">
-                                <label for="fullName">Nome Completo</label>
-                                <input type="text" id="fullName" class="form-control" value="">
-                            </div>
-                            <div class="form-group">
-                                <label for="birthDate">Data de Nascimento</label>
-                                <input type="date" id="birthDate" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
-                                <button type="button" class="btn btn-secondary" onclick="toggleEdit('basicInfo')">Cancelar</button>
-                            </div>
-                        </form>
-                    </div>
-                </section>
-
-                <!-- Informações de Contato -->
-                <section class="profile-section">
-                    <div class="section-header">
-                        <h3>Informações de Contato</h3>
-                        <button class="edit-btn" onclick="toggleEdit('contactInfo')">
-                            <span>✏️</span> Editar
-                        </button>
-                    </div>
-
-                    <!-- Display Mode -->
-                    <div id="contactInfoDisplay">
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <span class="info-label">Telefone</span>
-                                <span class="info-value" id="displayPhone">Não informado</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Endereço</span>
-                                <span class="info-value" id="displayAddress">Não informado</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Edit Mode -->
-                    <div id="contactInfoEdit" class="hidden">
-                        <form id="contactInfoForm">
-                            <div class="form-group">
-                                <label for="phone">Telefone</label>
-                                <input type="tel" id="phone" class="form-control" placeholder="(11) 99999-9999">
-                            </div>
-                            <div class="form-group">
-                                <label for="address">Endereço</label>
-                                <input type="text" id="address" class="form-control" placeholder="Cidade, Estado">
-                                <div class="form-text">Apenas cidade e estado para sua segurança</div>
-                            </div>
-                            <div class="form-group">
-                                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
-                                <button type="button" class="btn btn-secondary" onclick="toggleEdit('contactInfo')">Cancelar</button>
-                            </div>
-                        </form>
-                    </div>
-                </section>
-
-                <!-- Interesses e Preferências -->
-                <section class="profile-section">
-                    <div class="section-header">
-                        <h3>Interesses e Preferências</h3>
-                        <button class="edit-btn" onclick="toggleEdit('preferencesInfo')">
-                            <span>✏️</span> Editar
-                        </button>
-                    </div>
-
-                    <!-- Display Mode -->
-                    <div id="preferencesInfoDisplay">
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <span class="info-label">Gênero</span>
-                                <span class="info-value" id="displayGender">Não informado</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Interesses</span>
-                                <span class="info-value" id="displayInterests">Não informados</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Procuro por</span>
-                                <span class="info-value" id="displayLookingFor">Não informado</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Edit Mode -->
-                    <div id="preferencesInfoEdit" class="hidden">
-                        <form id="preferencesInfoForm">
-                            <div class="form-group">
-                                <label for="gender">Gênero</label>
-                                <select id="gender" class="form-control">
-                                    <option value="">Selecione...</option>
-                                    <option value="feminino">Feminino</option>
-                                    <option value="masculino">Masculino</option>
-                                    <option value="nao_informar">Prefiro não informar</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Interesses</label>
-                                <div class="checkbox-group">
-                                    <div class="checkbox-item">
-                                        <input type="checkbox" id="interest_movies" value="Cinema">
-                                        <label for="interest_movies">Cinema</label>
-                                    </div>
-                                    <div class="checkbox-item">
-                                        <input type="checkbox" id="interest_music" value="Música">
-                                        <label for="interest_music">Música</label>
-                                    </div>
-                                    <div class="checkbox-item">
-                                        <input type="checkbox" id="interest_sports" value="Esportes">
-                                        <label for="interest_sports">Esportes</label>
-                                    </div>
-                                    <div class="checkbox-item">
-                                        <input type="checkbox" id="interest_travel" value="Viagens">
-                                        <label for="interest_travel">Viagens</label>
-                                    </div>
-                                    <div class="checkbox-item">
-                                        <input type="checkbox" id="interest_reading" value="Leitura">
-                                        <label for="interest_reading">Leitura</label>
-                                    </div>
-                                    <div class="checkbox-item">
-                                        <input type="checkbox" id="interest_cooking" value="Culinária">
-                                        <label for="interest_cooking">Culinária</label>
-                                    </div>
-                                    <div class="checkbox-item">
-                                        <input type="checkbox" id="interest_games" value="Jogos">
-                                        <label for="interest_games">Jogos</label>
-                                    </div>
-                                    <div class="checkbox-item">
-                                        <input type="checkbox" id="interest_art" value="Arte">
-                                        <label for="interest_art">Arte</label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="lookingFor">O que procuro</label>
-                                <select id="lookingFor" class="form-control">
-                                    <option value="">Selecione...</option>
-                                    <option value="amizade">Amizade</option>
-                                    <option value="namoro">Namoro</option>
-                                    <option value="relacionamento_serio">Relacionamento Sério</option>
-                                    <option value="conversa">Apenas Conversa</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
-                                <button type="button" class="btn btn-secondary" onclick="toggleEdit('preferencesInfo')">Cancelar</button>
-                            </div>
-                        </form>
-                    </div>
-                </section>
-
-                <!-- Descrição Pessoal -->
-                <section class="profile-section">
-                    <div class="section-header">
-                        <h3>Descrição Pessoal</h3>
-                        <button class="edit-btn" onclick="toggleEdit('descriptionInfo')">
-                            <span>✏️</span> Editar
-                        </button>
-                    </div>
-
-                    <!-- Display Mode -->
-                    <div id="descriptionInfoDisplay">
-                        <div class="info-item">
-                            <span class="info-label">Sobre mim</span>
-                            <span class="info-value" id="displayDescription">Nenhuma descrição adicionada ainda.</span>
-                        </div>
-                    </div>
-
-                    <!-- Edit Mode -->
-                    <div id="descriptionInfoEdit" class="hidden">
-                        <form id="descriptionInfoForm">
-                            <div class="form-group">
-                                <label for="description">Descreva-se brevemente</label>
-                                <textarea id="description" class="form-control" rows="4" placeholder="Conte um pouco sobre você, seus hobbies, objetivos... (máximo 100 caracteres)"></textarea>
-                                <div class="char-count" id="charCount">0/100 caracteres</div>
-                            </div>
-                            <div class="form-group">
-                                <button type="submit" class="btn btn-primary">Salvar Descrição</button>
-                                <button type="button" class="btn btn-secondary" onclick="toggleEdit('descriptionInfo')">Cancelar</button>
-                            </div>
-                        </form>
-                    </div>
-                </section>
-            </div>
-
-            <!-- Profile Actions -->
-            <section class="profile-actions">
-                <h3>Ações do Perfil</h3>
-                <div class="actions-grid">
-                    <a href="home.html" class="action-card">
-                        <div class="action-icon">🏠</div>
-                        <h4>Voltar para Home</h4>
-                        <p>Retornar à página principal</p>
-                    </a>
-                    <a href="#" class="action-card" onclick="exportProfileData()">
-                        <div class="action-icon">📥</div>
-                        <h4>Exportar Dados</h4>
-                        <p>Baixar suas informações</p>
-                    </a>
-                    <a href="#" class="action-card" onclick="deleteAccount()">
-                        <div class="action-icon">🗑️</div>
-                        <h4>Excluir Conta</h4>
-                        <p>Remover permanentemente</p>
-                    </a>
-                </div>
-            </section>
-        </div>
-    </main>
-
-    <!-- Footer -->
-    <footer>
-        <div class="container">
+       <div class="container">
             <div class="footer-content">
                 <div class="footer-column">
                     <h3>Conexão Perfeita</h3>
@@ -791,7 +504,381 @@
         </div>
     </footer>
 
-   <script>
+    <!-- ================================================== -->
+    <!-- NOVAS SEÇÕES ADICIONADAS -->
+    <!-- ================================================== -->
+
+    <!-- Seção: Identidade e Características -->
+    <section class="profile-section">
+        <div class="section-header">
+            <h3>♋ Identidade e Características</h3>
+            <button class="edit-btn" onclick="toggleEdit('identityInfo')">
+                <span>✏️</span> Editar
+            </button>
+        </div>
+
+        <!-- Display Mode -->
+        <div id="identityInfoDisplay">
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Signo</span>
+                    <span class="info-value" id="displayZodiac">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Orientação Sexual</span>
+                    <span class="info-value" id="displaySexualOrientation">Não informado</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Escolaridade</span>
+                    <span class="info-value" id="displayEducation">Não informado</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Profissão</span>
+                    <span class="info-value" id="displayOccupation">Não informado</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Mode -->
+        <div id="identityInfoEdit" class="hidden">
+            <form id="identityInfoForm">
+                <div class="form-group">
+                    <label for="sexualOrientation">Orientação Sexual</label>
+                    <select id="sexualOrientation" class="form-control">
+                        <option value="">Selecione...</option>
+                        <option value="heterossexual">Heterossexual</option>
+                        <option value="homossexual">Homossexual</option>
+                        <option value="bissexual">Bissexual</option>
+                        <option value="assexual">Assexual</option>
+                        <option value="pansexual">Pansexual</option>
+                        <option value="outro">Outro</option>
+                        <option value="nao_informar">Prefiro não informar</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="education">Escolaridade</label>
+                    <select id="education" class="form-control">
+                        <option value="">Selecione...</option>
+                        <option value="ensino_fundamental">Ensino Fundamental</option>
+                        <option value="ensino_medio">Ensino Médio</option>
+                        <option value="tecnologo">Tecnólogo</option>
+                        <option value="graduacao">Graduação</option>
+                        <option value="pos_graduacao">Pós-graduação</option>
+                        <option value="mestrado">Mestrado</option>
+                        <option value="doutorado">Doutorado</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="occupation">Profissão</label>
+                    <input type="text" id="occupation" class="form-control" placeholder="Ex: Engenheiro, Professor, Médico...">
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                    <button type="button" class="btn btn-secondary" onclick="toggleEdit('identityInfo')">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Seção: Estilo de Vida -->
+    <section class="profile-section">
+        <div class="section-header">
+            <h3>🌿 Estilo de Vida</h3>
+            <button class="edit-btn" onclick="toggleEdit('lifestyleInfo')">
+                <span>✏️</span> Editar
+            </button>
+        </div>
+
+        <!-- Display Mode -->
+        <div id="lifestyleInfoDisplay">
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Fumante</span>
+                    <span class="info-value" id="displaySmoking">Não informado</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Bebida Alcoólica</span>
+                    <span class="info-value" id="displayDrinking">Não informado</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Atividade Física</span>
+                    <span class="info-value" id="displayExercise">Não informado</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Animais de Estimação</span>
+                    <span class="info-value" id="displayPets">Não informado</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Mode -->
+        <div id="lifestyleInfoEdit" class="hidden">
+            <form id="lifestyleInfoForm">
+                <div class="form-group">
+                    <label for="smoking">Fumante</label>
+                    <select id="smoking" class="form-control">
+                        <option value="">Selecione...</option>
+                        <option value="nao">Não</option>
+                        <option value="sim">Sim</option>
+                        <option value="socialmente">Socialmente</option>
+                        <option value="parei">Parei de fumar</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="drinking">Bebida Alcoólica</label>
+                    <select id="drinking" class="form-control">
+                        <option value="">Selecione...</option>
+                        <option value="nao">Não bebo</option>
+                        <option value="socialmente">Socialmente</option>
+                        <option value="moderadamente">Moderadamente</option>
+                        <option value="frequentemente">Frequentemente</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="exercise">Atividade Física</label>
+                    <select id="exercise" class="form-control">
+                        <option value="">Selecione...</option>
+                        <option value="sedentario">Sedentário</option>
+                        <option value="leve">Leve (caminhadas)</option>
+                        <option value="moderado">Moderado (1-3x/semana)</option>
+                        <option value="ativo">Ativo (4+ vezes/semana)</option>
+                        <option value="atleta">Atleta</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="hasPets">Tem animais de estimação?</label>
+                    <select id="hasPets" class="form-control" onchange="togglePetsDescription()">
+                        <option value="">Selecione...</option>
+                        <option value="sim">Sim</option>
+                        <option value="nao">Não</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="petsDescriptionGroup" style="display: none;">
+                    <label for="petsDescription">Quais animais você tem?</label>
+                    <input type="text" id="petsDescription" class="form-control" placeholder="Ex: 2 gatos, 1 cachorro, 1 pássaro...">
+                    <div class="form-text">Descreva brevemente seus animais de estimação</div>
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                    <button type="button" class="btn btn-secondary" onclick="toggleEdit('lifestyleInfo')">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Seção: Características Físicas (Opcional) -->
+    <section class="profile-section">
+        <div class="section-header">
+            <h3>💪 Características Físicas</h3>
+            <button class="edit-btn" onclick="toggleEdit('physicalInfo')">
+                <span>✏️</span> Editar
+            </button>
+        </div>
+
+        <!-- Display Mode -->
+        <div id="physicalInfoDisplay">
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Altura</span>
+                    <span class="info-value" id="displayHeight">Não informado</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Tipo de Corpo</span>
+                    <span class="info-value" id="displayBodyType">Não informado</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Cor dos Olhos</span>
+                    <span class="info-value" id="displayEyeColor">Não informado</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Cor do Cabelo</span>
+                    <span class="info-value" id="displayHairColor">Não informado</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Mode -->
+        <div id="physicalInfoEdit" class="hidden">
+            <form id="physicalInfoForm">
+                <div class="form-group">
+                    <label for="height">Altura (cm)</label>
+                    <input type="number" id="height" class="form-control" placeholder="Ex: 175" min="100" max="250">
+                </div>
+                
+                <div class="form-group">
+                    <label for="bodyType">Tipo de Corpo</label>
+                    <select id="bodyType" class="form-control">
+                        <option value="">Selecione...</option>
+                        <option value="magro">Magro</option>
+                        <option value="atlético">Atlético</option>
+                        <option value="mediano">Mediano</option>
+                        <option value="cheio">Cheio</option>
+                        <option value="musculoso">Musculoso</option>
+                        <option value="nao_informar">Prefiro não informar</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="eyeColor">Cor dos Olhos</label>
+                    <select id="eyeColor" class="form-control">
+                        <option value="">Selecione...</option>
+                        <option value="castanho">Castanho</option>
+                        <option value="preto">Preto</option>
+                        <option value="azul">Azul</option>
+                        <option value="verde">Verde</option>
+                        <option value="cinza">Cinza</option>
+                        <option value="avelã">Avelã</option>
+                        <option value="nao_informar">Prefiro não informar</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="hairColor">Cor do Cabelo</label>
+                    <select id="hairColor" class="form-control">
+                        <option value="">Selecione...</option>
+                        <option value="preto">Preto</option>
+                        <option value="castanho">Castanho</option>
+                        <option value="loiro">Loiro</option>
+                        <option value="ruivo">Ruivo</option>
+                        <option value="grisalho">Grisalho</option>
+                        <option value="colorido">Colorido</option>
+                        <option value="careca">Careca</option>
+                        <option value="nao_informar">Prefiro não informar</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                    <button type="button" class="btn btn-secondary" onclick="toggleEdit('physicalInfo')">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Seção: Controles de Privacidade -->
+    <section class="profile-section">
+        <div class="section-header">
+            <h3>🔒 Controles de Privacidade</h3>
+            <p>Escolha o que mostrar publicamente</p>
+        </div>
+
+        <div class="privacy-controls">
+            <div class="privacy-item">
+                <div class="privacy-info">
+                    <strong>Idade</strong>
+                    <span>Mostrar minha idade publicamente</span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="privacyAge" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="privacy-item">
+                <div class="privacy-info">
+                    <strong>Localização</strong>
+                    <span>Mostrar minha cidade/estado</span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="privacyLocation" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="privacy-item">
+                <div class="privacy-info">
+                    <strong>Ocupação</strong>
+                    <span>Mostrar minha profissão</span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="privacyOccupation" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="privacy-item">
+                <div class="privacy-info">
+                    <strong>Estilo de Vida</strong>
+                    <span>Mostrar hábitos (fumo, bebida, etc)</span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="privacyLifestyle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 1.5rem;">
+            <button class="btn btn-primary" onclick="savePrivacySettings()">
+                💾 Salvar Configurações de Privacidade
+            </button>
+        </div>
+    </section>
+
+    <!-- Profile Actions (já existente - manter no final) -->
+    <section class="profile-actions">
+        <h3>Ações do Perfil</h3>
+        <div class="actions-grid">
+            <a href="home.html" class="action-card">
+                <div class="action-icon">🏠</div>
+                <h4>Voltar para Home</h4>
+                <p>Retornar à página principal</p>
+            </a>
+            <a href="#" class="action-card" onclick="exportProfileData()">
+                <div class="action-icon">📥</div>
+                <h4>Exportar Dados</h4>
+                <p>Baixar suas informações</p>
+            </a>
+            <a href="#" class="action-card" onclick="deleteAccount()">
+                <div class="action-icon">🗑️</div>
+                <h4>Excluir Conta</h4>
+                <p>Remover permanentemente</p>
+            </a>
+        </div>
+    </section>
+</div>
+</main>
+
+<footer>
+    <!-- Footer existente - manter igual -->
+    <div class="container">
+        <div class="footer-content">
+            <div class="footer-column">
+                <h3>Conexão Perfeita</h3>
+                <p>Uma plataforma segura e discreta para conectar corações e construir relacionamentos genuínos.</p>
+            </div>
+            <div class="footer-column">
+                <h3>Links Rápidos</h3>
+                <ul>
+                    <li><a href="index.html">Página Inicial</a></li>
+                    <li><a href="home.html">Home</a></li>
+                    <li><a href="#depoimentos">Depoimentos</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Suporte</h3>
+                <ul>
+                    <li><a href="#">Central de Ajuda</a></li>
+                    <li><a href="#">Política de Privacidade</a></li>
+                    <li><a href="#">Termos de Uso</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="copyright">
+            <p>&copy; 2023 Conexão Perfeita Amor. Todos os direitos reservados.</p>
+        </div>
+    </div>
+</footer>
+
+  <script>
     // Configuração do Supabase
     const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
@@ -830,12 +917,12 @@
         }
     }
 
-    // ✅ CARREGAR DADOS DO USUÁRIO - VERSÃO CORRIGIDA
+    // ✅ CARREGAR DADOS DO USUÁRIO - ATUALIZADO
     async function loadUserData() {
         try {
             console.log('🔄 Carregando dados do usuário...');
             
-            // ✅ PRIMEIRO: Buscar dados do Auth (onde estão nickname e dados básicos)
+            // ✅ PRIMEIRO: Buscar dados do Auth
             const { data: { user } } = await supabase.auth.getUser();
             
             // ✅ SEGUNDO: Tentar buscar perfil da tabela profiles
@@ -847,14 +934,13 @@
 
             if (profileError) {
                 console.log('⚠️ Perfil não encontrado na tabela, criando perfil básico...');
-                // Se não existe perfil, criar um com dados do Auth
                 await createBasicProfile();
                 userProfile = await getProfileData();
             } else {
                 userProfile = profile;
             }
 
-            // ✅ TERCEIRO: Buscar detalhes complementares
+            // ✅ TERCEIRO: Buscar detalhes complementares (AGORA COM NOVOS CAMPOS)
             const { data: details, error: detailsError } = await supabase
                 .from('user_details')
                 .select('*')
@@ -871,6 +957,7 @@
 
             await updateProfileDisplay();
             updateProfileForms();
+            updatePrivacySettings();
 
         } catch (error) {
             console.error('❌ Erro ao carregar dados do usuário:', error);
@@ -900,7 +987,6 @@
 
             if (error) {
                 console.error('❌ Erro ao criar perfil:', error);
-                // Se der erro de política, tentar criar user_details primeiro
                 await createUserDetails();
                 throw error;
             }
@@ -921,12 +1007,23 @@
                 .insert([
                     {
                         user_id: currentUser.id,
+                        privacy_settings: {
+                            show_age: true,
+                            show_location: true,
+                            show_interests: true,
+                            show_looking_for: true,
+                            show_description: true,
+                            show_gender: true,
+                            show_education: true,
+                            show_occupation: true,
+                            show_lifestyle: true
+                        },
                         created_at: new Date().toISOString(),
                         updated_at: new Date().toISOString()
                     }
                 ]);
 
-            if (error && error.code !== '23505') { // Ignore duplicate key errors
+            if (error && error.code !== '23505') {
                 console.error('Erro ao criar user_details:', error);
             }
         } catch (error) {
@@ -946,10 +1043,10 @@
         return profile;
     }
 
-    // ✅ ATUALIZAR DISPLAY DO PERFIL - CORRIGIDO (AGORA É ASYNC)
+    // ✅ ATUALIZAR DISPLAY DO PERFIL - ATUALIZADO COM NOVOS CAMPOS
     async function updateProfileDisplay() {
         try {
-            // ✅ BUSCAR NICKNAME DO AUTH (SEM DEPENDER DA TABELA PROFILES)
+            // ✅ BUSCAR NICKNAME DO AUTH
             const { data: { user } } = await supabase.auth.getUser();
             const nickname = user.user_metadata?.nickname || user.email.split('@')[0];
             
@@ -959,7 +1056,7 @@
             document.getElementById('profileAvatar').textContent = nickname.charAt(0).toUpperCase();
             document.getElementById('profileName').textContent = nickname;
 
-            // Informações básicas
+            // Informações básicas (já existentes)
             document.getElementById('displayFullName').textContent = userProfile?.full_name || user.user_metadata?.full_name || 'Não informado';
             document.getElementById('displayFullName').className = (userProfile?.full_name || user.user_metadata?.full_name) ? 'info-value' : 'info-value empty';
             
@@ -971,14 +1068,14 @@
             document.getElementById('displayAge').textContent = userProfile?.birth_date ? 
                 calculateAge(userProfile.birth_date) + ' anos' : '-';
 
-            // Informações de contato
+            // Informações de contato (já existentes)
             document.getElementById('displayPhone').textContent = userDetails.phone || 'Não informado';
             document.getElementById('displayPhone').className = userDetails.phone ? 'info-value' : 'info-value empty';
             
             document.getElementById('displayAddress').textContent = userDetails.address || 'Não informado';
             document.getElementById('displayAddress').className = userDetails.address ? 'info-value' : 'info-value empty';
 
-            // Preferências
+            // Preferências (já existentes)
             document.getElementById('displayGender').textContent = formatGender(userDetails.gender) || 'Não informado';
             document.getElementById('displayGender').className = userDetails.gender ? 'info-value' : 'info-value empty';
             
@@ -989,9 +1086,57 @@
             document.getElementById('displayLookingFor').textContent = formatLookingFor(userDetails.looking_for) || 'Não informado';
             document.getElementById('displayLookingFor').className = userDetails.looking_for ? 'info-value' : 'info-value empty';
 
-            // Descrição
+            // Descrição (já existente)
             document.getElementById('displayDescription').textContent = userDetails.description || 'Nenhuma descrição adicionada ainda.';
             document.getElementById('displayDescription').className = userDetails.description ? 'info-value' : 'info-value empty';
+
+            // ✅ NOVOS CAMPOS: Identidade e Características
+            document.getElementById('displayZodiac').textContent = userProfile?.birth_date ? 
+                calculateZodiac(userProfile.birth_date) : '-';
+            document.getElementById('displayZodiac').className = userProfile?.birth_date ? 'info-value' : 'info-value empty';
+            
+            document.getElementById('displaySexualOrientation').textContent = formatSexualOrientation(userDetails.sexual_orientation) || 'Não informado';
+            document.getElementById('displaySexualOrientation').className = userDetails.sexual_orientation ? 'info-value' : 'info-value empty';
+            
+            document.getElementById('displayEducation').textContent = formatEducation(userDetails.education) || 'Não informado';
+            document.getElementById('displayEducation').className = userDetails.education ? 'info-value' : 'info-value empty';
+            
+            document.getElementById('displayOccupation').textContent = userDetails.occupation || 'Não informado';
+            document.getElementById('displayOccupation').className = userDetails.occupation ? 'info-value' : 'info-value empty';
+
+            // ✅ NOVOS CAMPOS: Estilo de Vida
+            document.getElementById('displaySmoking').textContent = formatSmoking(userDetails.smoking) || 'Não informado';
+            document.getElementById('displaySmoking').className = userDetails.smoking ? 'info-value' : 'info-value empty';
+            
+            document.getElementById('displayDrinking').textContent = formatDrinking(userDetails.drinking) || 'Não informado';
+            document.getElementById('displayDrinking').className = userDetails.drinking ? 'info-value' : 'info-value empty';
+            
+            document.getElementById('displayExercise').textContent = formatExercise(userDetails.exercise) || 'Não informado';
+            document.getElementById('displayExercise').className = userDetails.exercise ? 'info-value' : 'info-value empty';
+            
+            // Animais de estimação
+            let petsDisplay = 'Não informado';
+            if (userDetails.has_pets === true) {
+                petsDisplay = userDetails.pets_description || 'Sim';
+            } else if (userDetails.has_pets === false) {
+                petsDisplay = 'Não';
+            }
+            document.getElementById('displayPets').textContent = petsDisplay;
+            document.getElementById('displayPets').className = userDetails.has_pets !== undefined ? 'info-value' : 'info-value empty';
+
+            // ✅ NOVOS CAMPOS: Características Físicas
+            document.getElementById('displayHeight').textContent = userDetails.height ? 
+                userDetails.height + ' cm' : 'Não informado';
+            document.getElementById('displayHeight').className = userDetails.height ? 'info-value' : 'info-value empty';
+            
+            document.getElementById('displayBodyType').textContent = formatBodyType(userDetails.body_type) || 'Não informado';
+            document.getElementById('displayBodyType').className = userDetails.body_type ? 'info-value' : 'info-value empty';
+            
+            document.getElementById('displayEyeColor').textContent = formatEyeColor(userDetails.eye_color) || 'Não informado';
+            document.getElementById('displayEyeColor').className = userDetails.eye_color ? 'info-value' : 'info-value empty';
+            
+            document.getElementById('displayHairColor').textContent = formatHairColor(userDetails.hair_color) || 'Não informado';
+            document.getElementById('displayHairColor').className = userDetails.hair_color ? 'info-value' : 'info-value empty';
 
             // Atualizar badge do perfil
             updateProfileBadge();
@@ -1001,29 +1146,56 @@
         }
     }
 
-    // Atualizar formulários com dados existentes
+    // Atualizar formulários com dados existentes - ATUALIZADO
     function updateProfileForms() {
-        // Formulário de informações básicas
+        // Formulário de informações básicas (já existente)
         document.getElementById('fullName').value = userProfile?.full_name || '';
         document.getElementById('birthDate').value = userProfile?.birth_date || '';
 
-        // Formulário de contato
+        // Formulário de contato (já existente)
         document.getElementById('phone').value = userDetails.phone || '';
         document.getElementById('address').value = userDetails.address || '';
 
-        // Formulário de preferências
+        // Formulário de preferências (já existente)
         document.getElementById('gender').value = userDetails.gender || '';
         document.getElementById('lookingFor').value = userDetails.looking_for || '';
-
-        // Checkboxes de interesses
-        const interests = userDetails.interests || [];
         document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-            checkbox.checked = interests.includes(checkbox.value);
+            checkbox.checked = (userDetails.interests || []).includes(checkbox.value);
         });
 
-        // Descrição
+        // Descrição (já existente)
         document.getElementById('description').value = userDetails.description || '';
         updateCharCount();
+
+        // ✅ NOVOS FORMULÁRIOS: Identidade e Características
+        document.getElementById('sexualOrientation').value = userDetails.sexual_orientation || '';
+        document.getElementById('education').value = userDetails.education || '';
+        document.getElementById('occupation').value = userDetails.occupation || '';
+
+        // ✅ NOVOS FORMULÁRIOS: Estilo de Vida
+        document.getElementById('smoking').value = userDetails.smoking || '';
+        document.getElementById('drinking').value = userDetails.drinking || '';
+        document.getElementById('exercise').value = userDetails.exercise || '';
+        document.getElementById('hasPets').value = userDetails.has_pets !== undefined ? 
+            (userDetails.has_pets ? 'sim' : 'nao') : '';
+        document.getElementById('petsDescription').value = userDetails.pets_description || '';
+        togglePetsDescription(); // Atualizar visibilidade do campo
+
+        // ✅ NOVOS FORMULÁRIOS: Características Físicas
+        document.getElementById('height').value = userDetails.height || '';
+        document.getElementById('bodyType').value = userDetails.body_type || '';
+        document.getElementById('eyeColor').value = userDetails.eye_color || '';
+        document.getElementById('hairColor').value = userDetails.hair_color || '';
+    }
+
+    // ✅ ATUALIZAR CONFIGURAÇÕES DE PRIVACIDADE
+    function updatePrivacySettings() {
+        const privacy = userDetails.privacy_settings || {};
+        
+        document.getElementById('privacyAge').checked = privacy.show_age !== false;
+        document.getElementById('privacyLocation').checked = privacy.show_location !== false;
+        document.getElementById('privacyOccupation').checked = privacy.show_occupation !== false;
+        document.getElementById('privacyLifestyle').checked = privacy.show_lifestyle !== false;
     }
 
     // Configurar contador de caracteres
@@ -1041,7 +1213,123 @@
         charCount.className = count > 100 ? 'char-count warning' : 'char-count';
     }
 
-    // Funções auxiliares
+    // ✅ FUNÇÕES DE FORMATAÇÃO PARA NOVOS CAMPOS
+    function calculateZodiac(birthDate) {
+        const date = new Date(birthDate);
+        const day = date.getDate();
+        const month = date.getMonth() + 1;
+        
+        if ((month == 1 && day <= 20) || (month == 12 && day >= 22)) return 'Capricórnio ♑';
+        if ((month == 1 && day >= 21) || (month == 2 && day <= 18)) return 'Aquário ♒';
+        if ((month == 2 && day >= 19) || (month == 3 && day <= 20)) return 'Peixes ♓';
+        if ((month == 3 && day >= 21) || (month == 4 && day <= 20)) return 'Áries ♈';
+        if ((month == 4 && day >= 21) || (month == 5 && day <= 20)) return 'Touro ♉';
+        if ((month == 5 && day >= 21) || (month == 6 && day <= 20)) return 'Gêmeos ♊';
+        if ((month == 6 && day >= 21) || (month == 7 && day <= 22)) return 'Câncer ♋';
+        if ((month == 7 && day >= 23) || (month == 8 && day <= 22)) return 'Leão ♌';
+        if ((month == 8 && day >= 23) || (month == 9 && day <= 22)) return 'Virgem ♍';
+        if ((month == 9 && day >= 23) || (month == 10 && day <= 22)) return 'Libra ♎';
+        if ((month == 10 && day >= 23) || (month == 11 && day <= 21)) return 'Escorpião ♏';
+        return 'Sagitário ♐';
+    }
+
+    function formatSexualOrientation(orientation) {
+        const orientations = {
+            'heterossexual': 'Heterossexual',
+            'homossexual': 'Homossexual',
+            'bissexual': 'Bissexual',
+            'assexual': 'Assexual',
+            'pansexual': 'Pansexual',
+            'outro': 'Outro',
+            'nao_informar': 'Prefiro não informar'
+        };
+        return orientations[orientation] || orientation;
+    }
+
+    function formatEducation(education) {
+        const levels = {
+            'ensino_fundamental': 'Ensino Fundamental',
+            'ensino_medio': 'Ensino Médio',
+            'tecnologo': 'Tecnólogo',
+            'graduacao': 'Graduação',
+            'pos_graduacao': 'Pós-graduação',
+            'mestrado': 'Mestrado',
+            'doutorado': 'Doutorado'
+        };
+        return levels[education] || education;
+    }
+
+    function formatSmoking(smoking) {
+        const options = {
+            'nao': 'Não',
+            'sim': 'Sim',
+            'socialmente': 'Socialmente',
+            'parei': 'Parei de fumar'
+        };
+        return options[smoking] || smoking;
+    }
+
+    function formatDrinking(drinking) {
+        const options = {
+            'nao': 'Não bebo',
+            'socialmente': 'Socialmente',
+            'moderadamente': 'Moderadamente',
+            'frequentemente': 'Frequentemente'
+        };
+        return options[drinking] || drinking;
+    }
+
+    function formatExercise(exercise) {
+        const options = {
+            'sedentario': 'Sedentário',
+            'leve': 'Leve (caminhadas)',
+            'moderado': 'Moderado (1-3x/semana)',
+            'ativo': 'Ativo (4+ vezes/semana)',
+            'atleta': 'Atleta'
+        };
+        return options[exercise] || exercise;
+    }
+
+    function formatBodyType(bodyType) {
+        const types = {
+            'magro': 'Magro',
+            'atlético': 'Atlético',
+            'mediano': 'Mediano',
+            'cheio': 'Cheio',
+            'musculoso': 'Musculoso',
+            'nao_informar': 'Prefiro não informar'
+        };
+        return types[bodyType] || bodyType;
+    }
+
+    function formatEyeColor(color) {
+        const colors = {
+            'castanho': 'Castanho',
+            'preto': 'Preto',
+            'azul': 'Azul',
+            'verde': 'Verde',
+            'cinza': 'Cinza',
+            'avelã': 'Avelã',
+            'nao_informar': 'Prefiro não informar'
+        };
+        return colors[color] || color;
+    }
+
+    function formatHairColor(color) {
+        const colors = {
+            'preto': 'Preto',
+            'castanho': 'Castanho',
+            'loiro': 'Loiro',
+            'ruivo': 'Ruivo',
+            'grisalho': 'Grisalho',
+            'colorido': 'Colorido',
+            'careca': 'Careca',
+            'nao_informar': 'Prefiro não informar'
+        };
+        return colors[color] || color;
+    }
+
+    // Funções auxiliares existentes
     function calculateAge(birthDate) {
         const today = new Date();
         const birth = new Date(birthDate);
@@ -1095,25 +1383,21 @@
         let completed = 0;
         let total = 0;
 
-        // Perfil básico
-        if (userProfile?.full_name) completed++;
-        total++;
-        if (userProfile?.birth_date) completed++;
-        total++;
+        // Campos básicos
+        const basicFields = ['full_name', 'birth_date', 'phone', 'address', 'gender', 'looking_for', 'description'];
+        basicFields.forEach(field => {
+            total++;
+            if (field === 'interests') {
+                if (userDetails.interests && userDetails.interests.length > 0) completed++;
+            } else if (userDetails[field] || userProfile[field]) completed++;
+        });
 
-        // Detalhes
-        if (userDetails.phone) completed++;
-        total++;
-        if (userDetails.address) completed++;
-        total++;
-        if (userDetails.gender) completed++;
-        total++;
-        if (userDetails.interests && userDetails.interests.length > 0) completed++;
-        total++;
-        if (userDetails.looking_for) completed++;
-        total++;
-        if (userDetails.description) completed++;
-        total++;
+        // Novos campos
+        const newFields = ['sexual_orientation', 'education', 'occupation', 'smoking', 'drinking', 'exercise', 'has_pets'];
+        newFields.forEach(field => {
+            total++;
+            if (userDetails[field] !== undefined && userDetails[field] !== null && userDetails[field] !== '') completed++;
+        });
 
         return Math.round((completed / total) * 100);
     }
@@ -1132,18 +1416,169 @@
         }
     }
 
-    // Configurar event listeners
+    // ✅ MOSTRAR/OCULTAR CAMPO DE DESCRIÇÃO DE PETS
+    function togglePetsDescription() {
+        const hasPets = document.getElementById('hasPets').value;
+        const petsGroup = document.getElementById('petsDescriptionGroup');
+        petsGroup.style.display = hasPets === 'sim' ? 'block' : 'none';
+    }
+
+    // Configurar event listeners - ATUALIZADO
     function setupEventListeners() {
         document.getElementById('logoutBtn').addEventListener('click', logout);
         
-        // Form submissions
+        // Form submissions existentes
         document.getElementById('basicInfoForm').addEventListener('submit', saveBasicInfo);
         document.getElementById('contactInfoForm').addEventListener('submit', saveContactInfo);
         document.getElementById('preferencesInfoForm').addEventListener('submit', savePreferencesInfo);
         document.getElementById('descriptionInfoForm').addEventListener('submit', saveDescriptionInfo);
+        
+        // ✅ NOVOS FORMULÁRIOS
+        document.getElementById('identityInfoForm').addEventListener('submit', saveIdentityInfo);
+        document.getElementById('lifestyleInfoForm').addEventListener('submit', saveLifestyleInfo);
+        document.getElementById('physicalInfoForm').addEventListener('submit', savePhysicalInfo);
     }
 
-    // ✅ SALVAR INFORMAÇÕES BÁSICAS - CORRIGIDO
+    // ✅ SALVAR INFORMAÇÕES DE IDENTIDADE
+    async function saveIdentityInfo(e) {
+        e.preventDefault();
+        
+        try {
+            const sexualOrientation = document.getElementById('sexualOrientation').value;
+            const education = document.getElementById('education').value;
+            const occupation = document.getElementById('occupation').value;
+
+            const { error } = await supabase
+                .from('user_details')
+                .upsert({
+                    user_id: currentUser.id,
+                    sexual_orientation: sexualOrientation,
+                    education: education,
+                    occupation: occupation,
+                    updated_at: new Date()
+                }, {
+                    onConflict: 'user_id'
+                });
+
+            if (error) throw error;
+
+            await loadUserData();
+            toggleEdit('identityInfo');
+            showAlert('successAlert', 'Informações de identidade atualizadas com sucesso!');
+            
+        } catch (error) {
+            console.error('❌ Erro ao salvar informações de identidade:', error);
+            showAlert('errorAlert', 'Erro ao salvar informações: ' + error.message);
+        }
+    }
+
+    // ✅ SALVAR INFORMAÇÕES DE ESTILO DE VIDA
+    async function saveLifestyleInfo(e) {
+        e.preventDefault();
+        
+        try {
+            const smoking = document.getElementById('smoking').value;
+            const drinking = document.getElementById('drinking').value;
+            const exercise = document.getElementById('exercise').value;
+            const hasPets = document.getElementById('hasPets').value;
+            const petsDescription = document.getElementById('petsDescription').value;
+
+            const lifestyleData = {
+                user_id: currentUser.id,
+                smoking: smoking,
+                drinking: drinking,
+                exercise: exercise,
+                has_pets: hasPets === 'sim' ? true : (hasPets === 'nao' ? false : null),
+                pets_description: hasPets === 'sim' ? petsDescription : null,
+                updated_at: new Date()
+            };
+
+            const { error } = await supabase
+                .from('user_details')
+                .upsert(lifestyleData, {
+                    onConflict: 'user_id'
+                });
+
+            if (error) throw error;
+
+            await loadUserData();
+            toggleEdit('lifestyleInfo');
+            showAlert('successAlert', 'Informações de estilo de vida atualizadas com sucesso!');
+            
+        } catch (error) {
+            console.error('❌ Erro ao salvar estilo de vida:', error);
+            showAlert('errorAlert', 'Erro ao salvar informações: ' + error.message);
+        }
+    }
+
+    // ✅ SALVAR CARACTERÍSTICAS FÍSICAS
+    async function savePhysicalInfo(e) {
+        e.preventDefault();
+        
+        try {
+            const height = document.getElementById('height').value;
+            const bodyType = document.getElementById('bodyType').value;
+            const eyeColor = document.getElementById('eyeColor').value;
+            const hairColor = document.getElementById('hairColor').value;
+
+            const physicalData = {
+                user_id: currentUser.id,
+                height: height ? parseInt(height) : null,
+                body_type: bodyType,
+                eye_color: eyeColor,
+                hair_color: hairColor,
+                updated_at: new Date()
+            };
+
+            const { error } = await supabase
+                .from('user_details')
+                .upsert(physicalData, {
+                    onConflict: 'user_id'
+                });
+
+            if (error) throw error;
+
+            await loadUserData();
+            toggleEdit('physicalInfo');
+            showAlert('successAlert', 'Características físicas atualizadas com sucesso!');
+            
+        } catch (error) {
+            console.error('❌ Erro ao salvar características físicas:', error);
+            showAlert('errorAlert', 'Erro ao salvar informações: ' + error.message);
+        }
+    }
+
+    // ✅ SALVAR CONFIGURAÇÕES DE PRIVACIDADE
+    async function savePrivacySettings() {
+        try {
+            const privacySettings = {
+                show_age: document.getElementById('privacyAge').checked,
+                show_location: document.getElementById('privacyLocation').checked,
+                show_occupation: document.getElementById('privacyOccupation').checked,
+                show_lifestyle: document.getElementById('privacyLifestyle').checked
+            };
+
+            const { error } = await supabase
+                .from('user_details')
+                .upsert({
+                    user_id: currentUser.id,
+                    privacy_settings: privacySettings,
+                    updated_at: new Date()
+                }, {
+                    onConflict: 'user_id'
+                });
+
+            if (error) throw error;
+
+            showAlert('successAlert', 'Configurações de privacidade salvas com sucesso!');
+            
+        } catch (error) {
+            console.error('❌ Erro ao salvar privacidade:', error);
+            showAlert('errorAlert', 'Erro ao salvar configurações: ' + error.message);
+        }
+    }
+
+    // Funções existentes de salvamento (manter iguais)
     async function saveBasicInfo(e) {
         e.preventDefault();
         
@@ -1151,7 +1586,6 @@
             const fullName = document.getElementById('fullName').value;
             const birthDate = document.getElementById('birthDate').value;
 
-            // ✅ VERIFICAR SE O PERFIL JÁ EXISTE
             const { data: existingProfile } = await supabase
                 .from('profiles')
                 .select('id')
@@ -1161,7 +1595,6 @@
             let error;
             
             if (existingProfile) {
-                // ✅ ATUALIZAR PERFIL EXISTENTE
                 const { error: updateError } = await supabase
                     .from('profiles')
                     .update({
@@ -1173,7 +1606,6 @@
 
                 error = updateError;
             } else {
-                // ✅ CRIAR NOVO PERFIL
                 const { data: { user } } = await supabase.auth.getUser();
                 const { error: insertError } = await supabase
                     .from('profiles')
@@ -1191,10 +1623,7 @@
                 error = insertError;
             }
 
-            if (error) {
-                console.error('❌ Erro ao salvar perfil:', error);
-                throw error;
-            }
+            if (error) throw error;
 
             await loadUserData();
             toggleEdit('basicInfo');
@@ -1206,7 +1635,6 @@
         }
     }
 
-    // ✅ SALVAR INFORMAÇÕES DE CONTATO - CORRIGIDO
     async function saveContactInfo(e) {
         e.preventDefault();
         
@@ -1214,43 +1642,16 @@
             const phone = document.getElementById('phone').value;
             const address = document.getElementById('address').value;
 
-            // ✅ VERIFICAR SE USER_DETAILS JÁ EXISTE
-            const { data: existingDetails } = await supabase
+            const { error } = await supabase
                 .from('user_details')
-                .select('id')
-                .eq('user_id', currentUser.id)
-                .single();
-
-            let error;
-            
-            if (existingDetails) {
-                // ✅ ATUALIZAR
-                const { error: updateError } = await supabase
-                    .from('user_details')
-                    .update({
-                        phone: phone,
-                        address: address,
-                        updated_at: new Date()
-                    })
-                    .eq('user_id', currentUser.id);
-
-                error = updateError;
-            } else {
-                // ✅ CRIAR NOVO
-                const { error: insertError } = await supabase
-                    .from('user_details')
-                    .insert([
-                        {
-                            user_id: currentUser.id,
-                            phone: phone,
-                            address: address,
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString()
-                        }
-                    ]);
-
-                error = insertError;
-            }
+                .upsert({
+                    user_id: currentUser.id,
+                    phone: phone,
+                    address: address,
+                    updated_at: new Date()
+                }, {
+                    onConflict: 'user_id'
+                });
 
             if (error) throw error;
 
@@ -1264,7 +1665,6 @@
         }
     }
 
-    // ✅ SALVAR PREFERÊNCIAS - CORRIGIDO
     async function savePreferencesInfo(e) {
         e.preventDefault();
         
@@ -1272,51 +1672,22 @@
             const gender = document.getElementById('gender').value;
             const lookingFor = document.getElementById('lookingFor').value;
             
-            // Coletar interesses selecionados
             const interests = [];
             document.querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
                 interests.push(checkbox.value);
             });
 
-            // ✅ VERIFICAR SE USER_DETAILS JÁ EXISTE
-            const { data: existingDetails } = await supabase
+            const { error } = await supabase
                 .from('user_details')
-                .select('id')
-                .eq('user_id', currentUser.id)
-                .single();
-
-            let error;
-            
-            if (existingDetails) {
-                // ✅ ATUALIZAR
-                const { error: updateError } = await supabase
-                    .from('user_details')
-                    .update({
-                        gender: gender,
-                        interests: interests,
-                        looking_for: lookingFor,
-                        updated_at: new Date()
-                    })
-                    .eq('user_id', currentUser.id);
-
-                error = updateError;
-            } else {
-                // ✅ CRIAR NOVO
-                const { error: insertError } = await supabase
-                    .from('user_details')
-                    .insert([
-                        {
-                            user_id: currentUser.id,
-                            gender: gender,
-                            interests: interests,
-                            looking_for: lookingFor,
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString()
-                        }
-                    ]);
-
-                error = insertError;
-            }
+                .upsert({
+                    user_id: currentUser.id,
+                    gender: gender,
+                    interests: interests,
+                    looking_for: lookingFor,
+                    updated_at: new Date()
+                }, {
+                    onConflict: 'user_id'
+                });
 
             if (error) throw error;
 
@@ -1330,7 +1701,6 @@
         }
     }
 
-    // ✅ SALVAR DESCRIÇÃO - CORRIGIDO
     async function saveDescriptionInfo(e) {
         e.preventDefault();
         
@@ -1342,41 +1712,15 @@
                 return;
             }
 
-            // ✅ VERIFICAR SE USER_DETAILS JÁ EXISTE
-            const { data: existingDetails } = await supabase
+            const { error } = await supabase
                 .from('user_details')
-                .select('id')
-                .eq('user_id', currentUser.id)
-                .single();
-
-            let error;
-            
-            if (existingDetails) {
-                // ✅ ATUALIZAR
-                const { error: updateError } = await supabase
-                    .from('user_details')
-                    .update({
-                        description: description,
-                        updated_at: new Date()
-                    })
-                    .eq('user_id', currentUser.id);
-
-                error = updateError;
-            } else {
-                // ✅ CRIAR NOVO
-                const { error: insertError } = await supabase
-                    .from('user_details')
-                    .insert([
-                        {
-                            user_id: currentUser.id,
-                            description: description,
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString()
-                        }
-                    ]);
-
-                error = insertError;
-            }
+                .upsert({
+                    user_id: currentUser.id,
+                    description: description,
+                    updated_at: new Date()
+                }, {
+                    onConflict: 'user_id'
+                });
 
             if (error) throw error;
 
@@ -1446,7 +1790,6 @@
         console.log('User Profile:', userProfile);
         console.log('User Details:', userDetails);
         
-        // Verificar tabelas
         const { data: profiles } = await supabase.from('profiles').select('*');
         const { data: userDetailsAll } = await supabase.from('user_details').select('*');
         
