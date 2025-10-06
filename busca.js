@@ -71,6 +71,10 @@ function setupEventListeners() {
     document.getElementById('gender').addEventListener('change', applyFilters);
     document.getElementById('lookingFor').addEventListener('change', applyFilters);
     document.getElementById('location').addEventListener('input', applyFilters);
+    document.getElementById('zodiac').addEventListener('change', applyFilters);
+    
+    // Interesses - aplicar filtro quando selecionados
+    document.getElementById('interests').addEventListener('change', applyFilters);
 }
 
 // Carregar usuários iniciais
@@ -100,6 +104,7 @@ function clearFilters() {
     document.getElementById('gender').value = '';
     document.getElementById('lookingFor').value = '';
     document.getElementById('location').value = '';
+    document.getElementById('zodiac').value = '';
     
     // Limpar seleção múltipla de interesses
     const interestsSelect = document.getElementById('interests');
@@ -117,6 +122,7 @@ function getCurrentFilters() {
     const gender = document.getElementById('gender').value;
     const lookingFor = document.getElementById('lookingFor').value;
     const location = document.getElementById('location').value;
+    const zodiac = document.getElementById('zodiac').value;
     
     // Obter interesses selecionados
     const interestsSelect = document.getElementById('interests');
@@ -133,6 +139,7 @@ function getCurrentFilters() {
         gender: gender || null,
         lookingFor: lookingFor || null,
         location: location || null,
+        zodiac: zodiac || null,
         interests: selectedInterests.length > 0 ? selectedInterests : null
     };
 }
@@ -150,16 +157,14 @@ async function searchUsers() {
                     interests,
                     gender,
                     looking_for,
-                    description
+                    description,
+                    zodiac,
+                    profession
                 )
             `, { count: 'exact' })
             .neq('id', currentUser.id);
 
         // Aplicar filtros
-        if (currentFilters.ageMin || currentFilters.ageMax) {
-            // Filtro por idade será aplicado após buscar os dados
-        }
-
         if (currentFilters.gender) {
             query = query.eq('user_details.gender', currentFilters.gender);
         }
@@ -176,6 +181,10 @@ async function searchUsers() {
             query = query.contains('user_details.interests', currentFilters.interests);
         }
 
+        if (currentFilters.zodiac) {
+            query = query.eq('user_details.zodiac', currentFilters.zodiac);
+        }
+
         // Paginação
         const from = (currentPage - 1) * usersPerPage;
         const to = from + usersPerPage - 1;
@@ -188,7 +197,7 @@ async function searchUsers() {
 
         totalUsers = count || 0;
         
-        // Aplicar filtro de idade no frontend (já que birth_date está em profiles)
+        // Aplicar filtro de idade no frontend
         let filteredUsers = users || [];
         if (currentFilters.ageMin || currentFilters.ageMax) {
             filteredUsers = filteredUsers.filter(user => {
@@ -228,40 +237,96 @@ function displayUsers(users) {
 
     noResults.classList.add('hidden');
 
-    usersGrid.innerHTML = users.map(user => {
-        const age = user.birth_date ? calculateAge(user.birth_date) : null;
-        const details = user.user_details || {};
-        const interests = details.interests || [];
-        const location = details.address || 'Não informado';
-        const description = details.description || 'Este usuário ainda não adicionou uma descrição.';
+    usersGrid.innerHTML = users.map(user => createUserCard(user)).join('');
+}
 
-        return `
-            <div class="user-card">
-                <div class="user-card-avatar">${user.nickname ? user.nickname.charAt(0).toUpperCase() : 'U'}</div>
-                <div class="user-card-name">${user.nickname || 'Usuário'}</div>
-                <div class="user-card-info">
-                    ${age ? `<span>${age} anos</span>` : ''}
-                    <span class="user-card-location">${location}</span>
-                </div>
-                
-                ${interests.length > 0 ? `
-                    <div class="user-card-interests">
-                        ${interests.slice(0, 3).map(interest => 
-                            `<span class="interest-tag">${interest}</span>`
-                        ).join('')}
-                        ${interests.length > 3 ? `<span class="interest-tag">+${interests.length - 3}</span>` : ''}
-                    </div>
-                ` : ''}
-                
-                <div class="user-card-description">${description}</div>
-                <div class="user-card-actions">
-                    <button class="btn btn-primary btn-sm" onclick="sendMessage('${user.id}')">
-                        💌 Enviar Mensagem
-                    </button>
-                </div>
+// Criar card de usuário
+function createUserCard(user) {
+    const nickname = user.nickname || user.full_name?.split(' ')[0] || 'Usuário';
+    const age = user.birth_date ? calculateAge(user.birth_date) : null;
+    const details = user.user_details || {};
+    
+    // Informações públicas para mostrar
+    const zodiac = details.zodiac ? getZodiacIcon(details.zodiac) + ' ' + formatZodiac(details.zodiac) : null;
+    const profession = details.profession || null;
+    const interests = details.interests || [];
+    const lookingFor = details.looking_for ? formatLookingFor(details.looking_for) : null;
+    const location = details.address || null;
+    const bio = details.description || 'Este usuário ainda não adicionou uma descrição.';
+
+    return `
+        <div class="user-card" onclick="viewProfile('${user.id}')">
+            <div class="user-card-avatar">${nickname.charAt(0).toUpperCase()}</div>
+            <div class="user-card-name">${nickname}${age ? `, ${age}` : ''}</div>
+            
+            <div class="user-card-info">
+                ${zodiac ? `<div class="user-card-detail">${zodiac}</div>` : ''}
+                ${profession ? `<div class="user-card-detail">💼 ${profession}</div>` : ''}
+                ${lookingFor ? `<div class="user-card-detail">🎯 ${lookingFor}</div>` : ''}
+                ${location ? `<div class="user-card-detail">📍 ${location}</div>` : ''}
             </div>
-        `;
-    }).join('');
+            
+            ${interests.length > 0 ? `
+                <div class="user-card-interests">
+                    ${interests.slice(0, 3).map(interest => 
+                        `<span class="interest-tag">${interest}</span>`
+                    ).join('')}
+                    ${interests.length > 3 ? `<span class="interest-tag">+${interests.length - 3}</span>` : ''}
+                </div>
+            ` : ''}
+            
+            <div class="user-card-bio">${bio}</div>
+            
+            <div class="user-card-actions">
+                <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); sendMessage('${user.id}')">
+                    💌 Mensagem
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewProfile('${user.id}')">
+                    👀 Ver Perfil
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+// Ver perfil
+function viewProfile(userId) {
+    localStorage.setItem('viewingProfileId', userId);
+    window.location.href = 'perfil.html';
+}
+
+// Enviar mensagem
+function sendMessage(userId) {
+    const message = prompt('Digite sua mensagem para esta pessoa:');
+    if (message && message.trim()) {
+        sendMessageToUser(userId, message.trim());
+    }
+}
+
+async function sendMessageToUser(receiverId, content) {
+    try {
+        const { error } = await supabase
+            .from('messages')
+            .insert([
+                {
+                    sender_id: currentUser.id,
+                    receiver_id: receiverId,
+                    content: content
+                }
+            ]);
+
+        if (error) {
+            console.log('⚠️ Não foi possível salvar a mensagem');
+            alert('Mensagem enviada com sucesso! 💌');
+            return;
+        }
+        
+        alert('Mensagem enviada com sucesso! 💌');
+        
+    } catch (error) {
+        console.error('Erro ao enviar mensagem:', error);
+        alert('Mensagem enviada com sucesso! 💌');
+    }
 }
 
 // Atualizar paginação
@@ -339,38 +404,32 @@ function calculateAge(birthDate) {
     return age;
 }
 
-// Enviar mensagem
-function sendMessage(userId) {
-    const message = prompt('Digite sua mensagem:');
-    if (message && message.trim()) {
-        sendMessageToUser(userId, message.trim());
-    }
+function getZodiacIcon(zodiac) {
+    const icons = {
+        'aries': '♈', 'touro': '♉', 'gemeos': '♊', 'cancer': '♋',
+        'leao': '♌', 'virgem': '♍', 'libra': '♎', 'escorpiao': '♏',
+        'sagitario': '♐', 'capricornio': '♑', 'aquario': '♒', 'peixes': '♓'
+    };
+    return icons[zodiac] || '⭐';
 }
 
-async function sendMessageToUser(receiverId, content) {
-    try {
-        const { error } = await supabase
-            .from('messages')
-            .insert([
-                {
-                    sender_id: currentUser.id,
-                    receiver_id: receiverId,
-                    content: content
-                }
-            ]);
+function formatZodiac(zodiac) {
+    const names = {
+        'aries': 'Áries', 'touro': 'Touro', 'gemeos': 'Gêmeos', 'cancer': 'Câncer',
+        'leao': 'Leão', 'virgem': 'Virgem', 'libra': 'Libra', 'escorpiao': 'Escorpião',
+        'sagitario': 'Sagitário', 'capricornio': 'Capricórnio', 'aquario': 'Aquário', 'peixes': 'Peixes'
+    };
+    return names[zodiac] || zodiac;
+}
 
-        if (error) {
-            console.log('⚠️ Não foi possível salvar a mensagem');
-            alert('Mensagem enviada com sucesso! 💌');
-            return;
-        }
-        
-        alert('Mensagem enviada com sucesso! 💌');
-        
-    } catch (error) {
-        console.error('Erro ao enviar mensagem:', error);
-        alert('Mensagem enviada com sucesso! 💌');
-    }
+function formatLookingFor(lookingFor) {
+    const options = {
+        'amizade': 'Amizade',
+        'namoro': 'Namoro', 
+        'relacionamento_serio': 'Relacionamento Sério',
+        'conversa': 'Apenas Conversa'
+    };
+    return options[lookingFor] || lookingFor;
 }
 
 // Logout
@@ -398,6 +457,9 @@ function showError(message) {
                 <div class="no-results-icon">❌</div>
                 <h3>Erro</h3>
                 <p>${message}</p>
+                <button class="btn btn-primary" onclick="applyFilters()">
+                    🔁 Tentar Novamente
+                </button>
             </div>
         </div>
     `;

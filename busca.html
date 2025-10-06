@@ -23,8 +23,9 @@
                         <div class="user-avatar" id="userAvatar">U</div>
                         <span id="userNickname">Usuário</span>
                     </div>
-                    <a href="home.html" class="btn btn-outline">Voltar para Home</a>
-                    <button class="btn btn-outline" id="logoutBtn">Sair</button>
+                    <a href="home.html" class="btn btn-outline">🏠 Home</a>
+                    <a href="painel.html" class="btn btn-outline">👤 Perfil</a>
+                    <button class="btn btn-outline" id="logoutBtn">🚪 Sair</button>
                 </div>
             </div>
         </div>
@@ -62,6 +63,7 @@
                                 <option value="">Todos</option>
                                 <option value="feminino">Feminino</option>
                                 <option value="masculino">Masculino</option>
+                                <option value="nao_informar">Prefiro não informar</option>
                             </select>
                         </div>
 
@@ -69,14 +71,14 @@
                         <div class="filter-group">
                             <label for="interests">Interesses</label>
                             <select id="interests" class="form-control" multiple>
-                                <option value="Cinema">Cinema</option>
-                                <option value="Música">Música</option>
-                                <option value="Esportes">Esportes</option>
-                                <option value="Viagens">Viagens</option>
-                                <option value="Leitura">Leitura</option>
-                                <option value="Culinária">Culinária</option>
-                                <option value="Jogos">Jogos</option>
-                                <option value="Arte">Arte</option>
+                                <option value="Cinema">🎬 Cinema</option>
+                                <option value="Música">🎵 Música</option>
+                                <option value="Esportes">⚽ Esportes</option>
+                                <option value="Viagens">✈️ Viagens</option>
+                                <option value="Leitura">📚 Leitura</option>
+                                <option value="Culinária">🍳 Culinária</option>
+                                <option value="Jogos">🎮 Jogos</option>
+                                <option value="Arte">🎨 Arte</option>
                             </select>
                         </div>
 
@@ -85,17 +87,37 @@
                             <label for="lookingFor">Procura por</label>
                             <select id="lookingFor" class="form-control">
                                 <option value="">Todos</option>
-                                <option value="amizade">Amizade</option>
-                                <option value="namoro">Namoro</option>
-                                <option value="relacionamento_serio">Relacionamento Sério</option>
-                                <option value="conversa">Conversa</option>
+                                <option value="amizade">🤝 Amizade</option>
+                                <option value="namoro">💕 Namoro</option>
+                                <option value="relacionamento_serio">💍 Relacionamento Sério</option>
+                                <option value="conversa">💬 Apenas Conversa</option>
                             </select>
                         </div>
 
                         <!-- Localização -->
                         <div class="filter-group">
-                            <label for="location">Localização</label>
+                            <label for="location">📍 Localização</label>
                             <input type="text" id="location" class="form-control" placeholder="Cidade ou Estado">
+                        </div>
+
+                        <!-- Signo -->
+                        <div class="filter-group">
+                            <label for="zodiac">⭐ Signo</label>
+                            <select id="zodiac" class="form-control">
+                                <option value="">Todos</option>
+                                <option value="aries">♈ Áries</option>
+                                <option value="touro">♉ Touro</option>
+                                <option value="gemeos">♊ Gêmeos</option>
+                                <option value="cancer">♋ Câncer</option>
+                                <option value="leao">♌ Leão</option>
+                                <option value="virgem">♍ Virgem</option>
+                                <option value="libra">♎ Libra</option>
+                                <option value="escorpiao">♏ Escorpião</option>
+                                <option value="sagitario">♐ Sagitário</option>
+                                <option value="capricornio">♑ Capricórnio</option>
+                                <option value="aquario">♒ Aquário</option>
+                                <option value="peixes">♓ Peixes</option>
+                            </select>
                         </div>
                     </div>
 
@@ -141,6 +163,9 @@
                         <div class="no-results-icon">🔍</div>
                         <h3>Nenhuma pessoa encontrada</h3>
                         <p>Tente ajustar os filtros de busca para encontrar mais pessoas.</p>
+                        <button class="btn btn-primary" onclick="clearFilters()">
+                            🗑️ Limpar Filtros
+                        </button>
                     </div>
                 </div>
             </section>
