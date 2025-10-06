@@ -2284,77 +2284,62 @@
       }
     }
 
-    // ✅ FUNÇÕES DE LOGOUT E AÇÕES - COM EXCLUSÃO CORRIGIDA
-    async function logout() {
-      try {
-        const { error } = await supabase.auth.signOut();
-        if (error) throw error;
-        
-        window.location.href = 'login.html';
-      } catch (error) {
-        console.error('❌ Erro ao fazer logout:', error);
-        showAlert('errorAlert', 'Erro ao fazer logout.');
-      }
+    // ✅ FUNÇÕES DE UTILIDADE CORRIGIDAS
+function showAlert(alertId, message) {
+  try {
+    const alert = document.getElementById(alertId);
+    if (alert) {
+      alert.textContent = message;
+      alert.style.display = 'block';
+      
+      setTimeout(() => {
+        if (alert) {
+          alert.style.display = 'none';
+        }
+      }, 5000);
+    } else {
+      console.warn(`Alerta não encontrado: ${alertId}`);
+      // Fallback: usar console ou alert padrão
+      console.log(`ALERTA: ${message}`);
     }
+  } catch (error) {
+    console.error('Erro no showAlert:', error);
+  }
+}
 
-    function exportProfileData() {
-      try {
-        const profileData = {
-          perfil: userProfile,
-          detalhes: userDetails,
-          exportado_em: new Date().toISOString()
-        };
-        
-        const dataStr = JSON.stringify(profileData, null, 2);
-        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-        
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(dataBlob);
-        link.download = `perfil-${currentUser.id}-${new Date().getTime()}.json`;
-        link.click();
-        
-        showAlert('successAlert', 'Dados exportados com sucesso!');
-      } catch (error) {
-        console.error('❌ Erro ao exportar dados:', error);
-        showAlert('errorAlert', 'Erro ao exportar dados.');
-      }
-    }
-
-   // ✅ EXCLUSÃO REAL DE CONTA - VERSÃO CORRIGIDA
+// ✅ EXCLUSÃO REAL DE CONTA - VERSÃO CORRIGIDA E SEGURA
 async function deleteAccount() {
   try {
-    // 🔒 CONFIRMAÇÃO MÚLTIPLA
-    if (!confirm('⚠️ ATENÇÃO: EXCLUSÃO PERMANENTE!\n\nEsta ação:\n• Remove TODOS seus dados\n• Exclui fotos e mensagens\n• É IRREVERSÍVEL\n\nDeseja continuar?')) {
-      return;
-    }
-    
-    // 🔧 CORREÇÃO: Usar window.prompt e verificar melhor
-    const confirmation = window.prompt('Para confirmar, digite: EXCLUIR MINHA CONTA');
-    
-    // Verificar se o usuário cancelou
-    if (confirmation === null) {
-      showAlert('infoAlert', 'Exclusão cancelada.');
-      return;
-    }
-    
-    // 🔧 CORREÇÃO: Comparação mais flexível
-    if (!confirmation || confirmation.trim().toUpperCase() !== 'EXCLUIR MINHA CONTA') {
-      showAlert('errorAlert', '❌ Confirmação incorreta. Digite exatamente: EXCLUIR MINHA CONTA');
+    // 🔒 CONFIRMAÇÃO SIMPLES - REMOVENDO A SEGUNDA CONFIRMAÇÃO
+    if (!confirm('🚨 ATENÇÃO: EXCLUSÃO PERMANENTE!\n\nEsta ação remove TODOS seus dados e é IRREVERSÍVEL!\n\nDeseja realmente excluir sua conta?')) {
       return;
     }
 
-    // 🎯 PREPARAR INTERFACE
-    const actionCards = document.querySelectorAll('.action-card');
-    const deleteCard = actionCards[2];
-    const originalContent = deleteCard.innerHTML;
-    deleteCard.innerHTML = '<div class="spinner" style="width:30px;height:30px;margin:0 auto"></div><p>Excluindo conta...</p>';
-    deleteCard.style.opacity = '0.6';
-    deleteCard.style.pointerEvents = 'none';
+    // 🎯 PREPARAR INTERFACE DE FORMA SEGURA
+    let deleteCard = null;
+    try {
+      const actionCards = document.querySelectorAll('.action-card');
+      if (actionCards.length > 2) {
+        deleteCard = actionCards[2];
+        const originalContent = deleteCard.innerHTML;
+        deleteCard.innerHTML = '<div class="spinner" style="width:30px;height:30px;margin:0 auto"></div><p>Excluindo conta...</p>';
+        deleteCard.style.opacity = '0.6';
+        deleteCard.style.pointerEvents = 'none';
+      }
+    } catch (uiError) {
+      console.log('Erro na UI, continuando exclusão...', uiError);
+    }
 
     console.log('🗑️ INICIANDO EXCLUSÃO DEFINITIVA DA CONTA...');
-    showAlert('infoAlert', '🔄 Iniciando exclusão da conta...');
+    
+    // 🔧 CORREÇÃO: Usar try/catch individual para cada operação
+    try {
+      showAlert('infoAlert', '🔄 Iniciando exclusão da conta...');
+    } catch (e) {
+      console.log('InfoAlert não disponível');
+    }
 
-    // 1. 🖼️ DELETAR FOTO DO STORAGE
+    // 1. 🖼️ DELETAR FOTO DO STORAGE (se existir)
     if (userProfile?.avatar_url) {
       try {
         console.log('🖼️ Deletando foto do storage...');
@@ -2363,69 +2348,92 @@ async function deleteAccount() {
           .remove([userProfile.avatar_url]);
         
         if (storageError) {
-          console.log('⚠️ Erro ao deletar foto:', storageError);
+          console.log('⚠️ Foto não encontrada no storage:', storageError.message);
         } else {
           console.log('✅ Foto deletada do storage');
         }
       } catch (e) {
-        console.log('⚠️ Erro ao deletar foto:', e);
+        console.log('⚠️ Erro ao deletar foto:', e.message);
       }
     }
 
     // 2. 📋 DELETAR MENSAGENS
-    console.log('📋 Deletando mensagens...');
-    const { error: messagesError } = await supabase
-      .from('messages')
-      .delete()
-      .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`);
+    try {
+      console.log('📋 Deletando mensagens...');
+      const { error: messagesError } = await supabase
+        .from('messages')
+        .delete()
+        .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`);
 
-    if (messagesError) {
-      console.error('Erro ao deletar mensagens:', messagesError);
-    } else {
-      console.log('✅ Mensagens deletadas');
+      if (messagesError) {
+        console.error('Erro ao deletar mensagens:', messagesError.message);
+      } else {
+        console.log('✅ Mensagens deletadas');
+      }
+    } catch (e) {
+      console.log('⚠️ Erro ao deletar mensagens:', e.message);
     }
 
     // 3. 📝 DELETAR USER_DETAILS
-    console.log('📝 Deletando user_details...');
-    const { error: detailsError } = await supabase
-      .from('user_details')
-      .delete()
-      .eq('user_id', currentUser.id);
+    try {
+      console.log('📝 Deletando user_details...');
+      const { error: detailsError } = await supabase
+        .from('user_details')
+        .delete()
+        .eq('user_id', currentUser.id);
 
-    if (detailsError && detailsError.code !== 'PGRST116') {
-      console.error('Erro ao deletar user_details:', detailsError);
-    } else {
-      console.log('✅ User_details deletado');
+      if (detailsError && detailsError.code !== 'PGRST116') {
+        console.error('Erro ao deletar user_details:', detailsError.message);
+      } else {
+        console.log('✅ User_details deletado');
+      }
+    } catch (e) {
+      console.log('⚠️ Erro ao deletar user_details:', e.message);
     }
 
     // 4. 👤 MARCAR PERFIL COMO EXCLUÍDO
-    console.log('👤 Marcando perfil como excluído...');
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update({
-        deleted_at: new Date().toISOString(),
-        nickname: 'Usuário Excluído',
-        full_name: null,
-        avatar_url: null,
-        birth_date: null,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', currentUser.id);
+    try {
+      console.log('👤 Marcando perfil como excluído...');
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          deleted_at: new Date().toISOString(),
+          nickname: 'Usuário Excluído',
+          full_name: null,
+          avatar_url: null,
+          birth_date: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', currentUser.id);
 
-    if (profileError) {
-      console.error('❌ Erro ao marcar perfil como excluído:', profileError);
-      throw new Error('Não foi possível excluir o perfil');
+      if (profileError) {
+        console.error('❌ Erro ao marcar perfil como excluído:', profileError.message);
+        throw new Error('Não foi possível excluir o perfil');
+      }
+
+      console.log('✅ Perfil marcado como excluído');
+    } catch (e) {
+      console.error('❌ Erro crítico ao excluir perfil:', e.message);
+      throw e; // Re-lançar o erro para ser capturado pelo catch principal
     }
 
-    console.log('✅ Perfil marcado como excluído');
-
     // 5. 🚪 FAZER LOGOUT
-    console.log('🚪 Fazendo logout...');
-    await supabase.auth.signOut();
+    try {
+      console.log('🚪 Fazendo logout...');
+      await supabase.auth.signOut();
+    } catch (logoutError) {
+      console.log('⚠️ Erro no logout, continuando...', logoutError.message);
+    }
     
-    showAlert('successAlert', '✅ Conta excluída com sucesso! Redirecionando...');
+    // 🔧 CORREÇÃO: Mostrar alerta de sucesso de forma segura
+    try {
+      showAlert('successAlert', '✅ Conta excluída com sucesso! Redirecionando...');
+    } catch (e) {
+      console.log('✅ Conta excluída com sucesso! Redirecionando...');
+    }
     
     // 6. 🔄 REDIRECIONAR
+    console.log('🔄 Redirecionando para página inicial...');
     setTimeout(() => {
       window.location.href = 'index.html';
     }, 3000);
@@ -2434,29 +2442,30 @@ async function deleteAccount() {
     console.error('❌ Erro ao excluir conta:', error);
     
     // 🚨 RESTAURAR INTERFACE EM CASO DE ERRO
-    const actionCards = document.querySelectorAll('.action-card');
-    const deleteCard = actionCards[2];
-    deleteCard.innerHTML = '<div class="action-icon">🗑️</div><h4>Excluir Conta</h4><p>Remover permanentemente</p>';
-    deleteCard.style.opacity = '1';
-    deleteCard.style.pointerEvents = 'auto';
+    try {
+      const actionCards = document.querySelectorAll('.action-card');
+      if (actionCards.length > 2) {
+        const deleteCard = actionCards[2];
+        deleteCard.innerHTML = '<div class="action-icon">🗑️</div><h4>Excluir Conta</h4><p>Remover permanentemente</p>';
+        deleteCard.style.opacity = '1';
+        deleteCard.style.pointerEvents = 'auto';
+      }
+    } catch (uiError) {
+      console.log('Erro ao restaurar UI:', uiError);
+    }
     
-    showAlert('errorAlert', '❌ Erro ao excluir conta: ' + error.message);
+    // 🔧 CORREÇÃO: Mostrar erro de forma segura
+    try {
+      showAlert('errorAlert', '❌ Erro ao excluir conta: ' + error.message);
+    } catch (e) {
+      console.error('❌ Erro ao excluir conta: ' + error.message);
+      alert('❌ Erro ao excluir conta: ' + error.message);
+    }
   }
 }
 
-// ✅ FUNÇÕES DE UTILIDADE
-function showAlert(alertId, message) {
-  const alert = document.getElementById(alertId);
-  alert.textContent = message;
-  alert.style.display = 'block';
-  
-  setTimeout(() => {
-    alert.style.display = 'none';
-  }, 5000);
-}
-
 // ✅ INICIALIZAÇÃO FINAL
-console.log('🚀 Aplicação inicializada - Upload de foto disponível');
+console.log('🚀 Aplicação inicializada - Exclusão de conta disponível');
 
 // Adicionar evento para o input de foto direto (fallback)
 document.getElementById('photoInput').addEventListener('change', function(e) {
