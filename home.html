@@ -30,6 +30,7 @@
             background-color: var(--bege);
             color: var(--text);
             line-height: 1.6;
+            overflow-x: hidden;
         }
 
         .container {
@@ -467,30 +468,158 @@
             color: #2c5aa0;
         }
 
+        /* Menu Hamburguer Mobile */
+        #hamburgerBtn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--branco);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            z-index: 1001;
+        }
+
+        #mobileMenu {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            z-index: 1000;
+            padding: 2rem;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+        }
+
+        #closeMobileMenu {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: var(--branco);
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .mobile-user-info {
+            text-align: center;
+            color: var(--branco);
+        }
+
+        .mobile-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .mobile-nav .btn {
+            width: 100%;
+            text-align: center;
+            justify-content: center;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            font-size: 1.1rem;
+        }
+
         /* Responsividade */
         @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                gap: 1rem;
-                height: auto;
-                padding: 1rem 0;
-            }
-
-            .logo img {
-                height: 140px;
+            #hamburgerBtn {
+                display: block;
             }
 
             .user-menu {
-                flex-direction: column;
+                display: none;
+            }
+
+            .header-content {
+                flex-direction: row;
+                justify-content: space-between;
+                height: 70px;
+                padding: 0;
+            }
+
+            .logo {
+                flex-direction: row;
+                gap: 8px;
+            }
+
+            .logo img {
+                height: 120px !important;
+            }
+
+            .logo h1 {
+                font-size: 1.2rem;
+            }
+
+            .user-stats {
+                grid-template-columns: repeat(2, 1fr);
                 gap: 1rem;
             }
 
-            .welcome-section h2 {
-                font-size: 2rem;
+            .stat-card {
+                padding: 1rem;
+            }
+
+            .stat-number {
+                font-size: 1.8rem;
             }
 
             .users-grid {
                 grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .user-card {
+                padding: 1.2rem;
+            }
+
+            .user-card-avatar {
+                width: 70px;
+                height: 70px;
+            }
+
+            .user-card-name {
+                font-size: 1.1rem;
+            }
+
+            .user-card-actions {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .user-card-actions .btn {
+                width: 100%;
+            }
+
+            .actions-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-card {
+                padding: 1.2rem;
+            }
+
+            .welcome-section {
+                padding: 1.5rem;
+                margin-bottom: 2rem;
+            }
+
+            .welcome-section h2 {
+                font-size: 1.8rem;
+            }
+
+            .quick-actions {
+                padding: 1.5rem;
             }
 
             .section-header {
@@ -502,21 +631,40 @@
 
         @media (max-width: 480px) {
             .logo img {
-                height: 120px;
+                height: 100px !important;
+            }
+
+            .logo h1 {
+                font-size: 1rem;
+            }
+
+            .user-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .welcome-section h2 {
+                font-size: 1.5rem;
+            }
+
+            .stat-number {
+                font-size: 1.5rem;
             }
 
             .btn {
                 padding: 0.5rem 1rem;
                 font-size: 0.85rem;
             }
+        }
 
-            .welcome-section h2 {
-                font-size: 1.8rem;
-            }
+        /* Animações para o menu mobile */
+        #mobileMenu {
+            transition: opacity 0.3s ease;
+        }
 
-            .user-stats {
-                grid-template-columns: 1fr;
-            }
+        .mobile-user-info .user-avatar {
+            width: 80px;
+            height: 80px;
+            font-size: 1.5rem;
         }
     </style>
 </head>
@@ -525,6 +673,7 @@
     <header>
         <div class="container">
             <div class="header-content">
+                <button id="hamburgerBtn">☰</button>
                 <div class="logo">
                     <img src="logoamorconect.png" alt="Amor Conect">
                     <h1>Amor Conect</h1>
@@ -544,6 +693,27 @@
             </div>
         </div>
     </header>
+
+    <!-- Menu Mobile -->
+    <div id="mobileMenu">
+        <button id="closeMobileMenu">×</button>
+        
+        <div class="mobile-user-info">
+            <div class="user-avatar" id="mobileUserAvatar">
+                <img class="user-avatar-img" src="" alt="Avatar" style="display: none;">
+                <div class="user-avatar-fallback">U</div>
+            </div>
+            <div id="mobileUserNickname">Usuário</div>
+        </div>
+
+        <div class="mobile-nav">
+            <a href="busca.html" class="btn btn-outline">🔍 Buscar</a>
+            <a href="painel.html" class="btn btn-outline">👤 Perfil</a>
+            <a href="mensagens.html" class="btn btn-outline">💌 Mensagens</a>
+            <a href="configuracoes.html" class="btn btn-outline">⚙️ Configurações</a>
+            <button class="btn btn-outline" id="mobileLogoutBtn">🚪 Sair</button>
+        </div>
+    </div>
 
     <!-- Main Content -->
     <main class="main-content">
@@ -661,7 +831,52 @@
     document.addEventListener('DOMContentLoaded', function() {
         checkAuth();
         setupEventListeners();
+        setupMobileMenu();
     });
+
+    // Configurar menu mobile
+    function setupMobileMenu() {
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const closeMobileMenu = document.getElementById('closeMobileMenu');
+        const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+
+        hamburgerBtn.addEventListener('click', () => {
+            mobileMenu.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        });
+
+        closeMobileMenu.addEventListener('click', () => {
+            mobileMenu.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        });
+
+        mobileLogoutBtn.addEventListener('click', logout);
+
+        // Fechar menu ao clicar em um link
+        mobileMenu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            });
+        });
+
+        // Verificar tamanho da tela
+        function checkScreenSize() {
+            if (window.innerWidth <= 768) {
+                document.querySelector('.user-menu').style.display = 'none';
+                hamburgerBtn.style.display = 'block';
+            } else {
+                document.querySelector('.user-menu').style.display = 'flex';
+                hamburgerBtn.style.display = 'none';
+                mobileMenu.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        window.addEventListener('resize', checkScreenSize);
+        checkScreenSize();
+    }
 
     // Verificar autenticação
     async function checkAuth() {
@@ -738,28 +953,42 @@
                 displayName = user.email.split('@')[0];
             }
 
-            // ✅ ATUALIZAR AVATAR COM FOTO
-            const userAvatar = document.getElementById('userAvatar');
-            const userAvatarFallback = userAvatar.querySelector('.user-avatar-fallback');
+            // ✅ ATUALIZAR AVATAR COM FOTO (Desktop e Mobile)
+            await updateUserAvatar(displayName, profile);
+
+            // Atualizar interface
+            document.getElementById('userNickname').textContent = displayName;
+            document.getElementById('mobileUserNickname').textContent = displayName;
+            document.getElementById('welcomeNickname').textContent = displayName;
+
+        } catch (error) {
+            console.error('Erro ao carregar dados do usuário:', error);
+        }
+    }
+
+    // ✅ FUNÇÃO AUXILIAR PARA ATUALIZAR AVATAR
+    async function updateUserAvatar(displayName, profile) {
+        const avatarElements = [
+            document.getElementById('userAvatar'),
+            document.getElementById('mobileUserAvatar')
+        ];
+
+        for (const avatarElement of avatarElements) {
+            if (!avatarElement) continue;
+            
+            const userAvatarFallback = avatarElement.querySelector('.user-avatar-fallback');
             
             if (profile?.avatar_url) {
                 const photoUrl = await loadUserPhoto(profile.avatar_url);
                 if (photoUrl) {
-                    const imgElement = userAvatar.querySelector('.user-avatar-img');
+                    const imgElement = avatarElement.querySelector('.user-avatar-img');
                     imgElement.src = photoUrl;
                     imgElement.style.display = 'block';
                     userAvatarFallback.style.display = 'none';
-                    console.log('✅ Avatar do usuário atualizado com foto');
                 }
             }
-
-            // Atualizar interface
-            document.getElementById('userNickname').textContent = displayName;
-            document.getElementById('welcomeNickname').textContent = displayName;
+            
             userAvatarFallback.textContent = displayName.charAt(0).toUpperCase();
-
-        } catch (error) {
-            console.error('Erro ao carregar dados do usuário:', error);
         }
     }
 
@@ -767,6 +996,9 @@
     async function loadRealUsers() {
         try {
             console.log('🔄 Buscando usuários reais do banco...');
+            
+            // Ajustar limite baseado no tamanho da tela
+            const limit = window.innerWidth <= 768 ? 4 : 8;
             
             // Buscar perfis com detalhes públicos E avatar_url
             const { data: users, error } = await supabase
@@ -787,7 +1019,7 @@
                     )
                 `)
                 .neq('id', currentUser.id) // Excluir próprio usuário
-                .limit(8)
+                .limit(limit)
                 .order('created_at', { ascending: false });
 
             const usersGrid = document.getElementById('usersGrid');
@@ -1049,6 +1281,9 @@
     // Configurar event listeners
     function setupEventListeners() {
         document.getElementById('logoutBtn').addEventListener('click', logout);
+        
+        // Prevenir zoom em inputs no iOS
+        document.addEventListener('touchstart', function() {}, { passive: true });
     }
 
     // Logout
@@ -1066,6 +1301,5 @@
 </script>
 <!-- No final, antes de fechar o body -->
 <script src="delete-account.js"></script>
-</body>
 </body>
 </html>
