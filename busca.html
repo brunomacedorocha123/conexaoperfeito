@@ -87,9 +87,10 @@
             gap: 0.5rem;
         }
 
+        /* CORREÇÃO DO AVATAR NO HEADER - AGORA REDONDO E HARMONIOSO */
         .user-avatar {
-            width: 50px;
-            height: 50px;
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
             background: var(--branco);
             color: var(--vermelho-rosado);
@@ -97,11 +98,26 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             background-size: cover;
             background-position: center;
             border: 2px solid var(--branco);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .user-avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: none;
+        }
+
+        .user-avatar-fallback {
+            font-size: 1.2rem;
+            font-weight: bold;
         }
 
         .btn {
@@ -328,7 +344,7 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
 
-        /* AVATAR NAS CARDS */
+        /* AVATAR NAS CARDS - CORRIGIDO */
         .user-card-avatar {
             width: 80px;
             height: 80px;
@@ -338,7 +354,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: bold;
             margin: 0 auto 1rem;
             background-size: cover;
@@ -358,7 +374,7 @@
         }
 
         .user-card-avatar-fallback {
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: bold;
         }
 
@@ -608,15 +624,15 @@
             }
 
             .user-avatar {
-                width: 45px;
-                height: 45px;
-                font-size: 1.2rem;
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
             }
 
             .user-card-avatar {
                 width: 70px;
                 height: 70px;
-                font-size: 1.8rem;
+                font-size: 1.6rem;
             }
         }
 
@@ -631,6 +647,12 @@
 
             .logo h1 {
                 font-size: 1.1rem;
+            }
+
+            .user-avatar {
+                width: 35px;
+                height: 35px;
+                font-size: 0.9rem;
             }
         }
 
@@ -651,7 +673,7 @@
                 <div class="user-menu">
                     <div class="user-info">
                         <div class="user-avatar" id="userAvatar">
-                            <img class="user-avatar-img" src="" alt="Avatar" style="display: none;">
+                            <img class="user-avatar-img" src="" alt="Avatar">
                             <div class="user-avatar-fallback">U</div>
                         </div>
                         <span id="userNickname">Usuário</span>
@@ -835,329 +857,351 @@
             </div>
         </div>
     </footer>
-        <script>
-        // Configuração do Supabase
-        const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+<script>
+    // Configuração do Supabase
+    const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 
-        // Estado da aplicação
-        let currentUser = null;
-        let currentPage = 1;
-        const usersPerPage = 12;
-        let totalUsers = 0;
-        let currentFilters = {};
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        document.addEventListener('DOMContentLoaded', function() {
-            checkAuth();
-        });
+    // Estado da aplicação
+    let currentUser = null;
+    let currentPage = 1;
+    const usersPerPage = 12;
+    let totalUsers = 0;
+    let currentFilters = {};
 
-        // Verificar autenticação
-        async function checkAuth() {
-            try {
-                const { data: { user }, error } = await supabase.auth.getUser();
-                
-                if (error) throw error;
-                
-                if (!user) {
-                    window.location.href = 'login.html';
-                    return;
-                }
-                
-                currentUser = user;
-                await loadUserData();
-                setupEventListeners();
-                await loadInitialUsers();
-                
-            } catch (error) {
-                console.error('Erro na autenticação:', error);
+    document.addEventListener('DOMContentLoaded', function() {
+        checkAuth();
+    });
+
+    // Verificar autenticação
+    async function checkAuth() {
+        try {
+            const { data: { user }, error } = await supabase.auth.getUser();
+            
+            if (error) throw error;
+            
+            if (!user) {
                 window.location.href = 'login.html';
-            }
-        }
-
-        // Carregar dados do usuário
-        async function loadUserData() {
-            try {
-                const { data: { user } } = await supabase.auth.getUser();
-                
-                let displayName = 'Usuário';
-                
-                if (user.user_metadata && user.user_metadata.nickname) {
-                    displayName = user.user_metadata.nickname;
-                } else if (user.user_metadata && user.user_metadata.full_name) {
-                    displayName = user.user_metadata.full_name;
-                } else if (user.email) {
-                    displayName = user.email.split('@')[0];
-                }
-
-                document.getElementById('userNickname').textContent = displayName;
-                
-                // Carregar foto do usuário logado
-                await loadCurrentUserAvatar();
-
-            } catch (error) {
-                console.error('Erro ao carregar dados do usuário:', error);
-            }
-        }
-
-        // Carregar foto do usuário logado
-        async function loadCurrentUserAvatar() {
-            try {
-                const { data: profile, error } = await supabase
-                    .from('profiles')
-                    .select('avatar_url, nickname')
-                    .eq('id', currentUser.id)
-                    .single();
-
-                if (error || !profile) return;
-
-                const userAvatar = document.getElementById('userAvatar');
-                const userAvatarFallback = userAvatar.querySelector('.user-avatar-fallback');
-                const userAvatarImg = userAvatar.querySelector('.user-avatar-img');
-                
-                if (profile.avatar_url) {
-                    const photoUrl = await loadUserPhoto(profile.avatar_url);
-                    if (photoUrl) {
-                        userAvatarImg.src = photoUrl;
-                        userAvatarImg.style.display = 'block';
-                        userAvatarFallback.style.display = 'none';
-                    }
-                }
-
-            } catch (error) {
-                console.error('Erro ao carregar avatar do usuário:', error);
-            }
-        }
-
-        // Carregar foto do usuário
-        async function loadUserPhoto(avatarUrl) {
-            try {
-                if (!avatarUrl) return null;
-
-                const { data, error } = await supabase.storage
-                    .from('avatars')
-                    .download(avatarUrl);
-
-                if (error) return null;
-
-                return URL.createObjectURL(data);
-
-            } catch (error) {
-                console.error('Erro ao carregar foto:', error);
-                return null;
-            }
-        }
-
-        // Configurar event listeners
-        function setupEventListeners() {
-            document.getElementById('logoutBtn').addEventListener('click', logout);
-            document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
-            document.getElementById('clearFiltersBtn').addEventListener('click', clearFilters);
-            document.getElementById('clearFiltersNoResults').addEventListener('click', clearFilters);
-        }
-
-        // Fazer logout
-        async function logout() {
-            try {
-                const { error } = await supabase.auth.signOut();
-                if (error) throw error;
-                window.location.href = 'login.html';
-            } catch (error) {
-                console.error('Erro ao fazer logout:', error);
-            }
-        }
-
-        // Carregar usuários iniciais
-        async function loadInitialUsers() {
-            await applyFilters();
-        }
-
-        // Aplicar filtros
-        async function applyFilters() {
-            try {
-                currentPage = 1;
-                currentFilters = getCurrentFilters();
-                
-                showLoadingState();
-                await searchUsers();
-                
-            } catch (error) {
-                console.error('Erro ao aplicar filtros:', error);
-                showError('Erro ao buscar usuários. Tente novamente.');
-            }
-        }
-
-        // Limpar filtros
-        function clearFilters() {
-            document.getElementById('ageMin').value = '';
-            document.getElementById('ageMax').value = '';
-            document.getElementById('gender').value = '';
-            document.getElementById('lookingFor').value = '';
-            document.getElementById('location').value = '';
-            document.getElementById('zodiac').value = '';
-            
-            // Limpar seleção múltipla de interesses
-            const interestsSelect = document.getElementById('interests');
-            for (let option of interestsSelect.options) {
-                option.selected = false;
-            }
-            
-            applyFilters();
-        }
-
-        // Obter filtros atuais
-        function getCurrentFilters() {
-            const ageMin = document.getElementById('ageMin').value;
-            const ageMax = document.getElementById('ageMax').value;
-            const gender = document.getElementById('gender').value;
-            const lookingFor = document.getElementById('lookingFor').value;
-            const location = document.getElementById('location').value;
-            const zodiac = document.getElementById('zodiac').value;
-            
-            // Obter interesses selecionados
-            const interestsSelect = document.getElementById('interests');
-            const selectedInterests = [];
-            for (let option of interestsSelect.options) {
-                if (option.selected) {
-                    if (option.value === 'nao_importa') {
-                        return {
-                            ageMin: ageMin ? parseInt(ageMin) : null,
-                            ageMax: ageMax ? parseInt(ageMax) : null,
-                            gender: gender || null,
-                            lookingFor: lookingFor || null,
-                            location: location || null,
-                            zodiac: zodiac || null,
-                            interests: null
-                        };
-                    }
-                    selectedInterests.push(option.value);
-                }
-            }
-
-            return {
-                ageMin: ageMin ? parseInt(ageMin) : null,
-                ageMax: ageMax ? parseInt(ageMax) : null,
-                gender: gender || null,
-                lookingFor: lookingFor || null,
-                location: location || null,
-                zodiac: zodiac || null,
-                interests: selectedInterests.length > 0 ? selectedInterests : null
-            };
-        }
-
-        // Buscar usuários
-        async function searchUsers() {
-            try {
-                console.log('🔍 Aplicando filtros:', currentFilters);
-                
-                let query = supabase
-                    .from('profiles')
-                    .select('*')
-                    .neq('id', currentUser.id)
-                    .not('birth_date', 'is', null);
-
-                const { data: users, error } = await query;
-
-                if (error) throw error;
-
-                console.log('📊 Usuários encontrados:', users?.length);
-
-                // Aplicar filtros no client-side
-                let filteredUsers = users || [];
-                
-                // Filtro de idade
-                if (currentFilters.ageMin || currentFilters.ageMax) {
-                    filteredUsers = filteredUsers.filter(user => {
-                        if (!user.birth_date) return false;
-                        
-                        const age = calculateAge(user.birth_date);
-                        const minAge = currentFilters.ageMin || 0;
-                        const maxAge = currentFilters.ageMax || 100;
-                        
-                        return age >= minAge && age <= maxAge;
-                    });
-                }
-
-                // Filtro de gênero
-                if (currentFilters.gender) {
-                    filteredUsers = filteredUsers.filter(user => 
-                        user.gender === currentFilters.gender
-                    );
-                }
-
-                // Filtro de localização
-                if (currentFilters.location) {
-                    filteredUsers = filteredUsers.filter(user => 
-                        user.city && user.city.toLowerCase().includes(currentFilters.location.toLowerCase())
-                    );
-                }
-
-                console.log('🎉 RESULTADO FINAL:', filteredUsers.length, 'usuários');
-
-                // Paginação
-                totalUsers = filteredUsers.length;
-                const startIndex = (currentPage - 1) * usersPerPage;
-                const endIndex = startIndex + usersPerPage;
-                const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
-
-                await displayUsersWithPhotos(paginatedUsers);
-                updatePagination();
-                updateResultsCount(paginatedUsers.length, totalUsers);
-
-            } catch (error) {
-                console.error('❌ Erro ao buscar usuários:', error);
-                showError('Erro ao carregar usuários: ' + error.message);
-            }
-        }
-
-        // Exibir usuários com fotos
-        async function displayUsersWithPhotos(users) {
-            const usersGrid = document.getElementById('usersGrid');
-            const noResults = document.getElementById('noResults');
-            const loadingResults = document.getElementById('loadingResults');
-
-            loadingResults.classList.add('hidden');
-
-            if (!users || users.length === 0) {
-                usersGrid.innerHTML = '';
-                noResults.classList.remove('hidden');
                 return;
             }
-
-            noResults.classList.add('hidden');
-
-            // Carregar fotos para cada usuário
-            const userCards = await Promise.all(
-                users.map(async user => await createUserCardWithPhoto(user))
-            );
             
-            usersGrid.innerHTML = userCards.join('');
+            currentUser = user;
+            await loadUserData();
+            setupEventListeners();
+            await loadInitialUsers();
+            
+        } catch (error) {
+            console.error('Erro na autenticação:', error);
+            window.location.href = 'login.html';
+        }
+    }
+
+    // Carregar dados do usuário
+    async function loadUserData() {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            
+            let displayName = 'Usuário';
+            
+            if (user.user_metadata && user.user_metadata.nickname) {
+                displayName = user.user_metadata.nickname;
+            } else if (user.user_metadata && user.user_metadata.full_name) {
+                displayName = user.user_metadata.full_name;
+            } else if (user.email) {
+                displayName = user.email.split('@')[0];
+            }
+
+            document.getElementById('userNickname').textContent = displayName;
+            
+            // Carregar foto do usuário logado
+            await loadCurrentUserAvatar();
+
+        } catch (error) {
+            console.error('Erro ao carregar dados do usuário:', error);
+        }
+    }
+
+    // CORREÇÃO: Carregar foto do usuário logado
+    async function loadCurrentUserAvatar() {
+        try {
+            const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('avatar_url, nickname')
+                .eq('id', currentUser.id)
+                .single();
+
+            if (error || !profile) return;
+
+            const userAvatar = document.getElementById('userAvatar');
+            const userAvatarFallback = userAvatar.querySelector('.user-avatar-fallback');
+            const userAvatarImg = userAvatar.querySelector('.user-avatar-img');
+            
+            // Iniciar com fallback visível
+            userAvatarImg.style.display = 'none';
+            userAvatarFallback.style.display = 'flex';
+            
+            if (profile.avatar_url) {
+                const photoUrl = await loadUserPhoto(profile.avatar_url);
+                if (photoUrl) {
+                    userAvatarImg.src = photoUrl;
+                    userAvatarImg.style.display = 'block';
+                    userAvatarFallback.style.display = 'none';
+                    // Adicionar background image para garantir o redondel
+                    userAvatar.style.backgroundImage = `url(${photoUrl})`;
+                    userAvatar.style.backgroundSize = 'cover';
+                    userAvatar.style.backgroundPosition = 'center';
+                }
+            }
+
+        } catch (error) {
+            console.error('Erro ao carregar avatar do usuário:', error);
+        }
+    }
+
+    // Carregar foto do usuário
+    async function loadUserPhoto(avatarUrl) {
+        try {
+            if (!avatarUrl) return null;
+
+            const { data, error } = await supabase.storage
+                .from('avatars')
+                .download(avatarUrl);
+
+            if (error) {
+                console.error('Erro ao baixar imagem:', error);
+                return null;
+            }
+
+            return URL.createObjectURL(data);
+
+        } catch (error) {
+            console.error('Erro ao carregar foto:', error);
+            return null;
+        }
+    }
+
+    // Configurar event listeners
+    function setupEventListeners() {
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+        document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
+        document.getElementById('clearFiltersBtn').addEventListener('click', clearFilters);
+        document.getElementById('clearFiltersNoResults').addEventListener('click', clearFilters);
+    }
+
+    // Fazer logout
+    async function logout() {
+        try {
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
+            window.location.href = 'login.html';
+        } catch (error) {
+            console.error('Erro ao fazer logout:', error);
+        }
+    }
+
+    // Carregar usuários iniciais
+    async function loadInitialUsers() {
+        await applyFilters();
+    }
+
+    // Aplicar filtros
+    async function applyFilters() {
+        try {
+            currentPage = 1;
+            currentFilters = getCurrentFilters();
+            
+            showLoadingState();
+            await searchUsers();
+            
+        } catch (error) {
+            console.error('Erro ao aplicar filtros:', error);
+            showError('Erro ao buscar usuários. Tente novamente.');
+        }
+    }
+
+    // Limpar filtros
+    function clearFilters() {
+        document.getElementById('ageMin').value = '';
+        document.getElementById('ageMax').value = '';
+        document.getElementById('gender').value = '';
+        document.getElementById('lookingFor').value = '';
+        document.getElementById('location').value = '';
+        document.getElementById('zodiac').value = '';
+        
+        // Limpar seleção múltipla de interesses
+        const interestsSelect = document.getElementById('interests');
+        for (let option of interestsSelect.options) {
+            option.selected = false;
+        }
+        
+        applyFilters();
+    }
+
+    // Obter filtros atuais
+    function getCurrentFilters() {
+        const ageMin = document.getElementById('ageMin').value;
+        const ageMax = document.getElementById('ageMax').value;
+        const gender = document.getElementById('gender').value;
+        const lookingFor = document.getElementById('lookingFor').value;
+        const location = document.getElementById('location').value;
+        const zodiac = document.getElementById('zodiac').value;
+        
+        // Obter interesses selecionados
+        const interestsSelect = document.getElementById('interests');
+        const selectedInterests = [];
+        for (let option of interestsSelect.options) {
+            if (option.selected) {
+                if (option.value === 'nao_importa') {
+                    return {
+                        ageMin: ageMin ? parseInt(ageMin) : null,
+                        ageMax: ageMax ? parseInt(ageMax) : null,
+                        gender: gender || null,
+                        lookingFor: lookingFor || null,
+                        location: location || null,
+                        zodiac: zodiac || null,
+                        interests: null
+                    };
+                }
+                selectedInterests.push(option.value);
+            }
         }
 
-        // Criar card de usuário com foto
-        async function createUserCardWithPhoto(user) {
-            const nickname = user.nickname || user.full_name?.split(' ')[0] || 'Usuário';
-            const age = user.birth_date ? calculateAge(user.birth_date) : null;
+        return {
+            ageMin: ageMin ? parseInt(ageMin) : null,
+            ageMax: ageMax ? parseInt(ageMax) : null,
+            gender: gender || null,
+            lookingFor: lookingFor || null,
+            location: location || null,
+            zodiac: zodiac || null,
+            interests: selectedInterests.length > 0 ? selectedInterests : null
+        };
+    }
+
+    // Buscar usuários
+    async function searchUsers() {
+        try {
+            console.log('🔍 Aplicando filtros:', currentFilters);
             
-            // Carregar foto do usuário
-            let avatarHtml = '';
-            if (user.avatar_url) {
-                const photoUrl = await loadUserPhoto(user.avatar_url);
-                if (photoUrl) {
-                    avatarHtml = `
-                        <div class="user-card-avatar" style="background: none;">
-                            <img src="${photoUrl}" alt="${nickname}" class="user-card-avatar-img" style="display: block;">
-                            <div class="user-card-avatar-fallback" style="display: none;">${nickname.charAt(0).toUpperCase()}</div>
-                        </div>
-                    `;
-                } else {
-                    avatarHtml = `
-                        <div class="user-card-avatar">
-                            <div class="user-card-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
-                        </div>
-                    `;
-                }
+            let query = supabase
+                .from('profiles')
+                .select('*')
+                .neq('id', currentUser.id)
+                .not('birth_date', 'is', null);
+
+            const { data: users, error } = await query;
+
+            if (error) throw error;
+
+            console.log('📊 Usuários encontrados:', users?.length);
+
+            // Aplicar filtros no client-side
+            let filteredUsers = users || [];
+            
+            // Filtro de idade
+            if (currentFilters.ageMin || currentFilters.ageMax) {
+                filteredUsers = filteredUsers.filter(user => {
+                    if (!user.birth_date) return false;
+                    
+                    const age = calculateAge(user.birth_date);
+                    const minAge = currentFilters.ageMin || 0;
+                    const maxAge = currentFilters.ageMax || 100;
+                    
+                    return age >= minAge && age <= maxAge;
+                });
+            }
+
+            // Filtro de gênero
+            if (currentFilters.gender) {
+                filteredUsers = filteredUsers.filter(user => 
+                    user.gender === currentFilters.gender
+                );
+            }
+
+            // Filtro de localização
+            if (currentFilters.location) {
+                filteredUsers = filteredUsers.filter(user => 
+                    user.city && user.city.toLowerCase().includes(currentFilters.location.toLowerCase())
+                );
+            }
+
+            // Filtro de signo
+            if (currentFilters.zodiac) {
+                filteredUsers = filteredUsers.filter(user => 
+                    user.zodiac === currentFilters.zodiac
+                );
+            }
+
+            // Filtro de interesses
+            if (currentFilters.interests && currentFilters.interests.length > 0) {
+                filteredUsers = filteredUsers.filter(user => {
+                    if (!user.interests) return false;
+                    return currentFilters.interests.some(interest => 
+                        user.interests.includes(interest)
+                    );
+                });
+            }
+
+            console.log('🎉 RESULTADO FINAL:', filteredUsers.length, 'usuários');
+
+            // Paginação
+            totalUsers = filteredUsers.length;
+            const startIndex = (currentPage - 1) * usersPerPage;
+            const endIndex = startIndex + usersPerPage;
+            const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+
+            await displayUsersWithPhotos(paginatedUsers);
+            updatePagination();
+            updateResultsCount(paginatedUsers.length, totalUsers);
+
+        } catch (error) {
+            console.error('❌ Erro ao buscar usuários:', error);
+            showError('Erro ao carregar usuários: ' + error.message);
+        }
+    }
+
+    // Exibir usuários com fotos
+    async function displayUsersWithPhotos(users) {
+        const usersGrid = document.getElementById('usersGrid');
+        const noResults = document.getElementById('noResults');
+        const loadingResults = document.getElementById('loadingResults');
+
+        loadingResults.classList.add('hidden');
+
+        if (!users || users.length === 0) {
+            usersGrid.innerHTML = '';
+            noResults.classList.remove('hidden');
+            return;
+        }
+
+        noResults.classList.add('hidden');
+
+        // Carregar fotos para cada usuário
+        const userCards = await Promise.all(
+            users.map(async user => await createUserCardWithPhoto(user))
+        );
+        
+        usersGrid.innerHTML = userCards.join('');
+    }
+
+    // CORREÇÃO: Criar card de usuário com foto
+    async function createUserCardWithPhoto(user) {
+        const nickname = user.nickname || user.full_name?.split(' ')[0] || 'Usuário';
+        const age = user.birth_date ? calculateAge(user.birth_date) : null;
+        
+        // CORREÇÃO: Carregar foto sem CSS inline problemático
+        let avatarHtml = '';
+        if (user.avatar_url) {
+            const photoUrl = await loadUserPhoto(user.avatar_url);
+            if (photoUrl) {
+                avatarHtml = `
+                    <div class="user-card-avatar">
+                        <img src="${photoUrl}" alt="${nickname}" class="user-card-avatar-img">
+                        <div class="user-card-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
+                    </div>
+                `;
             } else {
                 avatarHtml = `
                     <div class="user-card-avatar">
@@ -1165,126 +1209,160 @@
                     </div>
                 `;
             }
-
-            const gender = user.gender ? formatGender(user.gender) : null;
-            const location = user.city || null;
-            const bio = user.bio || 'Este usuário ainda não adicionou uma descrição.';
-
-            return `
-                <div class="user-card">
-                    ${avatarHtml}
-                    <div class="user-card-name">${nickname}${age ? `, ${age}` : ''}</div>
-                    
-                    <div class="user-card-info">
-                        ${gender ? `<div class="user-card-detail">👤 ${gender}</div>` : ''}
-                        ${location ? `<div class="user-card-detail">📍 ${location}</div>` : ''}
-                    </div>
-                    
-                    <div class="user-card-bio">${bio}</div>
-                    
-                    <div class="user-card-actions">
-                        <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); sendMessage('${user.id}')">
-                            💌 Mensagem
-                        </button>
-                        <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewProfile('${user.id}')">
-                            👀 Ver Perfil
-                        </button>
-                    </div>
+        } else {
+            avatarHtml = `
+                <div class="user-card-avatar">
+                    <div class="user-card-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
                 </div>
             `;
         }
 
-        // Calcular idade a partir da data de nascimento
-        function calculateAge(birthDate) {
-            const today = new Date();
-            const birth = new Date(birthDate);
-            let age = today.getFullYear() - birth.getFullYear();
-            const monthDiff = today.getMonth() - birth.getMonth();
-            
-            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-                age--;
-            }
-            
-            return age;
-        }
-
-        // Formatar gênero para exibição
-        function formatGender(gender) {
-            const genderMap = {
-                'feminino': 'Feminino',
-                'masculino': 'Masculino'
-            };
-            return genderMap[gender] || gender;
-        }
-
-        // Atualizar contagem de resultados
-        function updateResultsCount(currentCount, totalCount) {
-            const resultsCount = document.getElementById('resultsCount');
-            if (totalCount === 0) {
-                resultsCount.textContent = 'Nenhum resultado encontrado';
-            } else {
-                resultsCount.textContent = `Mostrando ${currentCount} de ${totalCount} pessoas`;
-            }
-        }
-
-        // Atualizar paginação
-        function updatePagination() {
-            const pagination = document.getElementById('pagination');
-            const totalPages = Math.ceil(totalUsers / usersPerPage);
-            
-            if (totalPages <= 1) {
-                pagination.classList.add('hidden');
-                return;
-            }
-            
-            pagination.classList.remove('hidden');
-            
-            let paginationHTML = `
-                <button class="pagination-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(${currentPage - 1})">
-                    ← Anterior
-                </button>
-                <span class="pagination-info">Página ${currentPage} de ${totalPages}</span>
-                <button class="pagination-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="changePage(${currentPage + 1})">
-                    Próxima →
-                </button>
+        const gender = user.gender ? formatGender(user.gender) : null;
+        const location = user.city || null;
+        const bio = user.bio || 'Este usuário ainda não adicionou uma descrição.';
+        
+        // Mostrar interesses se disponíveis
+        let interestsHtml = '';
+        if (user.interests && user.interests.length > 0) {
+            const interests = Array.isArray(user.interests) ? user.interests : [user.interests];
+            interestsHtml = `
+                <div class="user-card-interests">
+                    ${interests.slice(0, 3).map(interest => 
+                        `<span class="interest-tag">${interest}</span>`
+                    ).join('')}
+                    ${interests.length > 3 ? `<span class="interest-tag">+${interests.length - 3}</span>` : ''}
+                </div>
             `;
-            
-            pagination.innerHTML = paginationHTML;
         }
 
-        // Mudar página
-        async function changePage(page) {
-            currentPage = page;
-            showLoadingState();
-            await searchUsers();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+        return `
+            <div class="user-card">
+                ${avatarHtml}
+                <div class="user-card-name">${nickname}${age ? `, ${age}` : ''}</div>
+                
+                <div class="user-card-info">
+                    ${gender ? `<div class="user-card-detail">👤 ${gender}</div>` : ''}
+                    ${location ? `<div class="user-card-detail">📍 ${location}</div>` : ''}
+                </div>
+                
+                ${interestsHtml}
+                
+                <div class="user-card-bio">${bio}</div>
+                
+                <div class="user-card-actions">
+                    <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); sendMessage('${user.id}')">
+                        💌 Mensagem
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewProfile('${user.id}')">
+                        👀 Ver Perfil
+                    </button>
+                </div>
+            </div>
+        `;
+    }
 
-        // Mostrar estado de carregamento
-        function showLoadingState() {
-            document.getElementById('loadingResults').classList.remove('hidden');
-            document.getElementById('usersGrid').innerHTML = '';
-            document.getElementById('noResults').classList.add('hidden');
-            document.getElementById('pagination').classList.add('hidden');
+    // Calcular idade a partir da data de nascimento
+    function calculateAge(birthDate) {
+        const today = new Date();
+        const birth = new Date(birthDate);
+        let age = today.getFullYear() - birth.getFullYear();
+        const monthDiff = today.getMonth() - birth.getMonth();
+        
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+            age--;
         }
+        
+        return age;
+    }
 
-        // Mostrar erro
-        function showError(message) {
-            alert(message);
-            document.getElementById('loadingResults').classList.add('hidden');
-        }
+    // Formatar gênero para exibição
+    function formatGender(gender) {
+        const genderMap = {
+            'feminino': 'Feminino',
+            'masculino': 'Masculino'
+        };
+        return genderMap[gender] || gender;
+    }
 
-        // Enviar mensagem (placeholder)
-        function sendMessage(userId) {
-            alert(`Função de enviar mensagem para o usuário ${userId} será implementada em breve!`);
-            // window.location.href = `mensagens.html?user=${userId}`;
+    // Atualizar contagem de resultados
+    function updateResultsCount(currentCount, totalCount) {
+        const resultsCount = document.getElementById('resultsCount');
+        if (totalCount === 0) {
+            resultsCount.textContent = 'Nenhum resultado encontrado';
+        } else {
+            const startUser = ((currentPage - 1) * usersPerPage) + 1;
+            const endUser = Math.min(startUser + currentCount - 1, totalCount);
+            resultsCount.textContent = `Mostrando ${startUser}-${endUser} de ${totalCount} pessoas`;
         }
+    }
 
-        // Ver perfil (placeholder)
-        function viewProfile(userId) {
-            alert(`Função de ver perfil do usuário ${userId} será implementada em breve!`);
-            // window.location.href = `perfil.html?id=${userId}`;
+    // Atualizar paginação
+    function updatePagination() {
+        const pagination = document.getElementById('pagination');
+        const totalPages = Math.ceil(totalUsers / usersPerPage);
+        
+        if (totalPages <= 1) {
+            pagination.classList.add('hidden');
+            return;
         }
-    </script>
+        
+        pagination.classList.remove('hidden');
+        
+        let paginationHTML = `
+            <button class="pagination-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(${currentPage - 1})">
+                ← Anterior
+            </button>
+            <span class="pagination-info">Página ${currentPage} de ${totalPages}</span>
+            <button class="pagination-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="changePage(${currentPage + 1})">
+                Próxima →
+            </button>
+        `;
+        
+        pagination.innerHTML = paginationHTML;
+    }
+
+    // Mudar página
+    async function changePage(page) {
+        currentPage = page;
+        showLoadingState();
+        await searchUsers();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Mostrar estado de carregamento
+    function showLoadingState() {
+        document.getElementById('loadingResults').classList.remove('hidden');
+        document.getElementById('usersGrid').innerHTML = '';
+        document.getElementById('noResults').classList.add('hidden');
+        document.getElementById('pagination').classList.add('hidden');
+        document.getElementById('resultsCount').textContent = 'Buscando...';
+    }
+
+    // Mostrar erro
+    function showError(message) {
+        alert(message);
+        document.getElementById('loadingResults').classList.add('hidden');
+    }
+
+    // Enviar mensagem (placeholder)
+    function sendMessage(userId) {
+        alert(`Função de enviar mensagem para o usuário ${userId} será implementada em breve!`);
+        // window.location.href = `mensagens.html?user=${userId}`;
+    }
+
+    // Ver perfil (placeholder)
+    function viewProfile(userId) {
+        alert(`Função de ver perfil do usuário ${userId} será implementada em breve!`);
+        // window.location.href = `perfil.html?id=${userId}`;
+    }
+
+    // Inicializar tooltips para múltiplos selects
+    function initSelectTooltips() {
+        const multipleSelects = document.querySelectorAll('select[multiple]');
+        multipleSelects.forEach(select => {
+            select.title = 'Segure Ctrl para selecionar múltiplas opções';
+        });
+    }
+</script>
 </body>
 </html>
