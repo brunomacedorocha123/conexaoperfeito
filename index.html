@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Amor Conect - Encontre seu par ideal</title>
     <style>
-     /* Reset e configurações gerais */
+ /* Reset e configurações gerais */
 * {
     margin: 0;
     padding: 0;
@@ -448,25 +448,27 @@ footer {
     color: var(--text-light);
 }
 
-/* RESPONSIVIDADE MOBILE - CORRIGIDA */
+/* RESPONSIVIDADE MOBILE - LOGO GRANDE */
 @media (max-width: 768px) {
     .header-content {
         flex-wrap: wrap;
         height: auto;
-        padding: 1rem 0;
+        padding: 1.5rem 0; /* Aumentei o padding para caber a logo grande */
         gap: 1rem;
         align-items: flex-start;
     }
 
-    /* LOGO - GRANDE E SEM TÍTULO */
+    /* LOGO - BEM GRANDE E SEM TÍTULO */
     .logo {
         order: 1;
         flex: 1;
+        justify-content: center;
     }
 
     .logo img {
-        height: 90px; /* Logo bem maior */
+        height: 160px; /* Logo BEM GRANDE - 160px */
         width: auto;
+        max-width: 100%;
     }
 
     .logo h1 {
@@ -478,7 +480,7 @@ footer {
         display: flex;
         order: 2;
         margin-left: auto;
-        margin-top: 1rem;
+        margin-top: 0.5rem;
     }
 
     /* BOTÕES LOGIN/CADASTRO - ABAIXO DO HAMBURGUER */
@@ -577,10 +579,11 @@ footer {
 @media (max-width: 480px) {
     .header-content {
         gap: 0.8rem;
+        padding: 1.2rem 0; /* Ajuste fino no padding */
     }
 
     .logo img {
-        height: 80px; /* Logo mantém tamanho grande */
+        height: 140px; /* Logo ainda grande em telas menores */
     }
 
     .auth-buttons {
@@ -613,7 +616,7 @@ footer {
 
 @media (max-width: 360px) {
     .logo img {
-        height: 70px; /* Logo ainda grande em telas menores */
+        height: 120px; /* Logo ainda bem legível em telas muito pequenas */
     }
 
     .auth-buttons .btn {
