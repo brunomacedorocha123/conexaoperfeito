@@ -1079,12 +1079,12 @@
         };
     }
 
-    // CORREÇÃO: Buscar usuários com JOIN nas tabelas corretas
+    // Buscar usuários com JOIN nas tabelas corretas
     async function searchUsers() {
         try {
             console.log('🔍 Aplicando filtros:', currentFilters);
             
-            // CORREÇÃO: Buscar com JOIN entre profiles e user_details
+            // Buscar com JOIN entre profiles e user_details
             let query = supabase
                 .from('profiles')
                 .select(`
@@ -1125,14 +1125,14 @@
                 });
             }
 
-            // Filtro de gênero - CORREÇÃO: Agora em user_details
+            // Filtro de gênero
             if (currentFilters.gender) {
                 filteredUsers = filteredUsers.filter(user => 
                     user.user_details?.gender === currentFilters.gender
                 );
             }
 
-            // Filtro de localização - CORREÇÃO: Agora em user_details
+            // Filtro de localização
             if (currentFilters.location) {
                 filteredUsers = filteredUsers.filter(user => 
                     user.user_details?.address && 
@@ -1140,14 +1140,14 @@
                 );
             }
 
-            // Filtro de signo - CORREÇÃO: Agora em user_details
+            // Filtro de signo
             if (currentFilters.zodiac) {
                 filteredUsers = filteredUsers.filter(user => 
                     user.user_details?.zodiac === currentFilters.zodiac
                 );
             }
 
-            // Filtro de interesses - CORREÇÃO: Agora em user_details
+            // Filtro de interesses
             if (currentFilters.interests && currentFilters.interests.length > 0) {
                 filteredUsers = filteredUsers.filter(user => {
                     if (!user.user_details?.interests) return false;
@@ -1157,7 +1157,7 @@
                 });
             }
 
-            // Filtro de looking_for - CORREÇÃO: Agora em user_details
+            // Filtro de looking_for
             if (currentFilters.lookingFor) {
                 filteredUsers = filteredUsers.filter(user => 
                     user.user_details?.looking_for === currentFilters.lookingFor
@@ -1206,29 +1206,27 @@
         usersGrid.innerHTML = userCards.join('');
     }
 
-    // CORREÇÃO: Criar card de usuário com dados das duas tabelas
+    // CORREÇÃO COMPLETA: Criar card de usuário com imagem funcionando
     async function createUserCardWithPhoto(user) {
         const nickname = user.nickname || user.full_name?.split(' ')[0] || 'Usuário';
         const age = user.birth_date ? calculateAge(user.birth_date) : null;
         
-        // Carregar foto do usuário
+        // CORREÇÃO: Carregar a foto ANTES de construir o HTML
         let avatarHtml = '';
+        let photoUrl = null;
+        
         if (user.avatar_url) {
-            const photoUrl = await loadUserPhoto(user.avatar_url);
-            if (photoUrl) {
-                avatarHtml = `
-                    <div class="user-card-avatar">
-                        <img src="${photoUrl}" alt="${nickname}" class="user-card-avatar-img">
-                        <div class="user-card-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
-                    </div>
-                `;
-            } else {
-                avatarHtml = `
-                    <div class="user-card-avatar">
-                        <div class="user-card-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
-                    </div>
-                `;
-            }
+            photoUrl = await loadUserPhoto(user.avatar_url);
+        }
+        
+        // CORREÇÃO: Construir o HTML baseado no resultado do carregamento
+        if (photoUrl) {
+            avatarHtml = `
+                <div class="user-card-avatar" style="background-image: url('${photoUrl}'); background-size: cover; background-position: center;">
+                    <img src="${photoUrl}" alt="${nickname}" class="user-card-avatar-img" style="display: none;">
+                    <div class="user-card-avatar-fallback" style="display: none;">${nickname.charAt(0).toUpperCase()}</div>
+                </div>
+            `;
         } else {
             avatarHtml = `
                 <div class="user-card-avatar">
@@ -1237,7 +1235,7 @@
             `;
         }
 
-        // CORREÇÃO: Usar dados de user_details
+        // Usar dados de user_details
         const userDetails = user.user_details || {};
         const gender = userDetails.gender ? formatGender(userDetails.gender) : null;
         const location = userDetails.address || null;
