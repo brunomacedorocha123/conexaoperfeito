@@ -97,6 +97,8 @@
             justify-content: center;
             font-weight: bold;
             font-size: 1.2rem;
+            background-size: cover;
+            background-position: center;
         }
 
         .btn {
@@ -253,6 +255,9 @@
             font-size: 1.2rem;
             font-weight: bold;
             flex-shrink: 0;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
         }
 
         .conversation-content {
@@ -612,7 +617,7 @@
     </footer>
 
     <script>
-   // Configuração do Supabase
+        // Configuração do Supabase
 const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 
@@ -675,7 +680,15 @@ async function loadUserData() {
         }
 
         document.getElementById('userNickname').textContent = displayName;
-        document.getElementById('userAvatar').textContent = displayName.charAt(0).toUpperCase();
+        
+        // Atualizar avatar do usuário logado com foto se existir
+        const userAvatar = document.getElementById('userAvatar');
+        if (profile && profile.avatar_url) {
+            userAvatar.style.backgroundImage = `url('${profile.avatar_url}')`;
+            userAvatar.textContent = '';
+        } else {
+            userAvatar.textContent = displayName.charAt(0).toUpperCase();
+        }
 
     } catch (error) {
         console.error('Erro ao carregar dados do usuário:', error);
@@ -696,16 +709,13 @@ async function loadConversations() {
             return;
         }
 
-        // REMOVIDO: Não mostra loading state
-        // showLoadingState();
-
         // Buscar todas as mensagens do usuário
         const { data: allMessages, error } = await supabase
             .from('messages')
             .select(`
                 *,
-                sender:profiles!messages_sender_id_fkey(nickname, birth_date),
-                receiver:profiles!messages_receiver_id_fkey(nickname, birth_date)
+                sender:profiles!messages_sender_id_fkey(nickname, birth_date, avatar_url),
+                receiver:profiles!messages_receiver_id_fkey(nickname, birth_date, avatar_url)
             `)
             .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
             .order('created_at', { ascending: false });
@@ -716,18 +726,18 @@ async function loadConversations() {
         }
 
         // Organizar conversas
-        const conversations = organizeConversations(allMessages);
+        const conversations = await organizeConversations(allMessages);
         displayConversations(conversations);
         updateConversationsInfo(conversations.length);
 
     } catch (error) {
         console.error('Erro ao carregar conversas:', error);
-        showNoConversations(); // Mostra estado vazio em caso de erro
+        showNoConversations();
     }
 }
 
 // Organizar conversas por usuário
-function organizeConversations(allMessages) {
+async function organizeConversations(allMessages) {
     const conversationsMap = new Map();
 
     allMessages.forEach(msg => {
@@ -740,6 +750,7 @@ function organizeConversations(allMessages) {
                 user_id: otherUserId,
                 nickname: otherUser?.nickname || 'Usuário',
                 age: otherUser?.birth_date ? calculateAge(otherUser.birth_date) : null,
+                avatar_url: otherUser?.avatar_url || null,
                 messages: [msg],
                 unread: !isFromCurrentUser && !msg.is_read,
                 last_message_time: msg.created_at
@@ -758,7 +769,6 @@ function organizeConversations(allMessages) {
     return Array.from(conversationsMap.values())
         .sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time))
         .map(conv => {
-            // Ordenar mensagens da conversa por tempo e pegar as 3 mais recentes
             conv.messages.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
             conv.recentMessages = conv.messages.slice(0, 3);
             return conv;
@@ -771,7 +781,6 @@ function displayConversations(conversations) {
     const noConversations = document.getElementById('noConversations');
     const loadingConversations = document.getElementById('loadingConversations');
 
-    // REMOVIDO: Esconde completamente o loading
     if (loadingConversations) {
         loadingConversations.style.display = 'none';
     }
@@ -795,9 +804,19 @@ function displayConversations(conversations) {
             return `<div class="conversation-preview">${prefix}${msg.content}</div>`;
         }).join('');
 
+        // Avatar com foto ou inicial
+        const avatarStyle = conv.avatar_url ? 
+            `style="background-image: url('${conv.avatar_url}');"` : 
+            '';
+        const avatarContent = conv.avatar_url ? 
+            '' : 
+            conv.nickname.charAt(0).toUpperCase();
+
         return `
             <div class="conversation-item" onclick="openConversation('${conv.user_id}')">
-                <div class="conversation-avatar">${conv.nickname.charAt(0).toUpperCase()}</div>
+                <div class="conversation-avatar" ${avatarStyle}>
+                    ${avatarContent}
+                </div>
                 <div class="conversation-content">
                     <div class="conversation-header">
                         <div class="conversation-name">
@@ -829,7 +848,6 @@ function showProfileIncomplete() {
     const conversationsList = document.getElementById('conversationsList');
     const loadingConversations = document.getElementById('loadingConversations');
     
-    // REMOVIDO: Esconde completamente o loading
     if (loadingConversations) {
         loadingConversations.style.display = 'none';
     }
@@ -854,7 +872,6 @@ function showNoConversations() {
     const noConversations = document.getElementById('noConversations');
     const loadingConversations = document.getElementById('loadingConversations');
     
-    // REMOVIDO: Esconde completamente o loading
     if (loadingConversations) {
         loadingConversations.style.display = 'none';
     }
@@ -906,7 +923,6 @@ async function updateMessagesStats() {
 
     } catch (error) {
         console.error('Erro ao carregar estatísticas:', error);
-        // Dados simulados em caso de erro
         document.getElementById('totalMessages').textContent = '0';
         document.getElementById('unreadMessages').textContent = '0';
         document.getElementById('conversationsCount').textContent = '0';
@@ -969,14 +985,16 @@ async function sendMessageToUser(receiverId, content) {
     }
 }
 
-// Ver perfil
+// Ver perfil - AGORA FUNCIONAL
 function viewProfile(userId) {
     if (!isProfileComplete()) {
         alert('📝 Complete seu perfil para ver outros perfis!');
         window.location.href = 'painel.html';
         return;
     }
-    alert(`🔍 Visualizando perfil - Em breve teremos uma página de perfil detalhada!`);
+    
+    // Redireciona para a página de perfil com o ID do usuário
+    window.location.href = `perfil.html?id=${userId}`;
 }
 
 // Configurar event listeners
