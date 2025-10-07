@@ -448,60 +448,60 @@ footer {
     color: var(--text-light);
 }
 
-/* RESPONSIVIDADE MOBILE - LOGO ENORME */
+/* RESPONSIVIDADE MOBILE - LOGO GRANDE E HEADER NORMAL */
 @media (max-width: 768px) {
+    /* HEADER VOLTA AO NORMAL */
     header {
-        padding: 2.5rem 0; /* HEADER MAIOR PARA CABER LOGO ENORME */
+        padding: 0.8rem 0; /* VOLTA AO PADDING ORIGINAL */
     }
 
     .header-content {
         flex-wrap: wrap;
         height: auto;
         padding: 0;
-        gap: 1.5rem;
+        gap: 1rem;
         align-items: center;
     }
 
-    /* LOGO - ENORME E SEM TÍTULO */
+    /* LOGO - MUITO GRANDE MAS DENTRO DO HEADER NORMAL */
     .logo {
         order: 1;
-        width: 100%;
-        justify-content: center;
-        text-align: center;
+        flex: 1;
+        justify-content: flex-start;
+        align-items: center;
+        height: 60px; /* ALTURA FIXA PARA A LOGO */
     }
 
     .logo img {
-        height: 180px !important; /* LOGO ENORME - 180PX */
+        height: 100px !important; /* LOGO MUITO GRANDE - 100PX */
         width: auto;
-        max-width: 90%;
-        margin: 0 auto;
+        max-height: 100%;
+        object-fit: contain;
     }
 
     .logo h1 {
-        display: none; /* REMOVE O TÍTULO */
+        display: none;
     }
 
     /* BOTÃO HAMBURGUER - SUPERIOR DIREITO */
     .menu-toggle {
         display: flex;
         order: 2;
-        position: absolute;
-        top: 2rem;
-        right: 2rem;
+        margin-left: auto;
     }
 
-    /* BOTÕES LOGIN/CADASTRO - CENTRALIZADOS ABAIXO DA LOGO */
+    /* BOTÕES LOGIN/CADASTRO - LADO DIREITO */
     .auth-buttons {
         order: 3;
-        gap: 1rem;
-        width: 100%;
-        justify-content: center;
+        gap: 0.5rem;
+        width: auto;
+        justify-content: flex-end;
         margin-top: 0;
     }
 
     .auth-buttons .btn {
-        padding: 0.8rem 1.8rem;
-        font-size: 1rem;
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
         white-space: nowrap;
     }
 
@@ -510,7 +510,7 @@ footer {
         display: none;
         width: 100%;
         order: 4;
-        margin-top: 1.5rem;
+        margin-top: 1rem;
     }
 
     nav.active {
@@ -584,26 +584,17 @@ footer {
 }
 
 @media (max-width: 480px) {
-    header {
-        padding: 2rem 0;
-    }
-
     .logo img {
-        height: 160px !important; /* LOGO AINDA ENORME EM TELAS PEQUENAS */
-    }
-
-    .menu-toggle {
-        top: 1.5rem;
-        right: 1.5rem;
+        height: 90px !important; /* LOGO AINDA GRANDE */
     }
 
     .auth-buttons {
-        gap: 0.8rem;
+        gap: 0.3rem;
     }
 
     .auth-buttons .btn {
-        padding: 0.7rem 1.5rem;
-        font-size: 0.9rem;
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
     }
 
     .hero h2 {
@@ -627,12 +618,12 @@ footer {
 
 @media (max-width: 360px) {
     .logo img {
-        height: 140px !important; /* LOGO AINDA BEM GRANDE */
+        height: 80px !important; /* LOGO AINDA BEM GRANDE */
     }
 
     .auth-buttons .btn {
-        padding: 0.6rem 1.2rem;
-        font-size: 0.85rem;
+        padding: 0.3rem 0.6rem;
+        font-size: 0.75rem;
     }
 }
     </style>
