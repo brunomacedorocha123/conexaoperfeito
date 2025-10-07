@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buscar Pessoas - Conexão Perfeita Amor</title>
+    <title>Buscar Pessoas - Amor Conect</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="busca.css">
 </head>
@@ -13,21 +13,16 @@
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <a href="home.html">
-                        <span class="logo-icon">💑</span>
-                        <h1>Conexão Perfeita</h1>
-                    </a>
+                    <img src="logoamorconect.png" alt="Amor Conect">
+                    <h1>Amor Conect</h1>
                 </div>
                 <div class="user-menu">
                     <div class="user-info">
-                        <div class="user-avatar" id="userAvatar">
-                            <img class="user-avatar-img" src="" alt="Avatar" style="display: none;">
-                            <div class="user-avatar-fallback">U</div>
-                        </div>
+                        <div class="user-avatar" id="userAvatar">U</div>
                         <span id="userNickname">Usuário</span>
                     </div>
+                    <a href="mensagens.html" class="btn btn-outline">💌 Mensagens</a>
                     <a href="home.html" class="btn btn-outline">🏠 Home</a>
-                    <a href="painel.html" class="btn btn-outline">👤 Perfil</a>
                     <button class="btn btn-outline" id="logoutBtn">🚪 Sair</button>
                 </div>
             </div>
@@ -39,14 +34,14 @@
         <div class="container">
             <!-- Page Header -->
             <section class="page-header">
-                <h1>Encontrar Pessoas Incríveis</h1>
-                <p>Conheça pessoas com interesses similares aos seus</p>
+                <h1>🔍 Buscar Pessoas</h1>
+                <p>Encontre pessoas incríveis com interesses similares aos seus</p>
             </section>
 
             <!-- Search Filters -->
             <section class="filters-section">
                 <div class="filters-card">
-                    <h3>🔍 Filtros de Busca</h3>
+                    <h3>Filtros de Busca</h3>
                     
                     <div class="filters-grid">
                         <!-- Idade -->
@@ -145,7 +140,7 @@
                 </div>
 
                 <!-- Loading State -->
-                <div class="loading" id="loadingResults">
+                <div class="loading hidden" id="loadingResults">
                     <div class="spinner"></div>
                     <p>Buscando pessoas...</p>
                 </div>
@@ -153,11 +148,6 @@
                 <!-- Results Grid -->
                 <div class="users-grid" id="usersGrid">
                     <!-- Os cards serão inseridos aqui via JavaScript -->
-                </div>
-
-                <!-- Pagination -->
-                <div class="pagination" id="pagination">
-                    <!-- Paginação será inserida aqui -->
                 </div>
 
                 <!-- No Results -->
@@ -180,7 +170,7 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-column">
-                    <h3>Conexão Perfeita</h3>
+                    <h3>Amor Conect</h3>
                     <p>Uma plataforma segura e discreta para conectar corações e construir relacionamentos genuínos.</p>
                 </div>
                 <div class="footer-column">
@@ -188,7 +178,7 @@
                     <ul>
                         <li><a href="index.html">Página Inicial</a></li>
                         <li><a href="home.html">Home</a></li>
-                        <li><a href="#depoimentos">Depoimentos</a></li>
+                        <li><a href="mensagens.html">Mensagens</a></li>
                     </ul>
                 </div>
                 <div class="footer-column">
@@ -201,7 +191,7 @@
                 </div>
             </div>
             <div class="copyright">
-                <p>&copy; 2023 Conexão Perfeita Amor. Todos os direitos reservados.</p>
+                <p>&copy; 2023 Amor Conect. Todos os direitos reservados.</p>
             </div>
         </div>
     </footer>
