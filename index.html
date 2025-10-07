@@ -3,415 +3,434 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conexão Perfeita Amor - Encontre seu par ideal</title>
+    <title>Amor Conect - Encontre seu par ideal</title>
     <style>
-        /* Reset e configurações gerais */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+    /* Reset e configurações gerais */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
 
-        :root {
-            --primary: #ff6b8b;
-            --primary-light: #ffb6c1;
-            --secondary: #a78bfa;
-            --accent: #67e8f9;
-            --light: #fdf2f8;
-            --dark: #4a044e;
-            --text: #444;
-            --text-light: #666;
-            --white: #fff;
-            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            --transition: all 0.3s ease;
-        }
+    :root {
+        --bege: #f6ecc5;
+        --vermelho-rosado: #d1656d;
+        --lilas: #dfc9ed;
+        --branco: #ffffff;
+        --text: #444;
+        --text-light: #666;
+        --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        --transition: all 0.3s ease;
+    }
 
-        body {
-            background-color: var(--light);
-            color: var(--text);
-            line-height: 1.6;
-        }
+    body {
+        background-color: var(--bege);
+        color: var(--text);
+        line-height: 1.6;
+    }
 
-        .container {
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
+    .container {
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
 
-        /* Header */
-        header {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: var(--white);
-            padding: 1rem 0;
-            box-shadow: var(--shadow);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
+    /* Header */
+    header {
+        background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+        color: var(--branco);
+        padding: 1rem 0;
+        box-shadow: var(--shadow);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
 
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .logo img {
+        height: 130px;
+        width: auto;
+    }
+
+    .logo h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--branco);
+    }
+
+    nav ul {
+        display: flex;
+        list-style: none;
+        gap: 2rem;
+    }
+
+    nav a {
+        color: var(--branco);
+        text-decoration: none;
+        font-weight: 500;
+        transition: var(--transition);
+        padding: 0.5rem 1rem;
+        border-radius: 30px;
+    }
+
+    nav a:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .auth-buttons {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .btn {
+        padding: 0.7rem 1.5rem;
+        border-radius: 30px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+    }
+
+    .btn-outline {
+        background: transparent;
+        border: 2px solid var(--branco);
+        color: var(--branco);
+    }
+
+    .btn-primary {
+        background: var(--branco);
+        color: var(--vermelho-rosado);
+    }
+
+    .btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Hero Section */
+    .hero {
+        padding: 5rem 0;
+        background: linear-gradient(rgba(246, 236, 197, 0.9), rgba(246, 236, 197, 0.9)), url('casal.jpg') center/cover no-repeat;
+        text-align: center;
+    }
+
+    .hero-content {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .hero h2 {
+        font-size: 3rem;
+        margin-bottom: 1.5rem;
+        color: var(--vermelho-rosado);
+        line-height: 1.2;
+    }
+
+    .hero p {
+        font-size: 1.2rem;
+        margin-bottom: 2rem;
+        color: var(--text-light);
+    }
+
+    .btn-large {
+        padding: 1rem 2.5rem;
+        font-size: 1.1rem;
+    }
+
+    /* Features Section */
+    .features {
+        padding: 5rem 0;
+        background-color: var(--branco);
+    }
+
+    .section-title {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .section-title h2 {
+        font-size: 2.5rem;
+        color: var(--vermelho-rosado);
+        margin-bottom: 1rem;
+    }
+
+    .section-title p {
+        color: var(--text-light);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+
+    .feature-card {
+        background: var(--branco);
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+        box-shadow: var(--shadow);
+        transition: var(--transition);
+        border: 1px solid var(--lilas);
+    }
+
+    .feature-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 10px 25px rgba(209, 101, 109, 0.15);
+    }
+
+    .feature-icon {
+        font-size: 3rem;
+        margin-bottom: 1.5rem;
+        color: var(--vermelho-rosado);
+    }
+
+    .feature-card h3 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        color: var(--vermelho-rosado);
+    }
+
+    /* How It Works */
+    .how-it-works {
+        padding: 5rem 0;
+        background-color: var(--bege);
+    }
+
+    .steps {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 2rem;
+        margin-top: 3rem;
+    }
+
+    .step {
+        flex: 1;
+        min-width: 250px;
+        text-align: center;
+        padding: 2rem 1rem;
+        background: var(--branco);
+        border-radius: 15px;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--lilas);
+    }
+
+    .step-number {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+        color: var(--branco);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin: 0 auto 1.5rem;
+    }
+
+    .step h3 {
+        margin-bottom: 1rem;
+        color: var(--vermelho-rosado);
+    }
+
+    /* Testimonials */
+    .testimonials {
+        padding: 5rem 0;
+        background-color: var(--branco);
+    }
+
+    .testimonial-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+
+    .testimonial-card {
+        background: var(--bege);
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--lilas);
+    }
+
+    .testimonial-text {
+        font-style: italic;
+        margin-bottom: 1.5rem;
+        color: var(--text);
+    }
+
+    .testimonial-author {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .author-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--branco);
+        font-weight: bold;
+    }
+
+    .author-info h4 {
+        color: var(--vermelho-rosado);
+    }
+
+    .author-info p {
+        color: var(--text-light);
+        font-size: 0.9rem;
+    }
+
+    /* CTA Section */
+    .cta {
+        padding: 5rem 0;
+        background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+        color: var(--branco);
+        text-align: center;
+    }
+
+    .cta h2 {
+        font-size: 2.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .cta p {
+        font-size: 1.2rem;
+        margin-bottom: 2rem;
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .btn-light {
+        background: var(--branco);
+        color: var(--vermelho-rosado);
+    }
+
+    /* Footer - Modificado para cores claras */
+    footer {
+        background-color: var(--bege);
+        color: var(--text);
+        padding: 3rem 0 1.5rem;
+        border-top: 1px solid var(--lilas);
+    }
+
+    .footer-content {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .footer-column h3 {
+        margin-bottom: 1.5rem;
+        font-size: 1.2rem;
+        color: var(--vermelho-rosado);
+    }
+
+    .footer-column ul {
+        list-style: none;
+    }
+
+    .footer-column ul li {
+        margin-bottom: 0.8rem;
+    }
+
+    .footer-column a {
+        color: var(--text);
+        text-decoration: none;
+        transition: var(--transition);
+    }
+
+    .footer-column a:hover {
+        color: var(--vermelho-rosado);
+    }
+
+    .social-links {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .social-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: var(--lilas);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition);
+        color: var(--branco);
+        text-decoration: none;
+    }
+
+    .social-icon:hover {
+        background-color: var(--vermelho-rosado);
+        transform: translateY(-3px);
+    }
+
+    .copyright {
+        text-align: center;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--lilas);
+        font-size: 0.9rem;
+        color: var(--text-light);
+    }
+
+    /* Responsividade */
+    @media (max-width: 768px) {
         .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .logo h1 {
-            font-size: 1.8rem;
-            font-weight: 700;
-        }
-
-        .logo-icon {
-            font-size: 2rem;
+            flex-direction: column;
+            gap: 1rem;
         }
 
         nav ul {
-            display: flex;
-            list-style: none;
-            gap: 2rem;
-        }
-
-        nav a {
-            color: var(--white);
-            text-decoration: none;
-            font-weight: 500;
-            transition: var(--transition);
-            padding: 0.5rem 1rem;
-            border-radius: 30px;
-        }
-
-        nav a:hover {
-            background-color: rgba(255, 255, 255, 0.2);
-        }
-
-        .auth-buttons {
-            display: flex;
             gap: 1rem;
-        }
-
-        .btn {
-            padding: 0.7rem 1.5rem;
-            border-radius: 30px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 2px solid var(--white);
-            color: var(--white);
-        }
-
-        .btn-primary {
-            background: var(--white);
-            color: var(--primary);
-        }
-
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Hero Section */
-        .hero {
-            padding: 5rem 0;
-            background: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), url('casal.jpg') center/cover no-repeat;
-            text-align: center;
-        }
-
-        .hero-content {
-            max-width: 800px;
-            margin: 0 auto;
         }
 
         .hero h2 {
-            font-size: 3rem;
-            margin-bottom: 1.5rem;
-            color: var(--dark);
-            line-height: 1.2;
-        }
-
-        .hero p {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-            color: var(--text-light);
-        }
-
-        .btn-large {
-            padding: 1rem 2.5rem;
-            font-size: 1.1rem;
-        }
-
-        /* Features Section */
-        .features {
-            padding: 5rem 0;
-            background-color: var(--white);
-        }
-
-        .section-title {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-
-        .section-title h2 {
-            font-size: 2.5rem;
-            color: var(--dark);
-            margin-bottom: 1rem;
-        }
-
-        .section-title p {
-            color: var(--text-light);
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-        }
-
-        .feature-card {
-            background: var(--white);
-            border-radius: 15px;
-            padding: 2rem;
-            text-align: center;
-            box-shadow: var(--shadow);
-            transition: var(--transition);
-        }
-
-        .feature-card:hover {
-            transform: translateY(-10px);
-        }
-
-        .feature-icon {
-            font-size: 3rem;
-            margin-bottom: 1.5rem;
-            color: var(--primary);
-        }
-
-        .feature-card h3 {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            color: var(--dark);
-        }
-
-        /* How It Works */
-        .how-it-works {
-            padding: 5rem 0;
-            background-color: var(--light);
+            font-size: 2.2rem;
         }
 
         .steps {
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 2rem;
-            margin-top: 3rem;
+            flex-direction: column;
         }
-
-        .step {
-            flex: 1;
-            min-width: 250px;
-            text-align: center;
-            padding: 2rem 1rem;
-        }
-
-        .step-number {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: var(--white);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin: 0 auto 1.5rem;
-        }
-
-        .step h3 {
-            margin-bottom: 1rem;
-            color: var(--dark);
-        }
-
-        /* Testimonials */
-        .testimonials {
-            padding: 5rem 0;
-            background-color: var(--white);
-        }
-
-        .testimonial-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-        }
-
-        .testimonial-card {
-            background: var(--light);
-            border-radius: 15px;
-            padding: 2rem;
-            box-shadow: var(--shadow);
-        }
-
-        .testimonial-text {
-            font-style: italic;
-            margin-bottom: 1.5rem;
-            color: var(--text);
-        }
-
-        .testimonial-author {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .author-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--white);
-            font-weight: bold;
-        }
-
-        .author-info h4 {
-            color: var(--dark);
-        }
-
-        .author-info p {
-            color: var(--text-light);
-            font-size: 0.9rem;
-        }
-
-        /* CTA Section */
-        .cta {
-            padding: 5rem 0;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: var(--white);
-            text-align: center;
-        }
-
-        .cta h2 {
-            font-size: 2.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .cta p {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-            max-width: 700px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .btn-light {
-            background: var(--white);
-            color: var(--primary);
-        }
-
-        /* Footer */
-        footer {
-            background-color: var(--dark);
-            color: var(--white);
-            padding: 3rem 0 1.5rem;
-        }
-
-        .footer-content {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .footer-column h3 {
-            margin-bottom: 1.5rem;
-            font-size: 1.2rem;
-        }
-
-        .footer-column ul {
-            list-style: none;
-        }
-
-        .footer-column ul li {
-            margin-bottom: 0.8rem;
-        }
-
-        .footer-column a {
-            color: var(--light);
-            text-decoration: none;
-            transition: var(--transition);
-        }
-
-        .footer-column a:hover {
-            color: var(--primary-light);
-        }
-
-        .social-links {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-
-        .social-icon {
-            width: 40px;
+        
+        .logo img {
             height: 40px;
-            border-radius: 50%;
-            background-color: rgba(255, 255, 255, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: var(--transition);
         }
-
-        .social-icon:hover {
-            background-color: var(--primary);
+        
+        .logo h1 {
+            font-size: 1.5rem;
         }
-
-        .copyright {
-            text-align: center;
-            padding-top: 1.5rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        /* Responsividade */
-        @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                gap: 1rem;
-            }
-
-            nav ul {
-                gap: 1rem;
-            }
-
-            .hero h2 {
-                font-size: 2.2rem;
-            }
-
-            .steps {
-                flex-direction: column;
-            }
-        }
-    </style>
+    }
+</style>
 </head>
 <body>
     <!-- Header -->
@@ -419,8 +438,8 @@
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <span class="logo-icon">💑</span>
-                    <h1>Conexão Perfeita</h1>
+                    <img src="logoamorconect.png" alt="Amor Conect">
+                    <h1>Amor Conect</h1>
                 </div>
                 <nav>
                     <ul>
@@ -452,7 +471,7 @@
     <section class="features">
         <div class="container">
             <div class="section-title">
-                <h2>Por que escolher a Conexão Perfeita?</h2>
+                <h2>Por que escolher o Amor Conect?</h2>
                 <p>Nossa plataforma foi desenvolvida pensando em sua segurança e privacidade, oferecendo uma experiência única de conexão.</p>
             </div>
             <div class="features-grid">
@@ -563,7 +582,7 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-column">
-                    <h3>Conexão Perfeita</h3>
+                    <h3>Amor Conect</h3>
                     <p>Uma plataforma segura e discreta para conectar corações e construir relacionamentos genuínos.</p>
                     <div class="social-links">
                         <a href="#" class="social-icon">f</a>
@@ -591,7 +610,7 @@
                 </div>
             </div>
             <div class="copyright">
-                <p>&copy; 2023 Conexão Perfeita Amor. Todos os direitos reservados.</p>
+                <p>&copy; 2023 Amor Conect. Todos os direitos reservados.</p>
             </div>
         </div>
     </footer>
