@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Amor Conect - Encontre seu par ideal</title>
     <style>
-       /* Reset e configurações gerais */
+     /* Reset e configurações gerais */
 * {
     margin: 0;
     padding: 0;
@@ -448,7 +448,7 @@ footer {
     color: var(--text-light);
 }
 
-/* RESPONSIVIDADE MOBILE CORRIGIDA */
+/* RESPONSIVIDADE MOBILE - CORRIGIDA */
 @media (max-width: 768px) {
     .header-content {
         flex-wrap: wrap;
@@ -458,18 +458,19 @@ footer {
         align-items: flex-start;
     }
 
-    /* LOGO - LADO ESQUERDO, MAIOR */
+    /* LOGO - GRANDE E SEM TÍTULO */
     .logo {
         order: 1;
         flex: 1;
     }
 
     .logo img {
-        height: 70px; /* Logo maior */
+        height: 90px; /* Logo bem maior */
+        width: auto;
     }
 
     .logo h1 {
-        font-size: 1.6rem;
+        display: none; /* Remove o título "Amor Conect" */
     }
 
     /* BOTÃO HAMBURGUER - SUPERIOR DIREITO */
@@ -477,7 +478,7 @@ footer {
         display: flex;
         order: 2;
         margin-left: auto;
-        margin-top: 0.5rem;
+        margin-top: 1rem;
     }
 
     /* BOTÕES LOGIN/CADASTRO - ABAIXO DO HAMBURGUER */
@@ -490,8 +491,8 @@ footer {
     }
 
     .auth-buttons .btn {
-        padding: 0.5rem 1rem;
-        font-size: 0.85rem;
+        padding: 0.6rem 1.2rem;
+        font-size: 0.9rem;
         white-space: nowrap;
     }
 
@@ -579,20 +580,16 @@ footer {
     }
 
     .logo img {
-        height: 60px; /* Logo mantém tamanho maior */
-    }
-
-    .logo h1 {
-        font-size: 1.4rem;
+        height: 80px; /* Logo mantém tamanho grande */
     }
 
     .auth-buttons {
-        gap: 0.3rem;
+        gap: 0.5rem;
     }
 
     .auth-buttons .btn {
-        padding: 0.4rem 0.8rem;
-        font-size: 0.8rem;
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
     }
 
     .hero h2 {
@@ -615,17 +612,13 @@ footer {
 }
 
 @media (max-width: 360px) {
-    .logo h1 {
-        font-size: 1.2rem;
-    }
-
     .logo img {
-        height: 50px; /* Logo ainda maior que antes */
+        height: 70px; /* Logo ainda grande em telas menores */
     }
 
     .auth-buttons .btn {
-        padding: 0.3rem 0.6rem;
-        font-size: 0.75rem;
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
     }
 }
     </style>
