@@ -448,12 +448,12 @@ footer {
     color: var(--text-light);
 }
 
-/* RESPONSIVIDADE MOBILE - LOGO GRANDE E HEADER PEQUENO */
+/* RESPONSIVIDADE MOBILE - HEADER PEQUENO E LOGO GRANDE */
 @media (max-width: 768px) {
-    /* HEADER REDUZIDO PELA METADE */
+    /* HEADER PEQUENO */
     header {
-        padding: 0.3rem 0; /* REDUZIDO PARA 0.3rem (era 0.8rem) */
-        min-height: 50px; /* ALTURA MÍNIMA PEQUENA */
+        padding: 0.3rem 0;
+        min-height: 50px;
     }
 
     .header-content {
@@ -465,49 +465,49 @@ footer {
         min-height: 50px;
     }
 
-    /* LOGO - ENORME NO HEADER PEQUENO */
+    /* LOGO - MUITO GRANDE */
     .logo {
         order: 1;
         flex: 1;
         justify-content: flex-start;
         align-items: center;
-        height: 45px; /* ALTURA PEQUENA PARA A LOGO */
+        height: 60px;
     }
 
     .logo img {
-        height: 140px !important; /* LOGO ENORME - 140PX */
+        height: 180px !important; /* LOGO MUITO GRANDE - 180PX */
         width: auto;
         max-height: 100%;
         object-fit: contain;
-        margin-top: -15px; /* SOBE A LOGO PARA CABER NO HEADER PEQUENO */
-        margin-bottom: -15px; /* COMPENSA PARA BAIXO */
+        margin-top: -25px;
+        margin-bottom: -25px;
     }
 
     .logo h1 {
         display: none;
     }
 
-    /* BOTÃO HAMBURGUER - SUPERIOR DIREITO PEQUENO */
+    /* BOTÃO HAMBURGUER - CANTO DIREITO */
     .menu-toggle {
         display: flex;
         order: 2;
         margin-left: auto;
-        padding: 6px;
-        margin-top: -8px; /* SOBE O HAMBURGUER */
+        padding: 8px;
+        margin-top: 0;
     }
 
-    /* BOTÕES LOGIN/CADASTRO - PEQUENOS E ALINHADOS */
+    /* BOTÕES LOGIN/CADASTRO - LADO DIREITO */
     .auth-buttons {
         order: 3;
         gap: 0.5rem;
         width: auto;
         justify-content: flex-end;
-        margin-top: -8px; /* SOBE OS BOTÕES */
+        margin-top: 0;
     }
 
     .auth-buttons .btn {
-        padding: 0.4rem 0.8rem;
-        font-size: 0.8rem;
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
         white-space: nowrap;
     }
 
@@ -591,9 +591,9 @@ footer {
 
 @media (max-width: 480px) {
     .logo img {
-        height: 120px !important; /* LOGO AINDA ENORME */
-        margin-top: -12px;
-        margin-bottom: -12px;
+        height: 160px !important; /* LOGO AINDA MUITO GRANDE */
+        margin-top: -20px;
+        margin-bottom: -20px;
     }
 
     .auth-buttons {
@@ -601,13 +601,8 @@ footer {
     }
 
     .auth-buttons .btn {
-        padding: 0.3rem 0.6rem;
-        font-size: 0.75rem;
-    }
-
-    .menu-toggle {
-        margin-top: -6px;
-        padding: 5px;
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
     }
 
     .hero h2 {
@@ -631,14 +626,14 @@ footer {
 
 @media (max-width: 360px) {
     .logo img {
-        height: 100px !important; /* LOGO AINDA MUITO GRANDE */
-        margin-top: -10px;
-        margin-bottom: -10px;
+        height: 140px !important; /* LOGO AINDA GRANDE */
+        margin-top: -18px;
+        margin-bottom: -18px;
     }
 
     .auth-buttons .btn {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.7rem;
+        padding: 0.3rem 0.6rem;
+        font-size: 0.75rem;
     }
 }
     </style>
