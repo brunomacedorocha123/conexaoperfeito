@@ -924,7 +924,7 @@
         }
     }
 
-    // CORREÇÃO: Carregar foto do usuário logado
+    // Carregar foto do usuário logado
     async function loadCurrentUserAvatar() {
         try {
             const { data: profile, error } = await supabase
@@ -949,7 +949,6 @@
                     userAvatarImg.src = photoUrl;
                     userAvatarImg.style.display = 'block';
                     userAvatarFallback.style.display = 'none';
-                    // Adicionar background image para garantir o redondel
                     userAvatar.style.backgroundImage = `url(${photoUrl})`;
                     userAvatar.style.backgroundSize = 'cover';
                     userAvatar.style.backgroundPosition = 'center';
@@ -1080,14 +1079,26 @@
         };
     }
 
-    // Buscar usuários
+    // CORREÇÃO: Buscar usuários com JOIN nas tabelas corretas
     async function searchUsers() {
         try {
             console.log('🔍 Aplicando filtros:', currentFilters);
             
+            // CORREÇÃO: Buscar com JOIN entre profiles e user_details
             let query = supabase
                 .from('profiles')
-                .select('*')
+                .select(`
+                    *,
+                    user_details (
+                        gender,
+                        looking_for,
+                        interests,
+                        zodiac,
+                        address,
+                        description,
+                        profession
+                    )
+                `)
                 .neq('id', currentUser.id)
                 .not('birth_date', 'is', null);
 
@@ -1096,6 +1107,7 @@
             if (error) throw error;
 
             console.log('📊 Usuários encontrados:', users?.length);
+            console.log('📋 Primeiro usuário:', users?.[0]);
 
             // Aplicar filtros no client-side
             let filteredUsers = users || [];
@@ -1113,35 +1125,43 @@
                 });
             }
 
-            // Filtro de gênero
+            // Filtro de gênero - CORREÇÃO: Agora em user_details
             if (currentFilters.gender) {
                 filteredUsers = filteredUsers.filter(user => 
-                    user.gender === currentFilters.gender
+                    user.user_details?.gender === currentFilters.gender
                 );
             }
 
-            // Filtro de localização
+            // Filtro de localização - CORREÇÃO: Agora em user_details
             if (currentFilters.location) {
                 filteredUsers = filteredUsers.filter(user => 
-                    user.city && user.city.toLowerCase().includes(currentFilters.location.toLowerCase())
+                    user.user_details?.address && 
+                    user.user_details.address.toLowerCase().includes(currentFilters.location.toLowerCase())
                 );
             }
 
-            // Filtro de signo
+            // Filtro de signo - CORREÇÃO: Agora em user_details
             if (currentFilters.zodiac) {
                 filteredUsers = filteredUsers.filter(user => 
-                    user.zodiac === currentFilters.zodiac
+                    user.user_details?.zodiac === currentFilters.zodiac
                 );
             }
 
-            // Filtro de interesses
+            // Filtro de interesses - CORREÇÃO: Agora em user_details
             if (currentFilters.interests && currentFilters.interests.length > 0) {
                 filteredUsers = filteredUsers.filter(user => {
-                    if (!user.interests) return false;
+                    if (!user.user_details?.interests) return false;
                     return currentFilters.interests.some(interest => 
-                        user.interests.includes(interest)
+                        user.user_details.interests.includes(interest)
                     );
                 });
+            }
+
+            // Filtro de looking_for - CORREÇÃO: Agora em user_details
+            if (currentFilters.lookingFor) {
+                filteredUsers = filteredUsers.filter(user => 
+                    user.user_details?.looking_for === currentFilters.lookingFor
+                );
             }
 
             console.log('🎉 RESULTADO FINAL:', filteredUsers.length, 'usuários');
@@ -1186,12 +1206,12 @@
         usersGrid.innerHTML = userCards.join('');
     }
 
-    // CORREÇÃO: Criar card de usuário com foto
+    // CORREÇÃO: Criar card de usuário com dados das duas tabelas
     async function createUserCardWithPhoto(user) {
         const nickname = user.nickname || user.full_name?.split(' ')[0] || 'Usuário';
         const age = user.birth_date ? calculateAge(user.birth_date) : null;
         
-        // CORREÇÃO: Carregar foto sem CSS inline problemático
+        // Carregar foto do usuário
         let avatarHtml = '';
         if (user.avatar_url) {
             const photoUrl = await loadUserPhoto(user.avatar_url);
@@ -1217,14 +1237,17 @@
             `;
         }
 
-        const gender = user.gender ? formatGender(user.gender) : null;
-        const location = user.city || null;
-        const bio = user.bio || 'Este usuário ainda não adicionou uma descrição.';
+        // CORREÇÃO: Usar dados de user_details
+        const userDetails = user.user_details || {};
+        const gender = userDetails.gender ? formatGender(userDetails.gender) : null;
+        const location = userDetails.address || null;
+        const bio = userDetails.description || 'Este usuário ainda não adicionou uma descrição.';
+        const profession = userDetails.profession || null;
         
         // Mostrar interesses se disponíveis
         let interestsHtml = '';
-        if (user.interests && user.interests.length > 0) {
-            const interests = Array.isArray(user.interests) ? user.interests : [user.interests];
+        if (userDetails.interests && userDetails.interests.length > 0) {
+            const interests = Array.isArray(userDetails.interests) ? userDetails.interests : [userDetails.interests];
             interestsHtml = `
                 <div class="user-card-interests">
                     ${interests.slice(0, 3).map(interest => 
@@ -1243,6 +1266,7 @@
                 <div class="user-card-info">
                     ${gender ? `<div class="user-card-detail">👤 ${gender}</div>` : ''}
                     ${location ? `<div class="user-card-detail">📍 ${location}</div>` : ''}
+                    ${profession ? `<div class="user-card-detail">💼 ${profession}</div>` : ''}
                 </div>
                 
                 ${interestsHtml}
@@ -1279,7 +1303,9 @@
     function formatGender(gender) {
         const genderMap = {
             'feminino': 'Feminino',
-            'masculino': 'Masculino'
+            'masculino': 'Masculino',
+            'mulher': 'Feminino',
+            'homem': 'Masculino'
         };
         return genderMap[gender] || gender;
     }
@@ -1354,14 +1380,6 @@
     function viewProfile(userId) {
         alert(`Função de ver perfil do usuário ${userId} será implementada em breve!`);
         // window.location.href = `perfil.html?id=${userId}`;
-    }
-
-    // Inicializar tooltips para múltiplos selects
-    function initSelectTooltips() {
-        const multipleSelects = document.querySelectorAll('select[multiple]');
-        multipleSelects.forEach(select => {
-            select.title = 'Segure Ctrl para selecionar múltiplas opções';
-        });
     }
 </script>
 </body>
