@@ -533,7 +533,7 @@
 
                 <!-- Conversations List -->
                 <div class="conversations-list" id="conversationsList">
-                    <!-- As conversas serão carregadas aqui -->
+                    <!-- As conversas serão carregadas aqui via JavaScript -->
                 </div>
 
                 <!-- No Conversations -->
@@ -583,297 +583,334 @@
     </footer>
 
     <script>
-       // Configuração do Supabase
-const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+        // Configuração do Supabase
+        const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let currentUser = null;
-let userProfile = null;
+        let currentUser = null;
+        let userProfile = null;
 
-document.addEventListener('DOMContentLoaded', function() {
-    initializeApp();
-});
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
 
-async function initializeApp() {
-    try {
-        const { data: { user }, error } = await supabase.auth.getUser();
-        
-        if (error) throw error;
-        
-        if (!user) {
-            window.location.href = 'login.html';
-            return;
-        }
-        
-        currentUser = user;
-        await loadUserData();
-        await loadConversations();
-        setupEventListeners();
-        
-    } catch (error) {
-        console.error('Erro na inicialização:', error);
-        window.location.href = 'login.html';
-    }
-}
-
-async function loadUserData() {
-    try {
-        const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', currentUser.id)
-            .single();
-
-        if (error) return;
-
-        userProfile = profile;
-
-        let displayName = 'Usuário';
-        if (currentUser.user_metadata?.nickname) {
-            displayName = currentUser.user_metadata.nickname;
-        } else if (currentUser.user_metadata?.full_name) {
-            displayName = currentUser.user_metadata.full_name;
-        } else if (currentUser.email) {
-            displayName = currentUser.email.split('@')[0];
-        }
-
-        document.getElementById('userNickname').textContent = displayName;
-        
-        const userAvatar = document.getElementById('userAvatar');
-        if (profile?.avatar_url) {
-            userAvatar.style.backgroundImage = `url('${profile.avatar_url}')`;
-            userAvatar.textContent = '';
-        } else {
-            userAvatar.textContent = displayName.charAt(0).toUpperCase();
-        }
-
-    } catch (error) {
-        console.error('Erro ao carregar dados do usuário:', error);
-    }
-}
-
-async function loadConversations() {
-    try {
-        if (!userProfile?.full_name) {
-            showProfileIncomplete();
-            return;
-        }
-
-        const { data: allMessages, error } = await supabase
-            .from('messages')
-            .select(`
-                *,
-                sender:profiles!messages_sender_id_fkey(nickname, birth_date, avatar_url),
-                receiver:profiles!messages_receiver_id_fkey(nickname, birth_date, avatar_url)
-            `)
-            .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
-            .order('created_at', { ascending: false });
-
-        if (error || !allMessages?.length) {
-            showNoConversations();
-            return;
-        }
-
-        const conversations = organizeConversations(allMessages);
-        displayConversations(conversations);
-        updateMessagesStats(conversations);
-
-    } catch (error) {
-        console.error('Erro ao carregar conversas:', error);
-        showNoConversations();
-    }
-}
-
-function organizeConversations(allMessages) {
-    const conversationsMap = new Map();
-
-    allMessages.forEach(msg => {
-        const isFromCurrentUser = msg.sender_id === currentUser.id;
-        const otherUserId = isFromCurrentUser ? msg.receiver_id : msg.sender_id;
-        const otherUser = isFromCurrentUser ? msg.receiver : msg.sender;
-        
-        if (!conversationsMap.has(otherUserId)) {
-            conversationsMap.set(otherUserId, {
-                user_id: otherUserId,
-                nickname: otherUser?.nickname || 'Usuário',
-                age: otherUser?.birth_date ? calculateAge(otherUser.birth_date) : null,
-                avatar_url: otherUser?.avatar_url || null,
-                messages: [msg],
-                unread: !isFromCurrentUser && !msg.is_read,
-                last_message_time: msg.created_at
-            });
-        } else {
-            const existing = conversationsMap.get(otherUserId);
-            existing.messages.push(msg);
-            existing.unread = existing.unread || (!isFromCurrentUser && !msg.is_read);
-            if (new Date(msg.created_at) > new Date(existing.last_message_time)) {
-                existing.last_message_time = msg.created_at;
+        async function initializeApp() {
+            try {
+                const { data: { user }, error } = await supabase.auth.getUser();
+                
+                if (error) throw error;
+                
+                if (!user) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                currentUser = user;
+                await loadUserData();
+                await loadConversations();
+                setupEventListeners();
+                
+            } catch (error) {
+                console.error('Erro na inicialização:', error);
+                window.location.href = 'login.html';
             }
         }
-    });
 
-    return Array.from(conversationsMap.values())
-        .sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time));
-}
+        async function loadUserData() {
+            try {
+                const { data: profile, error } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', currentUser.id)
+                    .single();
 
-function displayConversations(conversations) {
-    const conversationsList = document.getElementById('conversationsList');
-    const noConversations = document.getElementById('noConversations');
+                if (error) return;
 
-    if (!conversations.length) {
-        noConversations.classList.remove('hidden');
-        return;
-    }
+                userProfile = profile;
 
-    noConversations.classList.add('hidden');
+                let displayName = 'Usuário';
+                if (currentUser.user_metadata?.nickname) {
+                    displayName = currentUser.user_metadata.nickname;
+                } else if (currentUser.user_metadata?.full_name) {
+                    displayName = currentUser.user_metadata.full_name;
+                } else if (currentUser.email) {
+                    displayName = currentUser.email.split('@')[0];
+                }
 
-    conversationsList.innerHTML = conversations.map(conv => {
-        const timeAgo = formatTime(conv.last_message_time);
-        const unreadBadge = conv.unread ? '<span class="unread-badge">●</span>' : '';
-        const lastMessage = conv.messages[0]?.content || 'Nenhuma mensagem';
-        const isFromCurrentUser = conv.messages[0]?.sender_id === currentUser.id;
-        const messagePreview = isFromCurrentUser ? `Você: ${lastMessage}` : lastMessage;
+                document.getElementById('userNickname').textContent = displayName;
+                
+                const userAvatar = document.getElementById('userAvatar');
+                if (profile?.avatar_url) {
+                    // Carregar foto do usuário atual
+                    const photoUrl = await loadProfilePhoto(profile.avatar_url);
+                    if (photoUrl) {
+                        userAvatar.style.backgroundImage = `url('${photoUrl}')`;
+                    }
+                    userAvatar.textContent = '';
+                } else {
+                    userAvatar.textContent = displayName.charAt(0).toUpperCase();
+                }
 
-        // ✅ CORREÇÃO: AVATAR SEMPRE APARECE - com foto ou letra
-        let avatarHTML = '';
-        if (conv.avatar_url) {
-            avatarHTML = `<div class="conversation-avatar" style="background-image: url('${conv.avatar_url}')"></div>`;
-        } else {
-            avatarHTML = `<div class="conversation-avatar">${conv.nickname.charAt(0).toUpperCase()}</div>`;
+            } catch (error) {
+                console.error('Erro ao carregar dados do usuário:', error);
+            }
         }
 
-        return `
-            <div class="conversation-item">
-                ${avatarHTML}
-                <div class="conversation-content" onclick="openConversation('${conv.user_id}')">
-                    <div class="conversation-header">
-                        <div class="conversation-name">
-                            ${conv.nickname} ${unreadBadge}
+        async function loadConversations() {
+            try {
+                if (!userProfile?.full_name) {
+                    showProfileIncomplete();
+                    return;
+                }
+
+                const { data: allMessages, error } = await supabase
+                    .from('messages')
+                    .select(`
+                        *,
+                        sender:profiles!messages_sender_id_fkey(nickname, birth_date, avatar_url),
+                        receiver:profiles!messages_receiver_id_fkey(nickname, birth_date, avatar_url)
+                    `)
+                    .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
+                    .order('created_at', { ascending: false });
+
+                if (error || !allMessages?.length) {
+                    showNoConversations();
+                    return;
+                }
+
+                const conversations = await organizeConversations(allMessages);
+                displayConversations(conversations);
+                updateMessagesStats(conversations);
+
+            } catch (error) {
+                console.error('Erro ao carregar conversas:', error);
+                showNoConversations();
+            }
+        }
+
+        async function organizeConversations(allMessages) {
+            const conversationsMap = new Map();
+
+            for (const msg of allMessages) {
+                const isFromCurrentUser = msg.sender_id === currentUser.id;
+                const otherUserId = isFromCurrentUser ? msg.receiver_id : msg.sender_id;
+                const otherUser = isFromCurrentUser ? msg.receiver : msg.sender;
+                
+                if (!conversationsMap.has(otherUserId)) {
+                    // Carregar foto do usuário da conversa
+                    let avatarUrl = null;
+                    if (otherUser?.avatar_url) {
+                        avatarUrl = await loadProfilePhoto(otherUser.avatar_url);
+                    }
+
+                    conversationsMap.set(otherUserId, {
+                        user_id: otherUserId,
+                        nickname: otherUser?.nickname || 'Usuário',
+                        age: otherUser?.birth_date ? calculateAge(otherUser.birth_date) : null,
+                        avatar_url: avatarUrl,
+                        messages: [msg],
+                        unread: !isFromCurrentUser && !msg.is_read,
+                        last_message_time: msg.created_at
+                    });
+                } else {
+                    const existing = conversationsMap.get(otherUserId);
+                    existing.messages.push(msg);
+                    existing.unread = existing.unread || (!isFromCurrentUser && !msg.is_read);
+                    if (new Date(msg.created_at) > new Date(existing.last_message_time)) {
+                        existing.last_message_time = msg.created_at;
+                    }
+                }
+            }
+
+            return Array.from(conversationsMap.values())
+                .sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time));
+        }
+
+        async function loadProfilePhoto(avatarUrl) {
+            try {
+                if (!avatarUrl) {
+                    return null;
+                }
+
+                console.log('🔄 Buscando foto:', avatarUrl);
+                
+                const { data, error } = await supabase.storage
+                    .from('avatars')
+                    .download(avatarUrl);
+
+                if (error) {
+                    console.log('ℹ️ Foto não encontrada no storage:', error);
+                    return null;
+                }
+
+                const photoUrl = URL.createObjectURL(data);
+                console.log('✅ Foto carregada com sucesso');
+                return photoUrl;
+
+            } catch (error) {
+                console.error('❌ Erro ao carregar foto:', error);
+                return null;
+            }
+        }
+
+        function displayConversations(conversations) {
+            const conversationsList = document.getElementById('conversationsList');
+            const noConversations = document.getElementById('noConversations');
+
+            if (!conversations.length) {
+                noConversations.classList.remove('hidden');
+                return;
+            }
+
+            noConversations.classList.add('hidden');
+
+            conversationsList.innerHTML = conversations.map(conv => {
+                const timeAgo = formatTime(conv.last_message_time);
+                const unreadBadge = conv.unread ? '<span class="unread-badge">●</span>' : '';
+                const lastMessage = conv.messages[0]?.content || 'Nenhuma mensagem';
+                const isFromCurrentUser = conv.messages[0]?.sender_id === currentUser.id;
+                const messagePreview = isFromCurrentUser ? `Você: ${lastMessage}` : lastMessage;
+
+                // AVATAR COM FOTO REAL DO USUÁRIO - AGORA FUNCIONANDO
+                let avatarHTML = '';
+                if (conv.avatar_url) {
+                    avatarHTML = `<div class="conversation-avatar" style="background-image: url('${conv.avatar_url}')"></div>`;
+                } else {
+                    avatarHTML = `<div class="conversation-avatar">${conv.nickname.charAt(0).toUpperCase()}</div>`;
+                }
+
+                return `
+                    <div class="conversation-item">
+                        ${avatarHTML}
+                        <div class="conversation-content" onclick="openConversation('${conv.user_id}')">
+                            <div class="conversation-header">
+                                <div class="conversation-name">
+                                    ${conv.nickname} ${unreadBadge}
+                                </div>
+                                <div class="conversation-time">${timeAgo}</div>
+                            </div>
+                            <div class="conversation-preview">${messagePreview}</div>
+                            <div class="conversation-meta">
+                                <span class="user-card-age">${conv.age ? conv.age + ' anos' : ''}</span>
+                                <span class="message-count">${conv.messages.length} ${conv.messages.length === 1 ? 'mensagem' : 'mensagens'}</span>
+                            </div>
                         </div>
-                        <div class="conversation-time">${timeAgo}</div>
+                        <div class="conversation-actions">
+                            <button class="btn btn-primary btn-sm" onclick="sendMessage('${conv.user_id}')">💌</button>
+                            <button class="btn btn-secondary btn-sm" onclick="viewProfile('${conv.user_id}')">👤</button>
+                        </div>
                     </div>
-                    <div class="conversation-preview">${messagePreview}</div>
-                    <div class="conversation-meta">
-                        <span class="user-card-age">${conv.age ? conv.age + ' anos' : ''}</span>
-                        <span class="message-count">${conv.messages.length} ${conv.messages.length === 1 ? 'mensagem' : 'mensagens'}</span>
+                `;
+            }).join('');
+        }
+
+        function showProfileIncomplete() {
+            document.getElementById('conversationsList').innerHTML = `
+                <div class="no-results">
+                    <div class="no-results-content">
+                        <div class="no-results-icon">📝</div>
+                        <h3>Perfil Incompleto</h3>
+                        <p>Complete seu perfil para visualizar mensagens!</p>
+                        <a href="painel.html" class="btn btn-primary">👤 Completar Perfil</a>
                     </div>
                 </div>
-                <div class="conversation-actions">
-                    <button class="btn btn-primary btn-sm" onclick="sendMessage('${conv.user_id}')">💌</button>
-                    <button class="btn btn-secondary btn-sm" onclick="viewProfile('${conv.user_id}')">👤</button>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
+            `;
+        }
 
-function showProfileIncomplete() {
-    document.getElementById('conversationsList').innerHTML = `
-        <div class="no-results">
-            <div class="no-results-content">
-                <div class="no-results-icon">📝</div>
-                <h3>Perfil Incompleto</h3>
-                <p>Complete seu perfil para visualizar mensagens!</p>
-                <a href="painel.html" class="btn btn-primary">👤 Completar Perfil</a>
-            </div>
-        </div>
-    `;
-}
+        function showNoConversations() {
+            document.getElementById('noConversations').classList.remove('hidden');
+        }
 
-function showNoConversations() {
-    document.getElementById('noConversations').classList.remove('hidden');
-}
+        function updateMessagesStats(conversations) {
+            if (!conversations) return;
+            
+            const totalMessages = conversations.reduce((total, conv) => total + conv.messages.length, 0);
+            const unreadMessages = conversations.reduce((total, conv) => total + (conv.unread ? 1 : 0), 0);
+            const sentMessages = conversations.reduce((total, conv) => {
+                return total + conv.messages.filter(msg => msg.sender_id === currentUser.id).length;
+            }, 0);
 
-function updateMessagesStats(conversations) {
-    if (!conversations) return;
-    
-    const totalMessages = conversations.reduce((total, conv) => total + conv.messages.length, 0);
-    const unreadMessages = conversations.reduce((total, conv) => total + (conv.unread ? 1 : 0), 0);
-    const sentMessages = conversations.reduce((total, conv) => {
-        return total + conv.messages.filter(msg => msg.sender_id === currentUser.id).length;
-    }, 0);
+            document.getElementById('totalMessages').textContent = totalMessages;
+            document.getElementById('unreadMessages').textContent = unreadMessages;
+            document.getElementById('conversationsCount').textContent = conversations.length;
+            document.getElementById('sentMessages').textContent = sentMessages;
+        }
 
-    document.getElementById('totalMessages').textContent = totalMessages;
-    document.getElementById('unreadMessages').textContent = unreadMessages;
-    document.getElementById('conversationsCount').textContent = conversations.length;
-    document.getElementById('sentMessages').textContent = sentMessages;
-}
+        function openConversation(userId) {
+            sendMessage(userId);
+        }
 
-function openConversation(userId) {
-    sendMessage(userId);
-}
+        function sendMessage(userId) {
+            const message = prompt('Digite sua mensagem:');
+            if (message?.trim()) {
+                sendMessageToUser(userId, message.trim());
+            }
+        }
 
-function sendMessage(userId) {
-    const message = prompt('Digite sua mensagem:');
-    if (message?.trim()) {
-        sendMessageToUser(userId, message.trim());
-    }
-}
+        async function sendMessageToUser(receiverId, content) {
+            try {
+                await supabase.from('messages').insert([{
+                    sender_id: currentUser.id,
+                    receiver_id: receiverId,
+                    content: content,
+                    is_read: false
+                }]);
+                
+                alert('Mensagem enviada! 💌');
+                await loadConversations();
+                
+            } catch (error) {
+                console.error('Erro ao enviar mensagem:', error);
+                alert('Mensagem enviada! 💌');
+            }
+        }
 
-async function sendMessageToUser(receiverId, content) {
-    try {
-        await supabase.from('messages').insert([{
-            sender_id: currentUser.id,
-            receiver_id: receiverId,
-            content: content,
-            is_read: false
-        }]);
-        
-        alert('Mensagem enviada! 💌');
-        await loadConversations();
-        
-    } catch (error) {
-        console.error('Erro ao enviar mensagem:', error);
-        alert('Mensagem enviada! 💌');
-    }
-}
+        function viewProfile(userId) {
+            localStorage.setItem('viewingProfileId', userId);
+            window.location.href = 'perfil.html';
+        }
 
-function viewProfile(userId) {
-    localStorage.setItem('viewingProfileId', userId);
-    window.location.href = 'perfil.html';
-}
+        function setupEventListeners() {
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+        }
 
-function setupEventListeners() {
-    document.getElementById('logoutBtn').addEventListener('click', logout);
-}
+        async function logout() {
+            try {
+                await supabase.auth.signOut();
+                window.location.href = 'index.html';
+            } catch (error) {
+                console.error('Erro ao fazer logout:', error);
+                alert('Erro ao fazer logout');
+            }
+        }
 
-async function logout() {
-    try {
-        await supabase.auth.signOut();
-        window.location.href = 'index.html';
-    } catch (error) {
-        console.error('Erro ao fazer logout:', error);
-        alert('Erro ao fazer logout');
-    }
-}
+        function calculateAge(birthDate) {
+            if (!birthDate) return null;
+            const today = new Date();
+            const birth = new Date(birthDate);
+            let age = today.getFullYear() - birth.getFullYear();
+            const monthDiff = today.getMonth() - birth.getMonth();
+            
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+                age--;
+            }
+            
+            return age;
+        }
 
-function calculateAge(birthDate) {
-    if (!birthDate) return null;
-    const today = new Date();
-    const birth = new Date(birthDate);
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-        age--;
-    }
-    
-    return age;
-}
-
-function formatTime(dateString) {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = now - date;
-    
-    if (diff < 60000) return 'Agora';
-    if (diff < 3600000) return `${Math.floor(diff / 60000)}min`;
-    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h`;
-    return date.toLocaleDateString('pt-BR');
-}
+        function formatTime(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 60000) return 'Agora';
+            if (diff < 3600000) return `${Math.floor(diff / 60000)}min`;
+            if (diff < 86400000) return `${Math.floor(diff / 3600000)}h`;
+            return date.toLocaleDateString('pt-BR');
+        }
     </script>
 </body>
 </html>
