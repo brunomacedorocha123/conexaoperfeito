@@ -18,7 +18,10 @@
                 </div>
                 <div class="user-menu">
                     <div class="user-info">
-                        <div class="user-avatar" id="userAvatar">U</div>
+                        <div class="user-avatar" id="userAvatar">
+                            <img class="user-avatar-img" src="" alt="Avatar" style="display: none;">
+                            <div class="user-avatar-fallback">U</div>
+                        </div>
                         <span id="userNickname">Usuário</span>
                     </div>
                     <a href="mensagens.html" class="btn btn-outline">💌 Mensagens</a>
@@ -120,10 +123,10 @@
                     </div>
 
                     <div class="filter-actions">
-                        <button class="btn btn-primary" onclick="applyFilters()">
+                        <button class="btn btn-primary" id="applyFiltersBtn">
                             🔍 Aplicar Filtros
                         </button>
-                        <button class="btn btn-secondary" onclick="clearFilters()">
+                        <button class="btn btn-secondary" id="clearFiltersBtn">
                             🗑️ Limpar Filtros
                         </button>
                     </div>
@@ -135,28 +138,33 @@
                 <div class="results-header">
                     <h2>Pessoas Encontradas</h2>
                     <div class="results-info">
-                        <span id="resultsCount">0 resultados</span>
+                        <span id="resultsCount">Carregando...</span>
                     </div>
                 </div>
 
-                <!-- Loading State -->
-                <div class="loading hidden" id="loadingResults">
+                <!-- Loading State - INICIALMENTE VISÍVEL -->
+                <div class="loading" id="loadingResults">
                     <div class="spinner"></div>
                     <p>Buscando pessoas...</p>
                 </div>
 
-                <!-- Results Grid -->
+                <!-- Results Grid - INICIALMENTE VAZIO -->
                 <div class="users-grid" id="usersGrid">
                     <!-- Os cards serão inseridos aqui via JavaScript -->
                 </div>
 
-                <!-- No Results -->
+                <!-- Pagination -->
+                <div class="pagination" id="pagination">
+                    <!-- Paginação será inserida aqui -->
+                </div>
+
+                <!-- No Results - INICIALMENTE ESCONDIDO -->
                 <div class="no-results hidden" id="noResults">
                     <div class="no-results-content">
                         <div class="no-results-icon">🔍</div>
                         <h3>Nenhuma pessoa encontrada</h3>
                         <p>Tente ajustar os filtros de busca para encontrar mais pessoas.</p>
-                        <button class="btn btn-primary" onclick="clearFilters()">
+                        <button class="btn btn-primary" id="clearFiltersNoResults">
                             🗑️ Limpar Filtros
                         </button>
                     </div>
