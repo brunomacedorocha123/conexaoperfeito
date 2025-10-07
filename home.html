@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home - Conexão Perfeita Amor</title>
+    <title>Home - Amor Conect</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
@@ -14,15 +14,12 @@
         }
 
         :root {
-            --primary: #ff6b8b;
-            --primary-light: #ffb6c1;
-            --secondary: #a78bfa;
-            --accent: #67e8f9;
-            --light: #fdf2f8;
-            --dark: #4a044e;
+            --bege: #f6ecc5;
+            --vermelho-rosado: #d1656d;
+            --lilas: #dfc9ed;
+            --branco: #ffffff;
             --text: #444;
             --text-light: #666;
-            --white: #fff;
             --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             --transition: all 0.3s ease;
             --error: #e53e3e;
@@ -30,7 +27,7 @@
         }
 
         body {
-            background-color: var(--light);
+            background-color: var(--bege);
             color: var(--text);
             line-height: 1.6;
         }
@@ -44,9 +41,9 @@
 
         /* Header */
         header {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: var(--white);
-            padding: 1rem 0;
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            color: var(--branco);
+            padding: 0.8rem 0;
             box-shadow: var(--shadow);
             position: sticky;
             top: 0;
@@ -57,21 +54,27 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            height: 70px;
         }
 
         .logo {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .logo img {
+            height: 180px;
+            width: auto;
+            object-fit: contain;
         }
 
         .logo h1 {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             font-weight: 700;
-        }
-
-        .logo-icon {
-            font-size: 2rem;
+            color: var(--branco);
+            white-space: nowrap;
         }
 
         .user-menu {
@@ -90,8 +93,8 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: var(--white);
-            color: var(--primary);
+            background: var(--branco);
+            color: var(--vermelho-rosado);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -114,7 +117,7 @@
         }
 
         .btn {
-            padding: 0.5rem 1.5rem;
+            padding: 0.6rem 1.2rem;
             border-radius: 30px;
             border: none;
             font-weight: 600;
@@ -123,12 +126,24 @@
             text-decoration: none;
             display: inline-block;
             text-align: center;
+            font-size: 0.9rem;
         }
 
         .btn-outline {
             background: transparent;
-            border: 2px solid var(--white);
-            color: var(--white);
+            border: 2px solid var(--branco);
+            color: var(--branco);
+        }
+
+        .btn-primary {
+            background: var(--branco);
+            color: var(--vermelho-rosado);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--vermelho-rosado);
+            color: var(--vermelho-rosado);
         }
 
         .btn:hover {
@@ -145,14 +160,15 @@
             text-align: center;
             margin-bottom: 3rem;
             padding: 2rem;
-            background: var(--white);
+            background: var(--branco);
             border-radius: 15px;
             box-shadow: var(--shadow);
+            border: 1px solid var(--lilas);
         }
 
         .welcome-section h2 {
             font-size: 2.5rem;
-            color: var(--dark);
+            color: var(--vermelho-rosado);
             margin-bottom: 1rem;
         }
 
@@ -169,12 +185,13 @@
         }
 
         .stat-card {
-            background: var(--white);
+            background: var(--branco);
             padding: 1.5rem;
             border-radius: 15px;
             box-shadow: var(--shadow);
             text-align: center;
             transition: var(--transition);
+            border: 1px solid var(--lilas);
         }
 
         .stat-card:hover {
@@ -184,7 +201,7 @@
         .stat-number {
             font-size: 2.5rem;
             font-weight: bold;
-            color: var(--primary);
+            color: var(--vermelho-rosado);
             margin-bottom: 0.5rem;
         }
 
@@ -200,14 +217,14 @@
 
         .section-header {
             display: flex;
-            justify-content: between;
+            justify-content: space-between;
             align-items: center;
             margin-bottom: 2rem;
         }
 
         .section-header h2 {
             font-size: 2rem;
-            color: var(--dark);
+            color: var(--vermelho-rosado);
         }
 
         .users-grid {
@@ -217,13 +234,14 @@
         }
 
         .user-card {
-            background: var(--white);
+            background: var(--branco);
             border-radius: 15px;
             padding: 1.5rem;
             box-shadow: var(--shadow);
             transition: var(--transition);
             text-align: center;
             cursor: pointer;
+            border: 1px solid var(--lilas);
         }
 
         .user-card:hover {
@@ -236,8 +254,8 @@
             width: 80px;
             height: 80px;
             border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: var(--white);
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            color: var(--branco);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -264,7 +282,7 @@
         .user-card-name {
             font-size: 1.2rem;
             font-weight: 600;
-            color: var(--dark);
+            color: var(--vermelho-rosado);
             margin-bottom: 0.5rem;
         }
 
@@ -306,30 +324,19 @@
             font-size: 0.9rem;
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: var(--white);
-            border: none;
-        }
-
-        .btn-secondary {
-            background: transparent;
-            border: 2px solid var(--primary);
-            color: var(--primary);
-        }
-
         /* Quick Actions */
         .quick-actions {
-            background: var(--white);
+            background: var(--branco);
             padding: 2rem;
             border-radius: 15px;
             box-shadow: var(--shadow);
             margin-bottom: 3rem;
+            border: 1px solid var(--lilas);
         }
 
         .quick-actions h2 {
             margin-bottom: 1.5rem;
-            color: var(--dark);
+            color: var(--vermelho-rosado);
         }
 
         .actions-grid {
@@ -339,7 +346,7 @@
         }
 
         .action-card {
-            background: var(--light);
+            background: var(--bege);
             padding: 1.5rem;
             border-radius: 10px;
             text-align: center;
@@ -347,10 +354,11 @@
             cursor: pointer;
             text-decoration: none;
             color: inherit;
+            border: 1px solid var(--lilas);
         }
 
         .action-card:hover {
-            background: var(--primary-light);
+            background: var(--lilas);
             transform: translateY(-3px);
         }
 
@@ -361,22 +369,23 @@
 
         /* Footer */
         footer {
-            background-color: var(--dark);
-            color: var(--white);
-            padding: 3rem 0 1.5rem;
-            margin-top: 3rem;
+            background-color: var(--bege);
+            color: var(--text);
+            padding: 2rem 0 1rem;
+            border-top: 1px solid var(--lilas);
         }
 
         .footer-content {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 2rem;
-            margin-bottom: 2rem;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
         }
 
         .footer-column h3 {
-            margin-bottom: 1.5rem;
-            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            color: var(--vermelho-rosado);
         }
 
         .footer-column ul {
@@ -384,25 +393,26 @@
         }
 
         .footer-column ul li {
-            margin-bottom: 0.8rem;
+            margin-bottom: 0.5rem;
         }
 
         .footer-column a {
-            color: var(--light);
+            color: var(--text);
             text-decoration: none;
             transition: var(--transition);
+            font-size: 0.9rem;
         }
 
         .footer-column a:hover {
-            color: var(--primary-light);
+            color: var(--vermelho-rosado);
         }
 
         .copyright {
             text-align: center;
-            padding-top: 1.5rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.7);
+            padding-top: 1rem;
+            border-top: 1px solid var(--lilas);
+            font-size: 0.8rem;
+            color: var(--text-light);
         }
 
         /* Loading State */
@@ -414,8 +424,8 @@
         .spinner {
             width: 40px;
             height: 40px;
-            border: 4px solid var(--light);
-            border-top: 4px solid var(--primary);
+            border: 4px solid var(--bege);
+            border-top: 4px solid var(--vermelho-rosado);
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 0 auto 1rem;
@@ -430,9 +440,10 @@
         .empty-state {
             text-align: center;
             padding: 3rem;
-            background: var(--white);
+            background: var(--branco);
             border-radius: 15px;
             box-shadow: var(--shadow);
+            border: 1px solid var(--lilas);
         }
 
         .empty-state-icon {
@@ -447,11 +458,12 @@
             border-radius: 10px;
             margin-bottom: 1rem;
             text-align: center;
+            border: 1px solid;
         }
 
         .alert-info {
             background-color: #bee3f8;
-            border: 1px solid #90cdf4;
+            border-color: #90cdf4;
             color: #2c5aa0;
         }
 
@@ -460,6 +472,12 @@
             .header-content {
                 flex-direction: column;
                 gap: 1rem;
+                height: auto;
+                padding: 1rem 0;
+            }
+
+            .logo img {
+                height: 140px;
             }
 
             .user-menu {
@@ -474,6 +492,31 @@
             .users-grid {
                 grid-template-columns: 1fr;
             }
+
+            .section-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo img {
+                height: 120px;
+            }
+
+            .btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.85rem;
+            }
+
+            .welcome-section h2 {
+                font-size: 1.8rem;
+            }
+
+            .user-stats {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -483,8 +526,8 @@
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <span class="logo-icon">💑</span>
-                    <h1>Conexão Perfeita</h1>
+                    <img src="logoamorconect.png" alt="Amor Conect">
+                    <h1>Amor Conect</h1>
                 </div>
                 <div class="user-menu">
                     <div class="user-info">
@@ -578,7 +621,7 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-column">
-                    <h3>Conexão Perfeita</h3>
+                    <h3>Amor Conect</h3>
                     <p>Uma plataforma segura e discreta para conectar corações e construir relacionamentos genuínos.</p>
                 </div>
                 <div class="footer-column">
@@ -599,7 +642,7 @@
                 </div>
             </div>
             <div class="copyright">
-                <p>&copy; 2023 Conexão Perfeita Amor. Todos os direitos reservados.</p>
+                <p>&copy; 2023 Amor Conect. Todos os direitos reservados.</p>
             </div>
         </div>
     </footer>
@@ -1021,5 +1064,8 @@
         }
     }
 </script>
+<!-- No final, antes de fechar o body -->
+<script src="delete-account.js"></script>
+</body>
 </body>
 </html>
