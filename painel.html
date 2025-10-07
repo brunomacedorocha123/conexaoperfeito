@@ -1218,124 +1218,127 @@
       </div>
     </div>
   </footer>
+<script>
+// ✅ CONFIGURAÇÃO DO SUPABASE
+const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 
- <script>
-    // ✅ CONFIGURAÇÃO DO SUPABASE
-    const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// ✅ VARIÁVEIS GLOBAIS
+let currentUser = null;
+let userProfile = null;
+let userDetails = null;
+let selectedFile = null;
+let filePreviewUrl = null;
 
-    // ✅ VARIÁVEIS GLOBAIS
-    let currentUser = null;
-    let userProfile = null;
-    let userDetails = null;
-    let selectedFile = null;
-    let filePreviewUrl = null;
+// ✅ CONFIGURAÇÕES DE UPLOAD
+const MAX_FILE_SIZE = 250 * 1024; // 250KB
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/jpg'];
 
-    // ✅ CONFIGURAÇÕES DE UPLOAD
-    const MAX_FILE_SIZE = 250 * 1024; // 250KB
-    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/jpg'];
+// ✅ INICIALIZAÇÃO
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ DOM Carregado - Iniciando aplicação');
+    checkAuth();
+});
 
-    // ✅ INICIALIZAÇÃO
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log('✅ DOM Carregado - Upload de foto disponível');
-      checkAuth();
-      setupEventListeners();
-      setupDescriptionCounter();
-      setupMoreAboutListeners();
-    });
-
-    // ✅ VERIFICAR AUTENTICAÇÃO
-    async function checkAuth() {
-      try {
+// ✅ VERIFICAR AUTENTICAÇÃO
+async function checkAuth() {
+    try {
         const { data: { user }, error } = await supabase.auth.getUser();
         
         if (error) throw error;
         
         if (!user) {
-          window.location.href = 'login.html';
-          return;
+            window.location.href = 'login.html';
+            return;
         }
         
         currentUser = user;
         await loadUserData();
         
-      } catch (error) {
+    } catch (error) {
         console.error('Erro na autenticação:', error);
         window.location.href = 'login.html';
-      }
     }
+}
 
-    // ✅ CARREGAR DADOS DO USUÁRIO - ATUALIZADO COM FOTO
-    async function loadUserData() {
-      try {
-        console.log('🔄 Carregando dados do usuário...');
-        
-        const { data: { user } } = await supabase.auth.getUser();
+// ✅ CARREGAR DADOS DO USUÁRIO - CORRIGIDO
+async function loadUserData() {
+    try {
+        console.log('🔄 Carregando dados do usuário...', currentUser.id);
         
         // Buscar perfil
         const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', currentUser.id)
-          .single();
+            .from('profiles')
+            .select('*')
+            .eq('id', currentUser.id)
+            .single();
 
-        if (profileError) {
-          console.log('⚠️ Perfil não encontrado, criando perfil básico...');
-          await createBasicProfile();
-          userProfile = await getProfileData();
+        if (profileError && profileError.code === 'PGRST116') {
+            console.log('⚠️ Perfil não encontrado, criando perfil básico...');
+            await createBasicProfile();
+            userProfile = await getProfileData();
+        } else if (profileError) {
+            throw profileError;
         } else {
-          userProfile = profile;
+            userProfile = profile;
         }
 
         // Buscar detalhes
         const { data: details, error: detailsError } = await supabase
-          .from('user_details')
-          .select('*')
-          .eq('user_id', currentUser.id)
-          .single();
+            .from('user_details')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .single();
 
-        if (detailsError && detailsError.code !== 'PGRST116') {
-          console.error('Erro ao buscar detalhes:', detailsError);
+        if (detailsError && detailsError.code === 'PGRST116') {
+            console.log('⚠️ Detalhes não encontrados, criando...');
+            await createUserDetails();
+            userDetails = {};
+        } else if (detailsError) {
+            throw detailsError;
+        } else {
+            userDetails = details || {};
         }
-        
-        userDetails = details || {};
 
-        console.log('✅ Dados carregados:', userDetails);
+        console.log('✅ Dados carregados:', { userProfile, userDetails });
         await updateProfileDisplay();
         updateProfileForms();
+        setupEventListeners();
 
-      } catch (error) {
+    } catch (error) {
         console.error('❌ Erro ao carregar dados do usuário:', error);
-        showAlert('errorAlert', 'Erro ao carregar dados do perfil.');
-      }
+        showAlert('errorAlert', 'Erro ao carregar dados do perfil: ' + error.message);
     }
+}
 
-    // ✅ ATUALIZAR DISPLAY DO PERFIL - COM FOTO
-    async function updateProfileDisplay() {
-      try {
+// ✅ ATUALIZAR DISPLAY DO PERFIL - CORRIGIDO
+async function updateProfileDisplay() {
+    try {
         const { data: { user } } = await supabase.auth.getUser();
-        const nickname = user.user_metadata?.nickname || user.email.split('@')[0];
+        const nickname = userProfile?.nickname || user.user_metadata?.nickname || user.email.split('@')[0];
         
         // Header
         document.getElementById('userNickname').textContent = nickname;
-        document.getElementById('profileName').textContent = userProfile?.nickname || nickname;
+        document.getElementById('profileName').textContent = nickname;
 
         // ✅ ATUALIZAR FOTOS
         await updateAvatarPhotos();
 
         // Informações básicas
-        document.getElementById('displayFullName').textContent = userProfile?.full_name || user.user_metadata?.full_name || 'Não informado';
-        document.getElementById('displayFullName').className = (userProfile?.full_name || user.user_metadata?.full_name) ? 'info-value' : 'info-value empty';
+        document.getElementById('displayFullName').textContent = userProfile?.full_name || 'Não informado';
+        document.getElementById('displayFullName').className = userProfile?.full_name ? 'info-value' : 'info-value empty';
         
         document.getElementById('displayEmail').textContent = user.email;
-        document.getElementById('displayBirthDate').textContent = userProfile?.birth_date ?
-          new Date(userProfile.birth_date).toLocaleDateString('pt-BR') : 'Não informada';
-        document.getElementById('displayBirthDate').className = userProfile?.birth_date ? 'info-value' : 'info-value empty';
         
-        document.getElementById('displayAge').textContent = userProfile?.birth_date ?
-          calculateAge(userProfile.birth_date) + ' anos' : '-';
+        const birthDate = userProfile?.birth_date;
+        document.getElementById('displayBirthDate').textContent = birthDate ? 
+            new Date(birthDate).toLocaleDateString('pt-BR') : 'Não informada';
+        document.getElementById('displayBirthDate').className = birthDate ? 'info-value' : 'info-value empty';
+        
+        document.getElementById('displayAge').textContent = birthDate ? 
+            calculateAge(birthDate) + ' anos' : '-';
 
         // Informações de contato
         document.getElementById('displayPhone').textContent = userDetails.phone || 'Não informado';
@@ -1348,9 +1351,9 @@
         document.getElementById('displayGender').textContent = formatGender(userDetails.gender) || 'Não informado';
         document.getElementById('displayGender').className = userDetails.gender ? 'info-value' : 'info-value empty';
         
-        document.getElementById('displayInterests').textContent = userDetails.interests ?
-          userDetails.interests.join(', ') : 'Não informados';
-        document.getElementById('displayInterests').className = userDetails.interests ? 'info-value' : 'info-value empty';
+        document.getElementById('displayInterests').textContent = userDetails.interests && userDetails.interests.length > 0 ? 
+            userDetails.interests.join(', ') : 'Não informados';
+        document.getElementById('displayInterests').className = userDetails.interests && userDetails.interests.length > 0 ? 'info-value' : 'info-value empty';
         
         document.getElementById('displayLookingFor').textContent = formatLookingFor(userDetails.looking_for) || 'Não informado';
         document.getElementById('displayLookingFor').className = userDetails.looking_for ? 'info-value' : 'info-value empty';
@@ -1390,443 +1393,291 @@
         // Atualizar badge do perfil
         updateProfileBadge();
 
-      } catch (error) {
+    } catch (error) {
         console.error('❌ Erro ao atualizar display:', error);
-      }
     }
+}
 
-    // ✅ ATUALIZAR FOTOS DO AVATAR
-    async function updateAvatarPhotos() {
-      try {
-        // Buscar URL da foto do perfil
-        const { data: profileWithPhoto, error } = await supabase
-          .from('profiles')
-          .select('avatar_url, nickname')
-          .eq('id', currentUser.id)
-          .single();
-
-        if (error) {
-          console.log('ℹ️ Nenhuma foto de perfil encontrada');
-          return;
-        }
-
-        const avatarUrl = profileWithPhoto?.avatar_url;
-        const nickname = profileWithPhoto?.nickname || 'U';
+// ✅ ATUALIZAR FOTOS DO AVATAR - CORRIGIDO
+async function updateAvatarPhotos() {
+    try {
+        const avatarUrl = userProfile?.avatar_url;
+        const nickname = userProfile?.nickname || 'U';
         
         // Atualizar fallback com a primeira letra do nickname
-        document.getElementById('avatarFallback').textContent = nickname.charAt(0).toUpperCase();
-        document.getElementById('userAvatarFallback').textContent = nickname.charAt(0).toUpperCase();
+        const firstLetter = nickname.charAt(0).toUpperCase();
+        document.getElementById('avatarFallback').textContent = firstLetter;
+        document.getElementById('userAvatarFallback').textContent = firstLetter;
         
         if (avatarUrl) {
-          // Tentar carregar a foto do Supabase Storage
-          const { data } = await supabase.storage
-            .from('avatars')
-            .download(avatarUrl);
+            try {
+                // Tentar carregar a foto do Supabase Storage
+                const { data, error } = await supabase.storage
+                    .from('avatars')
+                    .download(avatarUrl);
 
-          if (data) {
-            const photoUrl = URL.createObjectURL(data);
-            
-            // Atualizar avatar do header
-            const userAvatarImg = document.getElementById('userAvatarImg');
-            const userAvatarFallback = document.getElementById('userAvatarFallback');
-            userAvatarImg.src = photoUrl;
-            userAvatarImg.style.display = 'block';
-            userAvatarFallback.style.display = 'none';
-            
-            // Atualizar avatar do perfil
-            const profileAvatarImg = document.getElementById('avatarImage');
-            const profileAvatarFallback = document.getElementById('avatarFallback');
-            profileAvatarImg.src = photoUrl;
-            profileAvatarImg.style.display = 'block';
-            profileAvatarFallback.style.display = 'none';
-            
-            console.log('✅ Foto do perfil carregada:', avatarUrl);
-          }
+                if (data && !error) {
+                    const photoUrl = URL.createObjectURL(data);
+                    
+                    // Atualizar avatar do header
+                    const userAvatarImg = document.getElementById('userAvatarImg');
+                    const userAvatarFallback = document.getElementById('userAvatarFallback');
+                    userAvatarImg.src = photoUrl;
+                    userAvatarImg.style.display = 'block';
+                    userAvatarFallback.style.display = 'none';
+                    
+                    // Atualizar avatar do perfil
+                    const profileAvatarImg = document.getElementById('avatarImage');
+                    const profileAvatarFallback = document.getElementById('avatarFallback');
+                    profileAvatarImg.src = photoUrl;
+                    profileAvatarImg.style.display = 'block';
+                    profileAvatarFallback.style.display = 'none';
+                    
+                    console.log('✅ Foto do perfil carregada:', avatarUrl);
+                } else {
+                    console.log('ℹ️ Foto não encontrada no storage:', avatarUrl);
+                }
+            } catch (storageError) {
+                console.log('ℹ️ Erro ao carregar foto do storage:', storageError);
+            }
         }
 
-      } catch (error) {
+    } catch (error) {
         console.error('❌ Erro ao carregar foto do perfil:', error);
-      }
     }
-        // ✅ UPLOAD DE FOTO - FUNÇÕES PRINCIPAIS
-    function openUploadModal() {
-      console.log('🎯 ABRINDO MODAL DE UPLOAD...');
-      const modal = document.getElementById('uploadModal');
-      modal.style.display = 'flex';
-      console.log('✅ Modal deve estar visível agora');
-      resetUploadModal();
-    }
+}
 
-    function closeUploadModal() {
-      console.log('🎯 FECHANDO MODAL...');
-      const modal = document.getElementById('uploadModal');
-      modal.style.display = 'none';
-      resetUploadModal();
-    }
-
-    function resetUploadModal() {
-      selectedFile = null;
-      
-      if (filePreviewUrl) {
-        URL.revokeObjectURL(filePreviewUrl);
-        filePreviewUrl = null;
-      }
-      
-      const modalPreview = document.getElementById('modalPreview');
-      modalPreview.style.display = 'none';
-      modalPreview.src = '';
-      
-      document.getElementById('fileInfo').textContent = '';
-      document.getElementById('uploadError').textContent = '';
-      document.getElementById('uploadBtn').disabled = true;
-      
-      document.getElementById('modalPhotoInput').value = '';
-    }
-
-    function handleModalPhotoSelect(event) {
-      console.log('📁 Arquivo selecionado no modal');
-      handlePhotoSelection(event.target.files[0]);
-    }
-
-    function handlePhotoSelect(event) {
-      console.log('📁 Arquivo selecionado diretamente');
-      handlePhotoSelection(event.target.files[0]);
-      if (event.target.files[0]) {
-        openUploadModal();
-      }
-    }
-
-    function handlePhotoSelection(file) {
-      console.log('🔄 Processando seleção de arquivo:', file?.name);
-      
-      // Limpar estado anterior
-      if (filePreviewUrl) {
-        URL.revokeObjectURL(filePreviewUrl);
-      }
-      
-      // Validar arquivo
-      const error = validateFile(file);
-      if (error) {
-        document.getElementById('uploadError').textContent = error;
-        document.getElementById('uploadBtn').disabled = true;
-        return;
-      }
-      
-      selectedFile = file;
-      
-      // Criar preview
-      filePreviewUrl = URL.createObjectURL(file);
-      const modalPreview = document.getElementById('modalPreview');
-      modalPreview.src = filePreviewUrl;
-      modalPreview.style.display = 'block';
-      
-      // Mostrar informações do arquivo
-      const fileSizeKB = Math.round(file.size / 1024);
-      document.getElementById('fileInfo').textContent = 
-        `${file.name} (${fileSizeKB} KB)`;
-      
-      document.getElementById('uploadError').textContent = '';
-      document.getElementById('uploadBtn').disabled = false;
-      
-      console.log('✅ Preview criado com sucesso');
-    }
-
-    function validateFile(file) {
-      if (!file) return 'Nenhum arquivo selecionado.';
-      
-      // Validar tipo
-      if (!ALLOWED_TYPES.includes(file.type)) {
-        return 'Formato não permitido. Use apenas JPG ou PNG.';
-      }
-      
-      // Validar tamanho
-      if (file.size > MAX_FILE_SIZE) {
-        const maxSizeKB = MAX_FILE_SIZE / 1024;
-        const fileSizeKB = Math.round(file.size / 1024);
-        return `Arquivo muito grande: ${fileSizeKB}KB. Máximo: ${maxSizeKB}KB.`;
-      }
-      
-      return null;
-    }
-
-    // ✅ UPLOAD REAL PARA SUPABASE
-    async function uploadPhoto() {
-      if (!selectedFile) {
-        showUploadError('Nenhum arquivo selecionado.');
-        return;
-      }
-
-      try {
-        console.log('🚀 INICIANDO UPLOAD...');
-        
-        // Mostrar loading
-        document.getElementById('uploadLoading').style.display = 'block';
-        document.getElementById('uploadBtn').disabled = true;
-        document.getElementById('uploadError').textContent = '';
-
-        // Nome único para o arquivo
-        const fileExt = selectedFile.name.split('.').pop();
-        const fileName = `${currentUser.id}-${Date.now()}.${fileExt}`;
-        
-        console.log('📤 Fazendo upload para:', fileName);
-
-        // Fazer upload para Supabase Storage
-        const { data, error } = await supabase.storage
-          .from('avatars')
-          .upload(fileName, selectedFile, {
-            cacheControl: '3600',
-            upsert: true
-          });
-
-        if (error) {
-          console.error('❌ Erro no upload:', error);
-          throw new Error(`Falha no upload: ${error.message}`);
-        }
-
-        console.log('✅ Upload concluído:', data);
-
-        // Salvar URL no perfil
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ 
-            avatar_url: fileName,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', currentUser.id);
-
-        if (updateError) {
-          console.error('❌ Erro ao salvar URL:', updateError);
-          throw new Error('Erro ao salvar foto no perfil');
-        }
-
-        console.log('✅ URL salva no perfil');
-
-        // Atualizar interface
-        await updateAvatarPhotos();
-        
-        // Fechar modal e mostrar sucesso
-        closeUploadModal();
-        showAlert('successAlert', '✅ Foto atualizada com sucesso!');
-        
-        console.log('🎉 Foto do perfil atualizada com sucesso!');
-
-      } catch (error) {
-        console.error('❌ Erro no upload da foto:', error);
-        showUploadError(error.message || 'Erro ao fazer upload da foto.');
-      } finally {
-        document.getElementById('uploadLoading').style.display = 'none';
-        document.getElementById('uploadBtn').disabled = false;
-      }
-    }
-
-    function showUploadError(message) {
-      document.getElementById('uploadError').textContent = message;
-    }
-
-    // ✅ CONFIGURAR EVENT LISTENERS
-    function setupEventListeners() {
-      document.getElementById('logoutBtn').addEventListener('click', logout);
-      
-      // Form submissions
-      document.getElementById('basicInfoForm').addEventListener('submit', saveBasicInfo);
-      document.getElementById('contactInfoForm').addEventListener('submit', saveContactInfo);
-      document.getElementById('preferencesInfoForm').addEventListener('submit', savePreferencesInfo);
-      document.getElementById('descriptionInfoForm').addEventListener('submit', saveDescriptionInfo);
-      document.getElementById('moreAboutInfoForm').addEventListener('submit', saveMoreAboutInfo);
-      
-      // Fechar modal ao clicar fora
-      document.getElementById('uploadModal').addEventListener('click', function(e) {
+// ✅ CONFIGURAR EVENT LISTENERS - CORRIGIDO
+function setupEventListeners() {
+    console.log('🔧 Configurando event listeners...');
+    
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+    
+    // Form submissions
+    document.getElementById('basicInfoForm').addEventListener('submit', saveBasicInfo);
+    document.getElementById('contactInfoForm').addEventListener('submit', saveContactInfo);
+    document.getElementById('preferencesInfoForm').addEventListener('submit', savePreferencesInfo);
+    document.getElementById('descriptionInfoForm').addEventListener('submit', saveDescriptionInfo);
+    document.getElementById('moreAboutInfoForm').addEventListener('submit', saveMoreAboutInfo);
+    
+    // Descrição counter
+    setupDescriptionCounter();
+    
+    // Mais sobre mim listeners
+    setupMoreAboutListeners();
+    
+    // Fechar modal ao clicar fora
+    document.getElementById('uploadModal').addEventListener('click', function(e) {
         if (e.target === this) {
-          closeUploadModal();
+            closeUploadModal();
         }
-      });
-    }
+    });
+    
+    console.log('✅ Event listeners configurados');
+}
 
-    // ✅ FUNÇÕES DE CRIAÇÃO DE PERFIL
-    async function createBasicProfile() {
-      try {
+// ✅ FUNÇÕES DE CRIAÇÃO DE PERFIL - CORRIGIDAS
+async function createBasicProfile() {
+    try {
         const { data: { user } } = await supabase.auth.getUser();
+        const nickname = user.user_metadata?.nickname || user.email.split('@')[0];
         
         const { error } = await supabase
-          .from('profiles')
-          .insert([
-            {
-              id: user.id,
-              nickname: user.user_metadata?.nickname || user.email.split('@')[0],
-              full_name: user.user_metadata?.full_name || '',
-              birth_date: user.user_metadata?.birth_date || null,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            }
-          ]);
+            .from('profiles')
+            .insert([
+                {
+                    id: user.id,
+                    nickname: nickname,
+                    full_name: user.user_metadata?.full_name || '',
+                    birth_date: user.user_metadata?.birth_date || null,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                }
+            ]);
 
         if (error) {
-          await createUserDetails();
-          throw error;
+            console.error('Erro ao criar perfil:', error);
+            throw error;
         }
 
+        console.log('✅ Perfil básico criado');
         return true;
-      } catch (error) {
+    } catch (error) {
         console.error('❌ Erro na criação do perfil:', error);
         return false;
-      }
     }
+}
 
-    async function createUserDetails() {
-      try {
+async function createUserDetails() {
+    try {
         const { error } = await supabase
-          .from('user_details')
-          .insert([
-            {
-              user_id: currentUser.id,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            }
-          ]);
+            .from('user_details')
+            .insert([
+                {
+                    user_id: currentUser.id,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                }
+            ]);
 
         if (error && error.code !== '23505') {
-          console.error('Erro ao criar user_details:', error);
+            console.error('Erro ao criar user_details:', error);
+            throw error;
         }
-      } catch (error) {
+        
+        console.log('✅ User details criados');
+    } catch (error) {
         console.error('Erro na criação de user_details:', error);
-      }
     }
+}
 
-    async function getProfileData() {
-      const { data: profile, error } = await supabase
+async function getProfileData() {
+    const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', currentUser.id)
         .single();
 
-      if (error) throw error;
-      return profile;
-    }
-        // ✅ FUNÇÕES DE FORMULÁRIO
-    function setupDescriptionCounter() {
-      const description = document.getElementById('description');
-      description.addEventListener('input', updateCharCount);
-    }
+    if (error) throw error;
+    return profile;
+}
 
-    function updateCharCount() {
-      const description = document.getElementById('description');
-      const charCount = document.getElementById('charCount');
-      const count = description.value.length;
-      
-      charCount.textContent = `${count}/100 caracteres`;
-      charCount.className = count > 100 ? 'char-count warning' : 'char-count';
+// ✅ FUNÇÕES DE FORMULÁRIO - CORRIGIDAS
+function setupDescriptionCounter() {
+    const description = document.getElementById('description');
+    if (description) {
+        description.addEventListener('input', updateCharCount);
     }
+}
 
-    function setupMoreAboutListeners() {
-      document.getElementById('hasPets').addEventListener('change', updatePetsDetailsVisibility);
-      document.getElementById('exercise').addEventListener('change', updateExerciseDetailsVisibility);
+function updateCharCount() {
+    const description = document.getElementById('description');
+    const charCount = document.getElementById('charCount');
+    if (description && charCount) {
+        const count = description.value.length;
+        charCount.textContent = `${count}/100 caracteres`;
+        charCount.className = count > 100 ? 'char-count warning' : 'char-count';
     }
+}
 
-    function updatePetsDetailsVisibility() {
-      const hasPets = document.getElementById('hasPets').value;
-      const petsDetailsGroup = document.getElementById('petsDetailsGroup');
-      petsDetailsGroup.style.display = hasPets === 'sim' ? 'block' : 'none';
+function setupMoreAboutListeners() {
+    const hasPets = document.getElementById('hasPets');
+    const exercise = document.getElementById('exercise');
+    
+    if (hasPets) hasPets.addEventListener('change', updatePetsDetailsVisibility);
+    if (exercise) exercise.addEventListener('change', updateExerciseDetailsVisibility);
+}
+
+function updatePetsDetailsVisibility() {
+    const hasPets = document.getElementById('hasPets');
+    const petsDetailsGroup = document.getElementById('petsDetailsGroup');
+    if (hasPets && petsDetailsGroup) {
+        petsDetailsGroup.style.display = hasPets.value === 'sim' ? 'block' : 'none';
     }
+}
 
-    function updateExerciseDetailsVisibility() {
-      const exercise = document.getElementById('exercise').value;
-      const exerciseDetailsGroup = document.getElementById('exerciseDetailsGroup');
-      exerciseDetailsGroup.style.display = (exercise === 'ocasionalmente' || exercise === 'regularmente') ? 'block' : 'none';
+function updateExerciseDetailsVisibility() {
+    const exercise = document.getElementById('exercise');
+    const exerciseDetailsGroup = document.getElementById('exerciseDetailsGroup');
+    if (exercise && exerciseDetailsGroup) {
+        exerciseDetailsGroup.style.display = (exercise.value === 'ocasionalmente' || exercise.value === 'regularmente') ? 'block' : 'none';
     }
+}
 
-    // ✅ FUNÇÕES AUXILIARES
-    function calculateAge(birthDate) {
-      if (!birthDate) return null;
-      const today = new Date();
-      const birth = new Date(birthDate);
-      let age = today.getFullYear() - birth.getFullYear();
-      const monthDiff = today.getMonth() - birth.getMonth();
-      
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+// ✅ FUNÇÕES AUXILIARES
+function calculateAge(birthDate) {
+    if (!birthDate) return null;
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
         age--;
-      }
-      
-      return age;
     }
+    
+    return age;
+}
 
-    function formatGender(gender) {
-      const genders = {
+function formatGender(gender) {
+    const genders = {
         'feminino': 'Feminino',
         'masculino': 'Masculino'
-      };
-      return genders[gender] || gender;
-    }
+    };
+    return genders[gender] || gender;
+}
 
-    function formatLookingFor(lookingFor) {
-      const options = {
+function formatLookingFor(lookingFor) {
+    const options = {
         'amizade': 'Amizade',
         'namoro': 'Namoro',
         'relacionamento_serio': 'Relacionamento Sério',
         'conversa': 'Apenas Conversa'
-      };
-      return options[lookingFor] || lookingFor;
-    }
+    };
+    return options[lookingFor] || lookingFor;
+}
 
-    function formatZodiac(zodiac) {
-      const zodiacs = {
+function formatZodiac(zodiac) {
+    const zodiacs = {
         'aries': 'Áries', 'touro': 'Touro', 'gemeos': 'Gêmeos', 'cancer': 'Câncer',
         'leao': 'Leão', 'virgem': 'Virgem', 'libra': 'Libra', 'escorpiao': 'Escorpião',
         'sagitario': 'Sagitário', 'capricornio': 'Capricórnio', 'aquario': 'Aquário', 'peixes': 'Peixes'
-      };
-      return zodiacs[zodiac] || zodiac;
-    }
+    };
+    return zodiacs[zodiac] || zodiac;
+}
 
-    function formatPets(hasPets, petsDetails) {
-      if (hasPets === 'sim') {
+function formatPets(hasPets, petsDetails) {
+    if (hasPets === 'sim') {
         return petsDetails ? `Sim, ${petsDetails}` : 'Sim, tenho';
-      } else if (hasPets === 'nao') {
+    } else if (hasPets === 'nao') {
         return 'Não tenho';
-      }
-      return null;
     }
+    return null;
+}
 
-    function formatSexualOrientation(orientation) {
-      const orientations = {
+function formatSexualOrientation(orientation) {
+    const orientations = {
         'heterossexual': 'Heterossexual',
         'homossexual': 'Homossexual',
         'bissexual': 'Bissexual',
         'outro': 'Outro',
         'prefiro_nao_informar': 'Prefiro não informar'
-      };
-      return orientations[orientation] || orientation;
-    }
+    };
+    return orientations[orientation] || orientation;
+}
 
-    function formatDrinking(drinking) {
-      const options = {
+function formatDrinking(drinking) {
+    const options = {
         'nao_bebo': 'Não bebo',
         'socialmente': 'Socialmente',
         'frequentemente': 'Com frequência'
-      };
-      return options[drinking] || drinking;
-    }
+    };
+    return options[drinking] || drinking;
+}
 
-    function formatSmoking(smoking) {
-      const options = {
+function formatSmoking(smoking) {
+    const options = {
         'nao_fumo': 'Não fumo',
         'socialmente': 'Socialmente',
         'frequentemente': 'Com frequência'
-      };
-      return options[smoking] || smoking;
-    }
+    };
+    return options[smoking] || smoking;
+}
 
-    function formatExercise(exercise, exerciseDetails) {
-      if (exercise === 'ocasionalmente') {
+function formatExercise(exercise, exerciseDetails) {
+    if (exercise === 'ocasionalmente') {
         return exerciseDetails ? `Ocasionalmente (${exerciseDetails})` : 'Ocasionalmente';
-      } else if (exercise === 'regularmente') {
+    } else if (exercise === 'regularmente') {
         return exerciseDetails ? `Regularmente (${exerciseDetails})` : 'Regularmente';
-      } else if (exercise === 'nao_pratico') {
+    } else if (exercise === 'nao_pratico') {
         return 'Não pratico';
-      }
-      return null;
     }
+    return null;
+}
 
-    function formatReligion(religion) {
-      const religions = {
+function formatReligion(religion) {
+    const religions = {
         'catolica': 'Católica',
         'evangelica': 'Evangélica',
         'espirita': 'Espírita',
@@ -1837,12 +1688,12 @@
         'outra': 'Outra',
         'nenhuma': 'Nenhuma',
         'prefiro_nao_informar': 'Prefiro não informar'
-      };
-      return religions[religion] || religion;
-    }
+    };
+    return religions[religion] || religion;
+}
 
-    function formatEducation(education) {
-      const levels = {
+function formatEducation(education) {
+    const levels = {
         'fundamental_incompleto': 'Fundamental Incompleto',
         'fundamental_completo': 'Fundamental Completo',
         'medio_incompleto': 'Médio Incompleto',
@@ -1852,361 +1703,388 @@
         'pos_graduacao': 'Pós-graduação',
         'mestrado': 'Mestrado',
         'doutorado': 'Doutorado'
-      };
-      return levels[education] || education;
-    }
+    };
+    return levels[education] || education;
+}
 
-    function updateProfileBadge() {
-      const badge = document.getElementById('profileBadge');
-      const completedFields = calculateProfileCompletion();
-      
-      if (completedFields >= 80) {
+function updateProfileBadge() {
+    const badge = document.getElementById('profileBadge');
+    if (!badge) return;
+    
+    const completedFields = calculateProfileCompletion();
+    
+    if (completedFields >= 80) {
         badge.textContent = 'Perfil Completo';
         badge.style.background = 'var(--success)';
         badge.style.color = 'white';
-      } else if (completedFields >= 50) {
+    } else if (completedFields >= 50) {
         badge.textContent = 'Perfil em Andamento';
         badge.style.background = 'var(--primary-light)';
-      } else {
+    } else {
         badge.textContent = 'Perfil Básico';
         badge.style.background = '#e2e8f0';
-      }
     }
+}
 
-    function calculateProfileCompletion() {
-      let completed = 0;
-      let total = 0;
+function calculateProfileCompletion() {
+    let completed = 0;
+    let total = 0;
 
-      // Perfil básico
-      if (userProfile?.full_name) completed++;
-      total++;
-      if (userProfile?.birth_date) completed++;
-      total++;
+    // Perfil básico
+    if (userProfile?.full_name) completed++;
+    total++;
+    if (userProfile?.birth_date) completed++;
+    total++;
 
-      // Detalhes
-      if (userDetails.phone) completed++;
-      total++;
-      if (userDetails.address) completed++;
-      total++;
-      if (userDetails.gender) completed++;
-      total++;
-      if (userDetails.interests && userDetails.interests.length > 0) completed++;
-      total++;
-      if (userDetails.looking_for) completed++;
-      total++;
-      if (userDetails.description) completed++;
-      total++;
+    // Detalhes
+    if (userDetails.phone) completed++;
+    total++;
+    if (userDetails.address) completed++;
+    total++;
+    if (userDetails.gender) completed++;
+    total++;
+    if (userDetails.interests && userDetails.interests.length > 0) completed++;
+    total++;
+    if (userDetails.looking_for) completed++;
+    total++;
+    if (userDetails.description) completed++;
+    total++;
 
-      // Mais sobre mim
-      if (userDetails.zodiac) completed++;
-      total++;
-      if (userDetails.has_pets) completed++;
-      total++;
-      if (userDetails.sexual_orientation) completed++;
-      total++;
-      if (userDetails.drinking) completed++;
-      total++;
-      if (userDetails.smoking) completed++;
-      total++;
-      if (userDetails.exercise) completed++;
-      total++;
-      if (userDetails.religion) completed++;
-      total++;
-      if (userDetails.education) completed++;
-      total++;
-      if (userDetails.profession) completed++;
-      total++;
+    // Mais sobre mim
+    if (userDetails.zodiac) completed++;
+    total++;
+    if (userDetails.has_pets) completed++;
+    total++;
+    if (userDetails.sexual_orientation) completed++;
+    total++;
+    if (userDetails.drinking) completed++;
+    total++;
+    if (userDetails.smoking) completed++;
+    total++;
+    if (userDetails.exercise) completed++;
+    total++;
+    if (userDetails.religion) completed++;
+    total++;
+    if (userDetails.education) completed++;
+    total++;
+    if (userDetails.profession) completed++;
+    total++;
 
-      return Math.round((completed / total) * 100);
+    return Math.round((completed / total) * 100);
+}
+
+// ✅ FUNÇÕES DE FORMULÁRIO - CORRIGIDAS
+function toggleEdit(section) {
+    const display = document.getElementById(section + 'Display');
+    const edit = document.getElementById(section + 'Edit');
+    
+    if (!display || !edit) {
+        console.error('Elementos não encontrados para:', section);
+        return;
     }
-
-    // ✅ FUNÇÕES DE FORMULÁRIO
-    function toggleEdit(section) {
-      const display = document.getElementById(section + 'Display');
-      const edit = document.getElementById(section + 'Edit');
-      
-      if (display.classList.contains('hidden')) {
+    
+    if (display.classList.contains('hidden')) {
         display.classList.remove('hidden');
         edit.classList.add('hidden');
-      } else {
+    } else {
         display.classList.add('hidden');
         edit.classList.remove('hidden');
-      }
     }
+}
 
-    function updateProfileForms() {
-      // Formulário de informações básicas
-      document.getElementById('fullName').value = userProfile?.full_name || '';
-      document.getElementById('birthDate').value = userProfile?.birth_date || '';
+function updateProfileForms() {
+    console.log('📝 Atualizando formulários com dados:', { userProfile, userDetails });
+    
+    // Formulário de informações básicas
+    const fullNameInput = document.getElementById('fullName');
+    const birthDateInput = document.getElementById('birthDate');
+    if (fullNameInput) fullNameInput.value = userProfile?.full_name || '';
+    if (birthDateInput) birthDateInput.value = userProfile?.birth_date || '';
 
-      // Formulário de contato
-      document.getElementById('phone').value = userDetails.phone || '';
-      document.getElementById('address').value = userDetails.address || '';
+    // Formulário de contato
+    const phoneInput = document.getElementById('phone');
+    const addressInput = document.getElementById('address');
+    if (phoneInput) phoneInput.value = userDetails.phone || '';
+    if (addressInput) addressInput.value = userDetails.address || '';
 
-      // Formulário de preferências
-      document.getElementById('gender').value = userDetails.gender || '';
-      document.getElementById('lookingFor').value = userDetails.looking_for || '';
+    // Formulário de preferências
+    const genderSelect = document.getElementById('gender');
+    const lookingForSelect = document.getElementById('lookingFor');
+    if (genderSelect) genderSelect.value = userDetails.gender || '';
+    if (lookingForSelect) lookingForSelect.value = userDetails.looking_for || '';
 
-      // Checkboxes de interesses
-      const interests = userDetails.interests || [];
-      document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+    // Checkboxes de interesses
+    const interests = userDetails.interests || [];
+    document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
         checkbox.checked = interests.includes(checkbox.value);
-      });
+    });
 
-      // Descrição
-      document.getElementById('description').value = userDetails.description || '';
-      updateCharCount();
-
-      // Mais sobre mim
-      document.getElementById('zodiac').value = userDetails.zodiac || '';
-      document.getElementById('hasPets').value = userDetails.has_pets || '';
-      document.getElementById('petsDetails').value = userDetails.pets_details || '';
-      document.getElementById('sexualOrientation').value = userDetails.sexual_orientation || '';
-      document.getElementById('drinking').value = userDetails.drinking || '';
-      document.getElementById('smoking').value = userDetails.smoking || '';
-      document.getElementById('exercise').value = userDetails.exercise || '';
-      document.getElementById('exerciseDetails').value = userDetails.exercise_details || '';
-      document.getElementById('religion').value = userDetails.religion || '';
-      document.getElementById('education').value = userDetails.education || '';
-      document.getElementById('profession').value = userDetails.profession || '';
-
-      // Atualizar visibilidade dos campos condicionais
-      updatePetsDetailsVisibility();
-      updateExerciseDetailsVisibility();
+    // Descrição
+    const descriptionInput = document.getElementById('description');
+    if (descriptionInput) {
+        descriptionInput.value = userDetails.description || '';
+        updateCharCount();
     }
 
-    // ✅ FUNÇÕES DE SALVAMENTO
-    async function saveBasicInfo(e) {
-      e.preventDefault();
-      
-      try {
+    // Mais sobre mim
+    const zodiacInput = document.getElementById('zodiac');
+    const hasPetsInput = document.getElementById('hasPets');
+    const petsDetailsInput = document.getElementById('petsDetails');
+    const sexualOrientationInput = document.getElementById('sexualOrientation');
+    const drinkingInput = document.getElementById('drinking');
+    const smokingInput = document.getElementById('smoking');
+    const exerciseInput = document.getElementById('exercise');
+    const exerciseDetailsInput = document.getElementById('exerciseDetails');
+    const religionInput = document.getElementById('religion');
+    const educationInput = document.getElementById('education');
+    const professionInput = document.getElementById('profession');
+    
+    if (zodiacInput) zodiacInput.value = userDetails.zodiac || '';
+    if (hasPetsInput) hasPetsInput.value = userDetails.has_pets || '';
+    if (petsDetailsInput) petsDetailsInput.value = userDetails.pets_details || '';
+    if (sexualOrientationInput) sexualOrientationInput.value = userDetails.sexual_orientation || '';
+    if (drinkingInput) drinkingInput.value = userDetails.drinking || '';
+    if (smokingInput) smokingInput.value = userDetails.smoking || '';
+    if (exerciseInput) exerciseInput.value = userDetails.exercise || '';
+    if (exerciseDetailsInput) exerciseDetailsInput.value = userDetails.exercise_details || '';
+    if (religionInput) religionInput.value = userDetails.religion || '';
+    if (educationInput) educationInput.value = userDetails.education || '';
+    if (professionInput) professionInput.value = userDetails.profession || '';
+
+    // Atualizar visibilidade dos campos condicionais
+    updatePetsDetailsVisibility();
+    updateExerciseDetailsVisibility();
+}
+
+// CONTINUA NA PRÓXIMA MENSAGEM...
+// ✅ FUNÇÕES DE SALVAMENTO - CORRIGIDAS
+async function saveBasicInfo(e) {
+    e.preventDefault();
+    
+    try {
         const fullName = document.getElementById('fullName').value;
         const birthDate = document.getElementById('birthDate').value;
 
-        const { data: existingProfile } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', currentUser.id)
-          .single();
+        console.log('💾 Salvando informações básicas:', { fullName, birthDate });
 
-        let error;
-        
-        if (existingProfile) {
-          const { error: updateError } = await supabase
+        const { error } = await supabase
             .from('profiles')
             .update({
-              full_name: fullName,
-              birth_date: birthDate,
-              updated_at: new Date()
+                full_name: fullName,
+                birth_date: birthDate,
+                updated_at: new Date().toISOString()
             })
             .eq('id', currentUser.id);
 
-          error = updateError;
-        } else {
-          const { data: { user } } = await supabase.auth.getUser();
-          const { error: insertError } = await supabase
-            .from('profiles')
-            .insert([
-              {
-                id: currentUser.id,
-                nickname: user.user_metadata?.nickname || user.email.split('@')[0],
-                full_name: fullName,
-                birth_date: birthDate,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-              }
-            ]);
-
-          error = insertError;
+        if (error) {
+            console.error('❌ Erro ao salvar perfil:', error);
+            throw error;
         }
 
-        if (error) throw error;
-
+        // Recarregar dados
         await loadUserData();
         toggleEdit('basicInfo');
-        showAlert('successAlert', 'Informações básicas atualizadas com sucesso!');
+        showAlert('successAlert', '✅ Informações básicas atualizadas com sucesso!');
         
-      } catch (error) {
+    } catch (error) {
         console.error('❌ Erro ao salvar informações básicas:', error);
-        showAlert('errorAlert', 'Erro ao salvar informações básicas: ' + error.message);
-      }
+        showAlert('errorAlert', '❌ Erro ao salvar informações básicas: ' + error.message);
     }
+}
 
-    async function saveContactInfo(e) {
-      e.preventDefault();
-      
-      try {
+async function saveContactInfo(e) {
+    e.preventDefault();
+    
+    try {
         const phone = document.getElementById('phone').value;
         const address = document.getElementById('address').value;
 
+        console.log('💾 Salvando informações de contato:', { phone, address });
+
+        // Verificar se user_details existe
         const { data: existingDetails } = await supabase
-          .from('user_details')
-          .select('id')
-          .eq('user_id', currentUser.id)
-          .single();
+            .from('user_details')
+            .select('id')
+            .eq('user_id', currentUser.id)
+            .single();
 
         let error;
         
         if (existingDetails) {
-          const { error: updateError } = await supabase
-            .from('user_details')
-            .update({
-              phone: phone,
-              address: address,
-              updated_at: new Date()
-            })
-            .eq('user_id', currentUser.id);
+            // Atualizar
+            const { error: updateError } = await supabase
+                .from('user_details')
+                .update({
+                    phone: phone,
+                    address: address,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('user_id', currentUser.id);
 
-          error = updateError;
+            error = updateError;
         } else {
-          const { error: insertError } = await supabase
-            .from('user_details')
-            .insert([
-              {
-                user_id: currentUser.id,
-                phone: phone,
-                address: address,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-              }
-            ]);
+            // Inserir
+            const { error: insertError } = await supabase
+                .from('user_details')
+                .insert([
+                    {
+                        user_id: currentUser.id,
+                        phone: phone,
+                        address: address,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    }
+                ]);
 
-          error = insertError;
+            error = insertError;
         }
 
         if (error) throw error;
 
+        // Recarregar dados
         await loadUserData();
         toggleEdit('contactInfo');
-        showAlert('successAlert', 'Informações de contato atualizadas com sucesso!');
+        showAlert('successAlert', '✅ Informações de contato atualizadas com sucesso!');
         
-      } catch (error) {
+    } catch (error) {
         console.error('❌ Erro ao salvar informações de contato:', error);
-        showAlert('errorAlert', 'Erro ao salvar informações de contato: ' + error.message);
-      }
+        showAlert('errorAlert', '❌ Erro ao salvar informações de contato: ' + error.message);
     }
+}
 
-    async function savePreferencesInfo(e) {
-      e.preventDefault();
-      
-      try {
+async function savePreferencesInfo(e) {
+    e.preventDefault();
+    
+    try {
         const gender = document.getElementById('gender').value;
         const lookingFor = document.getElementById('lookingFor').value;
         
         const interests = [];
         document.querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
-          interests.push(checkbox.value);
+            interests.push(checkbox.value);
         });
 
+        console.log('💾 Salvando preferências:', { gender, lookingFor, interests });
+
+        // Verificar se user_details existe
         const { data: existingDetails } = await supabase
-          .from('user_details')
-          .select('id')
-          .eq('user_id', currentUser.id)
-          .single();
+            .from('user_details')
+            .select('id')
+            .eq('user_id', currentUser.id)
+            .single();
 
         let error;
         
         if (existingDetails) {
-          const { error: updateError } = await supabase
-            .from('user_details')
-            .update({
-              gender: gender,
-              interests: interests,
-              looking_for: lookingFor,
-              updated_at: new Date()
-            })
-            .eq('user_id', currentUser.id);
+            // Atualizar
+            const { error: updateError } = await supabase
+                .from('user_details')
+                .update({
+                    gender: gender,
+                    interests: interests,
+                    looking_for: lookingFor,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('user_id', currentUser.id);
 
-          error = updateError;
+            error = updateError;
         } else {
-          const { error: insertError } = await supabase
-            .from('user_details')
-            .insert([
-              {
-                user_id: currentUser.id,
-                gender: gender,
-                interests: interests,
-                looking_for: lookingFor,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-              }
-            ]);
+            // Inserir
+            const { error: insertError } = await supabase
+                .from('user_details')
+                .insert([
+                    {
+                        user_id: currentUser.id,
+                        gender: gender,
+                        interests: interests,
+                        looking_for: lookingFor,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    }
+                ]);
 
-          error = insertError;
+            error = insertError;
         }
 
         if (error) throw error;
 
+        // Recarregar dados
         await loadUserData();
         toggleEdit('preferencesInfo');
-        showAlert('successAlert', 'Preferências atualizadas com sucesso!');
+        showAlert('successAlert', '✅ Preferências atualizadas com sucesso!');
         
-      } catch (error) {
+    } catch (error) {
         console.error('❌ Erro ao salvar preferências:', error);
-        showAlert('errorAlert', 'Erro ao salvar preferências: ' + error.message);
-      }
+        showAlert('errorAlert', '❌ Erro ao salvar preferências: ' + error.message);
     }
+}
 
-    async function saveDescriptionInfo(e) {
-      e.preventDefault();
-      
-      try {
+async function saveDescriptionInfo(e) {
+    e.preventDefault();
+    
+    try {
         const description = document.getElementById('description').value;
         
         if (description.length > 100) {
-          showAlert('errorAlert', 'A descrição deve ter no máximo 100 caracteres.');
-          return;
+            showAlert('errorAlert', '❌ A descrição deve ter no máximo 100 caracteres.');
+            return;
         }
 
+        console.log('💾 Salvando descrição:', description);
+
+        // Verificar se user_details existe
         const { data: existingDetails } = await supabase
-          .from('user_details')
-          .select('id')
-          .eq('user_id', currentUser.id)
-          .single();
+            .from('user_details')
+            .select('id')
+            .eq('user_id', currentUser.id)
+            .single();
 
         let error;
         
         if (existingDetails) {
-          const { error: updateError } = await supabase
-            .from('user_details')
-            .update({
-              description: description,
-              updated_at: new Date()
-            })
-            .eq('user_id', currentUser.id);
+            // Atualizar
+            const { error: updateError } = await supabase
+                .from('user_details')
+                .update({
+                    description: description,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('user_id', currentUser.id);
 
-          error = updateError;
+            error = updateError;
         } else {
-          const { error: insertError } = await supabase
-            .from('user_details')
-            .insert([
-              {
-                user_id: currentUser.id,
-                description: description,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-              }
-            ]);
+            // Inserir
+            const { error: insertError } = await supabase
+                .from('user_details')
+                .insert([
+                    {
+                        user_id: currentUser.id,
+                        description: description,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    }
+                ]);
 
-          error = insertError;
+            error = insertError;
         }
 
         if (error) throw error;
 
+        // Recarregar dados
         await loadUserData();
         toggleEdit('descriptionInfo');
-        showAlert('successAlert', 'Descrição atualizada com sucesso!');
+        showAlert('successAlert', '✅ Descrição atualizada com sucesso!');
         
-      } catch (error) {
+    } catch (error) {
         console.error('❌ Erro ao salvar descrição:', error);
-        showAlert('errorAlert', 'Erro ao salvar descrição: ' + error.message);
-      }
+        showAlert('errorAlert', '❌ Erro ao salvar descrição: ' + error.message);
     }
+}
 
-    async function saveMoreAboutInfo(e) {
-      e.preventDefault();
-      
-      try {
+async function saveMoreAboutInfo(e) {
+    e.preventDefault();
+    
+    try {
         const zodiac = document.getElementById('zodiac').value;
         const hasPets = document.getElementById('hasPets').value;
         const petsDetails = document.getElementById('petsDetails').value;
@@ -2219,158 +2097,399 @@
         const education = document.getElementById('education').value;
         const profession = document.getElementById('profession').value;
 
+        console.log('💾 Salvando mais informações:', {
+            zodiac, hasPets, petsDetails, sexualOrientation, drinking, 
+            smoking, exercise, exerciseDetails, religion, education, profession
+        });
+
+        // Verificar se user_details existe
         const { data: existingDetails } = await supabase
-          .from('user_details')
-          .select('id')
-          .eq('user_id', currentUser.id)
-          .single();
+            .from('user_details')
+            .select('id')
+            .eq('user_id', currentUser.id)
+            .single();
 
         let error;
         
         if (existingDetails) {
-          const { error: updateError } = await supabase
-            .from('user_details')
-            .update({
-              zodiac: zodiac,
-              has_pets: hasPets,
-              pets_details: petsDetails,
-              sexual_orientation: sexualOrientation,
-              drinking: drinking,
-              smoking: smoking,
-              exercise: exercise,
-              exercise_details: exerciseDetails,
-              religion: religion,
-              education: education,
-              profession: profession,
-              updated_at: new Date()
-            })
-            .eq('user_id', currentUser.id);
+            // Atualizar
+            const { error: updateError } = await supabase
+                .from('user_details')
+                .update({
+                    zodiac: zodiac,
+                    has_pets: hasPets,
+                    pets_details: petsDetails,
+                    sexual_orientation: sexualOrientation,
+                    drinking: drinking,
+                    smoking: smoking,
+                    exercise: exercise,
+                    exercise_details: exerciseDetails,
+                    religion: religion,
+                    education: education,
+                    profession: profession,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('user_id', currentUser.id);
 
-          error = updateError;
+            error = updateError;
         } else {
-          const { error: insertError } = await supabase
-            .from('user_details')
-            .insert([
-              {
-                user_id: currentUser.id,
-                zodiac: zodiac,
-                has_pets: hasPets,
-                pets_details: petsDetails,
-                sexual_orientation: sexualOrientation,
-                drinking: drinking,
-                smoking: smoking,
-                exercise: exercise,
-                exercise_details: exerciseDetails,
-                religion: religion,
-                education: education,
-                profession: profession,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-              }
-            ]);
+            // Inserir
+            const { error: insertError } = await supabase
+                .from('user_details')
+                .insert([
+                    {
+                        user_id: currentUser.id,
+                        zodiac: zodiac,
+                        has_pets: hasPets,
+                        pets_details: petsDetails,
+                        sexual_orientation: sexualOrientation,
+                        drinking: drinking,
+                        smoking: smoking,
+                        exercise: exercise,
+                        exercise_details: exerciseDetails,
+                        religion: religion,
+                        education: education,
+                        profession: profession,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    }
+                ]);
 
-          error = insertError;
+            error = insertError;
         }
 
         if (error) throw error;
 
+        // Recarregar dados
         await loadUserData();
         toggleEdit('moreAboutInfo');
-        showAlert('successAlert', 'Informações atualizadas com sucesso!');
+        showAlert('successAlert', '✅ Informações atualizadas com sucesso!');
         
-      } catch (error) {
+    } catch (error) {
         console.error('❌ Erro ao salvar informações:', error);
-        showAlert('errorAlert', 'Erro ao salvar informações: ' + error.message);
-      }
+        showAlert('errorAlert', '❌ Erro ao salvar informações: ' + error.message);
+    }
+}
+
+// ✅ FUNÇÕES DE UPLOAD DE FOTO - CORRIGIDAS
+function openUploadModal() {
+    console.log('🎯 Abrindo modal de upload...');
+    const modal = document.getElementById('uploadModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        resetUploadModal();
+    }
+}
+
+function closeUploadModal() {
+    console.log('🎯 Fechando modal...');
+    const modal = document.getElementById('uploadModal');
+    if (modal) {
+        modal.style.display = 'none';
+        resetUploadModal();
+    }
+}
+
+function resetUploadModal() {
+    selectedFile = null;
+    
+    if (filePreviewUrl) {
+        URL.revokeObjectURL(filePreviewUrl);
+        filePreviewUrl = null;
+    }
+    
+    const modalPreview = document.getElementById('modalPreview');
+    if (modalPreview) {
+        modalPreview.style.display = 'none';
+        modalPreview.src = '';
+    }
+    
+    const fileInfo = document.getElementById('fileInfo');
+    const uploadError = document.getElementById('uploadError');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const modalPhotoInput = document.getElementById('modalPhotoInput');
+    
+    if (fileInfo) fileInfo.textContent = '';
+    if (uploadError) uploadError.textContent = '';
+    if (uploadBtn) uploadBtn.disabled = true;
+    if (modalPhotoInput) modalPhotoInput.value = '';
+}
+
+function handleModalPhotoSelect(event) {
+    console.log('📁 Arquivo selecionado no modal');
+    handlePhotoSelection(event.target.files[0]);
+}
+
+function handlePhotoSelect(event) {
+    console.log('📁 Arquivo selecionado diretamente');
+    handlePhotoSelection(event.target.files[0]);
+    if (event.target.files[0]) {
+        openUploadModal();
+    }
+}
+
+function handlePhotoSelection(file) {
+    console.log('🔄 Processando seleção de arquivo:', file?.name);
+    
+    // Limpar estado anterior
+    if (filePreviewUrl) {
+        URL.revokeObjectURL(filePreviewUrl);
+    }
+    
+    // Validar arquivo
+    const error = validateFile(file);
+    if (error) {
+        const uploadError = document.getElementById('uploadError');
+        const uploadBtn = document.getElementById('uploadBtn');
+        if (uploadError) uploadError.textContent = error;
+        if (uploadBtn) uploadBtn.disabled = true;
+        return;
+    }
+    
+    selectedFile = file;
+    
+    // Criar preview
+    filePreviewUrl = URL.createObjectURL(file);
+    const modalPreview = document.getElementById('modalPreview');
+    if (modalPreview) {
+        modalPreview.src = filePreviewUrl;
+        modalPreview.style.display = 'block';
+    }
+    
+    // Mostrar informações do arquivo
+    const fileSizeKB = Math.round(file.size / 1024);
+    const fileInfo = document.getElementById('fileInfo');
+    const uploadError = document.getElementById('uploadError');
+    const uploadBtn = document.getElementById('uploadBtn');
+    
+    if (fileInfo) fileInfo.textContent = `${file.name} (${fileSizeKB} KB)`;
+    if (uploadError) uploadError.textContent = '';
+    if (uploadBtn) uploadBtn.disabled = false;
+    
+    console.log('✅ Preview criado com sucesso');
+}
+
+function validateFile(file) {
+    if (!file) return 'Nenhum arquivo selecionado.';
+    
+    // Validar tipo
+    if (!ALLOWED_TYPES.includes(file.type)) {
+        return 'Formato não permitido. Use apenas JPG ou PNG.';
+    }
+    
+    // Validar tamanho
+    if (file.size > MAX_FILE_SIZE) {
+        const maxSizeKB = MAX_FILE_SIZE / 1024;
+        const fileSizeKB = Math.round(file.size / 1024);
+        return `Arquivo muito grande: ${fileSizeKB}KB. Máximo: ${maxSizeKB}KB.`;
+    }
+    
+    return null;
+}
+
+async function uploadPhoto() {
+    if (!selectedFile) {
+        showUploadError('Nenhum arquivo selecionado.');
+        return;
     }
 
-    // ✅ FUNÇÕES DE UTILIDADE CORRIGIDAS
-function showAlert(alertId, message) {
-  try {
-    const alert = document.getElementById(alertId);
-    if (alert) {
-      alert.textContent = message;
-      alert.style.display = 'block';
-      
-      setTimeout(() => {
-        if (alert) {
-          alert.style.display = 'none';
+    try {
+        console.log('🚀 Iniciando upload...');
+        
+        // Mostrar loading
+        const uploadLoading = document.getElementById('uploadLoading');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const uploadError = document.getElementById('uploadError');
+        
+        if (uploadLoading) uploadLoading.style.display = 'block';
+        if (uploadBtn) uploadBtn.disabled = true;
+        if (uploadError) uploadError.textContent = '';
+
+        // Nome único para o arquivo
+        const fileExt = selectedFile.name.split('.').pop();
+        const fileName = `${currentUser.id}-${Date.now()}.${fileExt}`;
+        
+        console.log('📤 Fazendo upload para:', fileName);
+
+        // Fazer upload para Supabase Storage
+        const { data, error } = await supabase.storage
+            .from('avatars')
+            .upload(fileName, selectedFile, {
+                cacheControl: '3600',
+                upsert: true
+            });
+
+        if (error) {
+            console.error('❌ Erro no upload:', error);
+            throw new Error(`Falha no upload: ${error.message}`);
         }
-      }, 5000);
-    } else {
-      console.warn(`Alerta não encontrado: ${alertId}`);
-      // Fallback: usar console ou alert padrão
-      console.log(`ALERTA: ${message}`);
+
+        console.log('✅ Upload concluído:', data);
+
+        // Salvar URL no perfil
+        const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ 
+                avatar_url: fileName,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', currentUser.id);
+
+        if (updateError) {
+            console.error('❌ Erro ao salvar URL:', updateError);
+            throw new Error('Erro ao salvar foto no perfil');
+        }
+
+        console.log('✅ URL salva no perfil');
+
+        // Atualizar interface
+        await loadUserData();
+        
+        // Fechar modal e mostrar sucesso
+        closeUploadModal();
+        showAlert('successAlert', '✅ Foto atualizada com sucesso!');
+        
+        console.log('🎉 Foto do perfil atualizada com sucesso!');
+
+    } catch (error) {
+        console.error('❌ Erro no upload da foto:', error);
+        showUploadError(error.message || 'Erro ao fazer upload da foto.');
+    } finally {
+        const uploadLoading = document.getElementById('uploadLoading');
+        const uploadBtn = document.getElementById('uploadBtn');
+        
+        if (uploadLoading) uploadLoading.style.display = 'none';
+        if (uploadBtn) uploadBtn.disabled = false;
     }
-  } catch (error) {
-    console.error('Erro no showAlert:', error);
-  }
 }
 
-// ✅ EXCLUSÃO REAL - ÚNICA SOLUÇÃO QUE FUNCIONA
+function showUploadError(message) {
+    const uploadError = document.getElementById('uploadError');
+    if (uploadError) {
+        uploadError.textContent = message;
+    }
+}
+
+// ✅ FUNÇÕES DE UTILIDADE
+function showAlert(alertId, message) {
+    try {
+        const alert = document.getElementById(alertId);
+        if (alert) {
+            alert.textContent = message;
+            alert.style.display = 'block';
+            
+            setTimeout(() => {
+                if (alert) {
+                    alert.style.display = 'none';
+                }
+            }, 5000);
+        } else {
+            console.warn(`Alerta não encontrado: ${alertId}`);
+        }
+    } catch (error) {
+        console.error('Erro no showAlert:', error);
+    }
+}
+
+// ✅ FUNÇÕES DE EDITOR DE IMAGEM (placeholders)
+function cropImage() {
+    showAlert('errorAlert', '🚧 Funcionalidade de recorte em desenvolvimento');
+}
+
+function rotateImage() {
+    showAlert('errorAlert', '🚧 Funcionalidade de rotação em desenvolvimento');
+}
+
+function resizeImage() {
+    showAlert('errorAlert', '🚧 Funcionalidade de redimensionamento em desenvolvimento');
+}
+
+function adjustImage() {
+    showAlert('errorAlert', '🚧 Funcionalidade de ajustes em desenvolvimento');
+}
+
+// ✅ FUNÇÕES DE AÇÃO
+async function logout() {
+    try {
+        await supabase.auth.signOut();
+        window.location.href = 'index.html';
+    } catch (error) {
+        console.error('Erro ao fazer logout:', error);
+    }
+}
+
+function exportProfileData() {
+    const profileData = {
+        perfil: userProfile,
+        detalhes: userDetails
+    };
+    
+    const dataStr = JSON.stringify(profileData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `perfil-${currentUser.id}.json`;
+    link.click();
+    
+    URL.revokeObjectURL(url);
+    showAlert('successAlert', '✅ Dados exportados com sucesso!');
+}
+
 async function deleteAccount() {
-  // 1. CONFIRMAÇÃO ÚNICA E DIRETA
-  if (!confirm('🚨 EXCLUIR CONTA PERMANENTEMENTE?\n\nISSO VAI APAGAR TUDO!')) {
-    return;
-  }
-
-  try {
-    // Mostrar que está excluindo
-    const user = await supabase.auth.getUser();
-    console.log('EXCLUINDO CONTA DO USUÁRIO:', user.data.user.id);
-    
-    // ✅ PASSO 1: Apagar todos os dados das tabelas
-    await supabase.from('user_details').delete().eq('user_id', user.data.user.id);
-    await supabase.from('messages').delete().or(`sender_id.eq.${user.data.user.id},receiver_id.eq.${user.data.user.id}`);
-    
-    // ✅ PASSO 2: Apagar foto se existir
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('avatar_url')
-      .eq('id', user.data.user.id)
-      .single();
-    
-    if (profile?.avatar_url) {
-      await supabase.storage.from('avatars').remove([profile.avatar_url]);
-    }
-    
-    // ✅ PASSO 3: Apagar o perfil (HARD DELETE - some do banco)
-    const { error: deleteError } = await supabase
-      .from('profiles')
-      .delete()
-      .eq('id', user.data.user.id);
-
-    if (deleteError) {
-      console.log('Erro ao deletar perfil, tentando atualizar:', deleteError);
-      // Se não conseguir deletar, pelo menos marca como excluído
-      await supabase
-        .from('profiles')
-        .update({
-          nickname: 'USUARIO_EXCLUIDO',
-          full_name: 'Conta Excluída',
-          avatar_url: null,
-          birth_date: null
-        })
-        .eq('id', user.data.user.id);
+    if (!confirm('🚨 EXCLUIR CONTA PERMANENTEMENTE?\n\nISSO VAI APAGAR TUDO!')) {
+        return;
     }
 
-    // ✅ PASSO 4: Fazer logout (IMPORTANTE!)
-    await supabase.auth.signOut();
-    
-    // ✅ PASSO 5: Limpar tudo
-    localStorage.clear();
-    
-    // ✅ PASSO 6: Mostrar mensagem final
-    alert('✅ CONTA EXCLUÍDA!\n\nTodos os seus dados foram removidos.');
-    
-    // ✅ PASSO 7: Redirecionar
-    window.location.href = 'index.html';
+    try {
+        console.log('EXCLUINDO CONTA DO USUÁRIO:', currentUser.id);
+        
+        // ✅ PASSO 1: Apagar todos os dados das tabelas
+        await supabase.from('user_details').delete().eq('user_id', currentUser.id);
+        await supabase.from('messages').delete().or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`);
+        
+        // ✅ PASSO 2: Apagar foto se existir
+        if (userProfile?.avatar_url) {
+            await supabase.storage.from('avatars').remove([userProfile.avatar_url]);
+        }
+        
+        // ✅ PASSO 3: Apagar o perfil
+        const { error: deleteError } = await supabase
+            .from('profiles')
+            .delete()
+            .eq('id', currentUser.id);
 
-  } catch (error) {
-    console.error('Erro:', error);
-    alert('Erro ao excluir: ' + error.message);
-  }
+        if (deleteError) {
+            console.log('Erro ao deletar perfil:', deleteError);
+        }
+
+        // ✅ PASSO 4: Fazer logout
+        await supabase.auth.signOut();
+        
+        // ✅ PASSO 5: Limpar tudo
+        localStorage.clear();
+        
+        // ✅ PASSO 6: Mostrar mensagem final
+        alert('✅ CONTA EXCLUÍDA!\n\nTodos os seus dados foram removidos.');
+        
+        // ✅ PASSO 7: Redirecionar
+        window.location.href = 'index.html';
+
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao excluir: ' + error.message);
+    }
 }
+
+// ✅ INICIALIZAÇÃO DE COMPONENTES ADICIONAIS
+document.addEventListener('DOMContentLoaded', function() {
+    // Adicionar tooltips para os botões do editor de imagem
+    const editorButtons = document.querySelectorAll('.editor-btn');
+    editorButtons.forEach(button => {
+        button.title = 'Funcionalidade em desenvolvimento';
+    });
+});
 </script>
 </body>
 </html>
