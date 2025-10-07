@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Conexão Perfeita Amor</title>
+    <title>Login - Amor Conect</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* (MANTIDO O MESMO CSS ORIGINAL DO LOGIN) */
         * {
             margin: 0;
             padding: 0;
@@ -15,15 +14,12 @@
         }
 
         :root {
-            --primary: #ff6b8b;
-            --primary-light: #ffb6c1;
-            --secondary: #a78bfa;
-            --accent: #67e8f9;
-            --light: #fdf2f8;
-            --dark: #4a044e;
+            --bege: #f6ecc5;
+            --vermelho-rosado: #d1656d;
+            --lilas: #dfc9ed;
+            --branco: #ffffff;
             --text: #444;
             --text-light: #666;
-            --white: #fff;
             --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             --transition: all 0.3s ease;
             --error: #e53e3e;
@@ -31,7 +27,7 @@
         }
 
         body {
-            background-color: var(--light);
+            background-color: var(--bege);
             color: var(--text);
             line-height: 1.6;
             min-height: 100vh;
@@ -48,75 +44,99 @@
 
         /* Header */
         header {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: var(--white);
-            padding: 1rem 0;
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            color: var(--branco);
+            padding: 0.8rem 0;
             box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
         .header-content {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            height: 70px;
         }
 
         .logo {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            flex-shrink: 0;
         }
 
-        .logo a {
-            text-decoration: none;
-            color: var(--white);
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .logo img {
+            height: 180px;
+            width: auto;
+            object-fit: contain;
         }
 
         .logo h1 {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             font-weight: 700;
+            color: var(--branco);
+            white-space: nowrap;
         }
 
-        .logo-icon {
-            font-size: 2rem;
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
         }
 
-        nav a {
-            color: var(--white);
-            text-decoration: none;
-            font-weight: 500;
-            transition: var(--transition);
-            padding: 0.5rem 1rem;
+        .btn {
+            padding: 0.6rem 1.2rem;
             border-radius: 30px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            font-size: 0.9rem;
         }
 
-        nav a:hover {
-            background-color: rgba(255, 255, 255, 0.2);
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--branco);
+            color: var(--branco);
+        }
+
+        .btn-primary {
+            background: var(--branco);
+            color: var(--vermelho-rosado);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
 
         /* Main Content */
         .main-content {
             flex: 1;
+            padding: 2rem 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 2rem 0;
         }
 
         .auth-container {
-            background: var(--white);
-            border-radius: 20px;
-            box-shadow: var(--shadow);
             width: 100%;
             max-width: 450px;
+            background: var(--branco);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
             overflow: hidden;
+            border: 1px solid var(--lilas);
         }
 
         .auth-header {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: var(--white);
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            color: var(--branco);
             padding: 2rem;
             text-align: center;
         }
@@ -142,23 +162,23 @@
             display: block;
             margin-bottom: 0.5rem;
             font-weight: 500;
-            color: var(--dark);
+            color: var(--text);
         }
 
         .form-control {
             width: 100%;
             padding: 0.75rem 1rem;
-            border: 2px solid #e2e8f0;
+            border: 2px solid var(--lilas);
             border-radius: 10px;
             font-size: 1rem;
             transition: var(--transition);
-            background-color: var(--light);
+            background: var(--branco);
         }
 
         .form-control:focus {
             outline: none;
-            border-color: var(--primary);
-            background-color: var(--white);
+            border-color: var(--vermelho-rosado);
+            box-shadow: 0 0 0 3px rgba(209, 101, 109, 0.1);
         }
 
         .form-control.error {
@@ -208,7 +228,7 @@
         }
 
         .forgot-password {
-            color: var(--primary);
+            color: var(--vermelho-rosado);
             text-decoration: none;
             font-size: 0.9rem;
         }
@@ -217,46 +237,21 @@
             text-decoration: underline;
         }
 
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border-radius: 30px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
+        .btn-block {
             width: 100%;
-            font-size: 1rem;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: var(--white);
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
+            padding: 1rem;
+            font-size: 1.1rem;
         }
 
         .auth-footer {
             text-align: center;
             margin-top: 1.5rem;
             padding-top: 1.5rem;
-            border-top: 1px solid #e2e8f0;
+            border-top: 1px solid var(--lilas);
         }
 
         .auth-footer a {
-            color: var(--primary);
+            color: var(--vermelho-rosado);
             text-decoration: none;
             font-weight: 500;
         }
@@ -275,8 +270,8 @@
         .spinner {
             width: 30px;
             height: 30px;
-            border: 3px solid var(--light);
-            border-top: 3px solid var(--primary);
+            border: 3px solid var(--bege);
+            border-top: 3px solid var(--vermelho-rosado);
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 0 auto;
@@ -293,44 +288,46 @@
             border-radius: 10px;
             margin-bottom: 1.5rem;
             display: none;
+            border: 1px solid;
         }
 
         .alert-error {
             background-color: #fed7d7;
-            border: 1px solid #feb2b2;
+            border-color: #feb2b2;
             color: #c53030;
         }
 
         .alert-success {
             background-color: #f0fff4;
-            border: 1px solid #9ae6b4;
+            border-color: #9ae6b4;
             color: #276749;
         }
 
         .alert-info {
             background-color: #bee3f8;
-            border: 1px solid #90cdf4;
+            border-color: #90cdf4;
             color: #2c5aa0;
         }
 
         /* Footer */
         footer {
-            background-color: var(--dark);
-            color: var(--white);
-            padding: 2rem 0 1.5rem;
-            margin-top: auto;
+            background-color: var(--bege);
+            color: var(--text);
+            padding: 2rem 0 1rem;
+            border-top: 1px solid var(--lilas);
         }
 
         .footer-content {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 2rem;
-            margin-bottom: 2rem;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
         }
 
         .footer-column h3 {
-            margin-bottom: 1.5rem;
-            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            color: var(--vermelho-rosado);
         }
 
         .footer-column ul {
@@ -338,25 +335,26 @@
         }
 
         .footer-column ul li {
-            margin-bottom: 0.8rem;
+            margin-bottom: 0.5rem;
         }
 
         .footer-column a {
-            color: var(--light);
+            color: var(--text);
             text-decoration: none;
             transition: var(--transition);
+            font-size: 0.9rem;
         }
 
         .footer-column a:hover {
-            color: var(--primary-light);
+            color: var(--vermelho-rosado);
         }
 
         .copyright {
             text-align: center;
-            padding-top: 1.5rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.7);
+            padding-top: 1rem;
+            border-top: 1px solid var(--lilas);
+            font-size: 0.8rem;
+            color: var(--text-light);
         }
 
         /* Responsividade */
@@ -364,6 +362,12 @@
             .header-content {
                 flex-direction: column;
                 gap: 1rem;
+                height: auto;
+                padding: 1rem 0;
+            }
+
+            .logo img {
+                height: 140px;
             }
 
             .auth-container {
@@ -386,12 +390,21 @@
         }
 
         @media (max-width: 480px) {
+            .logo img {
+                height: 120px;
+            }
+
             .auth-header h2 {
                 font-size: 1.5rem;
             }
 
             .auth-body {
                 padding: 1rem;
+            }
+
+            .btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.85rem;
             }
         }
     </style>
@@ -402,14 +415,13 @@
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <a href="index.html">
-                        <span class="logo-icon">💑</span>
-                        <h1>Conexão Perfeita</h1>
-                    </a>
+                    <img src="logoamorconect.png" alt="Amor Conect">
+                    <h1>Amor Conect</h1>
                 </div>
-                <nav>
-                    <a href="index.html">Voltar para Home</a>
-                </nav>
+                <div class="auth-buttons">
+                    <a href="login.html" class="btn btn-outline">Entrar</a>
+                    <a href="cadastro.html" class="btn btn-primary">Cadastre-se</a>
+                </div>
             </div>
         </div>
     </header>
@@ -454,7 +466,7 @@
                             <a href="#" class="forgot-password" id="forgotPassword">Esqueci minha senha</a>
                         </div>
 
-                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <button type="submit" class="btn btn-primary btn-block" id="submitBtn">
                             Entrar
                         </button>
 
@@ -477,7 +489,7 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-column">
-                    <h3>Conexão Perfeita</h3>
+                    <h3>Amor Conect</h3>
                     <p>Uma plataforma segura e discreta para conectar corações e construir relacionamentos genuínos.</p>
                 </div>
                 <div class="footer-column">
@@ -498,7 +510,7 @@
                 </div>
             </div>
             <div class="copyright">
-                <p>&copy; 2023 Conexão Perfeita Amor. Todos os direitos reservados.</p>
+                <p>&copy; 2023 Amor Conect. Todos os direitos reservados.</p>
             </div>
         </div>
     </footer>
