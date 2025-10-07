@@ -41,7 +41,7 @@
         header {
             background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
             color: var(--branco);
-            padding: 1rem 0;
+            padding: 0.8rem 0;
             box-shadow: var(--shadow);
             position: sticky;
             top: 0;
@@ -52,23 +52,27 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            height: 70px;
         }
 
         .logo {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            flex-shrink: 0;
         }
 
         .logo img {
-            height: 130px;
+            height: 45px;
             width: auto;
+            object-fit: contain;
         }
 
         .logo h1 {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             font-weight: 700;
             color: var(--branco);
+            white-space: nowrap;
         }
 
         /* Menu Hamburguer */
@@ -77,7 +81,8 @@
             flex-direction: column;
             cursor: pointer;
             gap: 4px;
-            padding: 5px;
+            padding: 8px;
+            margin-left: auto;
         }
 
         .menu-toggle span {
@@ -122,10 +127,11 @@
         .auth-buttons {
             display: flex;
             gap: 1rem;
+            align-items: center;
         }
 
         .btn {
-            padding: 0.7rem 1.5rem;
+            padding: 0.6rem 1.2rem;
             border-radius: 30px;
             border: none;
             font-weight: 600;
@@ -134,6 +140,7 @@
             text-decoration: none;
             display: inline-block;
             text-align: center;
+            font-size: 0.9rem;
         }
 
         .btn-outline {
@@ -148,7 +155,7 @@
         }
 
         .btn:hover {
-            transform: translateY(-3px);
+            transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
 
@@ -238,6 +245,10 @@
             color: var(--vermelho-rosado);
         }
 
+        .feature-card p {
+            text-align: center;
+        }
+
         /* How It Works */
         .how-it-works {
             padding: 5rem 0;
@@ -282,6 +293,10 @@
             color: var(--vermelho-rosado);
         }
 
+        .step p {
+            text-align: center;
+        }
+
         /* Testimonials */
         .testimonials {
             padding: 5rem 0;
@@ -306,6 +321,8 @@
             font-style: italic;
             margin-bottom: 1.5rem;
             color: var(--text);
+            text-align: justify;
+            text-justify: inter-word;
         }
 
         .testimonial-author {
@@ -436,25 +453,41 @@
         @media (max-width: 768px) {
             .header-content {
                 flex-wrap: wrap;
-                gap: 1rem;
+                height: auto;
+                padding: 0.5rem 0;
             }
 
             .logo {
-                flex: 1;
+                order: 1;
             }
 
             .logo img {
-                height: 45px;
+                height: 40px;
             }
 
             .logo h1 {
-                font-size: 1.6rem;
+                font-size: 1.4rem;
             }
 
-            /* Menu Hamburguer */
+            /* Menu Hamburguer - Superior Direito */
             .menu-toggle {
                 display: flex;
                 order: 3;
+                margin-left: auto;
+            }
+
+            /* Botões Login/Cadastro - Lado a Lado */
+            .auth-buttons {
+                order: 2;
+                gap: 0.5rem;
+                margin-left: auto;
+                margin-right: 1rem;
+            }
+
+            .auth-buttons .btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.85rem;
+                white-space: nowrap;
             }
 
             nav {
@@ -496,16 +529,6 @@
                 margin: 0.2rem 0;
             }
 
-            .auth-buttons {
-                order: 2;
-                gap: 0.5rem;
-            }
-
-            .auth-buttons .btn {
-                padding: 0.6rem 1rem;
-                font-size: 0.9rem;
-            }
-
             /* Ajustes de texto para mobile */
             .hero h2 {
                 font-size: 2.2rem;
@@ -513,20 +536,15 @@
 
             .hero p,
             .section-title p,
-            .feature-card p,
-            .step p,
-            .testimonial-text,
             .cta p,
             .footer-column p {
                 text-align: justify;
                 text-justify: inter-word;
             }
 
-            /* Cards mantêm título centralizado */
-            .feature-card h3,
-            .step h3,
-            .section-title h2,
-            .cta h2 {
+            /* Cards mantêm texto centralizado */
+            .feature-card p,
+            .step p {
                 text-align: center;
             }
 
@@ -550,23 +568,25 @@
         }
 
         @media (max-width: 480px) {
-            .logo h1 {
-                font-size: 1.4rem;
-            }
-
-            .logo img {
-                height: 40px;
-            }
-
-            .auth-buttons {
-                flex-direction: column;
+            .header-content {
                 gap: 0.5rem;
             }
 
+            .logo h1 {
+                font-size: 1.3rem;
+            }
+
+            .logo img {
+                height: 35px;
+            }
+
+            .auth-buttons {
+                gap: 0.3rem;
+            }
+
             .auth-buttons .btn {
-                padding: 0.5rem 0.8rem;
-                font-size: 0.85rem;
-                min-width: 80px;
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
             }
 
             .hero h2 {
@@ -585,6 +605,21 @@
             .step,
             .testimonial-card {
                 padding: 1.5rem;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .logo h1 {
+                font-size: 1.1rem;
+            }
+
+            .logo img {
+                height: 30px;
+            }
+
+            .auth-buttons .btn {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.75rem;
             }
         }
     </style>
@@ -621,6 +656,7 @@
         </div>
     </header>
 
+    <!-- Resto do código permanece igual -->
     <!-- Hero Section -->
     <section class="hero">
         <div class="container">
