@@ -63,10 +63,12 @@
             align-items: center;
             gap: 12px;
             flex-shrink: 0;
+            justify-content: center;
+            flex: 1;
         }
 
         .logo img {
-            height: 180px;
+            height: 220px; /* Aumentado de 180px para 220px */
             width: auto;
             object-fit: contain;
         }
@@ -474,10 +476,15 @@
             background: none;
             border: none;
             color: var(--branco);
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             cursor: pointer;
             padding: 0.5rem;
             z-index: 1001;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         #mobileMenu {
@@ -498,18 +505,24 @@
 
         #closeMobileMenu {
             position: absolute;
-            top: 1rem;
-            right: 1rem;
+            top: 1.5rem;
+            right: 1.5rem;
             background: none;
             border: none;
             color: var(--branco);
-            font-size: 2rem;
+            font-size: 2.5rem;
             cursor: pointer;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .mobile-user-info {
             text-align: center;
             color: var(--branco);
+            margin-bottom: 2rem;
         }
 
         .mobile-nav {
@@ -526,15 +539,16 @@
             justify-content: center;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            padding: 1rem;
-            font-size: 1.1rem;
+            gap: 0.8rem;
+            padding: 1.2rem;
+            font-size: 1.2rem;
+            border-radius: 12px;
         }
 
         /* Responsividade */
         @media (max-width: 768px) {
             #hamburgerBtn {
-                display: block;
+                display: flex;
             }
 
             .user-menu {
@@ -544,21 +558,22 @@
             .header-content {
                 flex-direction: row;
                 justify-content: space-between;
-                height: 70px;
+                height: 80px;
                 padding: 0;
             }
 
             .logo {
-                flex-direction: row;
-                gap: 8px;
+                justify-content: center;
+                flex: 1;
+                margin: 0 auto;
             }
 
             .logo img {
-                height: 120px !important;
+                height: 180px !important; /* Aumentado de 120px para 180px */
             }
 
             .logo h1 {
-                font-size: 1.2rem;
+                display: none; /* Remove o título "Amor Conect" no mobile */
             }
 
             .user-stats {
@@ -631,11 +646,7 @@
 
         @media (max-width: 480px) {
             .logo img {
-                height: 100px !important;
-            }
-
-            .logo h1 {
-                font-size: 1rem;
+                height: 160px !important; /* Aumentado de 100px para 160px */
             }
 
             .user-stats {
@@ -654,6 +665,10 @@
                 padding: 0.5rem 1rem;
                 font-size: 0.85rem;
             }
+
+            .header-content {
+                height: 70px;
+            }
         }
 
         /* Animações para o menu mobile */
@@ -662,9 +677,15 @@
         }
 
         .mobile-user-info .user-avatar {
-            width: 80px;
-            height: 80px;
-            font-size: 1.5rem;
+            width: 100px;
+            height: 100px;
+            font-size: 2rem;
+            margin: 0 auto 1rem;
+        }
+
+        .mobile-user-info #mobileUserNickname {
+            font-size: 1.4rem;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -865,7 +886,7 @@
         function checkScreenSize() {
             if (window.innerWidth <= 768) {
                 document.querySelector('.user-menu').style.display = 'none';
-                hamburgerBtn.style.display = 'block';
+                hamburgerBtn.style.display = 'flex';
             } else {
                 document.querySelector('.user-menu').style.display = 'flex';
                 hamburgerBtn.style.display = 'none';
@@ -1299,7 +1320,5 @@
         }
     }
 </script>
-<!-- No final, antes de fechar o body -->
-<script src="delete-account.js"></script>
 </body>
 </html>
