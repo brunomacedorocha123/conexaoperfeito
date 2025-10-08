@@ -410,9 +410,36 @@
             gap: 1rem;
         }
 
+        /* NOVO ESTILO PARA MENSAGENS COM AVATAR */
+        .message-container {
+            display: flex;
+            align-items: flex-end;
+            gap: 0.5rem;
+            max-width: 100%;
+        }
+
+        .message-container.sent {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--branco);
+            font-size: 0.9rem;
+            flex-shrink: 0;
+            background-size: cover;
+            background-position: center;
+        }
+
         .message {
             max-width: 70%;
-            margin-bottom: 1rem;
             padding: 1rem;
             border-radius: 15px;
             position: relative;
@@ -422,13 +449,11 @@
         .message.received {
             background: var(--branco);
             border: 1px solid var(--lilas);
-            margin-right: auto;
         }
 
         .message.sent {
             background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
             color: var(--branco);
-            margin-left: auto;
         }
 
         .message-time {
@@ -593,6 +618,12 @@
             .message {
                 max-width: 85%;
             }
+
+            .message-avatar {
+                width: 30px;
+                height: 30px;
+                font-size: 0.8rem;
+            }
         }
 
         @media (max-width: 480px) {
@@ -622,6 +653,12 @@
                 width: 40px;
                 height: 40px;
                 font-size: 1rem;
+            }
+
+            .message-avatar {
+                width: 25px;
+                height: 25px;
+                font-size: 0.7rem;
             }
         }
 
@@ -766,540 +803,585 @@
 
 <script>
     // Configuração do Supabase
-    const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Estado da aplicação
-    let currentUser = null;
-    let currentChatPartner = null;
-    let conversations = [];
-    let messagesSubscription = null;
+// Estado da aplicação
+let currentUser = null;
+let currentChatPartner = null;
+let conversations = [];
+let messagesSubscription = null;
+let userAvatarsCache = new Map();
 
-    document.addEventListener('DOMContentLoaded', function() {
-        checkAuth();
-        setupMobileMenu();
-        setupEventListeners();
+document.addEventListener('DOMContentLoaded', function() {
+    checkAuth();
+    setupMobileMenu();
+    setupEventListeners();
+});
+
+// ==================== MENU MOBILE ====================
+function setupMobileMenu() {
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    const closeMobileMenu = document.getElementById('closeMobileMenu');
+    const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+
+    hamburgerBtn.addEventListener('click', () => {
+        mobileMenu.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
     });
 
-    // ==================== MENU MOBILE ====================
-    function setupMobileMenu() {
-        const hamburgerBtn = document.getElementById('hamburgerBtn');
-        const mobileMenu = document.getElementById('mobileMenu');
-        const closeMobileMenu = document.getElementById('closeMobileMenu');
-        const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+    closeMobileMenu.addEventListener('click', () => {
+        mobileMenu.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    });
 
-        hamburgerBtn.addEventListener('click', () => {
-            mobileMenu.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        });
+    mobileLogoutBtn.addEventListener('click', logout);
 
-        closeMobileMenu.addEventListener('click', () => {
+    // Fechar menu ao clicar em um link
+    mobileMenu.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
             mobileMenu.style.display = 'none';
             document.body.style.overflow = 'auto';
         });
+    });
 
-        mobileLogoutBtn.addEventListener('click', logout);
-
-        // Fechar menu ao clicar em um link
-        mobileMenu.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => {
-                mobileMenu.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            });
-        });
-
-        // Verificar tamanho da tela
-        function checkScreenSize() {
-            if (window.innerWidth <= 768) {
-                const userMenu = document.querySelector('.user-menu');
-                if (userMenu) userMenu.style.display = 'none';
-                hamburgerBtn.style.display = 'flex';
-            } else {
-                const userMenu = document.querySelector('.user-menu');
-                if (userMenu) userMenu.style.display = 'flex';
-                hamburgerBtn.style.display = 'none';
-                mobileMenu.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            }
+    // Verificar tamanho da tela
+    function checkScreenSize() {
+        if (window.innerWidth <= 768) {
+            const userMenu = document.querySelector('.user-menu');
+            if (userMenu) userMenu.style.display = 'none';
+            hamburgerBtn.style.display = 'flex';
+        } else {
+            const userMenu = document.querySelector('.user-menu');
+            if (userMenu) userMenu.style.display = 'flex';
+            hamburgerBtn.style.display = 'none';
+            mobileMenu.style.display = 'none';
+            document.body.style.overflow = 'auto';
         }
-
-        window.addEventListener('resize', checkScreenSize);
-        checkScreenSize();
     }
 
-    // ==================== AUTENTICAÇÃO ====================
-    async function checkAuth() {
-        try {
-            const { data: { user }, error } = await supabase.auth.getUser();
-            
-            if (error) throw error;
-            
-            if (!user) {
-                window.location.href = 'login.html';
-                return;
-            }
-            
-            currentUser = user;
-            await loadUserData();
-            await loadConversations();
-            
-        } catch (error) {
-            console.error('Erro na autenticação:', error);
+    window.addEventListener('resize', checkScreenSize);
+    checkScreenSize();
+}
+
+// ==================== AUTENTICAÇÃO ====================
+async function checkAuth() {
+    try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error) throw error;
+        
+        if (!user) {
             window.location.href = 'login.html';
+            return;
         }
+        
+        currentUser = user;
+        await loadUserData();
+        await loadConversations();
+        
+    } catch (error) {
+        console.error('Erro na autenticação:', error);
+        window.location.href = 'login.html';
     }
+}
 
-    // ==================== DADOS DO USUÁRIO ====================
-    async function loadUserData() {
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            
-            let displayName = 'Usuário';
-            
-            if (user.user_metadata && user.user_metadata.nickname) {
-                displayName = user.user_metadata.nickname;
-            } else if (user.user_metadata && user.user_metadata.full_name) {
-                displayName = user.user_metadata.full_name;
-            } else if (user.email) {
-                displayName = user.email.split('@')[0];
-            }
-
-            // Atualizar nome em todos os lugares
-            const userNickname = document.getElementById('userNickname');
-            const mobileUserNickname = document.getElementById('mobileUserNickname');
-            
-            if (userNickname) userNickname.textContent = displayName;
-            if (mobileUserNickname) mobileUserNickname.textContent = displayName;
-            
-            // Carregar foto do usuário logado
-            await loadCurrentUserAvatar();
-
-        } catch (error) {
-            console.error('Erro ao carregar dados do usuário:', error);
+// ==================== DADOS DO USUÁRIO ====================
+async function loadUserData() {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        let displayName = 'Usuário';
+        
+        if (user.user_metadata && user.user_metadata.nickname) {
+            displayName = user.user_metadata.nickname;
+        } else if (user.user_metadata && user.user_metadata.full_name) {
+            displayName = user.user_metadata.full_name;
+        } else if (user.email) {
+            displayName = user.email.split('@')[0];
         }
+
+        // Atualizar nome em todos os lugares
+        const userNickname = document.getElementById('userNickname');
+        const mobileUserNickname = document.getElementById('mobileUserNickname');
+        
+        if (userNickname) userNickname.textContent = displayName;
+        if (mobileUserNickname) mobileUserNickname.textContent = displayName;
+        
+        // Carregar foto do usuário logado
+        await loadCurrentUserAvatar();
+
+    } catch (error) {
+        console.error('Erro ao carregar dados do usuário:', error);
     }
+}
 
-    async function loadCurrentUserAvatar() {
-        try {
-            const { data: profile, error } = await supabase
-                .from('profiles')
-                .select('avatar_url, nickname')
-                .eq('id', currentUser.id)
-                .single();
+async function loadCurrentUserAvatar() {
+    try {
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('avatar_url, nickname')
+            .eq('id', currentUser.id)
+            .single();
 
-            if (error || !profile) {
-                console.log('Perfil não encontrado ou erro:', error);
-                return;
-            }
+        if (error || !profile) {
+            console.log('Perfil não encontrado ou erro:', error);
+            return;
+        }
 
-            const avatarElements = [
-                document.getElementById('userAvatar'),
-                document.getElementById('mobileUserAvatar')
-            ];
+        const avatarElements = [
+            document.getElementById('userAvatar'),
+            document.getElementById('mobileUserAvatar')
+        ];
 
-            for (const avatarElement of avatarElements) {
-                if (!avatarElement) continue;
-                
-                const userAvatarFallback = avatarElement.querySelector('.user-avatar-fallback');
-                const userAvatarImg = avatarElement.querySelector('.user-avatar-img');
-                
-                if (!userAvatarFallback || !userAvatarImg) continue;
+        for (const avatarElement of avatarElements) {
+            if (!avatarElement) continue;
+            
+            const userAvatarFallback = avatarElement.querySelector('.user-avatar-fallback');
+            const userAvatarImg = avatarElement.querySelector('.user-avatar-img');
+            
+            if (!userAvatarFallback || !userAvatarImg) continue;
 
-                // Iniciar com fallback visível
-                userAvatarImg.style.display = 'none';
-                userAvatarFallback.style.display = 'flex';
-                
-                if (profile.avatar_url) {
-                    const photoUrl = await loadUserPhoto(profile.avatar_url);
-                    if (photoUrl) {
-                        userAvatarImg.src = photoUrl;
-                        userAvatarImg.style.display = 'block';
-                        userAvatarFallback.style.display = 'none';
-                        avatarElement.style.backgroundImage = `url(${photoUrl})`;
-                        avatarElement.style.backgroundSize = 'cover';
-                        avatarElement.style.backgroundPosition = 'center';
-                    } else {
-                        // Mostrar inicial do nome
-                        const displayName = profile.nickname || 'Usuário';
-                        userAvatarFallback.textContent = displayName.charAt(0).toUpperCase();
-                    }
+            // Iniciar com fallback visível
+            userAvatarImg.style.display = 'none';
+            userAvatarFallback.style.display = 'flex';
+            
+            if (profile.avatar_url) {
+                const photoUrl = await loadUserPhoto(profile.avatar_url);
+                if (photoUrl) {
+                    userAvatarImg.src = photoUrl;
+                    userAvatarImg.style.display = 'block';
+                    userAvatarFallback.style.display = 'none';
+                    avatarElement.style.backgroundImage = `url(${photoUrl})`;
+                    avatarElement.style.backgroundSize = 'cover';
+                    avatarElement.style.backgroundPosition = 'center';
                 } else {
                     // Mostrar inicial do nome
                     const displayName = profile.nickname || 'Usuário';
                     userAvatarFallback.textContent = displayName.charAt(0).toUpperCase();
                 }
+            } else {
+                // Mostrar inicial do nome
+                const displayName = profile.nickname || 'Usuário';
+                userAvatarFallback.textContent = displayName.charAt(0).toUpperCase();
             }
-
-        } catch (error) {
-            console.error('Erro ao carregar avatar do usuário:', error);
         }
+
+    } catch (error) {
+        console.error('Erro ao carregar avatar do usuário:', error);
     }
+}
 
-    async function loadUserPhoto(avatarUrl) {
-        try {
-            if (!avatarUrl) return null;
+async function loadUserPhoto(avatarUrl) {
+    try {
+        if (!avatarUrl) return null;
 
-            const { data, error } = await supabase.storage
-                .from('avatars')
-                .download(avatarUrl);
+        const { data, error } = await supabase.storage
+            .from('avatars')
+            .download(avatarUrl);
 
-            if (error) {
-                console.error('Erro ao baixar imagem:', error);
-                return null;
-            }
-
-            return URL.createObjectURL(data);
-
-        } catch (error) {
-            console.error('Erro ao carregar foto:', error);
+        if (error) {
+            console.error('Erro ao baixar imagem:', error);
             return null;
         }
+
+        return URL.createObjectURL(data);
+
+    } catch (error) {
+        console.error('Erro ao carregar foto:', error);
+        return null;
+    }
+}
+
+// ==================== CONVERSAS E MENSAGENS ====================
+async function loadConversations() {
+    try {
+        // Buscar todas as conversas onde o usuário atual está envolvido
+        const { data: messages, error } = await supabase
+            .from('messages')
+            .select(`
+                id,
+                sender_id,
+                receiver_id,
+                content,
+                is_read,
+                created_at,
+                sender:profiles!messages_sender_id_fkey(nickname, avatar_url),
+                receiver:profiles!messages_receiver_id_fkey(nickname, avatar_url)
+            `)
+            .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        // Processar conversas
+        const conversationMap = new Map();
+
+        messages.forEach(message => {
+            const partnerId = message.sender_id === currentUser.id ? message.receiver_id : message.sender_id;
+            const partnerProfile = message.sender_id === currentUser.id ? message.receiver : message.sender;
+            
+            if (!conversationMap.has(partnerId)) {
+                conversationMap.set(partnerId, {
+                    partnerId: partnerId,
+                    partnerName: partnerProfile?.nickname || 'Usuário',
+                    partnerAvatar: partnerProfile?.avatar_url || null,
+                    lastMessage: message.content,
+                    lastMessageTime: message.created_at,
+                    unreadCount: 0,
+                    messages: []
+                });
+            }
+
+            const conversation = conversationMap.get(partnerId);
+            conversation.messages.push(message);
+
+            // Atualizar última mensagem se necessário
+            if (new Date(message.created_at) > new Date(conversation.lastMessageTime)) {
+                conversation.lastMessage = message.content;
+                conversation.lastMessageTime = message.created_at;
+            }
+
+            // Contar mensagens não lidas
+            if (!message.is_read && message.receiver_id === currentUser.id) {
+                conversation.unreadCount++;
+            }
+        });
+
+        conversations = Array.from(conversationMap.values());
+        renderConversations();
+
+    } catch (error) {
+        console.error('Erro ao carregar conversas:', error);
+    }
+}
+
+function renderConversations() {
+    const conversationsList = document.getElementById('conversationsList');
+    const conversationsLoading = document.getElementById('conversationsLoading');
+    const noConversations = document.getElementById('noConversations');
+
+    conversationsLoading.classList.add('hidden');
+
+    if (conversations.length === 0) {
+        noConversations.classList.remove('hidden');
+        conversationsList.innerHTML = '';
+        return;
     }
 
-    // ==================== CONVERSAS E MENSAGENS ====================
-    async function loadConversations() {
-        try {
-            // Buscar todas as conversas onde o usuário atual está envolvido
-            const { data: messages, error } = await supabase
-                .from('messages')
-                .select(`
-                    id,
-                    sender_id,
-                    receiver_id,
-                    content,
-                    is_read,
-                    created_at,
-                    sender:profiles!messages_sender_id_fkey(nickname, avatar_url),
-                    receiver:profiles!messages_receiver_id_fkey(nickname, avatar_url)
-                `)
-                .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
-                .order('created_at', { ascending: false });
+    noConversations.classList.add('hidden');
 
-            if (error) throw error;
-
-            // Processar conversas
-            const conversationMap = new Map();
-
-            messages.forEach(message => {
-                const partnerId = message.sender_id === currentUser.id ? message.receiver_id : message.sender_id;
-                const partnerProfile = message.sender_id === currentUser.id ? message.receiver : message.sender;
-                
-                if (!conversationMap.has(partnerId)) {
-                    conversationMap.set(partnerId, {
-                        partnerId: partnerId,
-                        partnerName: partnerProfile?.nickname || 'Usuário',
-                        partnerAvatar: partnerProfile?.avatar_url || null,
-                        lastMessage: message.content,
-                        lastMessageTime: message.created_at,
-                        unreadCount: 0,
-                        messages: []
-                    });
-                }
-
-                const conversation = conversationMap.get(partnerId);
-                conversation.messages.push(message);
-
-                // Atualizar última mensagem se necessário
-                if (new Date(message.created_at) > new Date(conversation.lastMessageTime)) {
-                    conversation.lastMessage = message.content;
-                    conversation.lastMessageTime = message.created_at;
-                }
-
-                // Contar mensagens não lidas
-                if (!message.is_read && message.receiver_id === currentUser.id) {
-                    conversation.unreadCount++;
-                }
-            });
-
-            conversations = Array.from(conversationMap.values());
-            renderConversations();
-
-        } catch (error) {
-            console.error('Erro ao carregar conversas:', error);
-        }
-    }
-
-    function renderConversations() {
-        const conversationsList = document.getElementById('conversationsList');
-        const conversationsLoading = document.getElementById('conversationsLoading');
-        const noConversations = document.getElementById('noConversations');
-
-        conversationsLoading.classList.add('hidden');
-
-        if (conversations.length === 0) {
-            noConversations.classList.remove('hidden');
-            conversationsList.innerHTML = '';
-            return;
-        }
-
-        noConversations.classList.add('hidden');
-
-        conversationsList.innerHTML = conversations.map(conversation => `
-            <div class="conversation-item" data-partner-id="${conversation.partnerId}">
-                <div class="conversation-avatar" style="${conversation.partnerAvatar ? `background-image: url(${conversation.partnerAvatar})` : ''}">
-                    ${!conversation.partnerAvatar ? conversation.partnerName.charAt(0).toUpperCase() : ''}
-                </div>
-                <div class="conversation-info">
-                    <div class="conversation-name">${conversation.partnerName}</div>
-                    <div class="conversation-preview">${conversation.lastMessage}</div>
-                </div>
-                <div class="conversation-time">${formatTime(conversation.lastMessageTime)}</div>
-                ${conversation.unreadCount > 0 ? `<div class="unread-badge">${conversation.unreadCount}</div>` : ''}
+    conversationsList.innerHTML = conversations.map(conversation => `
+        <div class="conversation-item" data-partner-id="${conversation.partnerId}">
+            <div class="conversation-avatar" style="${conversation.partnerAvatar ? `background-image: url(${conversation.partnerAvatar})` : ''}">
+                ${!conversation.partnerAvatar ? conversation.partnerName.charAt(0).toUpperCase() : ''}
             </div>
-        `).join('');
+            <div class="conversation-info">
+                <div class="conversation-name">${conversation.partnerName}</div>
+                <div class="conversation-preview">${conversation.lastMessage}</div>
+            </div>
+            <div class="conversation-time">${formatTime(conversation.lastMessageTime)}</div>
+            ${conversation.unreadCount > 0 ? `<div class="unread-badge">${conversation.unreadCount}</div>` : ''}
+        </div>
+    `).join('');
 
-        // Adicionar event listeners para as conversas
+    // Adicionar event listeners para as conversas
+    document.querySelectorAll('.conversation-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const partnerId = item.getAttribute('data-partner-id');
+            selectConversation(partnerId);
+        });
+    });
+}
+
+async function selectConversation(partnerId) {
+    try {
+        // Remover seleção anterior
         document.querySelectorAll('.conversation-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const partnerId = item.getAttribute('data-partner-id');
-                selectConversation(partnerId);
+            item.classList.remove('active');
+        });
+
+        // Adicionar seleção atual
+        document.querySelector(`[data-partner-id="${partnerId}"]`).classList.add('active');
+
+        // Buscar informações do parceiro
+        const { data: partnerProfile, error } = await supabase
+            .from('profiles')
+            .select('nickname, avatar_url')
+            .eq('id', partnerId)
+            .single();
+
+        if (error) throw error;
+
+        currentChatPartner = {
+            id: partnerId,
+            name: partnerProfile.nickname,
+            avatar: partnerProfile.avatar_url
+        };
+
+        // Atualizar header do chat
+        updateChatHeader();
+        
+        // Mostrar área de chat
+        document.getElementById('chatHeader').classList.remove('hidden');
+        document.getElementById('chatInput').classList.remove('hidden');
+        document.getElementById('messageInput').disabled = false;
+        document.getElementById('sendMessageBtn').disabled = false;
+
+        // Carregar mensagens da conversa
+        await loadMessages(partnerId);
+
+        // Marcar mensagens como lidas
+        await markMessagesAsRead(partnerId);
+
+        // Inscrever-se para novas mensagens em tempo real
+        setupRealtimeMessages(partnerId);
+
+    } catch (error) {
+        console.error('Erro ao selecionar conversa:', error);
+    }
+}
+
+async function loadMessages(partnerId) {
+    try {
+        const { data: messages, error } = await supabase
+            .from('messages')
+            .select('*')
+            .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${currentUser.id})`)
+            .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        // Buscar avatares de todos os usuários envolvidos
+        await loadUserAvatars(messages);
+
+        renderMessages(messages);
+
+    } catch (error) {
+        console.error('Erro ao carregar mensagens:', error);
+    }
+}
+
+async function loadUserAvatars(messages) {
+    const userIds = new Set();
+    
+    // Coletar todos os IDs de usuário únicos
+    messages.forEach(message => {
+        userIds.add(message.sender_id);
+        userIds.add(message.receiver_id);
+    });
+
+    // Buscar avatares apenas para IDs que ainda não estão no cache
+    const missingUserIds = Array.from(userIds).filter(id => !userAvatarsCache.has(id));
+    
+    if (missingUserIds.length > 0) {
+        const { data: profiles, error } = await supabase
+            .from('profiles')
+            .select('id, nickname, avatar_url')
+            .in('id', missingUserIds);
+
+        if (!error && profiles) {
+            profiles.forEach(profile => {
+                userAvatarsCache.set(profile.id, {
+                    name: profile.nickname,
+                    avatar: profile.avatar_url
+                });
             });
+        }
+    }
+}
+
+function renderMessages(messages) {
+    const chatMessages = document.getElementById('chatMessages');
+    const noMessages = document.getElementById('noMessages');
+
+    if (messages.length === 0) {
+        noMessages.classList.remove('hidden');
+        chatMessages.innerHTML = '';
+        return;
+    }
+
+    noMessages.classList.add('hidden');
+
+    chatMessages.innerHTML = messages.map(message => {
+        const isSent = message.sender_id === currentUser.id;
+        const partnerInfo = userAvatarsCache.get(isSent ? currentUser.id : message.sender_id);
+        const partnerName = partnerInfo?.name || 'Usuário';
+        const partnerAvatar = partnerInfo?.avatar || null;
+
+        return `
+            <div class="message-container ${isSent ? 'sent' : 'received'}">
+                <div class="message-avatar" style="${partnerAvatar ? `background-image: url(${partnerAvatar})` : ''}">
+                    ${!partnerAvatar ? partnerName.charAt(0).toUpperCase() : ''}
+                </div>
+                <div class="message ${isSent ? 'sent' : 'received'}">
+                    <div class="message-text">${message.content}</div>
+                    <div class="message-time">${formatTime(message.created_at)}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Scroll para a última mensagem
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+async function sendMessage() {
+    const messageInput = document.getElementById('messageInput');
+    const content = messageInput.value.trim();
+
+    if (!content || !currentChatPartner) return;
+
+    try {
+        const { error } = await supabase
+            .from('messages')
+            .insert({
+                sender_id: currentUser.id,
+                receiver_id: currentChatPartner.id,
+                content: content,
+                is_read: false
+            });
+
+        if (error) throw error;
+
+        // Limpar input
+        messageInput.value = '';
+
+        // Recarregar conversas para atualizar a lista
+        await loadConversations();
+
+    } catch (error) {
+        console.error('Erro ao enviar mensagem:', error);
+        alert('Erro ao enviar mensagem. Tente novamente.');
+    }
+}
+
+async function markMessagesAsRead(partnerId) {
+    try {
+        const { error } = await supabase
+            .from('messages')
+            .update({ is_read: true })
+            .eq('sender_id', partnerId)
+            .eq('receiver_id', currentUser.id)
+            .eq('is_read', false);
+
+        if (error) throw error;
+
+        // Atualizar contador de não lidas
+        await loadConversations();
+
+    } catch (error) {
+        console.error('Erro ao marcar mensagens como lidas:', error);
+    }
+}
+
+function setupRealtimeMessages(partnerId) {
+    // Cancelar subscription anterior se existir
+    if (messagesSubscription) {
+        supabase.removeSubscription(messagesSubscription);
+    }
+
+    // Nova subscription para mensagens em tempo real
+    messagesSubscription = supabase
+        .from('messages')
+        .on('INSERT', payload => {
+            const newMessage = payload.new;
+            
+            // Verificar se a mensagem é para a conversa atual
+            if ((newMessage.sender_id === partnerId && newMessage.receiver_id === currentUser.id) ||
+                (newMessage.sender_id === currentUser.id && newMessage.receiver_id === partnerId)) {
+                
+                // Recarregar mensagens
+                loadMessages(partnerId);
+                
+                // Recarregar conversas para atualizar a lista
+                loadConversations();
+                
+                // Marcar como lida se for do parceiro
+                if (newMessage.sender_id === partnerId) {
+                    markMessagesAsRead(partnerId);
+                }
+            }
+        })
+        .subscribe();
+}
+
+function updateChatHeader() {
+    if (!currentChatPartner) return;
+
+    document.getElementById('chatPartnerName').textContent = currentChatPartner.name;
+    document.getElementById('chatPartnerStatus').textContent = 'Online';
+    
+    const chatHeaderAvatar = document.getElementById('chatHeaderAvatar');
+    if (currentChatPartner.avatar) {
+        chatHeaderAvatar.style.backgroundImage = `url(${currentChatPartner.avatar})`;
+        chatHeaderAvatar.textContent = '';
+    } else {
+        chatHeaderAvatar.style.backgroundImage = '';
+        chatHeaderAvatar.textContent = currentChatPartner.name.charAt(0).toUpperCase();
+    }
+}
+
+// ==================== EVENT LISTENERS ====================
+function setupEventListeners() {
+    // Logout
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', logout);
+    }
+
+    // Envio de mensagens
+    const messageInput = document.getElementById('messageInput');
+    const sendMessageBtn = document.getElementById('sendMessageBtn');
+    
+    if (messageInput && sendMessageBtn) {
+        sendMessageBtn.addEventListener('click', sendMessage);
+        
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
         });
     }
+}
 
-    async function selectConversation(partnerId) {
-        try {
-            // Remover seleção anterior
-            document.querySelectorAll('.conversation-item').forEach(item => {
-                item.classList.remove('active');
-            });
-
-            // Adicionar seleção atual
-            document.querySelector(`[data-partner-id="${partnerId}"]`).classList.add('active');
-
-            // Buscar informações do parceiro
-            const { data: partnerProfile, error } = await supabase
-                .from('profiles')
-                .select('nickname, avatar_url')
-                .eq('id', partnerId)
-                .single();
-
-            if (error) throw error;
-
-            currentChatPartner = {
-                id: partnerId,
-                name: partnerProfile.nickname,
-                avatar: partnerProfile.avatar_url
-            };
-
-            // Atualizar header do chat
-            updateChatHeader();
-            
-            // Mostrar área de chat
-            document.getElementById('chatHeader').classList.remove('hidden');
-            document.getElementById('chatInput').classList.remove('hidden');
-            document.getElementById('messageInput').disabled = false;
-            document.getElementById('sendMessageBtn').disabled = false;
-
-            // Carregar mensagens da conversa
-            await loadMessages(partnerId);
-
-            // Marcar mensagens como lidas
-            await markMessagesAsRead(partnerId);
-
-            // Inscrever-se para novas mensagens em tempo real
-            setupRealtimeMessages(partnerId);
-
-        } catch (error) {
-            console.error('Erro ao selecionar conversa:', error);
-        }
-    }
-
-    async function loadMessages(partnerId) {
-        try {
-            const { data: messages, error } = await supabase
-                .from('messages')
-                .select('*')
-                .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${currentUser.id})`)
-                .order('created_at', { ascending: true });
-
-            if (error) throw error;
-
-            renderMessages(messages);
-
-        } catch (error) {
-            console.error('Erro ao carregar mensagens:', error);
-        }
-    }
-
-    function renderMessages(messages) {
-        const chatMessages = document.getElementById('chatMessages');
-        const noMessages = document.getElementById('noMessages');
-
-        if (messages.length === 0) {
-            noMessages.classList.remove('hidden');
-            chatMessages.innerHTML = '';
-            return;
-        }
-
-        noMessages.classList.add('hidden');
-
-        chatMessages.innerHTML = messages.map(message => `
-            <div class="message ${message.sender_id === currentUser.id ? 'sent' : 'received'}">
-                <div class="message-text">${message.content}</div>
-                <div class="message-time">${formatTime(message.created_at)}</div>
-            </div>
-        `).join('');
-
-        // Scroll para a última mensagem
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-
-    async function sendMessage() {
-        const messageInput = document.getElementById('messageInput');
-        const content = messageInput.value.trim();
-
-        if (!content || !currentChatPartner) return;
-
-        try {
-            const { error } = await supabase
-                .from('messages')
-                .insert({
-                    sender_id: currentUser.id,
-                    receiver_id: currentChatPartner.id,
-                    content: content,
-                    is_read: false
-                });
-
-            if (error) throw error;
-
-            // Limpar input
-            messageInput.value = '';
-
-            // Recarregar conversas para atualizar a lista
-            await loadConversations();
-
-        } catch (error) {
-            console.error('Erro ao enviar mensagem:', error);
-            alert('Erro ao enviar mensagem. Tente novamente.');
-        }
-    }
-
-    async function markMessagesAsRead(partnerId) {
-        try {
-            const { error } = await supabase
-                .from('messages')
-                .update({ is_read: true })
-                .eq('sender_id', partnerId)
-                .eq('receiver_id', currentUser.id)
-                .eq('is_read', false);
-
-            if (error) throw error;
-
-            // Atualizar contador de não lidas
-            await loadConversations();
-
-        } catch (error) {
-            console.error('Erro ao marcar mensagens como lidas:', error);
-        }
-    }
-
-    function setupRealtimeMessages(partnerId) {
-        // Cancelar subscription anterior se existir
+// ==================== LOGOUT ====================
+async function logout() {
+    try {
+        // Cancelar subscription se existir
         if (messagesSubscription) {
             supabase.removeSubscription(messagesSubscription);
         }
 
-        // Nova subscription para mensagens em tempo real
-        messagesSubscription = supabase
-            .from('messages')
-            .on('INSERT', payload => {
-                const newMessage = payload.new;
-                
-                // Verificar se a mensagem é para a conversa atual
-                if ((newMessage.sender_id === partnerId && newMessage.receiver_id === currentUser.id) ||
-                    (newMessage.sender_id === currentUser.id && newMessage.receiver_id === partnerId)) {
-                    
-                    // Recarregar mensagens
-                    loadMessages(partnerId);
-                    
-                    // Recarregar conversas para atualizar a lista
-                    loadConversations();
-                    
-                    // Marcar como lida se for do parceiro
-                    if (newMessage.sender_id === partnerId) {
-                        markMessagesAsRead(partnerId);
-                    }
-                }
-            })
-            .subscribe();
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+        window.location.href = 'login.html';
+    } catch (error) {
+        console.error('Erro ao fazer logout:', error);
+        alert('Erro ao fazer logout. Tente novamente.');
     }
+}
 
-    function updateChatHeader() {
-        if (!currentChatPartner) return;
+// ==================== FUNÇÕES AUXILIARES ====================
+function formatTime(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-        document.getElementById('chatPartnerName').textContent = currentChatPartner.name;
-        document.getElementById('chatPartnerStatus').textContent = 'Online';
-        
-        const chatHeaderAvatar = document.getElementById('chatHeaderAvatar');
-        if (currentChatPartner.avatar) {
-            chatHeaderAvatar.style.backgroundImage = `url(${currentChatPartner.avatar})`;
-            chatHeaderAvatar.textContent = '';
-        } else {
-            chatHeaderAvatar.style.backgroundImage = '';
-            chatHeaderAvatar.textContent = currentChatPartner.name.charAt(0).toUpperCase();
-        }
-    }
-
-    // ==================== EVENT LISTENERS ====================
-    function setupEventListeners() {
-        // Logout
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', logout);
-        }
-
-        // Envio de mensagens
-        const messageInput = document.getElementById('messageInput');
-        const sendMessageBtn = document.getElementById('sendMessageBtn');
-        
-        if (messageInput && sendMessageBtn) {
-            sendMessageBtn.addEventListener('click', sendMessage);
-            
-            messageInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    sendMessage();
-                }
-            });
-        }
-    }
-
-    // ==================== LOGOUT ====================
-    async function logout() {
-        try {
-            // Cancelar subscription se existir
-            if (messagesSubscription) {
-                supabase.removeSubscription(messagesSubscription);
-            }
-
-            const { error } = await supabase.auth.signOut();
-            if (error) throw error;
-            window.location.href = 'login.html';
-        } catch (error) {
-            console.error('Erro ao fazer logout:', error);
-            alert('Erro ao fazer logout. Tente novamente.');
-        }
-    }
-
-    // ==================== FUNÇÕES AUXILIARES ====================
-    function formatTime(dateString) {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffMs = now - date;
-        const diffMins = Math.floor(diffMs / (1000 * 60));
-        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-        if (diffMins < 1) return 'Agora';
-        if (diffMins < 60) return `${diffMins}m`;
-        if (diffHours < 24) return `${diffHours}h`;
-        if (diffDays === 1) return 'Ontem';
-        if (diffDays < 7) return `${diffDays}d`;
-        
-        return date.toLocaleDateString('pt-BR');
-    }
+    if (diffMins < 1) return 'Agora';
+    if (diffMins < 60) return `${diffMins}m`;
+    if (diffHours < 24) return `${diffHours}h`;
+    if (diffDays === 1) return 'Ontem';
+    if (diffDays < 7) return `${diffDays}d`;
+    
+    return date.toLocaleDateString('pt-BR');
+}
 </script>
 </body>
 </html>
