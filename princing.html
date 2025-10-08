@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planos - Amor Conect</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --bege: #f6ecc5;
+            --vermelho-rosado: #d1656d;
+            --lilas: #dfc9ed;
+            --branco: #ffffff;
+            --text: #444;
+            --text-light: #666;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            background-color: var(--bege);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            color: var(--branco);
+            padding: 0.8rem 0;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .logo img {
+            height: 120px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .logo h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--branco);
+            white-space: nowrap;
+        }
+
+        .btn {
+            padding: 0.5rem 1.5rem;
+            border-radius: 30px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--branco);
+            color: var(--branco);
+        }
+
+        .btn-primary {
+            background: var(--branco);
+            color: var(--vermelho-rosado);
+            border: none;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--vermelho-rosado);
+            color: var(--vermelho-rosado);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem 0;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            color: var(--vermelho-rosado);
+            margin-bottom: 1rem;
+        }
+
+        .page-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-light);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Plans Container */
+        .plans-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .plan-card {
+            background: var(--branco);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            text-align: center;
+            position: relative;
+            transition: var(--transition);
+            border: 1px solid var(--lilas);
+        }
+
+        .plan-card.featured {
+            border: 2px solid var(--vermelho-rosado);
+            transform: scale(1.02);
+        }
+
+        .plan-card.featured:hover {
+            transform: scale(1.02) translateY(-5px);
+        }
+
+        .plan-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .plan-badge {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--vermelho-rosado);
+            color: var(--branco);
+            padding: 0.5rem 1.5rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .plan-name {
+            font-size: 1.8rem;
+            color: var(--vermelho-rosado);
+            margin-bottom: 1rem;
+        }
+
+        .plan-price {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .plan-period {
+            color: var(--text-light);
+            margin-bottom: 2rem;
+        }
+
+        .plan-features {
+            text-align: left;
+            margin-bottom: 2rem;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid var(--bege);
+        }
+
+        .feature-item:last-child {
+            border-bottom: none;
+        }
+
+        .feature-icon {
+            margin-right: 1rem;
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .feature-text {
+            flex: 1;
+        }
+
+        .feature-unavailable {
+            color: var(--text-light);
+            opacity: 0.6;
+        }
+
+        .plan-actions {
+            margin-top: 2rem;
+        }
+
+        /* Premium Options */
+        .premium-options {
+            background: var(--branco);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 3rem;
+            border: 1px solid var(--lilas);
+        }
+
+        .options-title {
+            text-align: center;
+            font-size: 1.5rem;
+            color: var(--vermelho-rosado);
+            margin-bottom: 2rem;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .option-card {
+            background: var(--bege);
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+            transition: var(--transition);
+            border: 1px solid var(--lilas);
+        }
+
+        .option-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .option-card.featured {
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            color: var(--branco);
+        }
+
+        .option-price {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .option-period {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+
+        .option-savings {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--bege);
+            margin-top: 0.5rem;
+        }
+
+        .option-card.featured .option-savings {
+            color: var(--bege);
+        }
+
+        /* FAQ Section */
+        .faq-section {
+            margin-bottom: 3rem;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2rem;
+            color: var(--vermelho-rosado);
+            margin-bottom: 2rem;
+        }
+
+        .faq-container {
+            background: var(--branco);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--lilas);
+        }
+
+        .faq-item {
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--bege);
+            padding-bottom: 1.5rem;
+        }
+
+        .faq-item:last-child {
+            margin-bottom: 0;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .faq-question {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.8rem;
+        }
+
+        .faq-answer {
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .logo img {
+                height: 100px;
+            }
+
+            .logo h1 {
+                font-size: 1.2rem;
+            }
+
+            .page-title {
+                font-size: 2rem;
+            }
+
+            .plans-container {
+                grid-template-columns: 1fr;
+            }
+
+            .plan-card.featured {
+                transform: none;
+            }
+
+            .plan-card.featured:hover {
+                transform: translateY(-5px);
+            }
+
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo img {
+                height: 90px;
+            }
+
+            .logo h1 {
+                font-size: 1.1rem;
+            }
+
+            .plan-card, .premium-options, .faq-container {
+                padding: 1.5rem;
+            }
+
+            .plan-price {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="logoamorconect.png" alt="Amor Conect">
+                    <h1>Amor Conect</h1>
+                </div>
+                <a href="home.html" class="btn btn-outline">← Voltar para Home</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1 class="page-title">Escolha seu Plano</h1>
+                <p class="page-subtitle">Encontre a opção perfeita para sua jornada no amor</p>
+            </div>
+
+            <!-- Plans Comparison -->
+            <div class="plans-container">
+                <!-- Free Plan -->
+                <div class="plan-card">
+                    <h2 class="plan-name">Grátis</h2>
+                    <div class="plan-price">R$ 0</div>
+                    <div class="plan-period">Para sempre</div>
+                    
+                    <div class="plan-features">
+                        <div class="feature-item">
+                            <span class="feature-icon">💬</span>
+                            <span class="feature-text">5 mensagens por dia</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">🕒</span>
+                            <span class="feature-text">Histórico de 2 dias</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">📸</span>
+                            <span class="feature-text">1 foto de perfil</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">🛟</span>
+                            <span class="feature-text">Suporte em 48h</span>
+                        </div>
+                        <div class="feature-item feature-unavailable">
+                            <span class="feature-icon">👁️</span>
+                            <span class="feature-text">Modo invisível</span>
+                        </div>
+                        <div class="feature-item feature-unavailable">
+                            <span class="feature-icon">🚫</span>
+                            <span class="feature-text">Bloquear mensagens</span>
+                        </div>
+                        <div class="feature-item feature-unavailable">
+                            <span class="feature-icon">👀</span>
+                            <span class="feature-text">Ver visitantes</span>
+                        </div>
+                    </div>
+                    
+                    <div class="plan-actions">
+                        <button class="btn btn-secondary" onclick="window.location.href='home.html'">
+                            Continuar Grátis
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Premium Plan -->
+                <div class="plan-card featured">
+                    <div class="plan-badge">MAIS POPULAR</div>
+                    <h2 class="plan-name">Premium</h2>
+                    <div class="plan-price">R$ 14,90</div>
+                    <div class="plan-period">por mês</div>
+                    
+                    <div class="plan-features">
+                        <div class="feature-item">
+                            <span class="feature-icon">💬</span>
+                            <span class="feature-text">Mensagens ilimitadas</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">🕒</span>
+                            <span class="feature-text">Histórico permanente</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">📸</span>
+                            <span class="feature-text">Até 7 fotos</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">🛟</span>
+                            <span class="feature-text">Suporte em 6h</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">👁️</span>
+                            <span class="feature-text">Modo invisível</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">🚫</span>
+                            <span class="feature-text">Bloquear mensagens</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">👀</span>
+                            <span class="feature-text">Ver visitantes</span>
+                        </div>
+                    </div>
+                    
+                    <div class="plan-actions">
+                        <button class="btn btn-primary" onclick="selectPlan('monthly')">
+                            Assinar Agora
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Premium Options -->
+            <div class="premium-options">
+                <h3 class="options-title">Opções do Premium</h3>
+                <div class="options-grid">
+                    <div class="option-card">
+                        <div class="option-price">R$ 4,90</div>
+                        <div class="option-period">por semana</div>
+                        <button class="btn btn-primary" onclick="selectPlan('weekly')">
+                            Escolher Semanal
+                        </button>
+                    </div>
+                    
+                    <div class="option-card featured">
+                        <div class="option-price">R$ 14,90</div>
+                        <div class="option-period">por mês</div>
+                        <button class="btn btn-outline" onclick="selectPlan('monthly')">
+                            Escolher Mensal
+                        </button>
+                    </div>
+                    
+                    <div class="option-card">
+                        <div class="option-price">R$ 74,90</div>
+                        <div class="option-period">por 6 meses</div>
+                        <div class="option-savings">Economize 16%</div>
+                        <button class="btn btn-primary" onclick="selectPlan('semestral')">
+                            Escolher Semestral
+                        </button>
+                    </div>
+                    
+                    <div class="option-card">
+                        <div class="option-price">R$ 129,90</div>
+                        <div class="option-period">por ano</div>
+                        <div class="option-savings">Economize 27%</div>
+                        <button class="btn btn-primary" onclick="selectPlan('annual')">
+                            Escolher Anual
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ Section -->
+            <div class="faq-section">
+                <h2 class="section-title">Dúvidas Frequentes</h2>
+                <div class="faq-container">
+                    <div class="faq-item">
+                        <div class="faq-question">Posso cancelar quando quiser?</div>
+                        <div class="faq-answer">
+                            Sim! O cancelamento é imediato e você mantém os benefícios até o final do período pago.
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Como funciona o suporte prioritário?</div>
+                        <div class="faq-answer">
+                            Premium tem resposta em até 6 horas, enquanto o gratuito leva até 48 horas.
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Quais formas de pagamento?</div>
+                        <div class="faq-answer">
+                            Cartão de crédito, débito e PIX. Pagamento 100% seguro.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function selectPlan(planType) {
+            const plans = {
+                'weekly': { name: 'Semanal', price: '4,90' },
+                'monthly': { name: 'Mensal', price: '14,90' },
+                'semestral': { name: 'Semestral', price: '74,90' },
+                'annual': { name: 'Anual', price: '129,90' }
+            };
+            
+            const selectedPlan = plans[planType];
+            alert(`Ótima escolha! Você selecionou o plano ${selectedPlan.name} por R$ ${selectedPlanPrice}.`);
+            
+            // Em produção: window.location.href = `pagamento.html?plano=${planType}`;
+        }
+    </script>
+</body>
+</html>
