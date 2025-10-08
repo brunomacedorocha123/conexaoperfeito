@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro - Amor Conect</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-   <style>
+ <style>
     * {
         margin: 0;
         padding: 0;
@@ -40,7 +40,7 @@
         padding: 0 20px;
     }
 
-    /* Header - LOGO 3X MAIOR */
+    /* Header - COM SUA LOGO */
     header {
         background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
         color: var(--branco);
@@ -55,7 +55,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        height: 70px; /* Mantido */
+        height: 70px;
     }
 
     .logo {
@@ -66,11 +66,11 @@
     }
 
     .logo img {
-        height: 150px; /* 3X MAIOR - era 50px */
+        height: 150px;
         width: auto;
         object-fit: contain;
-        margin-top: 10px; /* Compensa a altura maior */
-        margin-bottom: 10px; /* Compensa a altura maior */
+        margin-top: 10px;
+        margin-bottom: 10px;
     }
 
     .logo h1 {
@@ -115,7 +115,7 @@
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     }
 
-    /* Main Content */
+    /* Main Content - COM SUA LOGO NO CARD */
     .main-content {
         flex: 1;
         padding: 2rem 0;
@@ -140,6 +140,17 @@
         margin-bottom: 2rem;
     }
 
+    /* SUA LOGO NO LUGAR DO EMOJI - CORRIGIDO */
+    .auth-logo {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 1.5rem auto;
+        background-image: url('logoamorconect.png');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+    }
+
     .auth-header h1 {
         font-size: 2.2rem;
         color: var(--vermelho-rosado);
@@ -149,12 +160,6 @@
     .auth-header p {
         color: var(--text-light);
         font-size: 1rem;
-    }
-
-    .auth-icon {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-        color: var(--vermelho-rosado);
     }
 
     /* Form Styles */
@@ -326,12 +331,12 @@
         color: var(--text-light);
     }
 
-    /* Responsividade - LOGO 3X MAIOR NO MOBILE TAMBÉM */
+    /* Responsividade */
     @media (max-width: 768px) {
         .header-content {
             flex-direction: row;
             justify-content: space-between;
-            height: 70px; /* Mantido */
+            height: 70px;
             padding: 0;
         }
 
@@ -340,7 +345,7 @@
         }
 
         .logo img {
-            height: 120px; /* 3X MAIOR no mobile - era 40px */
+            height: 120px;
             margin-top: 8px;
             margin-bottom: 8px;
         }
@@ -359,6 +364,11 @@
             margin: 1rem auto;
             width: 95%;
             max-width: 450px;
+        }
+
+        .auth-logo {
+            width: 90px;
+            height: 90px;
         }
 
         .auth-header h1 {
@@ -380,7 +390,7 @@
         }
 
         .logo img {
-            height: 100px; /* 3X MAIOR - era 35px */
+            height: 100px;
             margin-top: 5px;
             margin-bottom: 5px;
         }
@@ -389,6 +399,11 @@
             padding: 2rem;
             margin: 1rem auto;
             width: 95%;
+        }
+
+        .auth-logo {
+            width: 80px;
+            height: 80px;
         }
 
         .auth-header h1 {
@@ -402,10 +417,6 @@
         .btn {
             padding: 0.6rem 1rem;
         }
-
-        .auth-icon {
-            font-size: 2.5rem;
-        }
     }
 
     @media (max-width: 360px) {
@@ -414,7 +425,7 @@
         }
 
         .logo img {
-            height: 90px; /* 3X MAIOR - era 30px */
+            height: 90px;
             margin-top: 3px;
             margin-bottom: 3px;
         }
@@ -432,6 +443,11 @@
             padding: 1.5rem;
             margin: 0.5rem auto;
             width: 98%;
+        }
+
+        .auth-logo {
+            width: 70px;
+            height: 70px;
         }
     }
 
@@ -476,10 +492,11 @@
         <div class="container">
             <div class="auth-container">
                 <div class="auth-header">
-                    <div class="auth-icon">💑</div>
-                    <h1>Criar Conta</h1>
-                    <p>Junte-se ao Amor Conect e encontre sua conexão perfeita</p>
-                </div>
+    <!-- SUA LOGO NO LUGAR DO EMOJI -->
+    <img src="logoamorconect.png" alt="Amor Conect" class="auth-logo">
+    <h1>Criar Conta</h1>
+    <p>Junte-se ao Amor Conect e encontre sua conexão perfeita</p>
+</div>
 
                 <form id="registerForm">
                     <div class="form-row">
