@@ -19,8 +19,54 @@ async function checkAuth() {
         return;
     }
     currentUser = user;
+    await initializeUserProfile();
     await loadUserData();
     await loadProfileData();
+}
+
+// INICIALIZA O PERFIL DO USUÁRIO SE NÃO EXISTIR
+async function initializeUserProfile() {
+    try {
+        // Verifica se o perfil existe
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', currentUser.id)
+            .single();
+
+        // Se não existe, cria o perfil
+        if (profileError && profileError.code === 'PGRST116') {
+            console.log('Criando perfil para usuário...');
+            
+            const { error: createProfileError } = await supabase
+                .from('profiles')
+                .insert({
+                    id: currentUser.id,
+                    nickname: currentUser.email.split('@')[0],
+                    full_name: '',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                });
+
+            if (createProfileError) throw createProfileError;
+
+            // Cria também o user_details
+            const { error: createDetailsError } = await supabase
+                .from('user_details')
+                .insert({
+                    user_id: currentUser.id,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                });
+
+            if (createDetailsError) throw createDetailsError;
+            
+            console.log('Perfil criado com sucesso!');
+        }
+    } catch (error) {
+        console.error('Erro ao inicializar perfil:', error);
+        showNotification('❌ Erro ao inicializar perfil. Recarregue a página.', 'error');
+    }
 }
 
 // CARREGA DADOS BÁSICOS DO USUÁRIO
@@ -34,7 +80,14 @@ async function loadUserData() {
             .eq('id', currentUser.id)
             .single();
         
-        if (error) throw error;
+        if (error) {
+            if (error.code === 'PGRST116') {
+                // Perfil não existe, vamos criar
+                await initializeUserProfile();
+                return;
+            }
+            throw error;
+        }
         
         if (profile) {
             const nickname = profile.nickname || currentUser.email.split('@')[0];
@@ -60,7 +113,7 @@ async function loadAvatar(avatarUrl) {
         
         const { data, error } = await supabase.storage
             .from('avatars')
-            .createSignedUrl(fullPath, 60 * 60); // URL válida por 1 hora
+            .createSignedUrl(fullPath, 60 * 60);
 
         if (error) throw error;
         
@@ -110,7 +163,13 @@ async function loadProfileData() {
             .eq('id', currentUser.id)
             .single();
 
-        if (profileError) throw profileError;
+        if (profileError) {
+            if (profileError.code === 'PGRST116') {
+                await initializeUserProfile();
+                return;
+            }
+            throw profileError;
+        }
 
         // Busca detalhes do usuário
         const { data: userDetails, error: detailsError } = await supabase
@@ -119,7 +178,21 @@ async function loadProfileData() {
             .eq('user_id', currentUser.id)
             .single();
 
-        if (detailsError && detailsError.code !== 'PGRST116') throw detailsError;
+        if (detailsError && detailsError.code === 'PGRST116') {
+            // user_details não existe, vamos criar
+            const { error: createError } = await supabase
+                .from('user_details')
+                .insert({
+                    user_id: currentUser.id,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                });
+            
+            if (createError) throw createError;
+            return;
+        } else if (detailsError) {
+            throw detailsError;
+        }
 
         // PREENCHE FORMULÁRIO COM DADOS EXISTENTES
         if (profile) {
@@ -192,8 +265,8 @@ async function uploadAvatar(file) {
 
         if (error) {
             if (error.message.includes('bucket')) {
-                // Se o bucket não existir, tenta criar
-                await createAvatarBucket();
+                // Se o bucket não existir, tenta criar via API REST
+                await initializeAvatarBucket();
                 // Tenta upload novamente
                 const { data: retryData, error: retryError } = await supabase.storage
                     .from('avatars')
@@ -217,20 +290,13 @@ async function uploadAvatar(file) {
     }
 }
 
-// CRIA BUCKET DE AVATARS SE NÃO EXISTIR
-async function createAvatarBucket() {
+// INICIALIZA O BUCKET DE AVATARS
+async function initializeAvatarBucket() {
     try {
-        const { data, error } = await supabase
-            .from('_bucket_creation')
-            .insert([{ 
-                name: 'avatars',
-                public: true,
-                id: 'avatars'
-            }])
-            .select();
-            
+        // Tenta criar o bucket executando uma função no Supabase
+        const { error } = await supabase.rpc('create_avatar_bucket');
         if (error) {
-            console.log('Bucket já existe ou não pode ser criado via SQL:', error);
+            console.log('Não foi possível criar o bucket automaticamente:', error);
         }
     } catch (error) {
         console.log('Método alternativo de criação de bucket:', error);
@@ -290,6 +356,9 @@ async function saveProfile(event) {
         saveButton.innerHTML = '⏳ Salvando...';
         saveButton.disabled = true;
 
+        // VERIFICA SE O PERFIL EXISTE ANTES DE SALVAR
+        await ensureProfileExists();
+
         let avatarPath = null;
 
         // Faz upload da imagem se foi selecionada
@@ -318,6 +387,7 @@ async function saveProfile(event) {
 
         // Dados detalhados do usuário
         const userDetailsData = {
+            user_id: currentUser.id, // GARANTE que o user_id está incluído
             phone: document.getElementById('phone').value.trim(),
             address: document.getElementById('location').value.trim(),
             gender: document.getElementById('gender').value,
@@ -357,7 +427,7 @@ async function saveProfile(event) {
         // Calcula idade a partir da data de nascimento
         const birthDate = new Date(profileData.birth_date);
         const today = new Date();
-        const age = today.getFullYear() - birthDate.getFullYear();
+        let age = today.getFullYear() - birthDate.getFullYear();
         const monthDiff = today.getMonth() - birthDate.getMonth();
         
         if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
@@ -381,15 +451,19 @@ async function saveProfile(event) {
         // SALVA NO BANCO DE DADOS
         showNotification('💾 Salvando dados do perfil...', 'info');
 
-        // Atualiza perfil principal
+        // Atualiza perfil principal - USA UPSERT PARA GARANTIR
         const { error: profileError } = await supabase
             .from('profiles')
-            .update(profileData)
-            .eq('id', currentUser.id);
+            .upsert({
+                id: currentUser.id,
+                ...profileData
+            }, {
+                onConflict: 'id'
+            });
 
         if (profileError) throw profileError;
 
-        // Atualiza ou insere detalhes do usuário
+        // Atualiza ou insere detalhes do usuário - USA UPSERT
         const { error: detailsError } = await supabase
             .from('user_details')
             .upsert({
@@ -424,6 +498,25 @@ async function saveProfile(event) {
     } finally {
         saveButton.innerHTML = originalText;
         saveButton.disabled = false;
+    }
+}
+
+// GARANTE QUE O PERFIL EXISTE ANTES DE SALVAR
+async function ensureProfileExists() {
+    try {
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', currentUser.id)
+            .single();
+
+        if (error && error.code === 'PGRST116') {
+            // Perfil não existe, cria agora
+            await initializeUserProfile();
+        }
+    } catch (error) {
+        console.error('Erro ao verificar perfil:', error);
+        throw error;
     }
 }
 
