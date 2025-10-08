@@ -272,6 +272,7 @@
             box-shadow: var(--shadow);
             border: 1px solid var(--lilas);
             overflow: hidden;
+            min-height: 600px;
         }
 
         .conversations-list {
@@ -290,6 +291,7 @@
             cursor: pointer;
             transition: var(--transition);
             margin-bottom: 0.5rem;
+            border: 1px solid transparent;
         }
 
         .conversation-item:hover {
@@ -298,6 +300,7 @@
 
         .conversation-item.active {
             background: var(--lilas);
+            border-color: var(--vermelho-rosado);
         }
 
         .conversation-avatar {
@@ -312,6 +315,8 @@
             color: var(--branco);
             font-size: 1.2rem;
             flex-shrink: 0;
+            background-size: cover;
+            background-position: center;
         }
 
         .conversation-info {
@@ -338,6 +343,19 @@
             color: var(--text-light);
         }
 
+        .unread-badge {
+            background: var(--vermelho-rosado);
+            color: var(--branco);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
         .chat-area {
             display: flex;
             flex-direction: column;
@@ -348,6 +366,38 @@
             padding: 1.5rem;
             border-bottom: 2px solid var(--bege);
             background: var(--branco);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .chat-header-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--branco);
+            font-size: 1.2rem;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .chat-header-info {
+            flex: 1;
+        }
+
+        .chat-header-info h3 {
+            margin-bottom: 0.2rem;
+            color: var(--text);
+        }
+
+        .chat-header-info p {
+            font-size: 0.9rem;
+            color: var(--text-light);
         }
 
         .chat-messages {
@@ -355,6 +405,9 @@
             padding: 1.5rem;
             overflow-y: auto;
             background: var(--bege);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
         }
 
         .message {
@@ -363,6 +416,7 @@
             padding: 1rem;
             border-radius: 15px;
             position: relative;
+            word-wrap: break-word;
         }
 
         .message.received {
@@ -382,6 +436,20 @@
             opacity: 0.7;
             margin-top: 0.3rem;
             text-align: right;
+        }
+
+        .no-messages {
+            text-align: center;
+            color: var(--text-light);
+            padding: 2rem;
+            font-style: italic;
+        }
+
+        .no-conversations {
+            text-align: center;
+            color: var(--text-light);
+            padding: 2rem;
+            font-style: italic;
         }
 
         .chat-input {
@@ -407,6 +475,11 @@
         .input-group input:focus {
             outline: none;
             border-color: var(--vermelho-rosado);
+        }
+
+        .input-group input:disabled {
+            background: var(--lilas);
+            cursor: not-allowed;
         }
 
         /* Footer */
@@ -555,6 +628,12 @@
         .hidden {
             display: none;
         }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-light);
+        }
     </style>
 </head>
 <body>
@@ -617,65 +696,36 @@
             <section class="messages-container">
                 <!-- Conversations List -->
                 <div class="conversations-list">
-                    <div class="conversation-item active">
-                        <div class="conversation-avatar">M</div>
-                        <div class="conversation-info">
-                            <div class="conversation-name">Maria Silva</div>
-                            <div class="conversation-preview">Olá! Como você está?</div>
-                        </div>
-                        <div class="conversation-time">10:30</div>
+                    <div class="loading" id="conversationsLoading">
+                        Carregando conversas...
                     </div>
-                    <div class="conversation-item">
-                        <div class="conversation-avatar">J</div>
-                        <div class="conversation-info">
-                            <div class="conversation-name">João Santos</div>
-                            <div class="conversation-preview">Gostei muito do seu perfil!</div>
-                        </div>
-                        <div class="conversation-time">09:15</div>
+                    <div class="no-conversations hidden" id="noConversations">
+                        Nenhuma conversa encontrada.<br>
+                        Encontre pessoas na página de busca para começar a conversar!
                     </div>
-                    <div class="conversation-item">
-                        <div class="conversation-avatar">A</div>
-                        <div class="conversation-info">
-                            <div class="conversation-name">Ana Costa</div>
-                            <div class="conversation-preview">Vamos marcar de nos encontrar?</div>
-                        </div>
-                        <div class="conversation-time">Ontem</div>
-                    </div>
+                    <div id="conversationsList"></div>
                 </div>
 
                 <!-- Chat Area -->
                 <div class="chat-area">
-                    <div class="chat-header">
-                        <h3>Maria Silva</h3>
-                        <p style="color: var(--text-light); font-size: 0.9rem;">Online</p>
-                    </div>
-                    
-                    <div class="chat-messages">
-                        <div class="message received">
-                            <div class="message-text">Olá! Vi que você também gosta de cinema. Qual seu filme favorito?</div>
-                            <div class="message-time">10:15</div>
-                        </div>
-                        
-                        <div class="message sent">
-                            <div class="message-text">Oi Maria! Meu filme favorito é Interestelar. E o seu?</div>
-                            <div class="message-time">10:20</div>
-                        </div>
-                        
-                        <div class="message received">
-                            <div class="message-text">Adoro O Grande Hotel Budapeste! Acho o visual incrível.</div>
-                            <div class="message-time">10:25</div>
-                        </div>
-                        
-                        <div class="message sent">
-                            <div class="message-text">Excelente escolha! Wes Anderson é um diretor fantástico.</div>
-                            <div class="message-time">10:30</div>
+                    <div class="chat-header hidden" id="chatHeader">
+                        <div class="chat-header-avatar" id="chatHeaderAvatar"></div>
+                        <div class="chat-header-info">
+                            <h3 id="chatPartnerName">Selecione uma conversa</h3>
+                            <p id="chatPartnerStatus">Clique em uma conversa para começar</p>
                         </div>
                     </div>
                     
-                    <div class="chat-input">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="no-messages" id="noMessages">
+                            Selecione uma conversa para ver as mensagens
+                        </div>
+                    </div>
+                    
+                    <div class="chat-input hidden" id="chatInput">
                         <div class="input-group">
-                            <input type="text" placeholder="Digite sua mensagem...">
-                            <button class="btn btn-primary">Enviar</button>
+                            <input type="text" id="messageInput" placeholder="Digite sua mensagem..." disabled>
+                            <button class="btn btn-primary" id="sendMessageBtn" disabled>Enviar</button>
                         </div>
                     </div>
                 </div>
@@ -723,12 +773,14 @@
 
     // Estado da aplicação
     let currentUser = null;
+    let currentChatPartner = null;
+    let conversations = [];
+    let messagesSubscription = null;
 
     document.addEventListener('DOMContentLoaded', function() {
         checkAuth();
         setupMobileMenu();
         setupEventListeners();
-        setupChat();
     });
 
     // ==================== MENU MOBILE ====================
@@ -791,6 +843,7 @@
             
             currentUser = user;
             await loadUserData();
+            await loadConversations();
             
         } catch (error) {
             console.error('Erro na autenticação:', error);
@@ -905,6 +958,291 @@
         }
     }
 
+    // ==================== CONVERSAS E MENSAGENS ====================
+    async function loadConversations() {
+        try {
+            // Buscar todas as conversas onde o usuário atual está envolvido
+            const { data: messages, error } = await supabase
+                .from('messages')
+                .select(`
+                    id,
+                    sender_id,
+                    receiver_id,
+                    content,
+                    is_read,
+                    created_at,
+                    sender:profiles!messages_sender_id_fkey(nickname, avatar_url),
+                    receiver:profiles!messages_receiver_id_fkey(nickname, avatar_url)
+                `)
+                .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            // Processar conversas
+            const conversationMap = new Map();
+
+            messages.forEach(message => {
+                const partnerId = message.sender_id === currentUser.id ? message.receiver_id : message.sender_id;
+                const partnerProfile = message.sender_id === currentUser.id ? message.receiver : message.sender;
+                
+                if (!conversationMap.has(partnerId)) {
+                    conversationMap.set(partnerId, {
+                        partnerId: partnerId,
+                        partnerName: partnerProfile?.nickname || 'Usuário',
+                        partnerAvatar: partnerProfile?.avatar_url || null,
+                        lastMessage: message.content,
+                        lastMessageTime: message.created_at,
+                        unreadCount: 0,
+                        messages: []
+                    });
+                }
+
+                const conversation = conversationMap.get(partnerId);
+                conversation.messages.push(message);
+
+                // Atualizar última mensagem se necessário
+                if (new Date(message.created_at) > new Date(conversation.lastMessageTime)) {
+                    conversation.lastMessage = message.content;
+                    conversation.lastMessageTime = message.created_at;
+                }
+
+                // Contar mensagens não lidas
+                if (!message.is_read && message.receiver_id === currentUser.id) {
+                    conversation.unreadCount++;
+                }
+            });
+
+            conversations = Array.from(conversationMap.values());
+            renderConversations();
+
+        } catch (error) {
+            console.error('Erro ao carregar conversas:', error);
+        }
+    }
+
+    function renderConversations() {
+        const conversationsList = document.getElementById('conversationsList');
+        const conversationsLoading = document.getElementById('conversationsLoading');
+        const noConversations = document.getElementById('noConversations');
+
+        conversationsLoading.classList.add('hidden');
+
+        if (conversations.length === 0) {
+            noConversations.classList.remove('hidden');
+            conversationsList.innerHTML = '';
+            return;
+        }
+
+        noConversations.classList.add('hidden');
+
+        conversationsList.innerHTML = conversations.map(conversation => `
+            <div class="conversation-item" data-partner-id="${conversation.partnerId}">
+                <div class="conversation-avatar" style="${conversation.partnerAvatar ? `background-image: url(${conversation.partnerAvatar})` : ''}">
+                    ${!conversation.partnerAvatar ? conversation.partnerName.charAt(0).toUpperCase() : ''}
+                </div>
+                <div class="conversation-info">
+                    <div class="conversation-name">${conversation.partnerName}</div>
+                    <div class="conversation-preview">${conversation.lastMessage}</div>
+                </div>
+                <div class="conversation-time">${formatTime(conversation.lastMessageTime)}</div>
+                ${conversation.unreadCount > 0 ? `<div class="unread-badge">${conversation.unreadCount}</div>` : ''}
+            </div>
+        `).join('');
+
+        // Adicionar event listeners para as conversas
+        document.querySelectorAll('.conversation-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const partnerId = item.getAttribute('data-partner-id');
+                selectConversation(partnerId);
+            });
+        });
+    }
+
+    async function selectConversation(partnerId) {
+        try {
+            // Remover seleção anterior
+            document.querySelectorAll('.conversation-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // Adicionar seleção atual
+            document.querySelector(`[data-partner-id="${partnerId}"]`).classList.add('active');
+
+            // Buscar informações do parceiro
+            const { data: partnerProfile, error } = await supabase
+                .from('profiles')
+                .select('nickname, avatar_url')
+                .eq('id', partnerId)
+                .single();
+
+            if (error) throw error;
+
+            currentChatPartner = {
+                id: partnerId,
+                name: partnerProfile.nickname,
+                avatar: partnerProfile.avatar_url
+            };
+
+            // Atualizar header do chat
+            updateChatHeader();
+            
+            // Mostrar área de chat
+            document.getElementById('chatHeader').classList.remove('hidden');
+            document.getElementById('chatInput').classList.remove('hidden');
+            document.getElementById('messageInput').disabled = false;
+            document.getElementById('sendMessageBtn').disabled = false;
+
+            // Carregar mensagens da conversa
+            await loadMessages(partnerId);
+
+            // Marcar mensagens como lidas
+            await markMessagesAsRead(partnerId);
+
+            // Inscrever-se para novas mensagens em tempo real
+            setupRealtimeMessages(partnerId);
+
+        } catch (error) {
+            console.error('Erro ao selecionar conversa:', error);
+        }
+    }
+
+    async function loadMessages(partnerId) {
+        try {
+            const { data: messages, error } = await supabase
+                .from('messages')
+                .select('*')
+                .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${currentUser.id})`)
+                .order('created_at', { ascending: true });
+
+            if (error) throw error;
+
+            renderMessages(messages);
+
+        } catch (error) {
+            console.error('Erro ao carregar mensagens:', error);
+        }
+    }
+
+    function renderMessages(messages) {
+        const chatMessages = document.getElementById('chatMessages');
+        const noMessages = document.getElementById('noMessages');
+
+        if (messages.length === 0) {
+            noMessages.classList.remove('hidden');
+            chatMessages.innerHTML = '';
+            return;
+        }
+
+        noMessages.classList.add('hidden');
+
+        chatMessages.innerHTML = messages.map(message => `
+            <div class="message ${message.sender_id === currentUser.id ? 'sent' : 'received'}">
+                <div class="message-text">${message.content}</div>
+                <div class="message-time">${formatTime(message.created_at)}</div>
+            </div>
+        `).join('');
+
+        // Scroll para a última mensagem
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    async function sendMessage() {
+        const messageInput = document.getElementById('messageInput');
+        const content = messageInput.value.trim();
+
+        if (!content || !currentChatPartner) return;
+
+        try {
+            const { error } = await supabase
+                .from('messages')
+                .insert({
+                    sender_id: currentUser.id,
+                    receiver_id: currentChatPartner.id,
+                    content: content,
+                    is_read: false
+                });
+
+            if (error) throw error;
+
+            // Limpar input
+            messageInput.value = '';
+
+            // Recarregar conversas para atualizar a lista
+            await loadConversations();
+
+        } catch (error) {
+            console.error('Erro ao enviar mensagem:', error);
+            alert('Erro ao enviar mensagem. Tente novamente.');
+        }
+    }
+
+    async function markMessagesAsRead(partnerId) {
+        try {
+            const { error } = await supabase
+                .from('messages')
+                .update({ is_read: true })
+                .eq('sender_id', partnerId)
+                .eq('receiver_id', currentUser.id)
+                .eq('is_read', false);
+
+            if (error) throw error;
+
+            // Atualizar contador de não lidas
+            await loadConversations();
+
+        } catch (error) {
+            console.error('Erro ao marcar mensagens como lidas:', error);
+        }
+    }
+
+    function setupRealtimeMessages(partnerId) {
+        // Cancelar subscription anterior se existir
+        if (messagesSubscription) {
+            supabase.removeSubscription(messagesSubscription);
+        }
+
+        // Nova subscription para mensagens em tempo real
+        messagesSubscription = supabase
+            .from('messages')
+            .on('INSERT', payload => {
+                const newMessage = payload.new;
+                
+                // Verificar se a mensagem é para a conversa atual
+                if ((newMessage.sender_id === partnerId && newMessage.receiver_id === currentUser.id) ||
+                    (newMessage.sender_id === currentUser.id && newMessage.receiver_id === partnerId)) {
+                    
+                    // Recarregar mensagens
+                    loadMessages(partnerId);
+                    
+                    // Recarregar conversas para atualizar a lista
+                    loadConversations();
+                    
+                    // Marcar como lida se for do parceiro
+                    if (newMessage.sender_id === partnerId) {
+                        markMessagesAsRead(partnerId);
+                    }
+                }
+            })
+            .subscribe();
+    }
+
+    function updateChatHeader() {
+        if (!currentChatPartner) return;
+
+        document.getElementById('chatPartnerName').textContent = currentChatPartner.name;
+        document.getElementById('chatPartnerStatus').textContent = 'Online';
+        
+        const chatHeaderAvatar = document.getElementById('chatHeaderAvatar');
+        if (currentChatPartner.avatar) {
+            chatHeaderAvatar.style.backgroundImage = `url(${currentChatPartner.avatar})`;
+            chatHeaderAvatar.textContent = '';
+        } else {
+            chatHeaderAvatar.style.backgroundImage = '';
+            chatHeaderAvatar.textContent = currentChatPartner.name.charAt(0).toUpperCase();
+        }
+    }
+
     // ==================== EVENT LISTENERS ====================
     function setupEventListeners() {
         // Logout
@@ -914,87 +1252,28 @@
         }
 
         // Envio de mensagens
-        const chatInput = document.querySelector('.chat-input input');
-        const sendButton = document.querySelector('.chat-input .btn');
+        const messageInput = document.getElementById('messageInput');
+        const sendMessageBtn = document.getElementById('sendMessageBtn');
         
-        if (chatInput && sendButton) {
-            const sendMessage = () => {
-                const message = chatInput.value.trim();
-                if (message) {
-                    addMessageToChat(message, 'sent');
-                    chatInput.value = '';
-                    
-                    // Simular resposta após 1-3 segundos
-                    setTimeout(() => {
-                        const responses = [
-                            "Interessante! Conte-me mais sobre isso.",
-                            "Gostei da sua mensagem!",
-                            "Você parece ser uma pessoa muito interessante.",
-                            "Vamos continuar essa conversa!"
-                        ];
-                        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-                        addMessageToChat(randomResponse, 'received');
-                    }, 1000 + Math.random() * 2000);
-                }
-            };
-
-            sendButton.addEventListener('click', sendMessage);
-            chatInput.addEventListener('keypress', (e) => {
+        if (messageInput && sendMessageBtn) {
+            sendMessageBtn.addEventListener('click', sendMessage);
+            
+            messageInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     sendMessage();
                 }
             });
         }
-
-        // Seleção de conversas
-        const conversationItems = document.querySelectorAll('.conversation-item');
-        conversationItems.forEach(item => {
-            item.addEventListener('click', () => {
-                conversationItems.forEach(i => i.classList.remove('active'));
-                item.classList.add('active');
-                
-                // Atualizar header do chat
-                const chatHeader = document.querySelector('.chat-header h3');
-                const conversationName = item.querySelector('.conversation-name').textContent;
-                if (chatHeader) {
-                    chatHeader.textContent = conversationName;
-                }
-            });
-        });
-    }
-
-    // ==================== CHAT FUNCTIONS ====================
-    function setupChat() {
-        // Função para adicionar mensagem ao chat
-        window.addMessageToChat = function(message, type) {
-            const chatMessages = document.querySelector('.chat-messages');
-            if (!chatMessages) return;
-
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${type}`;
-            
-            const now = new Date();
-            const timeString = now.getHours().toString().padStart(2, '0') + ':' + 
-                             now.getMinutes().toString().padStart(2, '0');
-            
-            messageDiv.innerHTML = `
-                <div class="message-text">${message}</div>
-                <div class="message-time">${timeString}</div>
-            `;
-            
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        };
-
-        // Simular algumas mensagens iniciais
-        setTimeout(() => {
-            addMessageToChat("Olá! Como você está hoje?", 'received');
-        }, 500);
     }
 
     // ==================== LOGOUT ====================
     async function logout() {
         try {
+            // Cancelar subscription se existir
+            if (messagesSubscription) {
+                supabase.removeSubscription(messagesSubscription);
+            }
+
             const { error } = await supabase.auth.signOut();
             if (error) throw error;
             window.location.href = 'login.html';
@@ -1002,6 +1281,24 @@
             console.error('Erro ao fazer logout:', error);
             alert('Erro ao fazer logout. Tente novamente.');
         }
+    }
+
+    // ==================== FUNÇÕES AUXILIARES ====================
+    function formatTime(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / (1000 * 60));
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+        if (diffMins < 1) return 'Agora';
+        if (diffMins < 60) return `${diffMins}m`;
+        if (diffHours < 24) return `${diffHours}h`;
+        if (diffDays === 1) return 'Ontem';
+        if (diffDays < 7) return `${diffDays}d`;
+        
+        return date.toLocaleDateString('pt-BR');
     }
 </script>
 </body>
