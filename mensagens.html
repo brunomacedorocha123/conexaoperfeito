@@ -1618,37 +1618,28 @@
 
         noMessages.classList.add('hidden');
 
-        // 🔥 CORREÇÃO RADICAL - Garantir que cada mensagem mostra o avatar CORRETO
+        // 🔥 CORREÇÃO DEFINITIVA - Avatares individuais para cada mensagem
         chatMessages.innerHTML = messages.map(message => {
             const isSent = message.sender_id === currentUser.id;
             
-            // ✅ BUSCAR O AVATAR DO REMETENTE REAL
-            const senderId = message.sender_id;
-            let senderInfo = userAvatarsCache.get(senderId);
+            // ✅ BUSCAR AVATAR ESPECÍFICO PARA CADA MENSAGEM
+            let senderAvatar = null;
+            let senderName = 'Usuário';
             
-            // Se não encontrou no cache, buscar informações básicas
-            if (!senderInfo) {
-                // Para mensagens do usuário atual
-                if (isSent) {
-                    senderInfo = userAvatarsCache.get(currentUser.id) || { 
-                        name: 'Você', 
-                        avatar: null 
-                    };
-                } else {
-                    // Para mensagens do parceiro
-                    senderInfo = userAvatarsCache.get(currentChatPartner.id) || { 
-                        name: currentChatPartner?.name || 'Usuário', 
-                        avatar: null 
-                    };
-                }
+            if (isSent) {
+                // Mensagem ENVIADA - usar avatar do USUÁRIO LOGADO
+                const currentUserInfo = userAvatarsCache.get(currentUser.id);
+                senderName = currentUserInfo?.name || 'Você';
+                senderAvatar = currentUserInfo?.avatar || null;
+            } else {
+                // Mensagem RECEBIDA - usar avatar do PARCEIRO
+                const partnerInfo = userAvatarsCache.get(currentChatPartner.id);
+                senderName = partnerInfo?.name || currentChatPartner?.name || 'Usuário';
+                senderAvatar = partnerInfo?.avatar || null;
             }
 
-            const senderName = senderInfo.name;
-            const senderAvatar = senderInfo.avatar;
-
-            // DEBUG no console
-            console.log(`Mensagem ${message.id}:`, {
-                sender_id: message.sender_id,
+            console.log('🔍 DEBUG MENSAGEM:', {
+                messageId: message.id,
                 isSent: isSent,
                 senderName: senderName,
                 hasAvatar: !!senderAvatar,
@@ -1667,7 +1658,7 @@
 
             // Estrutura CORRETA: 
             if (isSent) {
-                // MENSAGEM ENVIADA pelo usuário logado (deve mostrar avatar do usuário logado)
+                // MENSAGEM ENVIADA pelo usuário logado
                 return `
                     <div class="message-container sent">
                         <div class="message sent">
@@ -1680,7 +1671,7 @@
                     </div>
                 `;
             } else {
-                // MENSAGEM RECEBIDA do usuário externo (deve mostrar avatar do usuário externo)
+                // MENSAGEM RECEBIDA do usuário externo
                 return `
                     <div class="message-container received">
                         <div class="message-avatar" ${avatarStyle}>
@@ -2074,7 +2065,7 @@
         
         return date.toLocaleDateString('pt-BR');
     }
-</script>>
+</script>
 
  
 </body>
