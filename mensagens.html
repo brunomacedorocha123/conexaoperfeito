@@ -1065,6 +1065,7 @@
     let currentChatPartner = null;
     let conversations = [];
     let messagesSubscription = null;
+    let conversationsSubscription = null;
     let userAvatarsCache = new Map();
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -1135,6 +1136,7 @@
             currentUser = user;
             await loadUserData();
             await loadConversations();
+            setupRealtimeConversations(); // ✅ NOVA: Atualização em tempo real das conversas
             
         } catch (error) {
             console.error('Erro na autenticação:', error);
@@ -1420,7 +1422,10 @@
             });
 
             // Adicionar seleção atual
-            document.querySelector(`[data-partner-id="${partnerId}"]`).classList.add('active');
+            const currentConversation = document.querySelector(`[data-partner-id="${partnerId}"]`);
+            if (currentConversation) {
+                currentConversation.classList.add('active');
+            }
 
             // Buscar informações do parceiro
             const { data: partnerProfile, error } = await supabase
@@ -1597,8 +1602,13 @@
             // Limpar input
             messageInput.value = '';
 
-            // Recarregar conversas para atualizar a lista
+            // ✅ ATUALIZAÇÃO IMEDIATA: Recarregar conversas e mensagens
             await loadConversations();
+            
+            // Se estiver na conversa atual, recarregar as mensagens também
+            if (currentChatPartner) {
+                await loadMessages(currentChatPartner.id);
+            }
 
         } catch (error) {
             console.error('Erro ao enviar mensagem:', error);
@@ -1625,6 +1635,7 @@
         }
     }
 
+    // ✅ FUNÇÃO MELHORADA PARA MENSAGENS EM TEMPO REAL
     function setupRealtimeMessages(partnerId) {
         // Cancelar subscription anterior se existir
         if (messagesSubscription) {
@@ -1634,22 +1645,56 @@
         // Nova subscription para mensagens em tempo real
         messagesSubscription = supabase
             .from('messages')
-            .on('INSERT', payload => {
+            .on('INSERT', async (payload) => {
                 const newMessage = payload.new;
+                
+                console.log('🔄 Nova mensagem recebida:', newMessage);
                 
                 // Verificar se a mensagem é para a conversa atual
                 if ((newMessage.sender_id === partnerId && newMessage.receiver_id === currentUser.id) ||
                     (newMessage.sender_id === currentUser.id && newMessage.receiver_id === partnerId)) {
                     
-                    // Recarregar mensagens
-                    loadMessages(partnerId);
+                    console.log('✅ Mensagem pertence à conversa atual, atualizando...');
                     
-                    // Recarregar conversas para atualizar a lista
-                    loadConversations();
+                    // ✅ ATUALIZAÇÃO IMEDIATA DAS MENSAGENS
+                    await loadMessages(partnerId);
+                    
+                    // ✅ ATUALIZAÇÃO IMEDIATA DA LISTA DE CONVERSAS
+                    await loadConversations();
                     
                     // Marcar como lida se for do parceiro
                     if (newMessage.sender_id === partnerId) {
-                        markMessagesAsRead(partnerId);
+                        await markMessagesAsRead(partnerId);
+                    }
+                }
+            })
+            .subscribe();
+    }
+
+    // ✅ NOVA FUNÇÃO: ATUALIZAÇÃO EM TEMPO REAL DAS CONVERSAS
+    function setupRealtimeConversations() {
+        // Cancelar subscription anterior se existir
+        if (conversationsSubscription) {
+            supabase.removeSubscription(conversationsSubscription);
+        }
+
+        // Subscription para atualizar a lista de conversas quando novas mensagens chegarem
+        conversationsSubscription = supabase
+            .from('messages')
+            .on('INSERT', async (payload) => {
+                const newMessage = payload.new;
+                
+                // Verificar se a mensagem é para o usuário atual
+                if (newMessage.receiver_id === currentUser.id || newMessage.sender_id === currentUser.id) {
+                    console.log('🔄 Nova mensagem detectada, atualizando lista de conversas...');
+                    
+                    // ✅ ATUALIZAÇÃO IMEDIATA DA LISTA DE CONVERSAS
+                    await loadConversations();
+                    
+                    // Se estiver na conversa atual, atualizar as mensagens também
+                    if (currentChatPartner && 
+                        (newMessage.sender_id === currentChatPartner.id || newMessage.receiver_id === currentChatPartner.id)) {
+                        await loadMessages(currentChatPartner.id);
                     }
                 }
             })
@@ -1832,9 +1877,12 @@
     // ==================== LOGOUT ====================
     async function logout() {
         try {
-            // Cancelar subscription se existir
+            // Cancelar subscriptions se existirem
             if (messagesSubscription) {
                 supabase.removeSubscription(messagesSubscription);
+            }
+            if (conversationsSubscription) {
+                supabase.removeSubscription(conversationsSubscription);
             }
 
             const { error } = await supabase.auth.signOut();
