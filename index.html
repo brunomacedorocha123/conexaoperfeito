@@ -448,12 +448,12 @@ footer {
     color: var(--text-light);
 }
 
-/* RESPONSIVIDADE MOBILE - HEADER PEQUENO E LOGO GRANDE */
+/* ========== MOBILE - LOGO GIGANTE ========== */
 @media (max-width: 768px) {
-    /* HEADER PEQUENO */
     header {
         padding: 0.3rem 0;
         min-height: 50px;
+        overflow: visible !important;
     }
 
     .header-content {
@@ -463,47 +463,59 @@ footer {
         gap: 0.5rem;
         align-items: center;
         min-height: 50px;
+        position: relative;
+        overflow: visible !important;
     }
 
-    /* LOGO - MUITO GRANDE */
+    /* LOGO - GIGANTE E NO LADO ESQUERDO */
     .logo {
         order: 1;
         flex: 0 auto;
         justify-content: flex-start;
         align-items: center;
         height: 60px;
-        margin-left: 10px;
+        margin-left: 0;
+        position: relative;
+        z-index: 100;
+        overflow: visible !important;
     }
 
     .logo img {
-        height: 220px !important;
-        width: auto;
-        max-height: 100%;
+        height: 400px !important; /* GIGANTE */
+        width: auto !important;
+        max-height: none !important;
         object-fit: contain;
-        margin-top: -40px;
-        margin-bottom: -40px;
+        margin-top: -120px !important;
+        margin-bottom: -120px !important;
+        margin-left: -20px !important;
+        display: block;
+        position: relative;
+        z-index: 101;
+        transform: scale(1.5) !important; /* FORÇA O AUMENTO */
     }
 
     .logo h1 {
         display: none;
     }
 
-    /* BOTÃO HAMBURGUER - CANTO DIREITO */
     .menu-toggle {
         display: flex;
         order: 2;
         margin-left: auto;
         padding: 8px;
         margin-top: 0;
+        position: relative;
+        z-index: 102;
     }
 
-    /* BOTÕES LOGIN/CADASTRO - LADO DIREITO */
     .auth-buttons {
         order: 3;
         gap: 0.5rem;
         width: auto;
         justify-content: flex-end;
         margin-top: 0;
+        position: relative;
+        z-index: 102;
     }
 
     .auth-buttons .btn {
@@ -512,12 +524,13 @@ footer {
         white-space: nowrap;
     }
 
-    /* NAVEGAÇÃO */
     nav {
         display: none;
         width: 100%;
         order: 4;
         margin-top: 0.5rem;
+        position: relative;
+        z-index: 99;
     }
 
     nav.active {
@@ -552,7 +565,6 @@ footer {
         margin: 0.2rem 0;
     }
 
-    /* Ajustes de texto para mobile */
     .hero h2 {
         font-size: 2.2rem;
     }
@@ -565,7 +577,6 @@ footer {
         text-justify: inter-word;
     }
 
-    /* Cards mantêm texto centralizado */
     .feature-card p,
     .step p {
         text-align: center;
@@ -580,7 +591,6 @@ footer {
         grid-template-columns: 1fr;
     }
 
-    /* Ajustes de padding para mobile */
     .hero,
     .features,
     .how-it-works,
@@ -592,9 +602,11 @@ footer {
 
 @media (max-width: 480px) {
     .logo img {
-        height: 600px !important; /* ⬅️ AUMENTEI PARA 600px - MUITO MAIOR */
-        margin-top: -120px; /* ⬅️ COMPENSAÇÃO MAIOR */
-        margin-bottom: -120px; /* ⬅️ COMPENSAÇÃO MAIOR */
+        height: 500px !important; /* AINDA MAIOR */
+        margin-top: -150px !important;
+        margin-bottom: -150px !important;
+        margin-left: -30px !important;
+        transform: scale(2) !important; /* MAIS AUMENTO */
     }
 
     .auth-buttons {
@@ -627,9 +639,11 @@ footer {
 
 @media (max-width: 360px) {
     .logo img {
-        height: 800px !important; /* ⬅️ AINDA MUITO GRANDE */
-        margin-top: -110px; /* ⬅️ COMPENSAÇÃO */
-        margin-bottom: -110px; /* ⬅️ COMPENSAÇÃO */
+        height: 450px !important;
+        margin-top: -140px !important;
+        margin-bottom: -140px !important;
+        margin-left: -25px !important;
+        transform: scale(1.8) !important;
     }
 
     .auth-buttons .btn {
