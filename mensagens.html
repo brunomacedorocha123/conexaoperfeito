@@ -1295,7 +1295,7 @@
             }
 
             userAvatarsCache.set(currentUser.id, {
-                name: profile.nickname || 'Usuário',
+                name: profile.nickname || 'Você',
                 avatar: currentUserAvatar
             });
 
@@ -1574,7 +1574,7 @@
                 }
                 
                 userAvatarsCache.set(currentUser.id, {
-                    name: currentUserProfile.nickname || 'Usuário',
+                    name: currentUserProfile.nickname || 'Você',
                     avatar: currentUserAvatar
                 });
             }
@@ -1618,15 +1618,43 @@
 
         noMessages.classList.add('hidden');
 
+        // 🔥 CORREÇÃO RADICAL - Garantir que cada mensagem mostra o avatar CORRETO
         chatMessages.innerHTML = messages.map(message => {
             const isSent = message.sender_id === currentUser.id;
             
-            // ✅ CORREÇÃO CRÍTICA: Sempre pega o avatar do REMETENTE real
+            // ✅ BUSCAR O AVATAR DO REMETENTE REAL
             const senderId = message.sender_id;
-            const senderInfo = userAvatarsCache.get(senderId) || { name: 'Usuário', avatar: null };
+            let senderInfo = userAvatarsCache.get(senderId);
             
+            // Se não encontrou no cache, buscar informações básicas
+            if (!senderInfo) {
+                // Para mensagens do usuário atual
+                if (isSent) {
+                    senderInfo = userAvatarsCache.get(currentUser.id) || { 
+                        name: 'Você', 
+                        avatar: null 
+                    };
+                } else {
+                    // Para mensagens do parceiro
+                    senderInfo = userAvatarsCache.get(currentChatPartner.id) || { 
+                        name: currentChatPartner?.name || 'Usuário', 
+                        avatar: null 
+                    };
+                }
+            }
+
             const senderName = senderInfo.name;
             const senderAvatar = senderInfo.avatar;
+
+            // DEBUG no console
+            console.log(`Mensagem ${message.id}:`, {
+                sender_id: message.sender_id,
+                isSent: isSent,
+                senderName: senderName,
+                hasAvatar: !!senderAvatar,
+                currentUser: currentUser.id,
+                partner: currentChatPartner?.id
+            });
 
             // Criar HTML do avatar
             const avatarHtml = senderAvatar ? 
@@ -1639,7 +1667,7 @@
 
             // Estrutura CORRETA: 
             if (isSent) {
-                // MENSAGEM ENVIADA pelo usuário logado (SARA)
+                // MENSAGEM ENVIADA pelo usuário logado (deve mostrar avatar do usuário logado)
                 return `
                     <div class="message-container sent">
                         <div class="message sent">
@@ -1652,7 +1680,7 @@
                     </div>
                 `;
             } else {
-                // MENSAGEM RECEBIDA do usuário externo (AKALANATA)
+                // MENSAGEM RECEBIDA do usuário externo (deve mostrar avatar do usuário externo)
                 return `
                     <div class="message-container received">
                         <div class="message-avatar" ${avatarStyle}>
@@ -2046,7 +2074,7 @@
         
         return date.toLocaleDateString('pt-BR');
     }
-</script>
+</script>>
 
  
 </body>
