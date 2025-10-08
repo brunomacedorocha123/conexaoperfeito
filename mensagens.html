@@ -1180,7 +1180,7 @@
       </div>
     </div>
   </footer>
-  
+
 <script>
     // Configuração do Supabase
     const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
@@ -1621,7 +1621,7 @@
         chatMessages.innerHTML = messages.map(message => {
             const isSent = message.sender_id === currentUser.id;
             
-            // SEMPRE usa o sender_id para pegar o remetente real
+            // ✅ CORREÇÃO CRÍTICA: Sempre pega o avatar do REMETENTE real
             const senderId = message.sender_id;
             const senderInfo = userAvatarsCache.get(senderId) || { name: 'Usuário', avatar: null };
             
@@ -1638,10 +1638,8 @@
                 '';
 
             // Estrutura CORRETA: 
-            // - Mensagens ENVIADAS: avatar à DIREITA
-            // - Mensagens RECEBIDAS: avatar à ESQUERDA
             if (isSent) {
-                // MENSAGEM ENVIADA pelo usuário logado
+                // MENSAGEM ENVIADA pelo usuário logado (SARA)
                 return `
                     <div class="message-container sent">
                         <div class="message sent">
@@ -1654,7 +1652,7 @@
                     </div>
                 `;
             } else {
-                // MENSAGEM RECEBIDA do usuário externo
+                // MENSAGEM RECEBIDA do usuário externo (AKALANATA)
                 return `
                     <div class="message-container received">
                         <div class="message-avatar" ${avatarStyle}>
@@ -1764,7 +1762,7 @@
     function updateChatHeader() {
         if (!currentChatPartner) return;
 
-        // CORREÇÃO: Mostra o nome do USUÁRIO EXTERNO (parceiro da conversa)
+        // Mostra o nome do USUÁRIO EXTERNO (parceiro da conversa)
         document.getElementById('chatPartnerName').textContent = currentChatPartner.name;
         document.getElementById('chatPartnerStatus').textContent = 'Online';
         
@@ -1772,7 +1770,7 @@
         const chatHeaderAvatarImg = chatHeaderAvatar.querySelector('.chat-header-avatar-img');
         const chatHeaderAvatarFallback = chatHeaderAvatar.querySelector('.user-avatar-fallback');
         
-        // CORREÇÃO: Usa o avatar do USUÁRIO EXTERNO (parceiro da conversa)
+        // Usa o avatar do USUÁRIO EXTERNO (parceiro da conversa)
         if (currentChatPartner.avatar) {
             chatHeaderAvatar.style.backgroundImage = `url(${currentChatPartner.avatar})`;
             chatHeaderAvatarImg.src = currentChatPartner.avatar;
