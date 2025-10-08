@@ -317,6 +317,16 @@
             flex-shrink: 0;
             background-size: cover;
             background-position: center;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .conversation-avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: none;
         }
 
         .conversation-info {
@@ -384,6 +394,16 @@
             font-size: 1.2rem;
             background-size: cover;
             background-position: center;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .chat-header-avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: none;
         }
 
         .chat-header-info {
@@ -410,7 +430,7 @@
             gap: 1rem;
         }
 
-        /* NOVO ESTILO PARA MENSAGENS COM AVATAR */
+        /* Estilo para Mensagens com Avatar */
         .message-container {
             display: flex;
             align-items: flex-end;
@@ -436,6 +456,15 @@
             flex-shrink: 0;
             background-size: cover;
             background-position: center;
+            overflow: hidden;
+        }
+
+        .message-avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: none;
         }
 
         .message {
@@ -505,6 +534,138 @@
         .input-group input:disabled {
             background: var(--lilas);
             cursor: not-allowed;
+        }
+
+        /* Modal do Perfil */
+        .profile-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .profile-modal.active {
+            display: flex;
+        }
+
+        .profile-modal-content {
+            background: var(--branco);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            border: 2px solid var(--lilas);
+            position: relative;
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .profile-modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-light);
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: var(--transition);
+        }
+
+        .profile-modal-close:hover {
+            background: var(--bege);
+            color: var(--vermelho-rosado);
+        }
+
+        .profile-modal-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            color: var(--branco);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 0 auto 1.5rem;
+            position: relative;
+            overflow: hidden;
+            border: 3px solid var(--branco);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-modal-avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: none;
+        }
+
+        .profile-modal-name {
+            font-size: 1.5rem;
+            color: var(--vermelho-rosado);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .profile-modal-status {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .profile-modal-actions {
+            display: flex;
+            gap: 0.8rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+
+        .profile-modal-actions .btn {
+            padding: 0.6rem 1.2rem;
+            font-size: 0.85rem;
+        }
+
+        /* Loading na modal */
+        .profile-modal-loading {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .profile-modal-spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid var(--bege);
+            border-top: 3px solid var(--vermelho-rosado);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         /* Footer */
@@ -619,10 +780,54 @@
                 max-width: 85%;
             }
 
+            .message-container.sent .message {
+                margin-left: auto;
+                margin-right: 0;
+            }
+
+            .message-container.received .message {
+                margin-left: 0;
+                margin-right: auto;
+            }
+
             .message-avatar {
                 width: 30px;
                 height: 30px;
                 font-size: 0.8rem;
+            }
+
+            .input-group {
+                gap: 0.5rem;
+            }
+
+            .input-group input {
+                padding: 0.8rem;
+                font-size: 0.9rem;
+            }
+
+            .btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+                white-space: nowrap;
+            }
+
+            .profile-modal-content {
+                margin: 1rem;
+                padding: 1.5rem;
+            }
+
+            .profile-modal-avatar {
+                width: 100px;
+                height: 100px;
+                font-size: 2rem;
+            }
+
+            .profile-modal-actions {
+                flex-direction: column;
+            }
+
+            .profile-modal-actions .btn {
+                width: 100%;
             }
         }
 
@@ -659,6 +864,19 @@
                 width: 25px;
                 height: 25px;
                 font-size: 0.7rem;
+            }
+
+            .input-group {
+                flex-wrap: nowrap;
+            }
+
+            .input-group input {
+                min-width: 0;
+                flex: 1;
+            }
+
+            .chat-input {
+                padding: 1rem;
             }
         }
 
@@ -746,7 +964,10 @@
                 <!-- Chat Area -->
                 <div class="chat-area">
                     <div class="chat-header hidden" id="chatHeader">
-                        <div class="chat-header-avatar" id="chatHeaderAvatar"></div>
+                        <div class="chat-header-avatar" id="chatHeaderAvatar">
+                            <img class="chat-header-avatar-img" src="" alt="Avatar">
+                            <div class="user-avatar-fallback">U</div>
+                        </div>
                         <div class="chat-header-info">
                             <h3 id="chatPartnerName">Selecione uma conversa</h3>
                             <p id="chatPartnerStatus">Clique em uma conversa para começar</p>
@@ -769,6 +990,37 @@
             </section>
         </div>
     </main>
+
+    <!-- Modal do Perfil -->
+    <div class="profile-modal" id="profileModal">
+        <div class="profile-modal-content">
+            <button class="profile-modal-close" id="closeProfileModal">×</button>
+            
+            <div class="profile-modal-loading" id="profileModalLoading">
+                <div class="profile-modal-spinner"></div>
+                <p>Carregando perfil...</p>
+            </div>
+
+            <div class="profile-modal-content-inner hidden" id="profileModalContent">
+                <div class="profile-modal-avatar" id="profileModalAvatar">
+                    <img class="profile-modal-avatar-img" src="" alt="Avatar">
+                    <div class="user-avatar-fallback">U</div>
+                </div>
+                
+                <h2 class="profile-modal-name" id="profileModalName">Usuário</h2>
+                <p class="profile-modal-status" id="profileModalStatus">Online</p>
+                
+                <div class="profile-modal-actions">
+                    <button class="btn btn-primary" id="sendMessageFromModal">
+                        💌 Enviar Mensagem
+                    </button>
+                    <button class="btn btn-secondary" id="viewFullProfile">
+                        👀 Ver Perfil Completo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Footer -->
     <footer>
@@ -801,587 +1053,746 @@
         </div>
     </footer>
 
-<script>
-    // Configuração do Supabase
-const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+    <script>
+        // Configuração do Supabase
+        const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Estado da aplicação
-let currentUser = null;
-let currentChatPartner = null;
-let conversations = [];
-let messagesSubscription = null;
-let userAvatarsCache = new Map();
+        // Estado da aplicação
+        let currentUser = null;
+        let currentChatPartner = null;
+        let conversations = [];
+        let messagesSubscription = null;
+        let userAvatarsCache = new Map();
 
-document.addEventListener('DOMContentLoaded', function() {
-    checkAuth();
-    setupMobileMenu();
-    setupEventListeners();
-});
-
-// ==================== MENU MOBILE ====================
-function setupMobileMenu() {
-    const hamburgerBtn = document.getElementById('hamburgerBtn');
-    const mobileMenu = document.getElementById('mobileMenu');
-    const closeMobileMenu = document.getElementById('closeMobileMenu');
-    const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
-
-    hamburgerBtn.addEventListener('click', () => {
-        mobileMenu.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-    });
-
-    closeMobileMenu.addEventListener('click', () => {
-        mobileMenu.style.display = 'none';
-        document.body.style.overflow = 'auto';
-    });
-
-    mobileLogoutBtn.addEventListener('click', logout);
-
-    // Fechar menu ao clicar em um link
-    mobileMenu.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', () => {
-            mobileMenu.style.display = 'none';
-            document.body.style.overflow = 'auto';
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            setupMobileMenu();
+            setupEventListeners();
+            setupProfileModal();
         });
-    });
 
-    // Verificar tamanho da tela
-    function checkScreenSize() {
-        if (window.innerWidth <= 768) {
-            const userMenu = document.querySelector('.user-menu');
-            if (userMenu) userMenu.style.display = 'none';
-            hamburgerBtn.style.display = 'flex';
-        } else {
-            const userMenu = document.querySelector('.user-menu');
-            if (userMenu) userMenu.style.display = 'flex';
-            hamburgerBtn.style.display = 'none';
-            mobileMenu.style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-    }
+        // ==================== MENU MOBILE ====================
+        function setupMobileMenu() {
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const mobileMenu = document.getElementById('mobileMenu');
+            const closeMobileMenu = document.getElementById('closeMobileMenu');
+            const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
 
-    window.addEventListener('resize', checkScreenSize);
-    checkScreenSize();
-}
+            hamburgerBtn.addEventListener('click', () => {
+                mobileMenu.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            });
 
-// ==================== AUTENTICAÇÃO ====================
-async function checkAuth() {
-    try {
-        const { data: { user }, error } = await supabase.auth.getUser();
-        
-        if (error) throw error;
-        
-        if (!user) {
-            window.location.href = 'login.html';
-            return;
-        }
-        
-        currentUser = user;
-        await loadUserData();
-        await loadConversations();
-        
-    } catch (error) {
-        console.error('Erro na autenticação:', error);
-        window.location.href = 'login.html';
-    }
-}
+            closeMobileMenu.addEventListener('click', () => {
+                mobileMenu.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            });
 
-// ==================== DADOS DO USUÁRIO ====================
-async function loadUserData() {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        let displayName = 'Usuário';
-        
-        if (user.user_metadata && user.user_metadata.nickname) {
-            displayName = user.user_metadata.nickname;
-        } else if (user.user_metadata && user.user_metadata.full_name) {
-            displayName = user.user_metadata.full_name;
-        } else if (user.email) {
-            displayName = user.email.split('@')[0];
-        }
+            mobileLogoutBtn.addEventListener('click', logout);
 
-        // Atualizar nome em todos os lugares
-        const userNickname = document.getElementById('userNickname');
-        const mobileUserNickname = document.getElementById('mobileUserNickname');
-        
-        if (userNickname) userNickname.textContent = displayName;
-        if (mobileUserNickname) mobileUserNickname.textContent = displayName;
-        
-        // Carregar foto do usuário logado
-        await loadCurrentUserAvatar();
+            // Fechar menu ao clicar em um link
+            mobileMenu.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenu.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                });
+            });
 
-    } catch (error) {
-        console.error('Erro ao carregar dados do usuário:', error);
-    }
-}
-
-async function loadCurrentUserAvatar() {
-    try {
-        const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('avatar_url, nickname')
-            .eq('id', currentUser.id)
-            .single();
-
-        if (error || !profile) {
-            console.log('Perfil não encontrado ou erro:', error);
-            return;
-        }
-
-        const avatarElements = [
-            document.getElementById('userAvatar'),
-            document.getElementById('mobileUserAvatar')
-        ];
-
-        for (const avatarElement of avatarElements) {
-            if (!avatarElement) continue;
-            
-            const userAvatarFallback = avatarElement.querySelector('.user-avatar-fallback');
-            const userAvatarImg = avatarElement.querySelector('.user-avatar-img');
-            
-            if (!userAvatarFallback || !userAvatarImg) continue;
-
-            // Iniciar com fallback visível
-            userAvatarImg.style.display = 'none';
-            userAvatarFallback.style.display = 'flex';
-            
-            if (profile.avatar_url) {
-                const photoUrl = await loadUserPhoto(profile.avatar_url);
-                if (photoUrl) {
-                    userAvatarImg.src = photoUrl;
-                    userAvatarImg.style.display = 'block';
-                    userAvatarFallback.style.display = 'none';
-                    avatarElement.style.backgroundImage = `url(${photoUrl})`;
-                    avatarElement.style.backgroundSize = 'cover';
-                    avatarElement.style.backgroundPosition = 'center';
+            // Verificar tamanho da tela
+            function checkScreenSize() {
+                if (window.innerWidth <= 768) {
+                    const userMenu = document.querySelector('.user-menu');
+                    if (userMenu) userMenu.style.display = 'none';
+                    hamburgerBtn.style.display = 'flex';
                 } else {
-                    // Mostrar inicial do nome
-                    const displayName = profile.nickname || 'Usuário';
-                    userAvatarFallback.textContent = displayName.charAt(0).toUpperCase();
+                    const userMenu = document.querySelector('.user-menu');
+                    if (userMenu) userMenu.style.display = 'flex';
+                    hamburgerBtn.style.display = 'none';
+                    mobileMenu.style.display = 'none';
+                    document.body.style.overflow = 'auto';
                 }
-            } else {
-                // Mostrar inicial do nome
-                const displayName = profile.nickname || 'Usuário';
-                userAvatarFallback.textContent = displayName.charAt(0).toUpperCase();
+            }
+
+            window.addEventListener('resize', checkScreenSize);
+            checkScreenSize();
+        }
+
+        // ==================== AUTENTICAÇÃO ====================
+        async function checkAuth() {
+            try {
+                const { data: { user }, error } = await supabase.auth.getUser();
+                
+                if (error) throw error;
+                
+                if (!user) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                currentUser = user;
+                await loadUserData();
+                await loadConversations();
+                
+            } catch (error) {
+                console.error('Erro na autenticação:', error);
+                window.location.href = 'login.html';
             }
         }
 
-    } catch (error) {
-        console.error('Erro ao carregar avatar do usuário:', error);
-    }
-}
+        // ==================== DADOS DO USUÁRIO ====================
+        async function loadUserData() {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                
+                let displayName = 'Usuário';
+                
+                if (user.user_metadata && user.user_metadata.nickname) {
+                    displayName = user.user_metadata.nickname;
+                } else if (user.user_metadata && user.user_metadata.full_name) {
+                    displayName = user.user_metadata.full_name;
+                } else if (user.email) {
+                    displayName = user.email.split('@')[0];
+                }
 
-async function loadUserPhoto(avatarUrl) {
-    try {
-        if (!avatarUrl) return null;
+                // Atualizar nome em todos os lugares
+                const userNickname = document.getElementById('userNickname');
+                const mobileUserNickname = document.getElementById('mobileUserNickname');
+                
+                if (userNickname) userNickname.textContent = displayName;
+                if (mobileUserNickname) mobileUserNickname.textContent = displayName;
+                
+                // Carregar foto do usuário logado
+                await loadCurrentUserAvatar();
 
-        const { data, error } = await supabase.storage
-            .from('avatars')
-            .download(avatarUrl);
-
-        if (error) {
-            console.error('Erro ao baixar imagem:', error);
-            return null;
+            } catch (error) {
+                console.error('Erro ao carregar dados do usuário:', error);
+            }
         }
 
-        return URL.createObjectURL(data);
+        async function loadCurrentUserAvatar() {
+            try {
+                const { data: profile, error } = await supabase
+                    .from('profiles')
+                    .select('avatar_url, nickname')
+                    .eq('id', currentUser.id)
+                    .single();
 
-    } catch (error) {
-        console.error('Erro ao carregar foto:', error);
-        return null;
-    }
-}
+                if (error || !profile) {
+                    console.log('Perfil não encontrado ou erro:', error);
+                    return;
+                }
 
-// ==================== CONVERSAS E MENSAGENS ====================
-async function loadConversations() {
-    try {
-        // Buscar todas as conversas onde o usuário atual está envolvido
-        const { data: messages, error } = await supabase
-            .from('messages')
-            .select(`
-                id,
-                sender_id,
-                receiver_id,
-                content,
-                is_read,
-                created_at,
-                sender:profiles!messages_sender_id_fkey(nickname, avatar_url),
-                receiver:profiles!messages_receiver_id_fkey(nickname, avatar_url)
-            `)
-            .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
-            .order('created_at', { ascending: false });
+                const avatarElements = [
+                    document.getElementById('userAvatar'),
+                    document.getElementById('mobileUserAvatar')
+                ];
 
-        if (error) throw error;
+                for (const avatarElement of avatarElements) {
+                    if (!avatarElement) continue;
+                    
+                    const userAvatarFallback = avatarElement.querySelector('.user-avatar-fallback');
+                    const userAvatarImg = avatarElement.querySelector('.user-avatar-img');
+                    
+                    if (!userAvatarFallback || !userAvatarImg) continue;
 
-        // Processar conversas
-        const conversationMap = new Map();
+                    // Iniciar com fallback visível
+                    userAvatarImg.style.display = 'none';
+                    userAvatarFallback.style.display = 'flex';
+                    
+                    if (profile.avatar_url) {
+                        const photoUrl = await loadUserPhoto(profile.avatar_url);
+                        if (photoUrl) {
+                            userAvatarImg.src = photoUrl;
+                            userAvatarImg.style.display = 'block';
+                            userAvatarFallback.style.display = 'none';
+                            avatarElement.style.backgroundImage = `url(${photoUrl})`;
+                            avatarElement.style.backgroundSize = 'cover';
+                            avatarElement.style.backgroundPosition = 'center';
+                        } else {
+                            // Mostrar inicial do nome
+                            const displayName = profile.nickname || 'Usuário';
+                            userAvatarFallback.textContent = displayName.charAt(0).toUpperCase();
+                        }
+                    } else {
+                        // Mostrar inicial do nome
+                        const displayName = profile.nickname || 'Usuário';
+                        userAvatarFallback.textContent = displayName.charAt(0).toUpperCase();
+                    }
+                }
 
-        messages.forEach(message => {
-            const partnerId = message.sender_id === currentUser.id ? message.receiver_id : message.sender_id;
-            const partnerProfile = message.sender_id === currentUser.id ? message.receiver : message.sender;
-            
-            if (!conversationMap.has(partnerId)) {
-                conversationMap.set(partnerId, {
-                    partnerId: partnerId,
-                    partnerName: partnerProfile?.nickname || 'Usuário',
-                    partnerAvatar: partnerProfile?.avatar_url || null,
-                    lastMessage: message.content,
-                    lastMessageTime: message.created_at,
-                    unreadCount: 0,
-                    messages: []
+            } catch (error) {
+                console.error('Erro ao carregar avatar do usuário:', error);
+            }
+        }
+
+        async function loadUserPhoto(avatarUrl) {
+            try {
+                if (!avatarUrl) return null;
+
+                const { data, error } = await supabase.storage
+                    .from('avatars')
+                    .download(avatarUrl);
+
+                if (error) {
+                    console.error('Erro ao baixar imagem:', error);
+                    return null;
+                }
+
+                return URL.createObjectURL(data);
+
+            } catch (error) {
+                console.error('Erro ao carregar foto:', error);
+                return null;
+            }
+        }
+
+        // ==================== CONVERSAS E MENSAGENS ====================
+        async function loadConversations() {
+            try {
+                // Buscar todas as conversas onde o usuário atual está envolvido
+                const { data: messages, error } = await supabase
+                    .from('messages')
+                    .select(`
+                        id,
+                        sender_id,
+                        receiver_id,
+                        content,
+                        is_read,
+                        created_at,
+                        sender:profiles!messages_sender_id_fkey(nickname, avatar_url),
+                        receiver:profiles!messages_receiver_id_fkey(nickname, avatar_url)
+                    `)
+                    .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                // Processar conversas
+                const conversationMap = new Map();
+
+                messages.forEach(message => {
+                    const partnerId = message.sender_id === currentUser.id ? message.receiver_id : message.sender_id;
+                    const partnerProfile = message.sender_id === currentUser.id ? message.receiver : message.sender;
+                    
+                    if (!conversationMap.has(partnerId)) {
+                        conversationMap.set(partnerId, {
+                            partnerId: partnerId,
+                            partnerName: partnerProfile?.nickname || 'Usuário',
+                            partnerAvatar: partnerProfile?.avatar_url || null,
+                            lastMessage: message.content,
+                            lastMessageTime: message.created_at,
+                            unreadCount: 0,
+                            messages: []
+                        });
+                    }
+
+                    const conversation = conversationMap.get(partnerId);
+                    conversation.messages.push(message);
+
+                    // Atualizar última mensagem se necessário
+                    if (new Date(message.created_at) > new Date(conversation.lastMessageTime)) {
+                        conversation.lastMessage = message.content;
+                        conversation.lastMessageTime = message.created_at;
+                    }
+
+                    // Contar mensagens não lidas
+                    if (!message.is_read && message.receiver_id === currentUser.id) {
+                        conversation.unreadCount++;
+                    }
                 });
+
+                conversations = Array.from(conversationMap.values());
+                renderConversations();
+
+            } catch (error) {
+                console.error('Erro ao carregar conversas:', error);
+            }
+        }
+
+        function renderConversations() {
+            const conversationsList = document.getElementById('conversationsList');
+            const conversationsLoading = document.getElementById('conversationsLoading');
+            const noConversations = document.getElementById('noConversations');
+
+            conversationsLoading.classList.add('hidden');
+
+            if (conversations.length === 0) {
+                noConversations.classList.remove('hidden');
+                conversationsList.innerHTML = '';
+                return;
             }
 
-            const conversation = conversationMap.get(partnerId);
-            conversation.messages.push(message);
+            noConversations.classList.add('hidden');
 
-            // Atualizar última mensagem se necessário
-            if (new Date(message.created_at) > new Date(conversation.lastMessageTime)) {
-                conversation.lastMessage = message.content;
-                conversation.lastMessageTime = message.created_at;
-            }
+            conversationsList.innerHTML = conversations.map(conversation => `
+                <div class="conversation-item" data-partner-id="${conversation.partnerId}">
+                    <div class="conversation-avatar" style="${conversation.partnerAvatar ? `background-image: url(${conversation.partnerAvatar})` : ''}">
+                        <img class="conversation-avatar-img" src="${conversation.partnerAvatar || ''}" alt="${conversation.partnerName}" style="${conversation.partnerAvatar ? 'display: block;' : 'display: none;'}">
+                        ${!conversation.partnerAvatar ? conversation.partnerName.charAt(0).toUpperCase() : ''}
+                    </div>
+                    <div class="conversation-info">
+                        <div class="conversation-name">${conversation.partnerName}</div>
+                        <div class="conversation-preview">${conversation.lastMessage}</div>
+                    </div>
+                    <div class="conversation-time">${formatTime(conversation.lastMessageTime)}</div>
+                    ${conversation.unreadCount > 0 ? `<div class="unread-badge">${conversation.unreadCount}</div>` : ''}
+                </div>
+            `).join('');
 
-            // Contar mensagens não lidas
-            if (!message.is_read && message.receiver_id === currentUser.id) {
-                conversation.unreadCount++;
-            }
-        });
+            // Configurar os event listeners
+            setupConversationAvatars();
+        }
 
-        conversations = Array.from(conversationMap.values());
-        renderConversations();
-
-    } catch (error) {
-        console.error('Erro ao carregar conversas:', error);
-    }
-}
-
-function renderConversations() {
-    const conversationsList = document.getElementById('conversationsList');
-    const conversationsLoading = document.getElementById('conversationsLoading');
-    const noConversations = document.getElementById('noConversations');
-
-    conversationsLoading.classList.add('hidden');
-
-    if (conversations.length === 0) {
-        noConversations.classList.remove('hidden');
-        conversationsList.innerHTML = '';
-        return;
-    }
-
-    noConversations.classList.add('hidden');
-
-    conversationsList.innerHTML = conversations.map(conversation => `
-        <div class="conversation-item" data-partner-id="${conversation.partnerId}">
-            <div class="conversation-avatar" style="${conversation.partnerAvatar ? `background-image: url(${conversation.partnerAvatar})` : ''}">
-                ${!conversation.partnerAvatar ? conversation.partnerName.charAt(0).toUpperCase() : ''}
-            </div>
-            <div class="conversation-info">
-                <div class="conversation-name">${conversation.partnerName}</div>
-                <div class="conversation-preview">${conversation.lastMessage}</div>
-            </div>
-            <div class="conversation-time">${formatTime(conversation.lastMessageTime)}</div>
-            ${conversation.unreadCount > 0 ? `<div class="unread-badge">${conversation.unreadCount}</div>` : ''}
-        </div>
-    `).join('');
-
-    // Adicionar event listeners para as conversas
-    document.querySelectorAll('.conversation-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const partnerId = item.getAttribute('data-partner-id');
-            selectConversation(partnerId);
-        });
-    });
-}
-
-async function selectConversation(partnerId) {
-    try {
-        // Remover seleção anterior
-        document.querySelectorAll('.conversation-item').forEach(item => {
-            item.classList.remove('active');
-        });
-
-        // Adicionar seleção atual
-        document.querySelector(`[data-partner-id="${partnerId}"]`).classList.add('active');
-
-        // Buscar informações do parceiro
-        const { data: partnerProfile, error } = await supabase
-            .from('profiles')
-            .select('nickname, avatar_url')
-            .eq('id', partnerId)
-            .single();
-
-        if (error) throw error;
-
-        currentChatPartner = {
-            id: partnerId,
-            name: partnerProfile.nickname,
-            avatar: partnerProfile.avatar_url
-        };
-
-        // Atualizar header do chat
-        updateChatHeader();
-        
-        // Mostrar área de chat
-        document.getElementById('chatHeader').classList.remove('hidden');
-        document.getElementById('chatInput').classList.remove('hidden');
-        document.getElementById('messageInput').disabled = false;
-        document.getElementById('sendMessageBtn').disabled = false;
-
-        // Carregar mensagens da conversa
-        await loadMessages(partnerId);
-
-        // Marcar mensagens como lidas
-        await markMessagesAsRead(partnerId);
-
-        // Inscrever-se para novas mensagens em tempo real
-        setupRealtimeMessages(partnerId);
-
-    } catch (error) {
-        console.error('Erro ao selecionar conversa:', error);
-    }
-}
-
-async function loadMessages(partnerId) {
-    try {
-        const { data: messages, error } = await supabase
-            .from('messages')
-            .select('*')
-            .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${currentUser.id})`)
-            .order('created_at', { ascending: true });
-
-        if (error) throw error;
-
-        // Buscar avatares de todos os usuários envolvidos
-        await loadUserAvatars(messages);
-
-        renderMessages(messages);
-
-    } catch (error) {
-        console.error('Erro ao carregar mensagens:', error);
-    }
-}
-
-async function loadUserAvatars(messages) {
-    const userIds = new Set();
-    
-    // Coletar todos os IDs de usuário únicos
-    messages.forEach(message => {
-        userIds.add(message.sender_id);
-        userIds.add(message.receiver_id);
-    });
-
-    // Buscar avatares apenas para IDs que ainda não estão no cache
-    const missingUserIds = Array.from(userIds).filter(id => !userAvatarsCache.has(id));
-    
-    if (missingUserIds.length > 0) {
-        const { data: profiles, error } = await supabase
-            .from('profiles')
-            .select('id, nickname, avatar_url')
-            .in('id', missingUserIds);
-
-        if (!error && profiles) {
-            profiles.forEach(profile => {
-                userAvatarsCache.set(profile.id, {
-                    name: profile.nickname,
-                    avatar: profile.avatar_url
+        function setupConversationAvatars() {
+            // Clique no item da conversa (seleciona a conversa)
+            document.querySelectorAll('.conversation-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    // Não abrir modal se clicar diretamente no avatar
+                    if (!e.target.closest('.conversation-avatar')) {
+                        const partnerId = item.getAttribute('data-partner-id');
+                        selectConversation(partnerId);
+                    }
                 });
             });
-        }
-    }
-}
 
-function renderMessages(messages) {
-    const chatMessages = document.getElementById('chatMessages');
-    const noMessages = document.getElementById('noMessages');
-
-    if (messages.length === 0) {
-        noMessages.classList.remove('hidden');
-        chatMessages.innerHTML = '';
-        return;
-    }
-
-    noMessages.classList.add('hidden');
-
-    chatMessages.innerHTML = messages.map(message => {
-        const isSent = message.sender_id === currentUser.id;
-        const partnerInfo = userAvatarsCache.get(isSent ? currentUser.id : message.sender_id);
-        const partnerName = partnerInfo?.name || 'Usuário';
-        const partnerAvatar = partnerInfo?.avatar || null;
-
-        return `
-            <div class="message-container ${isSent ? 'sent' : 'received'}">
-                <div class="message-avatar" style="${partnerAvatar ? `background-image: url(${partnerAvatar})` : ''}">
-                    ${!partnerAvatar ? partnerName.charAt(0).toUpperCase() : ''}
-                </div>
-                <div class="message ${isSent ? 'sent' : 'received'}">
-                    <div class="message-text">${message.content}</div>
-                    <div class="message-time">${formatTime(message.created_at)}</div>
-                </div>
-            </div>
-        `;
-    }).join('');
-
-    // Scroll para a última mensagem
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-async function sendMessage() {
-    const messageInput = document.getElementById('messageInput');
-    const content = messageInput.value.trim();
-
-    if (!content || !currentChatPartner) return;
-
-    try {
-        const { error } = await supabase
-            .from('messages')
-            .insert({
-                sender_id: currentUser.id,
-                receiver_id: currentChatPartner.id,
-                content: content,
-                is_read: false
+            // Clique específico no avatar (abre modal do perfil)
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('.conversation-avatar')) {
+                    const conversationItem = e.target.closest('.conversation-item');
+                    const partnerId = conversationItem.getAttribute('data-partner-id');
+                    openProfileModal(partnerId);
+                }
             });
 
-        if (error) throw error;
+            // Clique no avatar do header do chat (abre modal do perfil)
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('.chat-header-avatar') && currentChatPartner) {
+                    openProfileModal(currentChatPartner.id);
+                }
+            });
+        }
 
-        // Limpar input
-        messageInput.value = '';
+        async function selectConversation(partnerId) {
+            try {
+                // Remover seleção anterior
+                document.querySelectorAll('.conversation-item').forEach(item => {
+                    item.classList.remove('active');
+                });
 
-        // Recarregar conversas para atualizar a lista
-        await loadConversations();
+                // Adicionar seleção atual
+                document.querySelector(`[data-partner-id="${partnerId}"]`).classList.add('active');
 
-    } catch (error) {
-        console.error('Erro ao enviar mensagem:', error);
-        alert('Erro ao enviar mensagem. Tente novamente.');
-    }
-}
+                // Buscar informações do parceiro
+                const { data: partnerProfile, error } = await supabase
+                    .from('profiles')
+                    .select('nickname, avatar_url')
+                    .eq('id', partnerId)
+                    .single();
 
-async function markMessagesAsRead(partnerId) {
-    try {
-        const { error } = await supabase
-            .from('messages')
-            .update({ is_read: true })
-            .eq('sender_id', partnerId)
-            .eq('receiver_id', currentUser.id)
-            .eq('is_read', false);
+                if (error) throw error;
 
-        if (error) throw error;
+                currentChatPartner = {
+                    id: partnerId,
+                    name: partnerProfile.nickname,
+                    avatar: partnerProfile.avatar_url
+                };
 
-        // Atualizar contador de não lidas
-        await loadConversations();
+                // Atualizar header do chat
+                updateChatHeader();
+                
+                // Mostrar área de chat
+                document.getElementById('chatHeader').classList.remove('hidden');
+                document.getElementById('chatInput').classList.remove('hidden');
+                document.getElementById('messageInput').disabled = false;
+                document.getElementById('sendMessageBtn').disabled = false;
 
-    } catch (error) {
-        console.error('Erro ao marcar mensagens como lidas:', error);
-    }
-}
+                // Carregar mensagens da conversa
+                await loadMessages(partnerId);
 
-function setupRealtimeMessages(partnerId) {
-    // Cancelar subscription anterior se existir
-    if (messagesSubscription) {
-        supabase.removeSubscription(messagesSubscription);
-    }
+                // Marcar mensagens como lidas
+                await markMessagesAsRead(partnerId);
 
-    // Nova subscription para mensagens em tempo real
-    messagesSubscription = supabase
-        .from('messages')
-        .on('INSERT', payload => {
-            const newMessage = payload.new;
+                // Inscrever-se para novas mensagens em tempo real
+                setupRealtimeMessages(partnerId);
+
+            } catch (error) {
+                console.error('Erro ao selecionar conversa:', error);
+            }
+        }
+
+        async function loadMessages(partnerId) {
+            try {
+                const { data: messages, error } = await supabase
+                    .from('messages')
+                    .select('*')
+                    .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${currentUser.id})`)
+                    .order('created_at', { ascending: true });
+
+                if (error) throw error;
+
+                // Buscar avatares de todos os usuários envolvidos
+                await loadUserAvatars(messages);
+
+                renderMessages(messages);
+
+            } catch (error) {
+                console.error('Erro ao carregar mensagens:', error);
+            }
+        }
+
+        async function loadUserAvatars(messages) {
+            const userIds = new Set();
             
-            // Verificar se a mensagem é para a conversa atual
-            if ((newMessage.sender_id === partnerId && newMessage.receiver_id === currentUser.id) ||
-                (newMessage.sender_id === currentUser.id && newMessage.receiver_id === partnerId)) {
-                
-                // Recarregar mensagens
-                loadMessages(partnerId);
-                
+            // Coletar todos os IDs de usuário únicos
+            messages.forEach(message => {
+                userIds.add(message.sender_id);
+                userIds.add(message.receiver_id);
+            });
+
+            // Buscar avatares apenas para IDs que ainda não estão no cache
+            const missingUserIds = Array.from(userIds).filter(id => !userAvatarsCache.has(id));
+            
+            if (missingUserIds.length > 0) {
+                const { data: profiles, error } = await supabase
+                    .from('profiles')
+                    .select('id, nickname, avatar_url')
+                    .in('id', missingUserIds);
+
+                if (!error && profiles) {
+                    profiles.forEach(profile => {
+                        userAvatarsCache.set(profile.id, {
+                            name: profile.nickname,
+                            avatar: profile.avatar_url
+                        });
+                    });
+                }
+            }
+        }
+
+        function renderMessages(messages) {
+            const chatMessages = document.getElementById('chatMessages');
+            const noMessages = document.getElementById('noMessages');
+
+            if (messages.length === 0) {
+                noMessages.classList.remove('hidden');
+                chatMessages.innerHTML = '';
+                return;
+            }
+
+            noMessages.classList.add('hidden');
+
+            chatMessages.innerHTML = messages.map(message => {
+                const isSent = message.sender_id === currentUser.id;
+                const partnerInfo = userAvatarsCache.get(isSent ? currentUser.id : message.sender_id);
+                const partnerName = partnerInfo?.name || 'Usuário';
+                const partnerAvatar = partnerInfo?.avatar || null;
+
+                return `
+                    <div class="message-container ${isSent ? 'sent' : 'received'}">
+                        <div class="message-avatar" style="${partnerAvatar ? `background-image: url(${partnerAvatar})` : ''}">
+                            <img class="message-avatar-img" src="${partnerAvatar || ''}" alt="${partnerName}" style="${partnerAvatar ? 'display: block;' : 'display: none;'}">
+                            ${!partnerAvatar ? partnerName.charAt(0).toUpperCase() : ''}
+                        </div>
+                        <div class="message ${isSent ? 'sent' : 'received'}">
+                            <div class="message-text">${message.content}</div>
+                            <div class="message-time">${formatTime(message.created_at)}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Scroll para a última mensagem
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const content = messageInput.value.trim();
+
+            if (!content || !currentChatPartner) return;
+
+            try {
+                const { error } = await supabase
+                    .from('messages')
+                    .insert({
+                        sender_id: currentUser.id,
+                        receiver_id: currentChatPartner.id,
+                        content: content,
+                        is_read: false
+                    });
+
+                if (error) throw error;
+
+                // Limpar input
+                messageInput.value = '';
+
                 // Recarregar conversas para atualizar a lista
-                loadConversations();
-                
-                // Marcar como lida se for do parceiro
-                if (newMessage.sender_id === partnerId) {
-                    markMessagesAsRead(partnerId);
-                }
+                await loadConversations();
+
+            } catch (error) {
+                console.error('Erro ao enviar mensagem:', error);
+                alert('Erro ao enviar mensagem. Tente novamente.');
             }
-        })
-        .subscribe();
-}
-
-function updateChatHeader() {
-    if (!currentChatPartner) return;
-
-    document.getElementById('chatPartnerName').textContent = currentChatPartner.name;
-    document.getElementById('chatPartnerStatus').textContent = 'Online';
-    
-    const chatHeaderAvatar = document.getElementById('chatHeaderAvatar');
-    if (currentChatPartner.avatar) {
-        chatHeaderAvatar.style.backgroundImage = `url(${currentChatPartner.avatar})`;
-        chatHeaderAvatar.textContent = '';
-    } else {
-        chatHeaderAvatar.style.backgroundImage = '';
-        chatHeaderAvatar.textContent = currentChatPartner.name.charAt(0).toUpperCase();
-    }
-}
-
-// ==================== EVENT LISTENERS ====================
-function setupEventListeners() {
-    // Logout
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', logout);
-    }
-
-    // Envio de mensagens
-    const messageInput = document.getElementById('messageInput');
-    const sendMessageBtn = document.getElementById('sendMessageBtn');
-    
-    if (messageInput && sendMessageBtn) {
-        sendMessageBtn.addEventListener('click', sendMessage);
-        
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-    }
-}
-
-// ==================== LOGOUT ====================
-async function logout() {
-    try {
-        // Cancelar subscription se existir
-        if (messagesSubscription) {
-            supabase.removeSubscription(messagesSubscription);
         }
 
-        const { error } = await supabase.auth.signOut();
-        if (error) throw error;
-        window.location.href = 'login.html';
-    } catch (error) {
-        console.error('Erro ao fazer logout:', error);
-        alert('Erro ao fazer logout. Tente novamente.');
-    }
-}
+        async function markMessagesAsRead(partnerId) {
+            try {
+                const { error } = await supabase
+                    .from('messages')
+                    .update({ is_read: true })
+                    .eq('sender_id', partnerId)
+                    .eq('receiver_id', currentUser.id)
+                    .eq('is_read', false);
 
-// ==================== FUNÇÕES AUXILIARES ====================
-function formatTime(dateString) {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                if (error) throw error;
 
-    if (diffMins < 1) return 'Agora';
-    if (diffMins < 60) return `${diffMins}m`;
-    if (diffHours < 24) return `${diffHours}h`;
-    if (diffDays === 1) return 'Ontem';
-    if (diffDays < 7) return `${diffDays}d`;
-    
-    return date.toLocaleDateString('pt-BR');
-}
-</script>
+                // Atualizar contador de não lidas
+                await loadConversations();
+
+            } catch (error) {
+                console.error('Erro ao marcar mensagens como lidas:', error);
+            }
+        }
+
+        function setupRealtimeMessages(partnerId) {
+            // Cancelar subscription anterior se existir
+            if (messagesSubscription) {
+                supabase.removeSubscription(messagesSubscription);
+            }
+
+            // Nova subscription para mensagens em tempo real
+            messagesSubscription = supabase
+                .from('messages')
+                .on('INSERT', payload => {
+                    const newMessage = payload.new;
+                    
+                    // Verificar se a mensagem é para a conversa atual
+                    if ((newMessage.sender_id === partnerId && newMessage.receiver_id === currentUser.id) ||
+                        (newMessage.sender_id === currentUser.id && newMessage.receiver_id === partnerId)) {
+                        
+                        // Recarregar mensagens
+                        loadMessages(partnerId);
+                        
+                        // Recarregar conversas para atualizar a lista
+                        loadConversations();
+                        
+                        // Marcar como lida se for do parceiro
+                        if (newMessage.sender_id === partnerId) {
+                            markMessagesAsRead(partnerId);
+                        }
+                    }
+                })
+                .subscribe();
+        }
+
+        function updateChatHeader() {
+            if (!currentChatPartner) return;
+
+            document.getElementById('chatPartnerName').textContent = currentChatPartner.name;
+            document.getElementById('chatPartnerStatus').textContent = 'Online';
+            
+            const chatHeaderAvatar = document.getElementById('chatHeaderAvatar');
+            const chatHeaderAvatarImg = chatHeaderAvatar.querySelector('.chat-header-avatar-img');
+            const chatHeaderAvatarFallback = chatHeaderAvatar.querySelector('.user-avatar-fallback');
+            
+            if (currentChatPartner.avatar) {
+                chatHeaderAvatar.style.backgroundImage = `url(${currentChatPartner.avatar})`;
+                chatHeaderAvatarImg.src = currentChatPartner.avatar;
+                chatHeaderAvatarImg.style.display = 'block';
+                chatHeaderAvatarFallback.style.display = 'none';
+            } else {
+                chatHeaderAvatar.style.backgroundImage = '';
+                chatHeaderAvatarImg.style.display = 'none';
+                chatHeaderAvatarFallback.textContent = currentChatPartner.name.charAt(0).toUpperCase();
+                chatHeaderAvatarFallback.style.display = 'flex';
+            }
+        }
+
+        // ==================== MODAL DO PERFIL ====================
+        function setupProfileModal() {
+            const profileModal = document.getElementById('profileModal');
+            const closeProfileModal = document.getElementById('closeProfileModal');
+            const profileModalLoading = document.getElementById('profileModalLoading');
+            const profileModalContent = document.getElementById('profileModalContent');
+            const sendMessageFromModal = document.getElementById('sendMessageFromModal');
+            const viewFullProfile = document.getElementById('viewFullProfile');
+
+            // Fechar modal
+            closeProfileModal.addEventListener('click', () => {
+                profileModal.classList.remove('active');
+            });
+
+            // Fechar modal clicando fora
+            profileModal.addEventListener('click', (e) => {
+                if (e.target === profileModal) {
+                    profileModal.classList.remove('active');
+                }
+            });
+
+            // Enviar mensagem da modal
+            sendMessageFromModal.addEventListener('click', () => {
+                if (currentChatPartner) {
+                    profileModal.classList.remove('active');
+                    // Foca no input de mensagem
+                    const messageInput = document.getElementById('messageInput');
+                    if (messageInput) {
+                        messageInput.focus();
+                    }
+                }
+            });
+
+            // Ver perfil completo
+            viewFullProfile.addEventListener('click', () => {
+                if (currentChatPartner) {
+                    // Salva o ID do perfil para carregar no perfil.html
+                    localStorage.setItem('viewingProfileId', currentChatPartner.id);
+                    window.location.href = 'perfil.html';
+                }
+            });
+        }
+
+        // Função para abrir modal do perfil
+        async function openProfileModal(partnerId) {
+            const profileModal = document.getElementById('profileModal');
+            const profileModalLoading = document.getElementById('profileModalLoading');
+            const profileModalContent = document.getElementById('profileModalContent');
+            const profileModalName = document.getElementById('profileModalName');
+            const profileModalAvatar = document.getElementById('profileModalAvatar');
+            const profileModalStatus = document.getElementById('profileModalStatus');
+
+            // Mostrar modal e loading
+            profileModal.classList.add('active');
+            profileModalLoading.classList.remove('hidden');
+            profileModalContent.classList.add('hidden');
+
+            try {
+                // Buscar informações completas do perfil
+                const { data: profile, error } = await supabase
+                    .from('profiles')
+                    .select('nickname, avatar_url, user_details(description)')
+                    .eq('id', partnerId)
+                    .single();
+
+                if (error) throw error;
+
+                // Atualizar informações na modal
+                profileModalName.textContent = profile.nickname || 'Usuário';
+                
+                if (profile.user_details && profile.user_details.description) {
+                    profileModalStatus.textContent = profile.user_details.description;
+                } else {
+                    profileModalStatus.textContent = 'Conectado agora';
+                }
+
+                // Carregar avatar
+                const profileModalAvatarImg = profileModalAvatar.querySelector('.profile-modal-avatar-img');
+                const profileModalAvatarFallback = profileModalAvatar.querySelector('.user-avatar-fallback');
+
+                if (profile.avatar_url) {
+                    const photoUrl = await loadUserPhoto(profile.avatar_url);
+                    if (photoUrl) {
+                        profileModalAvatarImg.src = photoUrl;
+                        profileModalAvatarImg.style.display = 'block';
+                        profileModalAvatarFallback.style.display = 'none';
+                        profileModalAvatar.style.backgroundImage = `url(${photoUrl})`;
+                    } else {
+                        // Fallback para inicial
+                        profileModalAvatarImg.style.display = 'none';
+                        profileModalAvatarFallback.style.display = 'flex';
+                        profileModalAvatarFallback.textContent = (profile.nickname || 'U').charAt(0).toUpperCase();
+                        profileModalAvatar.style.backgroundImage = '';
+                    }
+                } else {
+                    // Sem foto, mostrar inicial
+                    profileModalAvatarImg.style.display = 'none';
+                    profileModalAvatarFallback.style.display = 'flex';
+                    profileModalAvatarFallback.textContent = (profile.nickname || 'U').charAt(0).toUpperCase();
+                    profileModalAvatar.style.backgroundImage = '';
+                }
+
+                // Esconder loading e mostrar conteúdo
+                profileModalLoading.classList.add('hidden');
+                profileModalContent.classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Erro ao carregar perfil para modal:', error);
+                // Fallback em caso de erro
+                profileModalName.textContent = 'Usuário';
+                profileModalStatus.textContent = 'Perfil não disponível';
+                
+                const profileModalAvatarImg = profileModalAvatar.querySelector('.profile-modal-avatar-img');
+                const profileModalAvatarFallback = profileModalAvatar.querySelector('.user-avatar-fallback');
+                
+                profileModalAvatarImg.style.display = 'none';
+                profileModalAvatarFallback.style.display = 'flex';
+                profileModalAvatarFallback.textContent = 'U';
+                profileModalAvatar.style.backgroundImage = '';
+
+                profileModalLoading.classList.add('hidden');
+                profileModalContent.classList.remove('hidden');
+            }
+        }
+
+        // ==================== EVENT LISTENERS ====================
+        function setupEventListeners() {
+            // Logout
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', logout);
+            }
+
+            // Envio de mensagens
+            const messageInput = document.getElementById('messageInput');
+            const sendMessageBtn = document.getElementById('sendMessageBtn');
+            
+            if (messageInput && sendMessageBtn) {
+                sendMessageBtn.addEventListener('click', sendMessage);
+                
+                messageInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        sendMessage();
+                    }
+                });
+            }
+        }
+
+        // ==================== LOGOUT ====================
+        async function logout() {
+            try {
+                // Cancelar subscription se existir
+                if (messagesSubscription) {
+                    supabase.removeSubscription(messagesSubscription);
+                }
+
+                const { error } = await supabase.auth.signOut();
+                if (error) throw error;
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Erro ao fazer logout:', error);
+                alert('Erro ao fazer logout. Tente novamente.');
+            }
+        }
+
+        // ==================== FUNÇÕES AUXILIARES ====================
+        function formatTime(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / (1000 * 60));
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+            if (diffMins < 1) return 'Agora';
+            if (diffMins < 60) return `${diffMins}m`;
+            if (diffHours < 24) return `${diffHours}h`;
+            if (diffDays === 1) return 'Ontem';
+            if (diffDays < 7) return `${diffDays}d`;
+            
+            return date.toLocaleDateString('pt-BR');
+        }
+    </script>
 </body>
 </html>
