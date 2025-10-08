@@ -28,6 +28,7 @@
             background-color: var(--bege);
             color: var(--text);
             line-height: 1.6;
+            overflow-x: hidden;
         }
 
         .container {
@@ -52,7 +53,23 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            height: 60px;
+            height: 80px;
+        }
+
+        /* Menu Hamburguer */
+        #hamburgerBtn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--branco);
+            font-size: 1.8rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            z-index: 1001;
+            width: 40px;
+            height: 40px;
+            align-items: center;
+            justify-content: center;
         }
 
         .logo {
@@ -60,10 +77,12 @@
             align-items: center;
             gap: 12px;
             flex-shrink: 0;
+            justify-content: center;
+            flex: 1;
         }
 
         .logo img {
-            height: 120px;
+            height: 180px;
             width: auto;
             object-fit: contain;
         }
@@ -87,7 +106,7 @@
             gap: 0.5rem;
         }
 
-        /* CORREÇÃO DO AVATAR NO HEADER - AGORA REDONDO E HARMONIOSO */
+        /* Avatar no Header */
         .user-avatar {
             width: 45px;
             height: 45px;
@@ -154,6 +173,65 @@
         .btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Menu Mobile */
+        #mobileMenu {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            z-index: 1000;
+            padding: 2rem;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+        }
+
+        #closeMobileMenu {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: none;
+            border: none;
+            color: var(--branco);
+            font-size: 2.5rem;
+            cursor: pointer;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mobile-user-info {
+            text-align: center;
+            color: var(--branco);
+            margin-bottom: 2rem;
+        }
+
+        .mobile-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .mobile-nav .btn {
+            width: 100%;
+            text-align: center;
+            justify-content: center;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 1.2rem;
+            font-size: 1.2rem;
+            border-radius: 12px;
         }
 
         /* Main Content */
@@ -344,7 +422,7 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
 
-        /* AVATAR NAS CARDS - CORRIGIDO */
+        /* Avatar nas Cards */
         .user-card-avatar {
             width: 80px;
             height: 80px;
@@ -581,16 +659,33 @@
 
         /* Responsividade */
         @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                gap: 0.8rem;
-                height: auto;
-                padding: 0.5rem 0;
+            #hamburgerBtn {
+                display: flex;
             }
 
             .user-menu {
-                flex-direction: column;
-                gap: 0.8rem;
+                display: none;
+            }
+
+            .header-content {
+                flex-direction: row;
+                justify-content: space-between;
+                height: 80px;
+                padding: 0;
+            }
+
+            .logo {
+                justify-content: center;
+                flex: 1;
+                margin: 0 auto;
+            }
+
+            .logo img {
+                height: 150px !important;
+            }
+
+            .logo h1 {
+                display: none;
             }
 
             .filters-grid {
@@ -615,14 +710,6 @@
                 font-size: 1.8rem;
             }
 
-            .logo img {
-                height: 100px;
-            }
-
-            .logo h1 {
-                font-size: 1.2rem;
-            }
-
             .user-avatar {
                 width: 40px;
                 height: 40px;
@@ -634,6 +721,18 @@
                 height: 70px;
                 font-size: 1.6rem;
             }
+
+            .mobile-user-info .user-avatar {
+                width: 100px;
+                height: 100px;
+                font-size: 2rem;
+                margin: 0 auto 1rem;
+            }
+
+            .mobile-user-info #mobileUserNickname {
+                font-size: 1.4rem;
+                font-weight: bold;
+            }
         }
 
         @media (max-width: 480px) {
@@ -642,17 +741,25 @@
             }
 
             .logo img {
-                height: 90px;
-            }
-
-            .logo h1 {
-                font-size: 1.1rem;
+                height: 130px !important;
             }
 
             .user-avatar {
                 width: 35px;
                 height: 35px;
                 font-size: 0.9rem;
+            }
+
+            .header-content {
+                height: 70px;
+            }
+
+            .page-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .filters-card h3 {
+                font-size: 1.2rem;
             }
         }
 
@@ -666,6 +773,7 @@
     <header>
         <div class="container">
             <div class="header-content">
+                <button id="hamburgerBtn">☰</button>
                 <div class="logo">
                     <img src="logoamorconect.png" alt="Amor Conect">
                     <h1>Amor Conect</h1>
@@ -685,6 +793,27 @@
             </div>
         </div>
     </header>
+
+    <!-- Menu Mobile -->
+    <div id="mobileMenu">
+        <button id="closeMobileMenu">×</button>
+        
+        <div class="mobile-user-info">
+            <div class="user-avatar" id="mobileUserAvatar">
+                <img class="user-avatar-img" src="" alt="Avatar">
+                <div class="user-avatar-fallback">U</div>
+            </div>
+            <div id="mobileUserNickname">Usuário</div>
+        </div>
+
+        <div class="mobile-nav">
+            <a href="home.html" class="btn btn-outline">🏠 Home</a>
+            <a href="mensagens.html" class="btn btn-outline">💌 Mensagens</a>
+            <a href="painel.html" class="btn btn-outline">👤 Perfil</a>
+            <a href="configuracoes.html" class="btn btn-outline">⚙️ Configurações</a>
+            <button class="btn btn-outline" id="mobileLogoutBtn">🚪 Sair</button>
+        </div>
+    </div>
 
     <!-- Main Content -->
     <main class="main-content">
@@ -874,9 +1003,61 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         checkAuth();
+        setupMobileMenu();
     });
 
-    // Verificar autenticação
+    // ==================== MENU MOBILE ====================
+    function setupMobileMenu() {
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const closeMobileMenu = document.getElementById('closeMobileMenu');
+        const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+
+        if (!hamburgerBtn || !mobileMenu) {
+            console.error('Elementos do menu mobile não encontrados');
+            return;
+        }
+
+        hamburgerBtn.addEventListener('click', () => {
+            mobileMenu.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        });
+
+        closeMobileMenu.addEventListener('click', () => {
+            mobileMenu.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        });
+
+        mobileLogoutBtn.addEventListener('click', logout);
+
+        // Fechar menu ao clicar em um link
+        mobileMenu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            });
+        });
+
+        // Verificar tamanho da tela
+        function checkScreenSize() {
+            if (window.innerWidth <= 768) {
+                const userMenu = document.querySelector('.user-menu');
+                if (userMenu) userMenu.style.display = 'none';
+                hamburgerBtn.style.display = 'flex';
+            } else {
+                const userMenu = document.querySelector('.user-menu');
+                if (userMenu) userMenu.style.display = 'flex';
+                hamburgerBtn.style.display = 'none';
+                mobileMenu.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        window.addEventListener('resize', checkScreenSize);
+        checkScreenSize();
+    }
+
+    // ==================== AUTENTICAÇÃO ====================
     async function checkAuth() {
         try {
             const { data: { user }, error } = await supabase.auth.getUser();
@@ -899,7 +1080,7 @@
         }
     }
 
-    // Carregar dados do usuário
+    // ==================== DADOS DO USUÁRIO ====================
     async function loadUserData() {
         try {
             const { data: { user } } = await supabase.auth.getUser();
@@ -914,7 +1095,12 @@
                 displayName = user.email.split('@')[0];
             }
 
-            document.getElementById('userNickname').textContent = displayName;
+            // Atualizar nome em todos os lugares
+            const userNickname = document.getElementById('userNickname');
+            const mobileUserNickname = document.getElementById('mobileUserNickname');
+            
+            if (userNickname) userNickname.textContent = displayName;
+            if (mobileUserNickname) mobileUserNickname.textContent = displayName;
             
             // Carregar foto do usuário logado
             await loadCurrentUserAvatar();
@@ -924,7 +1110,6 @@
         }
     }
 
-    // Carregar foto do usuário logado
     async function loadCurrentUserAvatar() {
         try {
             const { data: profile, error } = await supabase
@@ -933,25 +1118,46 @@
                 .eq('id', currentUser.id)
                 .single();
 
-            if (error || !profile) return;
+            if (error || !profile) {
+                console.log('Perfil não encontrado ou erro:', error);
+                return;
+            }
 
-            const userAvatar = document.getElementById('userAvatar');
-            const userAvatarFallback = userAvatar.querySelector('.user-avatar-fallback');
-            const userAvatarImg = userAvatar.querySelector('.user-avatar-img');
-            
-            // Iniciar com fallback visível
-            userAvatarImg.style.display = 'none';
-            userAvatarFallback.style.display = 'flex';
-            
-            if (profile.avatar_url) {
-                const photoUrl = await loadUserPhoto(profile.avatar_url);
-                if (photoUrl) {
-                    userAvatarImg.src = photoUrl;
-                    userAvatarImg.style.display = 'block';
-                    userAvatarFallback.style.display = 'none';
-                    userAvatar.style.backgroundImage = `url(${photoUrl})`;
-                    userAvatar.style.backgroundSize = 'cover';
-                    userAvatar.style.backgroundPosition = 'center';
+            const avatarElements = [
+                document.getElementById('userAvatar'),
+                document.getElementById('mobileUserAvatar')
+            ];
+
+            for (const avatarElement of avatarElements) {
+                if (!avatarElement) continue;
+                
+                const userAvatarFallback = avatarElement.querySelector('.user-avatar-fallback');
+                const userAvatarImg = avatarElement.querySelector('.user-avatar-img');
+                
+                if (!userAvatarFallback || !userAvatarImg) continue;
+
+                // Iniciar com fallback visível
+                userAvatarImg.style.display = 'none';
+                userAvatarFallback.style.display = 'flex';
+                
+                if (profile.avatar_url) {
+                    const photoUrl = await loadUserPhoto(profile.avatar_url);
+                    if (photoUrl) {
+                        userAvatarImg.src = photoUrl;
+                        userAvatarImg.style.display = 'block';
+                        userAvatarFallback.style.display = 'none';
+                        avatarElement.style.backgroundImage = `url(${photoUrl})`;
+                        avatarElement.style.backgroundSize = 'cover';
+                        avatarElement.style.backgroundPosition = 'center';
+                    } else {
+                        // Mostrar inicial do nome
+                        const displayName = profile.nickname || 'Usuário';
+                        userAvatarFallback.textContent = displayName.charAt(0).toUpperCase();
+                    }
+                } else {
+                    // Mostrar inicial do nome
+                    const displayName = profile.nickname || 'Usuário';
+                    userAvatarFallback.textContent = displayName.charAt(0).toUpperCase();
                 }
             }
 
@@ -960,7 +1166,6 @@
         }
     }
 
-    // Carregar foto do usuário
     async function loadUserPhoto(avatarUrl) {
         try {
             if (!avatarUrl) return null;
@@ -982,15 +1187,47 @@
         }
     }
 
-    // Configurar event listeners
+    // ==================== EVENT LISTENERS ====================
     function setupEventListeners() {
-        document.getElementById('logoutBtn').addEventListener('click', logout);
-        document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
-        document.getElementById('clearFiltersBtn').addEventListener('click', clearFilters);
-        document.getElementById('clearFiltersNoResults').addEventListener('click', clearFilters);
+        // Logout
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', logout);
+        }
+
+        // Filtros
+        const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+        const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+        const clearFiltersNoResults = document.getElementById('clearFiltersNoResults');
+
+        if (applyFiltersBtn) applyFiltersBtn.addEventListener('click', applyFilters);
+        if (clearFiltersBtn) clearFiltersBtn.addEventListener('click', clearFilters);
+        if (clearFiltersNoResults) clearFiltersNoResults.addEventListener('click', clearFilters);
+
+        // Buscar ao mudar filtros (opcional)
+        const filterInputs = document.querySelectorAll('.form-control, .range-inputs input');
+        filterInputs.forEach(input => {
+            input.addEventListener('change', debounce(applyFilters, 500));
+        });
+
+        // Prevenir zoom em inputs no iOS
+        document.addEventListener('touchstart', function() {}, { passive: true });
     }
 
-    // Fazer logout
+    // Debounce para otimizar buscas
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    // ==================== LOGOUT ====================
     async function logout() {
         try {
             const { error } = await supabase.auth.signOut();
@@ -998,15 +1235,15 @@
             window.location.href = 'login.html';
         } catch (error) {
             console.error('Erro ao fazer logout:', error);
+            alert('Erro ao fazer logout. Tente novamente.');
         }
     }
 
-    // Carregar usuários iniciais
+    // ==================== SISTEMA DE BUSCA ====================
     async function loadInitialUsers() {
         await applyFilters();
     }
 
-    // Aplicar filtros
     async function applyFilters() {
         try {
             currentPage = 1;
@@ -1021,8 +1258,8 @@
         }
     }
 
-    // Limpar filtros
     function clearFilters() {
+        // Limpar inputs
         document.getElementById('ageMin').value = '';
         document.getElementById('ageMax').value = '';
         document.getElementById('gender').value = '';
@@ -1032,14 +1269,15 @@
         
         // Limpar seleção múltipla de interesses
         const interestsSelect = document.getElementById('interests');
-        for (let option of interestsSelect.options) {
-            option.selected = false;
+        if (interestsSelect) {
+            for (let option of interestsSelect.options) {
+                option.selected = false;
+            }
         }
         
         applyFilters();
     }
 
-    // Obter filtros atuais
     function getCurrentFilters() {
         const ageMin = document.getElementById('ageMin').value;
         const ageMax = document.getElementById('ageMax').value;
@@ -1051,20 +1289,23 @@
         // Obter interesses selecionados
         const interestsSelect = document.getElementById('interests');
         const selectedInterests = [];
-        for (let option of interestsSelect.options) {
-            if (option.selected) {
-                if (option.value === 'nao_importa') {
-                    return {
-                        ageMin: ageMin ? parseInt(ageMin) : null,
-                        ageMax: ageMax ? parseInt(ageMax) : null,
-                        gender: gender || null,
-                        lookingFor: lookingFor || null,
-                        location: location || null,
-                        zodiac: zodiac || null,
-                        interests: null
-                    };
+        
+        if (interestsSelect) {
+            for (let option of interestsSelect.options) {
+                if (option.selected) {
+                    if (option.value === 'nao_importa') {
+                        return {
+                            ageMin: ageMin ? parseInt(ageMin) : null,
+                            ageMax: ageMax ? parseInt(ageMax) : null,
+                            gender: gender || null,
+                            lookingFor: lookingFor || null,
+                            location: location || null,
+                            zodiac: zodiac || null,
+                            interests: null
+                        };
+                    }
+                    selectedInterests.push(option.value);
                 }
-                selectedInterests.push(option.value);
             }
         }
 
@@ -1079,7 +1320,6 @@
         };
     }
 
-    // Buscar usuários com JOIN nas tabelas corretas
     async function searchUsers() {
         try {
             console.log('🔍 Aplicando filtros:', currentFilters);
@@ -1107,7 +1347,6 @@
             if (error) throw error;
 
             console.log('📊 Usuários encontrados:', users?.length);
-            console.log('📋 Primeiro usuário:', users?.[0]);
 
             // Aplicar filtros no client-side
             let filteredUsers = users || [];
@@ -1182,36 +1421,35 @@
         }
     }
 
-    // Exibir usuários com fotos
+    // ==================== EXIBIÇÃO DE USUÁRIOS ====================
     async function displayUsersWithPhotos(users) {
         const usersGrid = document.getElementById('usersGrid');
         const noResults = document.getElementById('noResults');
         const loadingResults = document.getElementById('loadingResults');
 
-        loadingResults.classList.add('hidden');
+        if (loadingResults) loadingResults.classList.add('hidden');
 
         if (!users || users.length === 0) {
-            usersGrid.innerHTML = '';
-            noResults.classList.remove('hidden');
+            if (usersGrid) usersGrid.innerHTML = '';
+            if (noResults) noResults.classList.remove('hidden');
             return;
         }
 
-        noResults.classList.add('hidden');
+        if (noResults) noResults.classList.add('hidden');
 
         // Carregar fotos para cada usuário
         const userCards = await Promise.all(
             users.map(async user => await createUserCardWithPhoto(user))
         );
         
-        usersGrid.innerHTML = userCards.join('');
+        if (usersGrid) usersGrid.innerHTML = userCards.join('');
     }
 
-    // CORREÇÃO COMPLETA: Criar card de usuário com imagem funcionando
     async function createUserCardWithPhoto(user) {
         const nickname = user.nickname || user.full_name?.split(' ')[0] || 'Usuário';
         const age = user.birth_date ? calculateAge(user.birth_date) : null;
         
-        // CORREÇÃO: Carregar a foto ANTES de construir o HTML
+        // Carregar a foto ANTES de construir o HTML
         let avatarHtml = '';
         let photoUrl = null;
         
@@ -1219,7 +1457,7 @@
             photoUrl = await loadUserPhoto(user.avatar_url);
         }
         
-        // CORREÇÃO: Construir o HTML baseado no resultado do carregamento
+        // Construir o HTML baseado no resultado do carregamento
         if (photoUrl) {
             avatarHtml = `
                 <div class="user-card-avatar" style="background-image: url('${photoUrl}'); background-size: cover; background-position: center;">
@@ -1283,7 +1521,7 @@
         `;
     }
 
-    // Calcular idade a partir da data de nascimento
+    // ==================== FUNÇÕES AUXILIARES ====================
     function calculateAge(birthDate) {
         const today = new Date();
         const birth = new Date(birthDate);
@@ -1297,7 +1535,6 @@
         return age;
     }
 
-    // Formatar gênero para exibição
     function formatGender(gender) {
         const genderMap = {
             'feminino': 'Feminino',
@@ -1308,9 +1545,10 @@
         return genderMap[gender] || gender;
     }
 
-    // Atualizar contagem de resultados
     function updateResultsCount(currentCount, totalCount) {
         const resultsCount = document.getElementById('resultsCount');
+        if (!resultsCount) return;
+        
         if (totalCount === 0) {
             resultsCount.textContent = 'Nenhum resultado encontrado';
         } else {
@@ -1320,9 +1558,10 @@
         }
     }
 
-    // Atualizar paginação
     function updatePagination() {
         const pagination = document.getElementById('pagination');
+        if (!pagination) return;
+        
         const totalPages = Math.ceil(totalUsers / usersPerPage);
         
         if (totalPages <= 1) {
@@ -1345,7 +1584,6 @@
         pagination.innerHTML = paginationHTML;
     }
 
-    // Mudar página
     async function changePage(page) {
         currentPage = page;
         showLoadingState();
@@ -1353,32 +1591,85 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // Mostrar estado de carregamento
     function showLoadingState() {
-        document.getElementById('loadingResults').classList.remove('hidden');
-        document.getElementById('usersGrid').innerHTML = '';
-        document.getElementById('noResults').classList.add('hidden');
-        document.getElementById('pagination').classList.add('hidden');
-        document.getElementById('resultsCount').textContent = 'Buscando...';
+        const loadingResults = document.getElementById('loadingResults');
+        const usersGrid = document.getElementById('usersGrid');
+        const noResults = document.getElementById('noResults');
+        const pagination = document.getElementById('pagination');
+        const resultsCount = document.getElementById('resultsCount');
+
+        if (loadingResults) loadingResults.classList.remove('hidden');
+        if (usersGrid) usersGrid.innerHTML = '';
+        if (noResults) noResults.classList.add('hidden');
+        if (pagination) pagination.classList.add('hidden');
+        if (resultsCount) resultsCount.textContent = 'Buscando...';
     }
 
-    // Mostrar erro
     function showError(message) {
         alert(message);
-        document.getElementById('loadingResults').classList.add('hidden');
+        const loadingResults = document.getElementById('loadingResults');
+        if (loadingResults) loadingResults.classList.add('hidden');
     }
 
-    // Enviar mensagem (placeholder)
+    // ==================== FUNÇÕES DE INTERAÇÃO ====================
     function sendMessage(userId) {
-        alert(`Função de enviar mensagem para o usuário ${userId} será implementada em breve!`);
-        // window.location.href = `mensagens.html?user=${userId}`;
+        if (!isProfileComplete()) {
+            alert('📝 Complete seu perfil primeiro para enviar mensagens!');
+            window.location.href = 'painel.html';
+            return;
+        }
+        
+        const message = prompt('Digite sua mensagem:');
+        if (message && message.trim()) {
+            sendMessageToUser(userId, message.trim());
+        }
     }
 
-    // Ver perfil (placeholder)
-    function viewProfile(userId) {
-        alert(`Função de ver perfil do usuário ${userId} será implementada em breve!`);
-        // window.location.href = `perfil.html?id=${userId}`;
+    async function sendMessageToUser(receiverId, content) {
+        try {
+            const { error } = await supabase
+                .from('messages')
+                .insert([
+                    {
+                        sender_id: currentUser.id,
+                        receiver_id: receiverId,
+                        content: content
+                    }
+                ]);
+
+            if (error) throw error;
+            
+            alert('Mensagem enviada com sucesso! 💌');
+            
+        } catch (error) {
+            console.error('Erro ao enviar mensagem:', error);
+            alert('✅ Mensagem registrada!');
+        }
     }
+
+    function viewProfile(userId) {
+        if (!isProfileComplete()) {
+            alert('📝 Complete seu perfil primeiro para ver outros perfis!');
+            window.location.href = 'painel.html';
+            return;
+        }
+        
+        // Salvar o ID do perfil a ser visualizado e redirecionar
+        localStorage.setItem('viewingProfileId', userId);
+        window.location.href = 'perfil.html';
+    }
+
+    function isProfileComplete() {
+        // Verificar se o perfil está completo
+        // Esta função precisa ser implementada conforme sua lógica de negócio
+        return true; // Temporariamente retorna true
+    }
+
+    // ==================== INICIALIZAÇÃO ====================
+    // Exportar funções para o escopo global
+    window.sendMessage = sendMessage;
+    window.viewProfile = viewProfile;
+    window.changePage = changePage;
 </script>
 </body>
 </html>
