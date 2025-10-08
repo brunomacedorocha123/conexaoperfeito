@@ -545,3 +545,148 @@ footer {
 .hidden {
     display: none;
 }
+/* Notifications */
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.notification {
+    position: fixed;
+    top: 100px;
+    right: 20px;
+    background: var(--vermelho-rosado);
+    color: var(--branco);
+    padding: 1rem 1.5rem;
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    z-index: 10000;
+    max-width: 400px;
+    animation: slideIn 0.3s ease;
+    border-left: 4px solid var(--lilas);
+}
+
+.notification-success {
+    background: #48bb78 !important;
+    border-left-color: #2f855a !important;
+}
+
+.notification-error {
+    background: #f56565 !important;
+    border-left-color: #c53030 !important;
+}
+
+.notification-info {
+    background: #4299e1 !important;
+    border-left-color: #3182ce !important;
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    color: var(--branco);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: var(--transition);
+}
+
+.notification-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Avatar Upload Improvements */
+.avatar-upload {
+    position: relative;
+    transition: var(--transition);
+}
+
+.avatar-upload:hover {
+    border-color: var(--vermelho-rosado);
+    background: var(--lilas);
+}
+
+.avatar-preview {
+    transition: var(--transition);
+}
+
+.avatar-preview:hover {
+    transform: scale(1.05);
+}
+
+/* Form Validation */
+.form-control:invalid {
+    border-color: #f56565;
+}
+
+.form-control:valid {
+    border-color: #48bb78;
+}
+
+/* Loading States */
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.btn:disabled:hover {
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Character Count Warning */
+.char-count-warning {
+    color: #f56565;
+    font-weight: bold;
+}
+
+/* Responsive Notifications */
+@media (max-width: 768px) {
+    .notification {
+        top: 80px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+}
+
+/* Interest Checkboxes Improvements */
+.interest-checkbox {
+    transition: var(--transition);
+    border: 2px solid transparent;
+}
+
+.interest-checkbox:hover {
+    border-color: var(--lilas);
+    transform: translateY(-2px);
+}
+
+.interest-checkbox input[type="checkbox"]:checked + span {
+    font-weight: bold;
+    color: var(--vermelho-rosado);
+}
+
+.interest-checkbox:has(input[type="checkbox"]:checked) {
+    background: var(--lilas);
+    border-color: var(--vermelho-rosado);
+}
