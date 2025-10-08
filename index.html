@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Amor Conect - Encontre seu par ideal</title>
-    <style>
+  <style>
 /* Reset e configurações gerais */
 * {
     margin: 0;
@@ -465,22 +465,27 @@ footer {
         min-height: 50px;
     }
 
-    /* LOGO - MUITO GRANDE */
+    /* LOGO - MUITO GRANDE E CENTRALIZADA */
     .logo {
         order: 1;
         flex: 1;
-        justify-content: flex-start;
+        justify-content: center; /* Centraliza a logo */
         align-items: center;
         height: 60px;
+        width: 100%;
+        position: relative;
     }
 
     .logo img {
-        height: 180px !important; /* LOGO MUITO GRANDE - 180PX */
+        height: 220px !important; /* LOGO MUITO GRANDE */
         width: auto;
         max-height: 100%;
         object-fit: contain;
-        margin-top: -25px;
-        margin-bottom: -25px;
+        margin-top: -40px;
+        margin-bottom: -40px;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
     }
 
     .logo h1 {
@@ -494,6 +499,11 @@ footer {
         margin-left: auto;
         padding: 8px;
         margin-top: 0;
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 101;
     }
 
     /* BOTÕES LOGIN/CADASTRO - LADO DIREITO */
@@ -503,6 +513,11 @@ footer {
         width: auto;
         justify-content: flex-end;
         margin-top: 0;
+        position: absolute;
+        right: 60px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 101;
     }
 
     .auth-buttons .btn {
@@ -591,18 +606,23 @@ footer {
 
 @media (max-width: 480px) {
     .logo img {
-        height: 300px !important; /* LOGO AINDA MUITO GRANDE */
-        margin-top: -30px;
-        margin-bottom: -30px;
+        height: 280px !important; /* LOGO AINDA MAIOR */
+        margin-top: -50px;
+        margin-bottom: -50px;
     }
 
     .auth-buttons {
         gap: 0.3rem;
+        right: 50px;
     }
 
     .auth-buttons .btn {
         padding: 0.4rem 0.8rem;
         font-size: 0.8rem;
+    }
+
+    .menu-toggle {
+        right: 10px;
     }
 
     .hero h2 {
@@ -626,17 +646,25 @@ footer {
 
 @media (max-width: 360px) {
     .logo img {
-        height: 140px !important; /* LOGO AINDA GRANDE */
-        margin-top: -18px;
-        margin-bottom: -18px;
+        height: 240px !important; /* LOGO AINDA GRANDE */
+        margin-top: -45px;
+        margin-bottom: -45px;
+    }
+
+    .auth-buttons {
+        right: 45px;
     }
 
     .auth-buttons .btn {
         padding: 0.3rem 0.6rem;
         font-size: 0.75rem;
     }
+
+    .menu-toggle {
+        right: 8px;
+    }
 }
-    </style>
+</style>
 </head>
 <body>
     <!-- Header -->
