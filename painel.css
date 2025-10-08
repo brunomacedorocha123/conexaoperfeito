@@ -463,7 +463,7 @@ footer {
     }
 
     .user-menu {
-        display: none;
+        display: none; /* Esconde o menu desktop no mobile */
     }
 
     .header-content {
