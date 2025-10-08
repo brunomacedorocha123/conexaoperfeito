@@ -66,12 +66,14 @@
     }
 
     .logo img {
-        height: 150px;
-        width: auto;
-        object-fit: contain;
-        margin-top: 10px;
-        margin-bottom: 10px;
-    }
+    height: 160px; /* AUMENTADO */
+    width: auto;
+    object-fit: contain;
+    position: relative;
+    top: -25px; /* COMPENSA para cima */
+    margin-bottom: -50px; /* COMPENSA para baixo */
+    z-index: 101;
+}
 
     .logo h1 {
         font-size: 1.6rem;
@@ -141,15 +143,15 @@
     }
 
     /* SUA LOGO NO LUGAR DO EMOJI - CORRIGIDO */
-    .auth-logo {
-        width: 100px;
-        height: 100px;
-        margin: 0 auto 1.5rem auto;
-        background-image: url('logoamorconect.png');
-        background-size: contain;
-        background-repeat: no-repeat;
-        background-position: center;
-    }
+   .auth-logo {
+    width: 250px; /* AUMENTADO */
+    height: 250px; /* AUMENTADO */
+    margin: -25px auto 1rem auto; /* COMPENSAÇÃO: -25px top, 1rem bottom */
+    object-fit: contain;
+    display: block;
+    position: relative;
+    z-index: 1;
+}
 
     .auth-header h1 {
         font-size: 2.2rem;
@@ -344,11 +346,12 @@
             display: none;
         }
 
-        .logo img {
-            height: 120px;
-            margin-top: 8px;
-            margin-bottom: 8px;
-        }
+       .logo img {
+    height: 160px; /* AUMENTADO no mobile */
+    position: relative;
+    top: -15px; /* COMPENSA para cima */
+    margin-bottom: -30px; /* COMPENSA para baixo */
+}
 
         .auth-buttons {
             gap: 0.8rem;
@@ -367,9 +370,10 @@
         }
 
         .auth-logo {
-            width: 90px;
-            height: 90px;
-        }
+    width: 130px; /* AUMENTADO */
+    height: 130px; /* AUMENTADO */
+    margin: -20px auto 0.8rem auto; /* COMPENSAÇÃO ajustada */
+}
 
         .auth-header h1 {
             font-size: 2rem;
