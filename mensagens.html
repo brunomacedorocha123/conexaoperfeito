@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minhas Mensagens - Amor Conect</title>
+    <title>Mensagens - Amor Conect</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
@@ -28,6 +28,7 @@
             background-color: var(--bege);
             color: var(--text);
             line-height: 1.6;
+            overflow-x: hidden;
         }
 
         .container {
@@ -37,11 +38,11 @@
             padding: 0 20px;
         }
 
-        /* Header - MAIS DISCRETO */
+        /* Header */
         header {
             background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
             color: var(--branco);
-            padding: 0.5rem 0; /* REDUZIDO de 1rem para 0.5rem */
+            padding: 0.5rem 0;
             box-shadow: var(--shadow);
             position: sticky;
             top: 0;
@@ -52,7 +53,23 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            height: 60px; /* REDUZIDO para ficar mais compacto */
+            height: 80px;
+        }
+
+        /* Menu Hamburguer */
+        #hamburgerBtn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--branco);
+            font-size: 1.8rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            z-index: 1001;
+            width: 40px;
+            height: 40px;
+            align-items: center;
+            justify-content: center;
         }
 
         .logo {
@@ -60,16 +77,18 @@
             align-items: center;
             gap: 12px;
             flex-shrink: 0;
+            justify-content: center;
+            flex: 1;
         }
 
         .logo img {
-            height: 120px; /* REDUZIDO de 180px para 120px */
+            height: 180px;
             width: auto;
             object-fit: contain;
         }
 
         .logo h1 {
-            font-size: 1.4rem; /* REDUZIDO de 1.6rem para 1.4rem */
+            font-size: 1.4rem;
             font-weight: 700;
             color: var(--branco);
             white-space: nowrap;
@@ -78,7 +97,7 @@
         .user-menu {
             display: flex;
             align-items: center;
-            gap: 1rem; /* REDUZIDO de 1.5rem para 1rem */
+            gap: 1rem;
         }
 
         .user-info {
@@ -87,10 +106,10 @@
             gap: 0.5rem;
         }
 
-        /* AVATAR DO USUÁRIO NO HEADER - AUMENTADO */
+        /* Avatar no Header */
         .user-avatar {
-            width: 50px; /* AUMENTADO de 40px para 50px */
-            height: 50px; /* AUMENTADO de 40px para 50px */
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
             background: var(--branco);
             color: var(--vermelho-rosado);
@@ -98,15 +117,30 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 1.4rem; /* AUMENTADO de 1.2rem para 1.4rem */
+            font-size: 1.2rem;
             background-size: cover;
             background-position: center;
             border: 2px solid var(--branco);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .user-avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: none;
+        }
+
+        .user-avatar-fallback {
+            font-size: 1.2rem;
+            font-weight: bold;
         }
 
         .btn {
-            padding: 0.4rem 1.2rem; /* REDUZIDO ligeiramente */
+            padding: 0.4rem 1.2rem;
             border-radius: 30px;
             border: none;
             font-weight: 600;
@@ -115,7 +149,7 @@
             text-decoration: none;
             display: inline-block;
             text-align: center;
-            font-size: 0.85rem; /* REDUZIDO ligeiramente */
+            font-size: 0.85rem;
         }
 
         .btn-outline {
@@ -139,6 +173,65 @@
         .btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Menu Mobile */
+        #mobileMenu {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            z-index: 1000;
+            padding: 2rem;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+        }
+
+        #closeMobileMenu {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: none;
+            border: none;
+            color: var(--branco);
+            font-size: 2.5rem;
+            cursor: pointer;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mobile-user-info {
+            text-align: center;
+            color: var(--branco);
+            margin-bottom: 2rem;
+        }
+
+        .mobile-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .mobile-nav .btn {
+            width: 100%;
+            text-align: center;
+            justify-content: center;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 1.2rem;
+            font-size: 1.2rem;
+            border-radius: 12px;
         }
 
         /* Main Content */
@@ -169,130 +262,75 @@
             font-size: 1rem;
         }
 
-        /* User Stats */
-        .user-stats {
+        /* Mensagens Layout */
+        .messages-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
+            grid-template-columns: 350px 1fr;
+            gap: 2rem;
             background: var(--branco);
-            padding: 1rem;
-            border-radius: 10px;
-            box-shadow: var(--shadow);
-            text-align: center;
-            transition: var(--transition);
-            border: 1px solid var(--lilas);
-        }
-
-        .stat-card:hover {
-            transform: translateY(-3px);
-        }
-
-        .stat-number {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: var(--vermelho-rosado);
-            margin-bottom: 0.25rem;
-        }
-
-        .stat-label {
-            color: var(--text-light);
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
-
-        /* Results Section */
-        .results-section {
-            background: var(--branco);
-            padding: 1.5rem;
             border-radius: 15px;
             box-shadow: var(--shadow);
             border: 1px solid var(--lilas);
+            overflow: hidden;
         }
 
-        .results-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid var(--bege);
-        }
-
-        .results-header h2 {
-            font-size: 1.5rem;
-            color: var(--vermelho-rosado);
-            margin: 0;
-        }
-
-        .results-info {
-            color: var(--text-light);
-            font-size: 0.9rem;
-        }
-
-        /* Conversations List */
         .conversations-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
+            border-right: 2px solid var(--bege);
+            padding: 1.5rem;
+            max-height: 600px;
+            overflow-y: auto;
         }
 
         .conversation-item {
             display: flex;
             align-items: center;
-            padding: 1rem;
-            background: var(--bege);
-            border-radius: 10px;
-            transition: var(--transition);
-            cursor: pointer;
-            border: 2px solid transparent;
             gap: 1rem;
+            padding: 1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-bottom: 0.5rem;
         }
 
         .conversation-item:hover {
-            border-color: var(--lilas);
-            transform: translateX(5px);
+            background: var(--bege);
         }
 
-        /* AVATAR NAS CONVERSAS - AUMENTADO */
+        .conversation-item.active {
+            background: var(--lilas);
+        }
+
         .conversation-avatar {
-            width: 60px; /* AUMENTADO de 50px para 60px */
-            height: 60px; /* AUMENTADO de 50px para 60px */
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
-            color: var(--branco);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.4rem; /* AUMENTADO de 1.2rem para 1.4rem */
             font-weight: bold;
+            color: var(--branco);
+            font-size: 1.2rem;
             flex-shrink: 0;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            border: 2px solid var(--branco);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
 
-        .conversation-content {
+        .conversation-info {
             flex: 1;
             min-width: 0;
-        }
-
-        .conversation-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.25rem;
         }
 
         .conversation-name {
             font-weight: 600;
             color: var(--text);
-            font-size: 1rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .conversation-preview {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .conversation-time {
@@ -300,78 +338,75 @@
             color: var(--text-light);
         }
 
-        .conversation-preview {
-            font-size: 0.85rem;
-            color: var(--text);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-bottom: 0.25rem;
-        }
-
-        .conversation-meta {
+        .chat-area {
             display: flex;
-            gap: 0.5rem;
-            align-items: center;
-            font-size: 0.75rem;
-            color: var(--text-light);
+            flex-direction: column;
+            height: 600px;
         }
 
-        .message-count {
-            background: var(--lilas);
-            color: var(--text);
-            padding: 0.1rem 0.4rem;
-            border-radius: 8px;
-            font-weight: 600;
+        .chat-header {
+            padding: 1.5rem;
+            border-bottom: 2px solid var(--bege);
+            background: var(--branco);
         }
 
-        .unread-badge {
-            color: var(--vermelho-rosado);
-            font-size: 0.8rem;
+        .chat-messages {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            background: var(--bege);
         }
 
-        .conversation-actions {
-            display: flex;
-            gap: 0.5rem;
-            flex-shrink: 0;
-        }
-
-        .btn-sm {
-            padding: 0.4rem 0.8rem;
-            font-size: 0.8rem;
-        }
-
-        /* No Results */
-        .no-results {
-            text-align: center;
-            padding: 3rem 2rem;
-        }
-
-        .no-results.hidden {
-            display: none;
-        }
-
-        .no-results-content {
-            max-width: 400px;
-            margin: 0 auto;
-        }
-
-        .no-results-icon {
-            font-size: 3rem;
+        .message {
+            max-width: 70%;
             margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 15px;
+            position: relative;
+        }
+
+        .message.received {
+            background: var(--branco);
+            border: 1px solid var(--lilas);
+            margin-right: auto;
+        }
+
+        .message.sent {
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            color: var(--branco);
+            margin-left: auto;
+        }
+
+        .message-time {
+            font-size: 0.7rem;
             opacity: 0.7;
+            margin-top: 0.3rem;
+            text-align: right;
         }
 
-        .no-results h3 {
-            font-size: 1.3rem;
-            color: var(--vermelho-rosado);
-            margin-bottom: 1rem;
+        .chat-input {
+            padding: 1.5rem;
+            border-top: 2px solid var(--bege);
+            background: var(--branco);
         }
 
-        .no-results p {
-            color: var(--text-light);
-            line-height: 1.6;
-            font-size: 0.9rem;
+        .input-group {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid var(--lilas);
+            border-radius: 25px;
+            font-size: 1rem;
+            background: var(--bege);
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--vermelho-rosado);
         }
 
         /* Footer */
@@ -425,91 +460,100 @@
 
         /* Responsividade */
         @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                gap: 0.8rem;
-                height: auto;
-                padding: 0.5rem 0;
+            #hamburgerBtn {
+                display: flex;
             }
 
             .user-menu {
-                flex-direction: column;
-                gap: 0.8rem;
+                display: none;
             }
 
-            .conversation-item {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.75rem;
+            .header-content {
+                flex-direction: row;
+                justify-content: space-between;
+                height: 80px;
+                padding: 0;
             }
 
-            .conversation-actions {
-                align-self: stretch;
+            .logo {
                 justify-content: center;
-            }
-
-            .user-stats {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .results-header {
-                flex-direction: column;
-                gap: 0.5rem;
-                align-items: flex-start;
-            }
-
-            .page-header h1 {
-                font-size: 1.8rem;
+                flex: 1;
+                margin: 0 auto;
             }
 
             .logo img {
-                height: 100px; /* Ajustado para mobile */
+                height: 150px !important;
             }
 
             .logo h1 {
-                font-size: 1.2rem; /* Ajustado para mobile */
+                display: none;
             }
 
-            /* Avatar menor no mobile */
+            .messages-container {
+                grid-template-columns: 1fr;
+            }
+
+            .conversations-list {
+                border-right: none;
+                border-bottom: 2px solid var(--bege);
+                max-height: 300px;
+            }
+
             .user-avatar {
-                width: 45px;
-                height: 45px;
-                font-size: 1.2rem;
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
             }
 
-            .conversation-avatar {
-                width: 55px;
-                height: 55px;
-                font-size: 1.2rem;
+            .mobile-user-info .user-avatar {
+                width: 100px;
+                height: 100px;
+                font-size: 2rem;
+                margin: 0 auto 1rem;
+            }
+
+            .mobile-user-info #mobileUserNickname {
+                font-size: 1.4rem;
+                font-weight: bold;
+            }
+
+            .message {
+                max-width: 85%;
             }
         }
 
         @media (max-width: 480px) {
-            .user-stats {
-                grid-template-columns: 1fr;
+            .logo img {
+                height: 130px !important;
             }
 
-            .stat-number {
+            .user-avatar {
+                width: 35px;
+                height: 35px;
+                font-size: 0.9rem;
+            }
+
+            .header-content {
+                height: 70px;
+            }
+
+            .page-header h1 {
                 font-size: 1.5rem;
             }
 
-            .conversation-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.25rem;
+            .conversation-item {
+                padding: 0.8rem;
             }
 
-            .conversation-time {
-                align-self: flex-start;
+            .conversation-avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
             }
+        }
 
-            .logo img {
-                height: 90px; /* Ajustado para mobile pequeno */
-            }
-
-            .logo h1 {
-                font-size: 1.1rem; /* Ajustado para mobile pequeno */
-            }
+        .hidden {
+            display: none;
         }
     </style>
 </head>
@@ -518,75 +562,121 @@
     <header>
         <div class="container">
             <div class="header-content">
+                <button id="hamburgerBtn">☰</button>
                 <div class="logo">
                     <img src="logoamorconect.png" alt="Amor Conect">
                     <h1>Amor Conect</h1>
                 </div>
                 <div class="user-menu">
                     <div class="user-info">
-                        <div class="user-avatar" id="userAvatar">U</div>
+                        <div class="user-avatar" id="userAvatar">
+                            <img class="user-avatar-img" src="" alt="Avatar">
+                            <div class="user-avatar-fallback">U</div>
+                        </div>
                         <span id="userNickname">Usuário</span>
                     </div>
-                    <a href="busca.html" class="btn btn-outline">🔍 Buscar</a>
                     <a href="home.html" class="btn btn-outline">🏠 Home</a>
+                    <a href="busca.html" class="btn btn-outline">🔍 Buscar</a>
                     <button class="btn btn-outline" id="logoutBtn">🚪 Sair</button>
                 </div>
             </div>
         </div>
     </header>
 
+    <!-- Menu Mobile -->
+    <div id="mobileMenu">
+        <button id="closeMobileMenu">×</button>
+        
+        <div class="mobile-user-info">
+            <div class="user-avatar" id="mobileUserAvatar">
+                <img class="user-avatar-img" src="" alt="Avatar">
+                <div class="user-avatar-fallback">U</div>
+            </div>
+            <div id="mobileUserNickname">Usuário</div>
+        </div>
+
+        <div class="mobile-nav">
+            <a href="home.html" class="btn btn-outline">🏠 Home</a>
+            <a href="busca.html" class="btn btn-outline">🔍 Buscar</a>
+            <a href="mensagens.html" class="btn btn-outline">💌 Mensagens</a>
+            <a href="configuracoes.html" class="btn btn-outline">⚙️ Configurações</a>
+            <button class="btn btn-outline" id="mobileLogoutBtn">🚪 Sair</button>
+        </div>
+    </div>
+
     <!-- Main Content -->
     <main class="main-content">
         <div class="container">
             <!-- Page Header -->
             <section class="page-header">
-                <h1>💌 Minhas Mensagens</h1>
-                <p>Gerencie suas conversas e responda às mensagens recebidas</p>
+                <h1>💌 Mensagens</h1>
+                <p>Converse e conheça melhor as pessoas</p>
             </section>
 
-            <!-- Messages Stats -->
-            <div class="user-stats">
-                <div class="stat-card">
-                    <div class="stat-number" id="totalMessages">0</div>
-                    <div class="stat-label">Total de Mensagens</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="unreadMessages">0</div>
-                    <div class="stat-label">Não Lidas</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="conversationsCount">0</div>
-                    <div class="stat-label">Conversas</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="sentMessages">0</div>
-                    <div class="stat-label">Enviadas</div>
-                </div>
-            </div>
-
-            <!-- Conversations List -->
-            <section class="results-section">
-                <div class="results-header">
-                    <h2>📋 Minhas Conversas</h2>
-                    <div class="results-info">
-                        <span id="conversationsInfo">0 conversas</span>
+            <!-- Messages Container -->
+            <section class="messages-container">
+                <!-- Conversations List -->
+                <div class="conversations-list">
+                    <div class="conversation-item active">
+                        <div class="conversation-avatar">M</div>
+                        <div class="conversation-info">
+                            <div class="conversation-name">Maria Silva</div>
+                            <div class="conversation-preview">Olá! Como você está?</div>
+                        </div>
+                        <div class="conversation-time">10:30</div>
+                    </div>
+                    <div class="conversation-item">
+                        <div class="conversation-avatar">J</div>
+                        <div class="conversation-info">
+                            <div class="conversation-name">João Santos</div>
+                            <div class="conversation-preview">Gostei muito do seu perfil!</div>
+                        </div>
+                        <div class="conversation-time">09:15</div>
+                    </div>
+                    <div class="conversation-item">
+                        <div class="conversation-avatar">A</div>
+                        <div class="conversation-info">
+                            <div class="conversation-name">Ana Costa</div>
+                            <div class="conversation-preview">Vamos marcar de nos encontrar?</div>
+                        </div>
+                        <div class="conversation-time">Ontem</div>
                     </div>
                 </div>
 
-                <!-- Conversations List -->
-                <div class="conversations-list" id="conversationsList">
-                    <!-- As conversas serão carregadas aqui via JavaScript -->
-                </div>
-
-                <!-- No Conversations -->
-                <div class="no-results hidden" id="noConversations">
-                    <div class="no-results-content">
-                        <div class="no-results-icon">💬</div>
-                        <h3>Nenhuma conversa ainda</h3>
-                        <p>Envie mensagens para outras pessoas para começar conversas!</p>
-                        <a href="busca.html" class="btn btn-primary" style="margin-top: 1rem;">
-                            🔍 Buscar Pessoas
-                        </a>
+                <!-- Chat Area -->
+                <div class="chat-area">
+                    <div class="chat-header">
+                        <h3>Maria Silva</h3>
+                        <p style="color: var(--text-light); font-size: 0.9rem;">Online</p>
+                    </div>
+                    
+                    <div class="chat-messages">
+                        <div class="message received">
+                            <div class="message-text">Olá! Vi que você também gosta de cinema. Qual seu filme favorito?</div>
+                            <div class="message-time">10:15</div>
+                        </div>
+                        
+                        <div class="message sent">
+                            <div class="message-text">Oi Maria! Meu filme favorito é Interestelar. E o seu?</div>
+                            <div class="message-time">10:20</div>
+                        </div>
+                        
+                        <div class="message received">
+                            <div class="message-text">Adoro O Grande Hotel Budapeste! Acho o visual incrível.</div>
+                            <div class="message-time">10:25</div>
+                        </div>
+                        
+                        <div class="message sent">
+                            <div class="message-text">Excelente escolha! Wes Anderson é um diretor fantástico.</div>
+                            <div class="message-time">10:30</div>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-input">
+                        <div class="input-group">
+                            <input type="text" placeholder="Digite sua mensagem...">
+                            <button class="btn btn-primary">Enviar</button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -606,7 +696,7 @@
                     <ul>
                         <li><a href="index.html">Página Inicial</a></li>
                         <li><a href="home.html">Home</a></li>
-                        <li><a href="busca.html">Buscar Pessoas</a></li>
+                        <li><a href="mensagens.html">Mensagens</a></li>
                     </ul>
                 </div>
                 <div class="footer-column">
@@ -624,335 +714,295 @@
         </div>
     </footer>
 
-    <script>
-        // Configuração do Supabase
-        const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+<script>
+    // Configuração do Supabase
+    const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        let currentUser = null;
-        let userProfile = null;
+    // Estado da aplicação
+    let currentUser = null;
 
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeApp();
+    document.addEventListener('DOMContentLoaded', function() {
+        checkAuth();
+        setupMobileMenu();
+        setupEventListeners();
+        setupChat();
+    });
+
+    // ==================== MENU MOBILE ====================
+    function setupMobileMenu() {
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const closeMobileMenu = document.getElementById('closeMobileMenu');
+        const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+
+        hamburgerBtn.addEventListener('click', () => {
+            mobileMenu.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
         });
 
-        async function initializeApp() {
-            try {
-                const { data: { user }, error } = await supabase.auth.getUser();
-                
-                if (error) throw error;
-                
-                if (!user) {
-                    window.location.href = 'login.html';
-                    return;
-                }
-                
-                currentUser = user;
-                await loadUserData();
-                await loadConversations();
-                setupEventListeners();
-                
-            } catch (error) {
-                console.error('Erro na inicialização:', error);
+        closeMobileMenu.addEventListener('click', () => {
+            mobileMenu.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        });
+
+        mobileLogoutBtn.addEventListener('click', logout);
+
+        // Fechar menu ao clicar em um link
+        mobileMenu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            });
+        });
+
+        // Verificar tamanho da tela
+        function checkScreenSize() {
+            if (window.innerWidth <= 768) {
+                const userMenu = document.querySelector('.user-menu');
+                if (userMenu) userMenu.style.display = 'none';
+                hamburgerBtn.style.display = 'flex';
+            } else {
+                const userMenu = document.querySelector('.user-menu');
+                if (userMenu) userMenu.style.display = 'flex';
+                hamburgerBtn.style.display = 'none';
+                mobileMenu.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        window.addEventListener('resize', checkScreenSize);
+        checkScreenSize();
+    }
+
+    // ==================== AUTENTICAÇÃO ====================
+    async function checkAuth() {
+        try {
+            const { data: { user }, error } = await supabase.auth.getUser();
+            
+            if (error) throw error;
+            
+            if (!user) {
                 window.location.href = 'login.html';
+                return;
             }
+            
+            currentUser = user;
+            await loadUserData();
+            
+        } catch (error) {
+            console.error('Erro na autenticação:', error);
+            window.location.href = 'login.html';
         }
+    }
 
-        async function loadUserData() {
-            try {
-                const { data: profile, error } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', currentUser.id)
-                    .single();
-
-                if (error) return;
-
-                userProfile = profile;
-
-                let displayName = 'Usuário';
-                if (currentUser.user_metadata?.nickname) {
-                    displayName = currentUser.user_metadata.nickname;
-                } else if (currentUser.user_metadata?.full_name) {
-                    displayName = currentUser.user_metadata.full_name;
-                } else if (currentUser.email) {
-                    displayName = currentUser.email.split('@')[0];
-                }
-
-                document.getElementById('userNickname').textContent = displayName;
-                
-                const userAvatar = document.getElementById('userAvatar');
-                if (profile?.avatar_url) {
-                    // Carregar foto do usuário atual
-                    const photoUrl = await loadProfilePhoto(profile.avatar_url);
-                    if (photoUrl) {
-                        userAvatar.style.backgroundImage = `url('${photoUrl}')`;
-                    }
-                    userAvatar.textContent = '';
-                } else {
-                    userAvatar.textContent = displayName.charAt(0).toUpperCase();
-                }
-
-            } catch (error) {
-                console.error('Erro ao carregar dados do usuário:', error);
-            }
-        }
-
-        async function loadConversations() {
-            try {
-                if (!userProfile?.full_name) {
-                    showProfileIncomplete();
-                    return;
-                }
-
-                const { data: allMessages, error } = await supabase
-                    .from('messages')
-                    .select(`
-                        *,
-                        sender:profiles!messages_sender_id_fkey(nickname, birth_date, avatar_url),
-                        receiver:profiles!messages_receiver_id_fkey(nickname, birth_date, avatar_url)
-                    `)
-                    .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
-                    .order('created_at', { ascending: false });
-
-                if (error || !allMessages?.length) {
-                    showNoConversations();
-                    return;
-                }
-
-                const conversations = await organizeConversations(allMessages);
-                displayConversations(conversations);
-                updateMessagesStats(conversations);
-
-            } catch (error) {
-                console.error('Erro ao carregar conversas:', error);
-                showNoConversations();
-            }
-        }
-
-        async function organizeConversations(allMessages) {
-            const conversationsMap = new Map();
-
-            for (const msg of allMessages) {
-                const isFromCurrentUser = msg.sender_id === currentUser.id;
-                const otherUserId = isFromCurrentUser ? msg.receiver_id : msg.sender_id;
-                const otherUser = isFromCurrentUser ? msg.receiver : msg.sender;
-                
-                if (!conversationsMap.has(otherUserId)) {
-                    // Carregar foto do usuário da conversa
-                    let avatarUrl = null;
-                    if (otherUser?.avatar_url) {
-                        avatarUrl = await loadProfilePhoto(otherUser.avatar_url);
-                    }
-
-                    conversationsMap.set(otherUserId, {
-                        user_id: otherUserId,
-                        nickname: otherUser?.nickname || 'Usuário',
-                        age: otherUser?.birth_date ? calculateAge(otherUser.birth_date) : null,
-                        avatar_url: avatarUrl,
-                        messages: [msg],
-                        unread: !isFromCurrentUser && !msg.is_read,
-                        last_message_time: msg.created_at
-                    });
-                } else {
-                    const existing = conversationsMap.get(otherUserId);
-                    existing.messages.push(msg);
-                    existing.unread = existing.unread || (!isFromCurrentUser && !msg.is_read);
-                    if (new Date(msg.created_at) > new Date(existing.last_message_time)) {
-                        existing.last_message_time = msg.created_at;
-                    }
-                }
+    // ==================== DADOS DO USUÁRIO ====================
+    async function loadUserData() {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            
+            let displayName = 'Usuário';
+            
+            if (user.user_metadata && user.user_metadata.nickname) {
+                displayName = user.user_metadata.nickname;
+            } else if (user.user_metadata && user.user_metadata.full_name) {
+                displayName = user.user_metadata.full_name;
+            } else if (user.email) {
+                displayName = user.email.split('@')[0];
             }
 
-            return Array.from(conversationsMap.values())
-                .sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time));
+            // Atualizar nome em todos os lugares
+            const userNickname = document.getElementById('userNickname');
+            const mobileUserNickname = document.getElementById('mobileUserNickname');
+            
+            if (userNickname) userNickname.textContent = displayName;
+            if (mobileUserNickname) mobileUserNickname.textContent = displayName;
+            
+            // Carregar foto do usuário logado
+            await loadCurrentUserAvatar();
+
+        } catch (error) {
+            console.error('Erro ao carregar dados do usuário:', error);
         }
+    }
 
-        async function loadProfilePhoto(avatarUrl) {
-            try {
-                if (!avatarUrl) {
-                    return null;
-                }
+    async function loadCurrentUserAvatar() {
+        try {
+            const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('avatar_url, nickname')
+                .eq('id', currentUser.id)
+                .single();
 
-                console.log('🔄 Buscando foto:', avatarUrl);
-                
-                const { data, error } = await supabase.storage
-                    .from('avatars')
-                    .download(avatarUrl);
-
-                if (error) {
-                    console.log('ℹ️ Foto não encontrada no storage:', error);
-                    return null;
-                }
-
-                const photoUrl = URL.createObjectURL(data);
-                console.log('✅ Foto carregada com sucesso');
-                return photoUrl;
-
-            } catch (error) {
-                console.error('❌ Erro ao carregar foto:', error);
-                return null;
-            }
-        }
-
-        function displayConversations(conversations) {
-            const conversationsList = document.getElementById('conversationsList');
-            const noConversations = document.getElementById('noConversations');
-
-            if (!conversations.length) {
-                noConversations.classList.remove('hidden');
+            if (error || !profile) {
+                console.log('Perfil não encontrado ou erro:', error);
                 return;
             }
 
-            noConversations.classList.add('hidden');
+            const avatarElements = [
+                document.getElementById('userAvatar'),
+                document.getElementById('mobileUserAvatar')
+            ];
 
-            conversationsList.innerHTML = conversations.map(conv => {
-                const timeAgo = formatTime(conv.last_message_time);
-                const unreadBadge = conv.unread ? '<span class="unread-badge">●</span>' : '';
-                const lastMessage = conv.messages[0]?.content || 'Nenhuma mensagem';
-                const isFromCurrentUser = conv.messages[0]?.sender_id === currentUser.id;
-                const messagePreview = isFromCurrentUser ? `Você: ${lastMessage}` : lastMessage;
+            for (const avatarElement of avatarElements) {
+                if (!avatarElement) continue;
+                
+                const userAvatarFallback = avatarElement.querySelector('.user-avatar-fallback');
+                const userAvatarImg = avatarElement.querySelector('.user-avatar-img');
+                
+                if (!userAvatarFallback || !userAvatarImg) continue;
 
-                // AVATAR COM FOTO REAL DO USUÁRIO - AGORA FUNCIONANDO
-                let avatarHTML = '';
-                if (conv.avatar_url) {
-                    avatarHTML = `<div class="conversation-avatar" style="background-image: url('${conv.avatar_url}')"></div>`;
+                // Iniciar com fallback visível
+                userAvatarImg.style.display = 'none';
+                userAvatarFallback.style.display = 'flex';
+                
+                if (profile.avatar_url) {
+                    const photoUrl = await loadUserPhoto(profile.avatar_url);
+                    if (photoUrl) {
+                        userAvatarImg.src = photoUrl;
+                        userAvatarImg.style.display = 'block';
+                        userAvatarFallback.style.display = 'none';
+                        avatarElement.style.backgroundImage = `url(${photoUrl})`;
+                        avatarElement.style.backgroundSize = 'cover';
+                        avatarElement.style.backgroundPosition = 'center';
+                    } else {
+                        // Mostrar inicial do nome
+                        const displayName = profile.nickname || 'Usuário';
+                        userAvatarFallback.textContent = displayName.charAt(0).toUpperCase();
+                    }
                 } else {
-                    avatarHTML = `<div class="conversation-avatar">${conv.nickname.charAt(0).toUpperCase()}</div>`;
+                    // Mostrar inicial do nome
+                    const displayName = profile.nickname || 'Usuário';
+                    userAvatarFallback.textContent = displayName.charAt(0).toUpperCase();
                 }
-
-                return `
-                    <div class="conversation-item">
-                        ${avatarHTML}
-                        <div class="conversation-content" onclick="openConversation('${conv.user_id}')">
-                            <div class="conversation-header">
-                                <div class="conversation-name">
-                                    ${conv.nickname} ${unreadBadge}
-                                </div>
-                                <div class="conversation-time">${timeAgo}</div>
-                            </div>
-                            <div class="conversation-preview">${messagePreview}</div>
-                            <div class="conversation-meta">
-                                <span class="user-card-age">${conv.age ? conv.age + ' anos' : ''}</span>
-                                <span class="message-count">${conv.messages.length} ${conv.messages.length === 1 ? 'mensagem' : 'mensagens'}</span>
-                            </div>
-                        </div>
-                        <div class="conversation-actions">
-                            <button class="btn btn-primary btn-sm" onclick="sendMessage('${conv.user_id}')">💌</button>
-                            <button class="btn btn-secondary btn-sm" onclick="viewProfile('${conv.user_id}')">👤</button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function showProfileIncomplete() {
-            document.getElementById('conversationsList').innerHTML = `
-                <div class="no-results">
-                    <div class="no-results-content">
-                        <div class="no-results-icon">📝</div>
-                        <h3>Perfil Incompleto</h3>
-                        <p>Complete seu perfil para visualizar mensagens!</p>
-                        <a href="painel.html" class="btn btn-primary">👤 Completar Perfil</a>
-                    </div>
-                </div>
-            `;
-        }
-
-        function showNoConversations() {
-            document.getElementById('noConversations').classList.remove('hidden');
-        }
-
-        function updateMessagesStats(conversations) {
-            if (!conversations) return;
-            
-            const totalMessages = conversations.reduce((total, conv) => total + conv.messages.length, 0);
-            const unreadMessages = conversations.reduce((total, conv) => total + (conv.unread ? 1 : 0), 0);
-            const sentMessages = conversations.reduce((total, conv) => {
-                return total + conv.messages.filter(msg => msg.sender_id === currentUser.id).length;
-            }, 0);
-
-            document.getElementById('totalMessages').textContent = totalMessages;
-            document.getElementById('unreadMessages').textContent = unreadMessages;
-            document.getElementById('conversationsCount').textContent = conversations.length;
-            document.getElementById('sentMessages').textContent = sentMessages;
-        }
-
-        function openConversation(userId) {
-            sendMessage(userId);
-        }
-
-        function sendMessage(userId) {
-            const message = prompt('Digite sua mensagem:');
-            if (message?.trim()) {
-                sendMessageToUser(userId, message.trim());
             }
+
+        } catch (error) {
+            console.error('Erro ao carregar avatar do usuário:', error);
+        }
+    }
+
+    async function loadUserPhoto(avatarUrl) {
+        try {
+            if (!avatarUrl) return null;
+
+            const { data, error } = await supabase.storage
+                .from('avatars')
+                .download(avatarUrl);
+
+            if (error) {
+                console.error('Erro ao baixar imagem:', error);
+                return null;
+            }
+
+            return URL.createObjectURL(data);
+
+        } catch (error) {
+            console.error('Erro ao carregar foto:', error);
+            return null;
+        }
+    }
+
+    // ==================== EVENT LISTENERS ====================
+    function setupEventListeners() {
+        // Logout
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', logout);
         }
 
-        async function sendMessageToUser(receiverId, content) {
-            try {
-                await supabase.from('messages').insert([{
-                    sender_id: currentUser.id,
-                    receiver_id: receiverId,
-                    content: content,
-                    is_read: false
-                }]);
+        // Envio de mensagens
+        const chatInput = document.querySelector('.chat-input input');
+        const sendButton = document.querySelector('.chat-input .btn');
+        
+        if (chatInput && sendButton) {
+            const sendMessage = () => {
+                const message = chatInput.value.trim();
+                if (message) {
+                    addMessageToChat(message, 'sent');
+                    chatInput.value = '';
+                    
+                    // Simular resposta após 1-3 segundos
+                    setTimeout(() => {
+                        const responses = [
+                            "Interessante! Conte-me mais sobre isso.",
+                            "Gostei da sua mensagem!",
+                            "Você parece ser uma pessoa muito interessante.",
+                            "Vamos continuar essa conversa!"
+                        ];
+                        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                        addMessageToChat(randomResponse, 'received');
+                    }, 1000 + Math.random() * 2000);
+                }
+            };
+
+            sendButton.addEventListener('click', sendMessage);
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        }
+
+        // Seleção de conversas
+        const conversationItems = document.querySelectorAll('.conversation-item');
+        conversationItems.forEach(item => {
+            item.addEventListener('click', () => {
+                conversationItems.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
                 
-                alert('Mensagem enviada! 💌');
-                await loadConversations();
-                
-            } catch (error) {
-                console.error('Erro ao enviar mensagem:', error);
-                alert('Mensagem enviada! 💌');
-            }
-        }
+                // Atualizar header do chat
+                const chatHeader = document.querySelector('.chat-header h3');
+                const conversationName = item.querySelector('.conversation-name').textContent;
+                if (chatHeader) {
+                    chatHeader.textContent = conversationName;
+                }
+            });
+        });
+    }
 
-        function viewProfile(userId) {
-            localStorage.setItem('viewingProfileId', userId);
-            window.location.href = 'perfil.html';
-        }
+    // ==================== CHAT FUNCTIONS ====================
+    function setupChat() {
+        // Função para adicionar mensagem ao chat
+        window.addMessageToChat = function(message, type) {
+            const chatMessages = document.querySelector('.chat-messages');
+            if (!chatMessages) return;
 
-        function setupEventListeners() {
-            document.getElementById('logoutBtn').addEventListener('click', logout);
-        }
-
-        async function logout() {
-            try {
-                await supabase.auth.signOut();
-                window.location.href = 'index.html';
-            } catch (error) {
-                console.error('Erro ao fazer logout:', error);
-                alert('Erro ao fazer logout');
-            }
-        }
-
-        function calculateAge(birthDate) {
-            if (!birthDate) return null;
-            const today = new Date();
-            const birth = new Date(birthDate);
-            let age = today.getFullYear() - birth.getFullYear();
-            const monthDiff = today.getMonth() - birth.getMonth();
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
             
-            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-                age--;
-            }
-            
-            return age;
-        }
-
-        function formatTime(dateString) {
-            if (!dateString) return '';
-            const date = new Date(dateString);
             const now = new Date();
-            const diff = now - date;
+            const timeString = now.getHours().toString().padStart(2, '0') + ':' + 
+                             now.getMinutes().toString().padStart(2, '0');
             
-            if (diff < 60000) return 'Agora';
-            if (diff < 3600000) return `${Math.floor(diff / 60000)}min`;
-            if (diff < 86400000) return `${Math.floor(diff / 3600000)}h`;
-            return date.toLocaleDateString('pt-BR');
+            messageDiv.innerHTML = `
+                <div class="message-text">${message}</div>
+                <div class="message-time">${timeString}</div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        };
+
+        // Simular algumas mensagens iniciais
+        setTimeout(() => {
+            addMessageToChat("Olá! Como você está hoje?", 'received');
+        }, 500);
+    }
+
+    // ==================== LOGOUT ====================
+    async function logout() {
+        try {
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
+            window.location.href = 'login.html';
+        } catch (error) {
+            console.error('Erro ao fazer logout:', error);
+            alert('Erro ao fazer logout. Tente novamente.');
         }
-    </script>
+    }
+</script>
 </body>
 </html>
