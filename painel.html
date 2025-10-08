@@ -1,2538 +1,1182 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Meu Perfil - Amor Conect</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
-    :root {
-      --bege: #f6ecc5;
-      --vermelho-rosado: #d1656d;
-      --lilas: #dfc9ed;
-      --branco: #ffffff;
-      --text: #444;
-      --text-light: #666;
-      --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-      --transition: all 0.3s ease;
-      --error: #e53e3e;
-      --success: #38a169;
-    }
-
-    body {
-      background-color: var(--bege);
-      color: var(--text);
-      line-height: 1.6;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 20px;
-    }
-
-    /* Header */
-    header {
-      background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
-      color: var(--branco);
-      padding: 0.8rem 0;
-      box-shadow: var(--shadow);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .header-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      height: 70px;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-shrink: 0;
-    }
-
-    .logo img {
-      height: 180px;
-      width: auto;
-      object-fit: contain;
-    }
-
-    .logo h1 {
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: var(--branco);
-      white-space: nowrap;
-    }
-
-    .user-menu {
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-    }
-
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .user-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: var(--branco);
-      color: var(--vermelho-rosado);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 1.2rem;
-      position: relative;
-      cursor: pointer;
-      overflow: hidden;
-    }
-
-    .user-avatar-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 50%;
-      display: none;
-    }
-
-    .user-avatar-fallback {
-      font-size: 1.2rem;
-    }
-
-    .btn {
-      padding: 0.6rem 1.2rem;
-      border-radius: 30px;
-      border: none;
-      font-weight: 600;
-      cursor: pointer;
-      transition: var(--transition);
-      text-decoration: none;
-      display: inline-block;
-      text-align: center;
-      font-size: 0.9rem;
-    }
-
-    .btn-outline {
-      background: transparent;
-      border: 2px solid var(--branco);
-      color: var(--branco);
-    }
-
-    .btn-primary {
-      background: var(--branco);
-      color: var(--vermelho-rosado);
-    }
-
-    .btn-secondary {
-      background: transparent;
-      border: 2px solid var(--vermelho-rosado);
-      color: var(--vermelho-rosado);
-    }
-
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    /* Main Content */
-    .main-content {
-      padding: 2rem 0;
-    }
-
-    .profile-header {
-      text-align: center;
-      margin-bottom: 3rem;
-      padding: 2rem;
-      background: var(--branco);
-      border-radius: 15px;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--lilas);
-    }
-
-    .avatar-section {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 3rem;
-      margin-bottom: 1.5rem;
-      flex-wrap: wrap;
-    }
-
-    .profile-avatar-container {
-      text-align: center;
-    }
-
-    .profile-avatar {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
-      color: var(--branco);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 3rem;
-      font-weight: bold;
-      margin: 0 auto 1rem;
-      position: relative;
-      cursor: pointer;
-      transition: var(--transition);
-      overflow: hidden;
-    }
-
-    .profile-avatar:hover {
-      transform: scale(1.05);
-    }
-
-    .avatar-image {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      object-fit: cover;
-      display: none;
-    }
-
-    .avatar-fallback {
-      font-size: 3rem;
-      font-weight: bold;
-      color: white;
-    }
-
-    .edit-avatar-btn {
-      background: none;
-      border: 2px solid var(--vermelho-rosado);
-      color: var(--vermelho-rosado);
-      padding: 0.5rem 1rem;
-      border-radius: 20px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      transition: var(--transition);
-      margin: 0 auto;
-    }
-
-    .edit-avatar-btn:hover {
-      background: var(--vermelho-rosado);
-      color: var(--branco);
-      transform: translateY(-2px);
-    }
-
-    .upload-loading {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0,0,0,0.7);
-      color: white;
-      padding: 5px 10px;
-      border-radius: 10px;
-      font-size: 0.8rem;
-      display: none;
-    }
-
-    .profile-info {
-      text-align: center;
-    }
-
-    .profile-header h2 {
-      font-size: 2rem;
-      color: var(--vermelho-rosado);
-      margin-bottom: 0.5rem;
-    }
-
-    .profile-badge {
-      display: inline-block;
-      background: var(--lilas);
-      color: var(--text);
-      padding: 0.25rem 1rem;
-      border-radius: 20px;
-      font-size: 0.9rem;
-      margin-bottom: 1rem;
-    }
-        /* Modal de Upload */
-    .upload-modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      display: none;
-    }
-
-    .upload-modal-content {
-      background: var(--branco);
-      padding: 2rem;
-      border-radius: 15px;
-      max-width: 400px;
-      width: 90%;
-      text-align: center;
-      border: 1px solid var(--lilas);
-    }
-
-    .preview-container {
-      margin: 1rem 0;
-    }
-
-    .preview-image {
-      max-width: 200px;
-      max-height: 200px;
-      border-radius: 10px;
-      margin: 0 auto;
-      display: block;
-      display: none;
-    }
-
-    .file-info {
-      margin: 1rem 0;
-      font-size: 0.9rem;
-      color: var(--text-light);
-    }
-
-    .upload-error {
-      color: var(--error);
-      margin: 1rem 0;
-      font-size: 0.9rem;
-      min-height: 20px;
-    }
-
-    /* Profile Sections */
-    .profile-sections {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2rem;
-      margin-bottom: 2rem;
-    }
-
-    @media (max-width: 768px) {
-      .profile-sections {
-        grid-template-columns: 1fr;
-      }
-      
-      .avatar-section {
-        flex-direction: column;
-        gap: 1.5rem;
-      }
-    }
-
-    .profile-section {
-      background: var(--branco);
-      border-radius: 15px;
-      padding: 2rem;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--lilas);
-    }
-
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.5rem;
-      padding-bottom: 1rem;
-      border-bottom: 2px solid var(--bege);
-    }
-
-    .section-header h3 {
-      font-size: 1.5rem;
-      color: var(--vermelho-rosado);
-    }
-
-    .edit-btn {
-      background: none;
-      border: none;
-      color: var(--vermelho-rosado);
-      cursor: pointer;
-      font-size: 0.9rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .edit-btn:hover {
-      color: var(--lilas);
-    }
-
-    /* Form Styles */
-    .form-group {
-      margin-bottom: 1.5rem;
-    }
-
-    .form-group label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 500;
-      color: var(--text);
-    }
-
-    .form-control {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      border: 2px solid var(--lilas);
-      border-radius: 10px;
-      font-size: 1rem;
-      transition: var(--transition);
-      background: var(--branco);
-    }
-
-    .form-control:focus {
-      outline: none;
-      border-color: var(--vermelho-rosado);
-      box-shadow: 0 0 0 3px rgba(209, 101, 109, 0.1);
-    }
-
-    select.form-control {
-      appearance: none;
-      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-      background-repeat: no-repeat;
-      background-position: right 1rem center;
-      background-size: 1em;
-    }
-
-    .form-text {
-      font-size: 0.875rem;
-      color: var(--text-light);
-      margin-top: 0.25rem;
-    }
-
-    .char-count {
-      text-align: right;
-      font-size: 0.875rem;
-      color: var(--text-light);
-      margin-top: 0.25rem;
-    }
-
-    .char-count.warning {
-      color: var(--error);
-    }
-
-    /* Checkbox Group */
-    .checkbox-group {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 1rem;
-      margin-top: 0.5rem;
-    }
-
-    .checkbox-item {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .checkbox-item input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      accent-color: var(--vermelho-rosado);
-    }
-
-    .checkbox-item label {
-      margin: 0;
-      font-weight: normal;
-    }
-
-    /* Profile Info Display */
-    .info-grid {
-      display: grid;
-      gap: 1rem;
-    }
-
-    .info-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem;
-      background: var(--bege);
-      border-radius: 10px;
-      border: 1px solid var(--lilas);
-    }
-
-    .info-label {
-      font-weight: 500;
-      color: var(--text);
-    }
-
-    .info-value {
-      color: var(--text);
-    }
-
-    .info-value.empty {
-      color: var(--text-light);
-      font-style: italic;
-    }
-
-    /* Actions Section */
-    .profile-actions {
-      background: var(--branco);
-      border-radius: 15px;
-      padding: 2rem;
-      box-shadow: var(--shadow);
-      text-align: center;
-      border: 1px solid var(--lilas);
-    }
-
-    .actions-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-top: 1.5rem;
-    }
-
-    .action-card {
-      background: var(--bege);
-      padding: 1.5rem;
-      border-radius: 10px;
-      text-align: center;
-      transition: var(--transition);
-      cursor: pointer;
-      text-decoration: none;
-      color: inherit;
-      border: 1px solid var(--lilas);
-    }
-
-    .action-card:hover {
-      background: var(--lilas);
-      transform: translateY(-3px);
-    }
-
-    .action-icon {
-      font-size: 2rem;
-      margin-bottom: 1rem;
-    }
-
-    /* Alert Messages */
-    .alert {
-      padding: 1rem;
-      border-radius: 10px;
-      margin-bottom: 1.5rem;
-      text-align: center;
-      border: 1px solid;
-    }
-
-    .alert-success {
-      background-color: #f0fff4;
-      border-color: #9ae6b4;
-      color: #276749;
-    }
-
-    .alert-error {
-      background-color: #fed7d7;
-      border-color: #feb2b2;
-      color: #c53030;
-    }
-
-    /* Loading State */
-    .loading {
-      text-align: center;
-      padding: 2rem;
-    }
-
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid var(--bege);
-      border-top: 4px solid var(--vermelho-rosado);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 1rem;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    /* Footer */
-    footer {
-      background-color: var(--bege);
-      color: var(--text);
-      padding: 2rem 0 1rem;
-      border-top: 1px solid var(--lilas);
-    }
-
-    .footer-content {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .footer-column h3 {
-      margin-bottom: 1rem;
-      font-size: 1.1rem;
-      color: var(--vermelho-rosado);
-    }
-
-    .footer-column ul {
-      list-style: none;
-    }
-
-    .footer-column ul li {
-      margin-bottom: 0.5rem;
-    }
-
-    .footer-column a {
-      color: var(--text);
-      text-decoration: none;
-      transition: var(--transition);
-      font-size: 0.9rem;
-    }
-
-    .footer-column a:hover {
-      color: var(--vermelho-rosado);
-    }
-
-    .copyright {
-      text-align: center;
-      padding-top: 1rem;
-      border-top: 1px solid var(--lilas);
-      font-size: 0.8rem;
-      color: var(--text-light);
-    }
-
-    /* Hidden class for toggling */
-    .hidden {
-      display: none !important;
-    }
-
-    .image-editor-tools {
-      display: flex;
-      gap: 0.5rem;
-      margin: 1rem 0;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .image-editor-tools button {
-      background: var(--lilas);
-      border: 2px solid var(--vermelho-rosado);
-      color: var(--text);
-      padding: 0.5rem 1rem;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      transition: var(--transition);
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
-    }
-
-    .image-editor-tools button:hover {
-      background: var(--vermelho-rosado);
-      color: var(--branco);
-      transform: translateY(-2px);
-    }
-
-    /* Responsividade */
-    @media (max-width: 768px) {
-      .header-content {
-        flex-direction: column;
-        gap: 1rem;
-        height: auto;
-        padding: 1rem 0;
-      }
-
-      .logo img {
-        height: 140px;
-      }
-
-      .user-menu {
-        flex-direction: column;
-        gap: 1rem;
-      }
-
-      .btn {
-        padding: 0.5rem 1rem;
-        font-size: 0.85rem;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .logo img {
-        height: 120px;
-      }
-
-      .profile-header {
-        padding: 1.5rem;
-      }
-
-      .profile-section {
-        padding: 1.5rem;
-      }
-
-      .avatar-section {
-        gap: 1.5rem;
-      }
-    }
-  </style>
-</head>
-<body>
-  <!-- Header -->
-  <header>
-    <div class="container">
-      <div class="header-content">
-        <div class="logo">
-          <img src="logoamorconect.png" alt="Amor Conect">
-          <h1>Amor Conect</h1>
-        </div>
-        <div class="user-menu">
-          <div class="user-info">
-            <div class="user-avatar" id="userAvatar" onclick="openUploadModal()">
-              <img id="userAvatarImg" class="user-avatar-img" src="" alt="Avatar">
-              <div id="userAvatarFallback" class="user-avatar-fallback">U</div>
-            </div>
-            <span id="userNickname">Usuário</span>
-          </div>
-          <a href="home.html" class="btn btn-outline">Voltar para Home</a>
-          <button class="btn btn-outline" id="logoutBtn">Sair</button>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <!-- Main Content -->
-  <main class="main-content">
-    <div class="container">
-      <!-- Alert Messages -->
-      <div class="alert alert-success" id="successAlert" style="display: none;"></div>
-      <div class="alert alert-error" id="errorAlert" style="display: none;"></div>
-
-      <!-- Profile Header -->
-      <section class="profile-header">
-        <div class="avatar-section">
-          <div class="profile-avatar-container">
-            <div class="profile-avatar" id="profileAvatar" onclick="openUploadModal()">
-              <img id="avatarImage" class="avatar-image" src="" alt="Foto do perfil">
-              <div id="avatarFallback" class="avatar-fallback">A</div>
-              <div id="uploadLoading" class="upload-loading">📤 Enviando...</div>
-            </div>
-            
-            <!-- Botão Editar Foto -->
-            <button class="edit-avatar-btn" onclick="openUploadModal()">
-              <span>📷</span> Alterar Foto
-            </button>
-          </div>
-          
-          <div class="profile-info">
-            <h2 id="profileName">akalanata</h2>
-            <div class="profile-badge" id="profileBadge">Perfil em Andamento</div>
-            <p>Complete seu perfil para aumentar suas conexões</p>
-          </div>
-        </div>
-        
-        <input type="file" id="photoInput" class="hidden" 
-               accept=".jpg,.jpeg,.png" 
-               onchange="handlePhotoSelect(event)">
-      </section>
-
-      <!-- Modal de Upload com Editor de Imagem -->
-      <div id="uploadModal" class="upload-modal">
-        <div class="upload-modal-content">
-          <h3>📸 Alterar Foto do Perfil</h3>
-          
-          <div class="preview-container">
-            <img id="modalPreview" class="preview-image" src="" alt="Preview">
-          </div>
-          
-          <!-- Editor de Imagem -->
-          <div class="image-editor-tools">
-            <button type="button" class="editor-btn" onclick="cropImage()">
-              <span>✂️</span> Recortar
-            </button>
-            <button type="button" class="editor-btn" onclick="rotateImage()">
-              <span>🔄</span> Girar
-            </button>
-            <button type="button" class="editor-btn" onclick="resizeImage()">
-              <span>📐</span> Redimensionar
-            </button>
-            <button type="button" class="editor-btn" onclick="adjustImage()">
-              <span>🎨</span> Ajustes
-            </button>
-          </div>
-          
-          <div class="file-info" id="fileInfo"></div>
-          <div class="upload-error" id="uploadError"></div>
-          
-          <div class="form-group">
-            <label for="modalPhotoInput" class="btn btn-primary">
-              📁 Escolher Nova Foto
-            </label>
-            <input type="file" id="modalPhotoInput" 
-                   accept=".jpg,.jpeg,.png" 
-                   onchange="handleModalPhotoSelect(event)"
-                   class="hidden">
-          </div>
-          
-          <div class="form-group">
-            <button class="btn btn-primary" onclick="uploadPhoto()" id="uploadBtn" disabled>
-              📤 Salvar Foto
-            </button>
-            <button class="btn btn-secondary" onclick="closeUploadModal()">
-              Cancelar
-            </button>
-          </div>
-          
-          <div class="form-text">
-            <strong>Requisitos:</strong><br>
-            • Formatos: JPG, PNG<br>
-            • Tamanho máximo: 250KB<br>
-            • Dimensões recomendadas: 400x400px
-          </div>
-        </div>
-      </div>
-            <!-- Profile Sections -->
-      <div class="profile-sections">
-        <!-- Informações Básicas -->
-        <section class="profile-section">
-          <div class="section-header">
-            <h3>Informações Básicas</h3>
-            <button class="edit-btn" onclick="toggleEdit('basicInfo')">
-              <span>✏️</span> Editar
-            </button>
-          </div>
-
-          <!-- Display Mode -->
-          <div id="basicInfoDisplay">
-            <div class="info-grid">
-              <div class="info-item">
-                <span class="info-label">Nome Completo</span>
-                <span class="info-value" id="displayFullName">Não informado</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">E-mail</span>
-                <span class="info-value" id="displayEmail">Carregando...</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Data de Nascimento</span>
-                <span class="info-value" id="displayBirthDate">Não informada</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Idade</span>
-                <span class="info-value" id="displayAge">-</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Edit Mode -->
-          <div id="basicInfoEdit" class="hidden">
-            <form id="basicInfoForm">
-              <div class="form-group">
-                <label for="fullName">Nome Completo</label>
-                <input type="text" id="fullName" class="form-control" value="">
-              </div>
-              <div class="form-group">
-                <label for="birthDate">Data de Nascimento</label>
-                <input type="date" id="birthDate" class="form-control">
-              </div>
-              <div class="form-group">
-                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
-                <button type="button" class="btn btn-secondary" onclick="toggleEdit('basicInfo')">Cancelar</button>
-              </div>
-            </form>
-          </div>
-        </section>
-
-        <!-- Informações de Contato -->
-        <section class="profile-section">
-          <div class="section-header">
-            <h3>Informações de Contato</h3>
-            <button class="edit-btn" onclick="toggleEdit('contactInfo')">
-              <span>✏️</span> Editar
-            </button>
-          </div>
-
-          <!-- Display Mode -->
-          <div id="contactInfoDisplay">
-            <div class="info-grid">
-              <div class="info-item">
-                <span class="info-label">Telefone</span>
-                <span class="info-value" id="displayPhone">Não informado</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Endereço</span>
-                <span class="info-value" id="displayAddress">Não informado</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Edit Mode -->
-          <div id="contactInfoEdit" class="hidden">
-            <form id="contactInfoForm">
-              <div class="form-group">
-                <label for="phone">Telefone</label>
-                <input type="tel" id="phone" class="form-control" placeholder="(11) 99999-9999">
-              </div>
-              <div class="form-group">
-                <label for="address">Endereço</label>
-                <input type="text" id="address" class="form-control" placeholder="Cidade, Estado">
-                <div class="form-text">Apenas cidade e estado para sua segurança</div>
-              </div>
-              <div class="form-group">
-                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
-                <button type="button" class="btn btn-secondary" onclick="toggleEdit('contactInfo')">Cancelar</button>
-              </div>
-            </form>
-          </div>
-        </section>
-
-        <!-- Interesses e Preferências -->
-        <section class="profile-section">
-          <div class="section-header">
-            <h3>Interesses e Preferências</h3>
-            <button class="edit-btn" onclick="toggleEdit('preferencesInfo')">
-              <span>✏️</span> Editar
-            </button>
-          </div>
-
-          <!-- Display Mode -->
-          <div id="preferencesInfoDisplay">
-            <div class="info-grid">
-              <div class="info-item">
-                <span class="info-label">Gênero</span>
-                <span class="info-value" id="displayGender">Não informado</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Interesses</span>
-                <span class="info-value" id="displayInterests">Não informados</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Procuro por</span>
-                <span class="info-value" id="displayLookingFor">Não informado</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Edit Mode -->
-          <div id="preferencesInfoEdit" class="hidden">
-            <form id="preferencesInfoForm">
-              <div class="form-group">
-                <label for="gender">Gênero</label>
-                <select id="gender" class="form-control">
-                  <option value="">Selecione...</option>
-                  <option value="feminino">Feminino</option>
-                  <option value="masculino">Masculino</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label>Interesses</label>
-                <div class="checkbox-group">
-                  <div class="checkbox-item">
-                    <input type="checkbox" id="interest_movies" value="Cinema">
-                    <label for="interest_movies">Cinema</label>
-                  </div>
-                  <div class="checkbox-item">
-                    <input type="checkbox" id="interest_music" value="Música">
-                    <label for="interest_music">Música</label>
-                  </div>
-                  <div class="checkbox-item">
-                    <input type="checkbox" id="interest_sports" value="Esportes">
-                    <label for="interest_sports">Esportes</label>
-                  </div>
-                  <div class="checkbox-item">
-                    <input type="checkbox" id="interest_travel" value="Viagens">
-                    <label for="interest_travel">Viagens</label>
-                  </div>
-                  <div class="checkbox-item">
-                    <input type="checkbox" id="interest_reading" value="Leitura">
-                    <label for="interest_reading">Leitura</label>
-                  </div>
-                  <div class="checkbox-item">
-                    <input type="checkbox" id="interest_cooking" value="Culinária">
-                    <label for="interest_cooking">Culinária</label>
-                  </div>
-                  <div class="checkbox-item">
-                    <input type="checkbox" id="interest_games" value="Jogos">
-                    <label for="interest_games">Jogos</label>
-                  </div>
-                  <div class="checkbox-item">
-                    <input type="checkbox" id="interest_art" value="Arte">
-                    <label for="interest_art">Arte</label>
-                  </div>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label for="lookingFor">O que procuro</label>
-                <select id="lookingFor" class="form-control">
-                  <option value="">Selecione...</option>
-                  <option value="amizade">Amizade</option>
-                  <option value="namoro">Namoro</option>
-                  <option value="relacionamento_serio">Relacionamento Sério</option>
-                  <option value="conversa">Apenas Conversa</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
-                <button type="button" class="btn btn-secondary" onclick="toggleEdit('preferencesInfo')">Cancelar</button>
-              </div>
-            </form>
-          </div>
-        </section>
-                <!-- Descrição Pessoal -->
-        <section class="profile-section">
-          <div class="section-header">
-            <h3>Descrição Pessoal</h3>
-            <button class="edit-btn" onclick="toggleEdit('descriptionInfo')">
-              <span>✏️</span> Editar
-            </button>
-          </div>
-
-          <!-- Display Mode -->
-          <div id="descriptionInfoDisplay">
-            <div class="info-item">
-              <span class="info-label">Sobre mim</span>
-              <span class="info-value" id="displayDescription">Nenhuma descrição adicionada ainda.</span>
-            </div>
-          </div>
-
-          <!-- Edit Mode -->
-          <div id="descriptionInfoEdit" class="hidden">
-            <form id="descriptionInfoForm">
-              <div class="form-group">
-                <label for="description">Descreva-se brevemente</label>
-                <textarea id="description" class="form-control" rows="4" placeholder="Conte um pouco sobre você, seus hobbies, objetivos... (máximo 100 caracteres)"></textarea>
-                <div class="char-count" id="charCount">0/100 caracteres</div>
-              </div>
-              <div class="form-group">
-                <button type="submit" class="btn btn-primary">Salvar Descrição</button>
-                <button type="button" class="btn btn-secondary" onclick="toggleEdit('descriptionInfo')">Cancelar</button>
-              </div>
-            </form>
-          </div>
-        </section>
-
-        <!-- Mais sobre mim -->
-        <section class="profile-section">
-          <div class="section-header">
-            <h3>Mais sobre mim</h3>
-            <button class="edit-btn" onclick="toggleEdit('moreAboutInfo')">
-              <span>✏️</span> Editar
-            </button>
-          </div>
-
-          <!-- Display Mode -->
-          <div id="moreAboutInfoDisplay">
-            <div class="info-grid">
-              <div class="info-item">
-                <span class="info-label">Signo</span>
-                <span class="info-value" id="displayZodiac">Não informado</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Animal de Estimação</span>
-                <span class="info-value" id="displayPets">Não informado</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Orientação Sexual</span>
-                <span class="info-value" id="displaySexualOrientation">Não informado</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Bebida</span>
-                <span class="info-value" id="displayDrinking">Não informado</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Fumo</span>
-                <span class="info-value" id="displaySmoking">Não informado</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Atividade Física</span>
-                <span class="info-value" id="displayExercise">Não informado</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Religião</span>
-                <span class="info-value" id="displayReligion">Não informado</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Escolaridade</span>
-                <span class="info-value" id="displayEducation">Não informado</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Profissão</span>
-                <span class="info-value" id="displayProfession">Não informado</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Edit Mode -->
-          <div id="moreAboutInfoEdit" class="hidden">
-            <form id="moreAboutInfoForm">
-              <div class="form-group">
-                <label for="zodiac">Signo</label>
-                <select id="zodiac" class="form-control">
-                  <option value="">Selecione...</option>
-                  <option value="aries">Áries</option>
-                  <option value="touro">Touro</option>
-                  <option value="gemeos">Gêmeos</option>
-                  <option value="cancer">Câncer</option>
-                  <option value="leao">Leão</option>
-                  <option value="virgem">Virgem</option>
-                  <option value="libra">Libra</option>
-                  <option value="escorpiao">Escorpião</option>
-                  <option value="sagitario">Sagitário</option>
-                  <option value="capricornio">Capricórnio</option>
-                  <option value="aquario">Aquário</option>
-                  <option value="peixes">Peixes</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label for="hasPets">Tem animal de estimação?</label>
-                <select id="hasPets" class="form-control">
-                  <option value="">Selecione...</option>
-                  <option value="nao">Não tenho</option>
-                  <option value="sim">Sim, tenho</option>
-                </select>
-              </div>
-
-              <div class="form-group" id="petsDetailsGroup" style="display: none;">
-                <label for="petsDetails">Quais animais você tem?</label>
-                <input type="text" id="petsDetails" class="form-control" placeholder="Ex: Cachorro, gato, pássaro...">
-              </div>
-
-              <div class="form-group">
-                <label for="sexualOrientation">Orientação Sexual</label>
-                <select id="sexualOrientation" class="form-control">
-                  <option value="">Selecione...</option>
-                  <option value="heterossexual">Heterossexual</option>
-                  <option value="homossexual">Homossexual</option>
-                  <option value="bissexual">Bissexual</option>
-                  <option value="outro">Outro</option>
-                  <option value="prefiro_nao_informar">Prefiro não informar</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label for="drinking">Bebida</label>
-                <select id="drinking" class="form-control">
-                  <option value="">Selecione...</option>
-                  <option value="nao_bebo">Não bebo</option>
-                  <option value="socialmente">Socialmente</option>
-                  <option value="frequentemente">Com frequência</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label for="smoking">Fumo</label>
-                <select id="smoking" class="form-control">
-                  <option value="">Selecione...</option>
-                  <option value="nao_fumo">Não fumo</option>
-                  <option value="socialmente">Socialmente</option>
-                  <option value="frequentemente">Com frequência</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label for="exercise">Pratica atividade física?</label>
-                <select id="exercise" class="form-control">
-                  <option value="">Selecione...</option>
-                  <option value="nao_pratico">Não pratico</option>
-                  <option value="ocasionalmente">Ocasionalmente</option>
-                  <option value="regularmente">Regularmente</option>
-                </select>
-              </div>
-
-              <div class="form-group" id="exerciseDetailsGroup" style="display: none;">
-                <label for="exerciseDetails">Quais atividades físicas pratica?</label>
-                <input type="text" id="exerciseDetails" class="form-control" placeholder="Ex: Academia, corrida, natação...">
-              </div>
-
-              <div class="form-group">
-                <label for="religion">Religião</label>
-                <select id="religion" class="form-control">
-                  <option value="">Selecione...</option>
-                  <option value="catolica">Católica</option>
-                  <option value="evangelica">Evangélica</option>
-                  <option value="espirita">Espírita</option>
-                  <option value="umbanda_candomble">Umbanda/Candomblé</option>
-                  <option value="budista">Budista</option>
-                  <option value="judaica">Judaica</option>
-                  <option value="islamica">Islâmica</option>
-                  <option value="outra">Outra</option>
-                  <option value="nenhuma">Nenhuma</option>
-                  <option value="prefiro_nao_informar">Prefiro não informar</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label for="education">Escolaridade</label>
-                <select id="education" class="form-control">
-                  <option value="">Selecione...</option>
-                  <option value="fundamental_incompleto">Fundamental Incompleto</option>
-                  <option value="fundamental_completo">Fundamental Completo</option>
-                  <option value="medio_incompleto">Médio Incompleto</option>
-                  <option value="medio_completo">Médio Completo</option>
-                  <option value="superior_incompleto">Superior Incompleto</option>
-                  <option value="superior_completo">Superior Completo</option>
-                  <option value="pos_graduacao">Pós-graduação</option>
-                  <option value="mestrado">Mestrado</option>
-                  <option value="doutorado">Doutorado</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label for="profession">Profissão</label>
-                <input type="text" id="profession" class="form-control" placeholder="Sua profissão ou área de atuação">
-              </div>
-
-              <div class="form-group">
-                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
-                <button type="button" class="btn btn-secondary" onclick="toggleEdit('moreAboutInfo')">Cancelar</button>
-              </div>
-            </form>
-          </div>
-        </section>
-      </div>
-
-      <!-- Profile Actions -->
-      <section class="profile-actions">
-        <h3>Ações do Perfil</h3>
-        <div class="actions-grid">
-          <a href="home.html" class="action-card">
-            <div class="action-icon">🏠</div>
-            <h4>Voltar para Home</h4>
-            <p>Retornar à página principal</p>
-          </a>
-          <a href="#" class="action-card" onclick="exportProfileData()">
-            <div class="action-icon">📥</div>
-            <h4>Exportar Dados</h4>
-            <p>Baixar suas informações</p>
-          </a>
-          <a href="#" class="action-card" onclick="deleteAccount()">
-            <div class="action-icon">🗑️</div>
-            <h4>Excluir Conta</h4>
-            <p>Remover permanentemente</p>
-          </a>
-        </div>
-      </section>
-    </div>
-  </main>
-
-  <!-- Footer -->
-  <footer>
-    <div class="container">
-      <div class="footer-content">
-        <div class="footer-column">
-          <h3>Amor Conect</h3>
-          <p>Uma plataforma segura e discreta para conectar corações e construir relacionamentos genuínos.</p>
-        </div>
-        <div class="footer-column">
-          <h3>Links Rápidos</h3>
-          <ul>
-            <li><a href="index.html">Página Inicial</a></li>
-            <li><a href="home.html">Home</a></li>
-            <li><a href="#depoimentos">Depoimentos</a></li>
-          </ul>
-        </div>
-        <div class="footer-column">
-          <h3>Suporte</h3>
-          <ul>
-            <li><a href="#">Central de Ajuda</a></li>
-            <li><a href="#">Política de Privacidade</a></li>
-            <li><a href="#">Termos de Uso</a></li>
-          </ul>
-        </div>
-      </div>
-      <div class="copyright">
-        <p>&copy; 2023 Amor Conect. Todos os direitos reservados.</p>
-      </div>
-    </div>
-  </footer>
-<script>
-// ✅ CONFIGURAÇÃO DO SUPABASE
-const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
-
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// ✅ VARIÁVEIS GLOBAIS
-let currentUser = null;
-let userProfile = null;
-let userDetails = null;
-let selectedFile = null;
-let filePreviewUrl = null;
-
-// ✅ CONFIGURAÇÕES DE UPLOAD
-const MAX_FILE_SIZE = 250 * 1024; // 250KB
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/jpg'];
-
-// ✅ INICIALIZAÇÃO
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('✅ DOM Carregado - Iniciando aplicação');
-    checkAuth();
-});
-
-// ✅ VERIFICAR AUTENTICAÇÃO
-async function checkAuth() {
-    try {
-        const { data: { user }, error } = await supabase.auth.getUser();
-        
-        if (error) throw error;
-        
-        if (!user) {
-            window.location.href = 'login.html';
-            return;
-        }
-        
-        currentUser = user;
-        await loadUserData();
-        
-    } catch (error) {
-        console.error('Erro na autenticação:', error);
-        window.location.href = 'login.html';
-    }
-}
-
-// ✅ CARREGAR DADOS DO USUÁRIO - CORRIGIDO
-async function loadUserData() {
-    try {
-        console.log('🔄 Carregando dados do usuário...', currentUser.id);
-        
-        // Buscar perfil
-        const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', currentUser.id)
-            .single();
-
-        if (profileError && profileError.code === 'PGRST116') {
-            console.log('⚠️ Perfil não encontrado, criando perfil básico...');
-            await createBasicProfile();
-            userProfile = await getProfileData();
-        } else if (profileError) {
-            throw profileError;
-        } else {
-            userProfile = profile;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Usuário - Amor Conect</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        // Buscar detalhes
-        const { data: details, error: detailsError } = await supabase
-            .from('user_details')
-            .select('*')
-            .eq('user_id', currentUser.id)
-            .single();
-
-        if (detailsError && detailsError.code === 'PGRST116') {
-            console.log('⚠️ Detalhes não encontrados, criando...');
-            await createUserDetails();
-            userDetails = {};
-        } else if (detailsError) {
-            throw detailsError;
-        } else {
-            userDetails = details || {};
+        :root {
+            --bege: #f6ecc5;
+            --vermelho-rosado: #d1656d;
+            --lilas: #dfc9ed;
+            --branco: #ffffff;
+            --text: #444;
+            --text-light: #666;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
         }
 
-        console.log('✅ Dados carregados:', { userProfile, userDetails });
-        await updateProfileDisplay();
-        updateProfileForms();
-        setupEventListeners();
+        body {
+            background-color: var(--bege);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
 
-    } catch (error) {
-        console.error('❌ Erro ao carregar dados do usuário:', error);
-        showAlert('errorAlert', 'Erro ao carregar dados do perfil: ' + error.message);
-    }
-}
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
 
-// ✅ ATUALIZAR DISPLAY DO PERFIL - CORRIGIDO
-async function updateProfileDisplay() {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        const nickname = userProfile?.nickname || user.user_metadata?.nickname || user.email.split('@')[0];
-        
-        // Header
-        document.getElementById('userNickname').textContent = nickname;
-        document.getElementById('profileName').textContent = nickname;
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            color: var(--branco);
+            padding: 0.5rem 0;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
 
-        // ✅ ATUALIZAR FOTOS
-        await updateAvatarPhotos();
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 80px;
+        }
 
-        // Informações básicas
-        document.getElementById('displayFullName').textContent = userProfile?.full_name || 'Não informado';
-        document.getElementById('displayFullName').className = userProfile?.full_name ? 'info-value' : 'info-value empty';
-        
-        document.getElementById('displayEmail').textContent = user.email;
-        
-        const birthDate = userProfile?.birth_date;
-        document.getElementById('displayBirthDate').textContent = birthDate ? 
-            new Date(birthDate).toLocaleDateString('pt-BR') : 'Não informada';
-        document.getElementById('displayBirthDate').className = birthDate ? 'info-value' : 'info-value empty';
-        
-        document.getElementById('displayAge').textContent = birthDate ? 
-            calculateAge(birthDate) + ' anos' : '-';
+        /* Menu Hamburguer */
+        #hamburgerBtn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--branco);
+            font-size: 1.8rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            z-index: 1001;
+            width: 40px;
+            height: 40px;
+            align-items: center;
+            justify-content: center;
+        }
 
-        // Informações de contato
-        document.getElementById('displayPhone').textContent = userDetails.phone || 'Não informado';
-        document.getElementById('displayPhone').className = userDetails.phone ? 'info-value' : 'info-value empty';
-        
-        document.getElementById('displayAddress').textContent = userDetails.address || 'Não informado';
-        document.getElementById('displayAddress').className = userDetails.address ? 'info-value' : 'info-value empty';
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+            justify-content: center;
+            flex: 1;
+        }
 
-        // Preferências
-        document.getElementById('displayGender').textContent = formatGender(userDetails.gender) || 'Não informado';
-        document.getElementById('displayGender').className = userDetails.gender ? 'info-value' : 'info-value empty';
-        
-        document.getElementById('displayInterests').textContent = userDetails.interests && userDetails.interests.length > 0 ? 
-            userDetails.interests.join(', ') : 'Não informados';
-        document.getElementById('displayInterests').className = userDetails.interests && userDetails.interests.length > 0 ? 'info-value' : 'info-value empty';
-        
-        document.getElementById('displayLookingFor').textContent = formatLookingFor(userDetails.looking_for) || 'Não informado';
-        document.getElementById('displayLookingFor').className = userDetails.looking_for ? 'info-value' : 'info-value empty';
+        .logo img {
+            height: 180px;
+            width: auto;
+            object-fit: contain;
+        }
 
-        // Descrição
-        document.getElementById('displayDescription').textContent = userDetails.description || 'Nenhuma descrição adicionada ainda.';
-        document.getElementById('displayDescription').className = userDetails.description ? 'info-value' : 'info-value empty';
+        .logo h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--branco);
+            white-space: nowrap;
+        }
 
-        // Mais sobre mim
-        document.getElementById('displayZodiac').textContent = formatZodiac(userDetails.zodiac) || 'Não informado';
-        document.getElementById('displayZodiac').className = userDetails.zodiac ? 'info-value' : 'info-value empty';
-        
-        document.getElementById('displayPets').textContent = formatPets(userDetails.has_pets, userDetails.pets_details) || 'Não informado';
-        document.getElementById('displayPets').className = userDetails.has_pets ? 'info-value' : 'info-value empty';
-        
-        document.getElementById('displaySexualOrientation').textContent = formatSexualOrientation(userDetails.sexual_orientation) || 'Não informado';
-        document.getElementById('displaySexualOrientation').className = userDetails.sexual_orientation ? 'info-value' : 'info-value empty';
-        
-        document.getElementById('displayDrinking').textContent = formatDrinking(userDetails.drinking) || 'Não informado';
-        document.getElementById('displayDrinking').className = userDetails.drinking ? 'info-value' : 'info-value empty';
-        
-        document.getElementById('displaySmoking').textContent = formatSmoking(userDetails.smoking) || 'Não informado';
-        document.getElementById('displaySmoking').className = userDetails.smoking ? 'info-value' : 'info-value empty';
-        
-        document.getElementById('displayExercise').textContent = formatExercise(userDetails.exercise, userDetails.exercise_details) || 'Não informado';
-        document.getElementById('displayExercise').className = userDetails.exercise ? 'info-value' : 'info-value empty';
-        
-        document.getElementById('displayReligion').textContent = formatReligion(userDetails.religion) || 'Não informado';
-        document.getElementById('displayReligion').className = userDetails.religion ? 'info-value' : 'info-value empty';
-        
-        document.getElementById('displayEducation').textContent = formatEducation(userDetails.education) || 'Não informado';
-        document.getElementById('displayEducation').className = userDetails.education ? 'info-value' : 'info-value empty';
-        
-        document.getElementById('displayProfession').textContent = userDetails.profession || 'Não informado';
-        document.getElementById('displayProfession').className = userDetails.profession ? 'info-value' : 'info-value empty';
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
 
-        // Atualizar badge do perfil
-        updateProfileBadge();
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
 
-    } catch (error) {
-        console.error('❌ Erro ao atualizar display:', error);
-    }
-}
+        /* Avatar no Header */
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: var(--branco);
+            color: var(--vermelho-rosado);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            background-size: cover;
+            background-position: center;
+            border: 2px solid var(--branco);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            flex-shrink: 0;
+        }
 
-// ✅ ATUALIZAR FOTOS DO AVATAR - CORRIGIDO
-async function updateAvatarPhotos() {
-    try {
-        const avatarUrl = userProfile?.avatar_url;
-        const nickname = userProfile?.nickname || 'U';
-        
-        // Atualizar fallback com a primeira letra do nickname
-        const firstLetter = nickname.charAt(0).toUpperCase();
-        document.getElementById('avatarFallback').textContent = firstLetter;
-        document.getElementById('userAvatarFallback').textContent = firstLetter;
-        
-        if (avatarUrl) {
-            try {
-                // Tentar carregar a foto do Supabase Storage
-                const { data, error } = await supabase.storage
-                    .from('avatars')
-                    .download(avatarUrl);
+        .user-avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: none;
+        }
 
-                if (data && !error) {
-                    const photoUrl = URL.createObjectURL(data);
-                    
-                    // Atualizar avatar do header
-                    const userAvatarImg = document.getElementById('userAvatarImg');
-                    const userAvatarFallback = document.getElementById('userAvatarFallback');
-                    userAvatarImg.src = photoUrl;
-                    userAvatarImg.style.display = 'block';
-                    userAvatarFallback.style.display = 'none';
-                    
-                    // Atualizar avatar do perfil
-                    const profileAvatarImg = document.getElementById('avatarImage');
-                    const profileAvatarFallback = document.getElementById('avatarFallback');
-                    profileAvatarImg.src = photoUrl;
-                    profileAvatarImg.style.display = 'block';
-                    profileAvatarFallback.style.display = 'none';
-                    
-                    console.log('✅ Foto do perfil carregada:', avatarUrl);
-                } else {
-                    console.log('ℹ️ Foto não encontrada no storage:', avatarUrl);
-                }
-            } catch (storageError) {
-                console.log('ℹ️ Erro ao carregar foto do storage:', storageError);
+        .user-avatar-fallback {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .btn {
+            padding: 0.4rem 1.2rem;
+            border-radius: 30px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--branco);
+            color: var(--branco);
+        }
+
+        .btn-primary {
+            background: var(--branco);
+            color: var(--vermelho-rosado);
+            border: none;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--vermelho-rosado);
+            color: var(--vermelho-rosado);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Menu Mobile */
+        #mobileMenu {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            z-index: 1000;
+            padding: 2rem;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+        }
+
+        #closeMobileMenu {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: none;
+            border: none;
+            color: var(--branco);
+            font-size: 2.5rem;
+            cursor: pointer;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mobile-user-info {
+            text-align: center;
+            color: var(--branco);
+            margin-bottom: 2rem;
+        }
+
+        .mobile-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .mobile-nav .btn {
+            width: 100%;
+            text-align: center;
+            justify-content: center;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 1.2rem;
+            font-size: 1.2rem;
+            border-radius: 12px;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem 0;
+            min-height: 70vh;
+        }
+
+        /* Page Header */
+        .page-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--branco);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--lilas);
+        }
+
+        .page-header h1 {
+            font-size: 2rem;
+            color: var(--vermelho-rosado);
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            color: var(--text-light);
+            font-size: 1rem;
+        }
+
+        /* Dashboard Cards */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-card {
+            background: var(--branco);
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--lilas);
+            transition: var(--transition);
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .dashboard-card h3 {
+            font-size: 1.3rem;
+            color: var(--vermelho-rosado);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .dashboard-card p {
+            color: var(--text-light);
+            margin-bottom: 1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: var(--bege);
+            border-radius: 10px;
+        }
+
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--vermelho-rosado);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        /* Profile Section */
+        .profile-section {
+            background: var(--branco);
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--lilas);
+            margin-bottom: 2rem;
+        }
+
+        .profile-section h2 {
+            font-size: 1.5rem;
+            color: var(--vermelho-rosado);
+            margin-bottom: 1.5rem;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+        }
+
+        .profile-avatar {
+            text-align: center;
+        }
+
+        .profile-avatar-img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            color: var(--branco);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 0 auto 1rem;
+            background-size: cover;
+            background-position: center;
+            border: 3px solid var(--branco);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+
+        .profile-avatar-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: none;
+        }
+
+        .profile-avatar-fallback {
+            font-size: 3rem;
+            font-weight: bold;
+        }
+
+        .profile-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .info-group {
+            margin-bottom: 1rem;
+        }
+
+        .info-group label {
+            display: block;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.3rem;
+            font-size: 0.9rem;
+        }
+
+        .info-group .value {
+            padding: 0.5rem 0;
+            color: var(--text-light);
+        }
+
+        .actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--bege);
+            color: var(--text);
+            padding: 2rem 0 1rem;
+            margin-top: 2rem;
+            border-top: 1px solid var(--lilas);
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-column h3 {
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            color: var(--vermelho-rosado);
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-column a {
+            color: var(--text);
+            text-decoration: none;
+            transition: var(--transition);
+            font-size: 0.9rem;
+        }
+
+        .footer-column a:hover {
+            color: var(--vermelho-rosado);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 1rem;
+            border-top: 1px solid var(--lilas);
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            #hamburgerBtn {
+                display: flex;
+            }
+
+            .user-menu {
+                display: none;
+            }
+
+            .header-content {
+                flex-direction: row;
+                justify-content: space-between;
+                height: 80px;
+                padding: 0;
+            }
+
+            .logo {
+                justify-content: center;
+                flex: 1;
+                margin: 0 auto;
+            }
+
+            .logo img {
+                height: 150px !important;
+            }
+
+            .logo h1 {
+                display: none;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-avatar-img {
+                width: 120px;
+                height: 120px;
+                font-size: 2.5rem;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+
+            .user-avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+
+            .mobile-user-info .user-avatar {
+                width: 100px;
+                height: 100px;
+                font-size: 2rem;
+                margin: 0 auto 1rem;
+            }
+
+            .mobile-user-info #mobileUserNickname {
+                font-size: 1.4rem;
+                font-weight: bold;
             }
         }
 
-    } catch (error) {
-        console.error('❌ Erro ao carregar foto do perfil:', error);
-    }
-}
+        @media (max-width: 480px) {
+            .logo img {
+                height: 130px !important;
+            }
 
-// ✅ CONFIGURAR EVENT LISTENERS - CORRIGIDO
-function setupEventListeners() {
-    console.log('🔧 Configurando event listeners...');
-    
-    // Logout
-    document.getElementById('logoutBtn').addEventListener('click', logout);
-    
-    // Form submissions
-    document.getElementById('basicInfoForm').addEventListener('submit', saveBasicInfo);
-    document.getElementById('contactInfoForm').addEventListener('submit', saveContactInfo);
-    document.getElementById('preferencesInfoForm').addEventListener('submit', savePreferencesInfo);
-    document.getElementById('descriptionInfoForm').addEventListener('submit', saveDescriptionInfo);
-    document.getElementById('moreAboutInfoForm').addEventListener('submit', saveMoreAboutInfo);
-    
-    // Descrição counter
-    setupDescriptionCounter();
-    
-    // Mais sobre mim listeners
-    setupMoreAboutListeners();
-    
-    // Fechar modal ao clicar fora
-    document.getElementById('uploadModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeUploadModal();
+            .user-avatar {
+                width: 35px;
+                height: 35px;
+                font-size: 0.9rem;
+            }
+
+            .header-content {
+                height: 70px;
+            }
+
+            .page-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
-    });
-    
-    console.log('✅ Event listeners configurados');
-}
 
-// ✅ FUNÇÕES DE CRIAÇÃO DE PERFIL - CORRIGIDAS
-async function createBasicProfile() {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        const nickname = user.user_metadata?.nickname || user.email.split('@')[0];
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <button id="hamburgerBtn">☰</button>
+                <div class="logo">
+                    <img src="logoamorconect.png" alt="Amor Conect">
+                    <h1>Amor Conect</h1>
+                </div>
+                <div class="user-menu">
+                    <div class="user-info">
+                        <div class="user-avatar" id="userAvatar">
+                            <img class="user-avatar-img" src="" alt="Avatar">
+                            <div class="user-avatar-fallback">U</div>
+                        </div>
+                        <span id="userNickname">Usuário</span>
+                    </div>
+                    <a href="mensagens.html" class="btn btn-outline">💌 Mensagens</a>
+                    <a href="busca.html" class="btn btn-outline">🔍 Buscar</a>
+                    <button class="btn btn-outline" id="logoutBtn">🚪 Sair</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Menu Mobile -->
+    <div id="mobileMenu">
+        <button id="closeMobileMenu">×</button>
         
-        const { error } = await supabase
-            .from('profiles')
-            .insert([
-                {
-                    id: user.id,
-                    nickname: nickname,
-                    full_name: user.user_metadata?.full_name || '',
-                    birth_date: user.user_metadata?.birth_date || null,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                }
-            ]);
+        <div class="mobile-user-info">
+            <div class="user-avatar" id="mobileUserAvatar">
+                <img class="user-avatar-img" src="" alt="Avatar">
+                <div class="user-avatar-fallback">U</div>
+            </div>
+            <div id="mobileUserNickname">Usuário</div>
+        </div>
 
-        if (error) {
-            console.error('Erro ao criar perfil:', error);
-            throw error;
-        }
+        <div class="mobile-nav">
+            <a href="home.html" class="btn btn-outline">🏠 Home</a>
+            <a href="busca.html" class="btn btn-outline">🔍 Buscar</a>
+            <a href="mensagens.html" class="btn btn-outline">💌 Mensagens</a>
+            <a href="configuracoes.html" class="btn btn-outline">⚙️ Configurações</a>
+            <button class="btn btn-outline" id="mobileLogoutBtn">🚪 Sair</button>
+        </div>
+    </div>
 
-        console.log('✅ Perfil básico criado');
-        return true;
-    } catch (error) {
-        console.error('❌ Erro na criação do perfil:', error);
-        return false;
-    }
-}
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Page Header -->
+            <section class="page-header">
+                <h1>👤 Painel do Usuário</h1>
+                <p>Gerencie seu perfil e acompanhe suas atividades</p>
+            </section>
 
-async function createUserDetails() {
-    try {
-        const { error } = await supabase
-            .from('user_details')
-            .insert([
-                {
-                    user_id: currentUser.id,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                }
-            ]);
+            <!-- Dashboard Stats -->
+            <section class="dashboard-grid">
+                <div class="dashboard-card">
+                    <h3>📊 Estatísticas</h3>
+                    <p>Resumo da sua atividade na plataforma</p>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-number" id="profileViews">0</div>
+                            <div class="stat-label">Visualizações</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="matchesCount">0</div>
+                            <div class="stat-label">Matches</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="messagesCount">0</div>
+                            <div class="stat-label">Mensagens</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="likesCount">0</div>
+                            <div class="stat-label">Curtidas</div>
+                        </div>
+                    </div>
+                </div>
 
-        if (error && error.code !== '23505') {
-            console.error('Erro ao criar user_details:', error);
-            throw error;
-        }
-        
-        console.log('✅ User details criados');
-    } catch (error) {
-        console.error('Erro na criação de user_details:', error);
-    }
-}
+                <div class="dashboard-card">
+                    <h3>🚀 Ações Rápidas</h3>
+                    <p>Atualize seu perfil e interaja com outros usuários</p>
+                    <div class="actions">
+                        <a href="editar-perfil.html" class="btn btn-primary">✏️ Editar Perfil</a>
+                        <a href="busca.html" class="btn btn-secondary">🔍 Buscar Pessoas</a>
+                        <a href="mensagens.html" class="btn btn-secondary">💌 Ver Mensagens</a>
+                    </div>
+                </div>
+            </section>
 
-async function getProfileData() {
-    const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', currentUser.id)
-        .single();
+            <!-- Profile Information -->
+            <section class="profile-section">
+                <h2>📋 Informações do Perfil</h2>
+                <div class="profile-grid">
+                    <div class="profile-avatar">
+                        <div class="profile-avatar-img" id="profileAvatar">
+                            <img src="" alt="Avatar">
+                            <div class="profile-avatar-fallback">U</div>
+                        </div>
+                        <button class="btn btn-primary" id="changeAvatarBtn">🖼️ Alterar Foto</button>
+                    </div>
+                    <div class="profile-info">
+                        <div class="info-group">
+                            <label>Nome</label>
+                            <div class="value" id="profileName">Carregando...</div>
+                        </div>
+                        <div class="info-group">
+                            <label>Idade</label>
+                            <div class="value" id="profileAge">Carregando...</div>
+                        </div>
+                        <div class="info-group">
+                            <label>Gênero</label>
+                            <div class="value" id="profileGender">Carregando...</div>
+                        </div>
+                        <div class="info-group">
+                            <label>Localização</label>
+                            <div class="value" id="profileLocation">Carregando...</div>
+                        </div>
+                        <div class="info-group">
+                            <label>Interesses</label>
+                            <div class="value" id="profileInterests">Carregando...</div>
+                        </div>
+                        <div class="info-group">
+                            <label>Procura por</label>
+                            <div class="value" id="profileLookingFor">Carregando...</div>
+                        </div>
+                        <div class="info-group">
+                            <label>Signo</label>
+                            <div class="value" id="profileZodiac">Carregando...</div>
+                        </div>
+                        <div class="info-group">
+                            <label>Profissão</label>
+                            <div class="value" id="profileProfession">Carregando...</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="actions">
+                    <a href="editar-perfil.html" class="btn btn-primary">✏️ Editar Perfil Completo</a>
+                    <button class="btn btn-secondary" id="toggleVisibilityBtn">👁️ Tornar Perfil Público</button>
+                </div>
+            </section>
+        </div>
+    </main>
 
-    if (error) throw error;
-    return profile;
-}
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Amor Conect</h3>
+                    <p>Uma plataforma segura e discreta para conectar corações e construir relacionamentos genuínos.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Links Rápidos</h3>
+                    <ul>
+                        <li><a href="index.html">Página Inicial</a></li>
+                        <li><a href="home.html">Home</a></li>
+                        <li><a href="mensagens.html">Mensagens</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Suporte</h3>
+                    <ul>
+                        <li><a href="#">Central de Ajuda</a></li>
+                        <li><a href="#">Política de Privacidade</a></li>
+                        <li><a href="#">Termos de Uso</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2023 Amor Conect. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
 
-// ✅ FUNÇÕES DE FORMULÁRIO - CORRIGIDAS
-function setupDescriptionCounter() {
-    const description = document.getElementById('description');
-    if (description) {
-        description.addEventListener('input', updateCharCount);
-    }
-}
+<script>
+    // Configuração do Supabase
+    const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 
-function updateCharCount() {
-    const description = document.getElementById('description');
-    const charCount = document.getElementById('charCount');
-    if (description && charCount) {
-        const count = description.value.length;
-        charCount.textContent = `${count}/100 caracteres`;
-        charCount.className = count > 100 ? 'char-count warning' : 'char-count';
-    }
-}
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-function setupMoreAboutListeners() {
-    const hasPets = document.getElementById('hasPets');
-    const exercise = document.getElementById('exercise');
-    
-    if (hasPets) hasPets.addEventListener('change', updatePetsDetailsVisibility);
-    if (exercise) exercise.addEventListener('change', updateExerciseDetailsVisibility);
-}
+    // Estado da aplicação
+    let currentUser = null;
 
-function updatePetsDetailsVisibility() {
-    const hasPets = document.getElementById('hasPets');
-    const petsDetailsGroup = document.getElementById('petsDetailsGroup');
-    if (hasPets && petsDetailsGroup) {
-        petsDetailsGroup.style.display = hasPets.value === 'sim' ? 'block' : 'none';
-    }
-}
-
-function updateExerciseDetailsVisibility() {
-    const exercise = document.getElementById('exercise');
-    const exerciseDetailsGroup = document.getElementById('exerciseDetailsGroup');
-    if (exercise && exerciseDetailsGroup) {
-        exerciseDetailsGroup.style.display = (exercise.value === 'ocasionalmente' || exercise.value === 'regularmente') ? 'block' : 'none';
-    }
-}
-
-// ✅ FUNÇÕES AUXILIARES
-function calculateAge(birthDate) {
-    if (!birthDate) return null;
-    const today = new Date();
-    const birth = new Date(birthDate);
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-        age--;
-    }
-    
-    return age;
-}
-
-function formatGender(gender) {
-    const genders = {
-        'feminino': 'Feminino',
-        'masculino': 'Masculino'
-    };
-    return genders[gender] || gender;
-}
-
-function formatLookingFor(lookingFor) {
-    const options = {
-        'amizade': 'Amizade',
-        'namoro': 'Namoro',
-        'relacionamento_serio': 'Relacionamento Sério',
-        'conversa': 'Apenas Conversa'
-    };
-    return options[lookingFor] || lookingFor;
-}
-
-function formatZodiac(zodiac) {
-    const zodiacs = {
-        'aries': 'Áries', 'touro': 'Touro', 'gemeos': 'Gêmeos', 'cancer': 'Câncer',
-        'leao': 'Leão', 'virgem': 'Virgem', 'libra': 'Libra', 'escorpiao': 'Escorpião',
-        'sagitario': 'Sagitário', 'capricornio': 'Capricórnio', 'aquario': 'Aquário', 'peixes': 'Peixes'
-    };
-    return zodiacs[zodiac] || zodiac;
-}
-
-function formatPets(hasPets, petsDetails) {
-    if (hasPets === 'sim') {
-        return petsDetails ? `Sim, ${petsDetails}` : 'Sim, tenho';
-    } else if (hasPets === 'nao') {
-        return 'Não tenho';
-    }
-    return null;
-}
-
-function formatSexualOrientation(orientation) {
-    const orientations = {
-        'heterossexual': 'Heterossexual',
-        'homossexual': 'Homossexual',
-        'bissexual': 'Bissexual',
-        'outro': 'Outro',
-        'prefiro_nao_informar': 'Prefiro não informar'
-    };
-    return orientations[orientation] || orientation;
-}
-
-function formatDrinking(drinking) {
-    const options = {
-        'nao_bebo': 'Não bebo',
-        'socialmente': 'Socialmente',
-        'frequentemente': 'Com frequência'
-    };
-    return options[drinking] || drinking;
-}
-
-function formatSmoking(smoking) {
-    const options = {
-        'nao_fumo': 'Não fumo',
-        'socialmente': 'Socialmente',
-        'frequentemente': 'Com frequência'
-    };
-    return options[smoking] || smoking;
-}
-
-function formatExercise(exercise, exerciseDetails) {
-    if (exercise === 'ocasionalmente') {
-        return exerciseDetails ? `Ocasionalmente (${exerciseDetails})` : 'Ocasionalmente';
-    } else if (exercise === 'regularmente') {
-        return exerciseDetails ? `Regularmente (${exerciseDetails})` : 'Regularmente';
-    } else if (exercise === 'nao_pratico') {
-        return 'Não pratico';
-    }
-    return null;
-}
-
-function formatReligion(religion) {
-    const religions = {
-        'catolica': 'Católica',
-        'evangelica': 'Evangélica',
-        'espirita': 'Espírita',
-        'umbanda_candomble': 'Umbanda/Candomblé',
-        'budista': 'Budista',
-        'judaica': 'Judaica',
-        'islamica': 'Islâmica',
-        'outra': 'Outra',
-        'nenhuma': 'Nenhuma',
-        'prefiro_nao_informar': 'Prefiro não informar'
-    };
-    return religions[religion] || religion;
-}
-
-function formatEducation(education) {
-    const levels = {
-        'fundamental_incompleto': 'Fundamental Incompleto',
-        'fundamental_completo': 'Fundamental Completo',
-        'medio_incompleto': 'Médio Incompleto',
-        'medio_completo': 'Médio Completo',
-        'superior_incompleto': 'Superior Incompleto',
-        'superior_completo': 'Superior Completo',
-        'pos_graduacao': 'Pós-graduação',
-        'mestrado': 'Mestrado',
-        'doutorado': 'Doutorado'
-    };
-    return levels[education] || education;
-}
-
-function updateProfileBadge() {
-    const badge = document.getElementById('profileBadge');
-    if (!badge) return;
-    
-    const completedFields = calculateProfileCompletion();
-    
-    if (completedFields >= 80) {
-        badge.textContent = 'Perfil Completo';
-        badge.style.background = 'var(--success)';
-        badge.style.color = 'white';
-    } else if (completedFields >= 50) {
-        badge.textContent = 'Perfil em Andamento';
-        badge.style.background = 'var(--primary-light)';
-    } else {
-        badge.textContent = 'Perfil Básico';
-        badge.style.background = '#e2e8f0';
-    }
-}
-
-function calculateProfileCompletion() {
-    let completed = 0;
-    let total = 0;
-
-    // Perfil básico
-    if (userProfile?.full_name) completed++;
-    total++;
-    if (userProfile?.birth_date) completed++;
-    total++;
-
-    // Detalhes
-    if (userDetails.phone) completed++;
-    total++;
-    if (userDetails.address) completed++;
-    total++;
-    if (userDetails.gender) completed++;
-    total++;
-    if (userDetails.interests && userDetails.interests.length > 0) completed++;
-    total++;
-    if (userDetails.looking_for) completed++;
-    total++;
-    if (userDetails.description) completed++;
-    total++;
-
-    // Mais sobre mim
-    if (userDetails.zodiac) completed++;
-    total++;
-    if (userDetails.has_pets) completed++;
-    total++;
-    if (userDetails.sexual_orientation) completed++;
-    total++;
-    if (userDetails.drinking) completed++;
-    total++;
-    if (userDetails.smoking) completed++;
-    total++;
-    if (userDetails.exercise) completed++;
-    total++;
-    if (userDetails.religion) completed++;
-    total++;
-    if (userDetails.education) completed++;
-    total++;
-    if (userDetails.profession) completed++;
-    total++;
-
-    return Math.round((completed / total) * 100);
-}
-
-// ✅ FUNÇÕES DE FORMULÁRIO - CORRIGIDAS
-function toggleEdit(section) {
-    const display = document.getElementById(section + 'Display');
-    const edit = document.getElementById(section + 'Edit');
-    
-    if (!display || !edit) {
-        console.error('Elementos não encontrados para:', section);
-        return;
-    }
-    
-    if (display.classList.contains('hidden')) {
-        display.classList.remove('hidden');
-        edit.classList.add('hidden');
-    } else {
-        display.classList.add('hidden');
-        edit.classList.remove('hidden');
-    }
-}
-
-function updateProfileForms() {
-    console.log('📝 Atualizando formulários com dados:', { userProfile, userDetails });
-    
-    // Formulário de informações básicas
-    const fullNameInput = document.getElementById('fullName');
-    const birthDateInput = document.getElementById('birthDate');
-    if (fullNameInput) fullNameInput.value = userProfile?.full_name || '';
-    if (birthDateInput) birthDateInput.value = userProfile?.birth_date || '';
-
-    // Formulário de contato
-    const phoneInput = document.getElementById('phone');
-    const addressInput = document.getElementById('address');
-    if (phoneInput) phoneInput.value = userDetails.phone || '';
-    if (addressInput) addressInput.value = userDetails.address || '';
-
-    // Formulário de preferências
-    const genderSelect = document.getElementById('gender');
-    const lookingForSelect = document.getElementById('lookingFor');
-    if (genderSelect) genderSelect.value = userDetails.gender || '';
-    if (lookingForSelect) lookingForSelect.value = userDetails.looking_for || '';
-
-    // Checkboxes de interesses
-    const interests = userDetails.interests || [];
-    document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-        checkbox.checked = interests.includes(checkbox.value);
+    document.addEventListener('DOMContentLoaded', function() {
+        checkAuth();
+        setupMobileMenu();
     });
 
-    // Descrição
-    const descriptionInput = document.getElementById('description');
-    if (descriptionInput) {
-        descriptionInput.value = userDetails.description || '';
-        updateCharCount();
-    }
+    // ==================== MENU MOBILE ====================
+    function setupMobileMenu() {
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const closeMobileMenu = document.getElementById('closeMobileMenu');
+        const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
 
-    // Mais sobre mim
-    const zodiacInput = document.getElementById('zodiac');
-    const hasPetsInput = document.getElementById('hasPets');
-    const petsDetailsInput = document.getElementById('petsDetails');
-    const sexualOrientationInput = document.getElementById('sexualOrientation');
-    const drinkingInput = document.getElementById('drinking');
-    const smokingInput = document.getElementById('smoking');
-    const exerciseInput = document.getElementById('exercise');
-    const exerciseDetailsInput = document.getElementById('exerciseDetails');
-    const religionInput = document.getElementById('religion');
-    const educationInput = document.getElementById('education');
-    const professionInput = document.getElementById('profession');
-    
-    if (zodiacInput) zodiacInput.value = userDetails.zodiac || '';
-    if (hasPetsInput) hasPetsInput.value = userDetails.has_pets || '';
-    if (petsDetailsInput) petsDetailsInput.value = userDetails.pets_details || '';
-    if (sexualOrientationInput) sexualOrientationInput.value = userDetails.sexual_orientation || '';
-    if (drinkingInput) drinkingInput.value = userDetails.drinking || '';
-    if (smokingInput) smokingInput.value = userDetails.smoking || '';
-    if (exerciseInput) exerciseInput.value = userDetails.exercise || '';
-    if (exerciseDetailsInput) exerciseDetailsInput.value = userDetails.exercise_details || '';
-    if (religionInput) religionInput.value = userDetails.religion || '';
-    if (educationInput) educationInput.value = userDetails.education || '';
-    if (professionInput) professionInput.value = userDetails.profession || '';
-
-    // Atualizar visibilidade dos campos condicionais
-    updatePetsDetailsVisibility();
-    updateExerciseDetailsVisibility();
-}
-
-// CONTINUA NA PRÓXIMA MENSAGEM...
-// ✅ FUNÇÕES DE SALVAMENTO - CORRIGIDAS
-async function saveBasicInfo(e) {
-    e.preventDefault();
-    
-    try {
-        const fullName = document.getElementById('fullName').value;
-        const birthDate = document.getElementById('birthDate').value;
-
-        console.log('💾 Salvando informações básicas:', { fullName, birthDate });
-
-        const { error } = await supabase
-            .from('profiles')
-            .update({
-                full_name: fullName,
-                birth_date: birthDate,
-                updated_at: new Date().toISOString()
-            })
-            .eq('id', currentUser.id);
-
-        if (error) {
-            console.error('❌ Erro ao salvar perfil:', error);
-            throw error;
-        }
-
-        // Recarregar dados
-        await loadUserData();
-        toggleEdit('basicInfo');
-        showAlert('successAlert', '✅ Informações básicas atualizadas com sucesso!');
-        
-    } catch (error) {
-        console.error('❌ Erro ao salvar informações básicas:', error);
-        showAlert('errorAlert', '❌ Erro ao salvar informações básicas: ' + error.message);
-    }
-}
-
-async function saveContactInfo(e) {
-    e.preventDefault();
-    
-    try {
-        const phone = document.getElementById('phone').value;
-        const address = document.getElementById('address').value;
-
-        console.log('💾 Salvando informações de contato:', { phone, address });
-
-        // Verificar se user_details existe
-        const { data: existingDetails } = await supabase
-            .from('user_details')
-            .select('id')
-            .eq('user_id', currentUser.id)
-            .single();
-
-        let error;
-        
-        if (existingDetails) {
-            // Atualizar
-            const { error: updateError } = await supabase
-                .from('user_details')
-                .update({
-                    phone: phone,
-                    address: address,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('user_id', currentUser.id);
-
-            error = updateError;
-        } else {
-            // Inserir
-            const { error: insertError } = await supabase
-                .from('user_details')
-                .insert([
-                    {
-                        user_id: currentUser.id,
-                        phone: phone,
-                        address: address,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    }
-                ]);
-
-            error = insertError;
-        }
-
-        if (error) throw error;
-
-        // Recarregar dados
-        await loadUserData();
-        toggleEdit('contactInfo');
-        showAlert('successAlert', '✅ Informações de contato atualizadas com sucesso!');
-        
-    } catch (error) {
-        console.error('❌ Erro ao salvar informações de contato:', error);
-        showAlert('errorAlert', '❌ Erro ao salvar informações de contato: ' + error.message);
-    }
-}
-
-async function savePreferencesInfo(e) {
-    e.preventDefault();
-    
-    try {
-        const gender = document.getElementById('gender').value;
-        const lookingFor = document.getElementById('lookingFor').value;
-        
-        const interests = [];
-        document.querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
-            interests.push(checkbox.value);
-        });
-
-        console.log('💾 Salvando preferências:', { gender, lookingFor, interests });
-
-        // Verificar se user_details existe
-        const { data: existingDetails } = await supabase
-            .from('user_details')
-            .select('id')
-            .eq('user_id', currentUser.id)
-            .single();
-
-        let error;
-        
-        if (existingDetails) {
-            // Atualizar
-            const { error: updateError } = await supabase
-                .from('user_details')
-                .update({
-                    gender: gender,
-                    interests: interests,
-                    looking_for: lookingFor,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('user_id', currentUser.id);
-
-            error = updateError;
-        } else {
-            // Inserir
-            const { error: insertError } = await supabase
-                .from('user_details')
-                .insert([
-                    {
-                        user_id: currentUser.id,
-                        gender: gender,
-                        interests: interests,
-                        looking_for: lookingFor,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    }
-                ]);
-
-            error = insertError;
-        }
-
-        if (error) throw error;
-
-        // Recarregar dados
-        await loadUserData();
-        toggleEdit('preferencesInfo');
-        showAlert('successAlert', '✅ Preferências atualizadas com sucesso!');
-        
-    } catch (error) {
-        console.error('❌ Erro ao salvar preferências:', error);
-        showAlert('errorAlert', '❌ Erro ao salvar preferências: ' + error.message);
-    }
-}
-
-async function saveDescriptionInfo(e) {
-    e.preventDefault();
-    
-    try {
-        const description = document.getElementById('description').value;
-        
-        if (description.length > 100) {
-            showAlert('errorAlert', '❌ A descrição deve ter no máximo 100 caracteres.');
+        if (!hamburgerBtn || !mobileMenu) {
+            console.error('Elementos do menu mobile não encontrados');
             return;
         }
 
-        console.log('💾 Salvando descrição:', description);
-
-        // Verificar se user_details existe
-        const { data: existingDetails } = await supabase
-            .from('user_details')
-            .select('id')
-            .eq('user_id', currentUser.id)
-            .single();
-
-        let error;
-        
-        if (existingDetails) {
-            // Atualizar
-            const { error: updateError } = await supabase
-                .from('user_details')
-                .update({
-                    description: description,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('user_id', currentUser.id);
-
-            error = updateError;
-        } else {
-            // Inserir
-            const { error: insertError } = await supabase
-                .from('user_details')
-                .insert([
-                    {
-                        user_id: currentUser.id,
-                        description: description,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    }
-                ]);
-
-            error = insertError;
-        }
-
-        if (error) throw error;
-
-        // Recarregar dados
-        await loadUserData();
-        toggleEdit('descriptionInfo');
-        showAlert('successAlert', '✅ Descrição atualizada com sucesso!');
-        
-    } catch (error) {
-        console.error('❌ Erro ao salvar descrição:', error);
-        showAlert('errorAlert', '❌ Erro ao salvar descrição: ' + error.message);
-    }
-}
-
-async function saveMoreAboutInfo(e) {
-    e.preventDefault();
-    
-    try {
-        const zodiac = document.getElementById('zodiac').value;
-        const hasPets = document.getElementById('hasPets').value;
-        const petsDetails = document.getElementById('petsDetails').value;
-        const sexualOrientation = document.getElementById('sexualOrientation').value;
-        const drinking = document.getElementById('drinking').value;
-        const smoking = document.getElementById('smoking').value;
-        const exercise = document.getElementById('exercise').value;
-        const exerciseDetails = document.getElementById('exerciseDetails').value;
-        const religion = document.getElementById('religion').value;
-        const education = document.getElementById('education').value;
-        const profession = document.getElementById('profession').value;
-
-        console.log('💾 Salvando mais informações:', {
-            zodiac, hasPets, petsDetails, sexualOrientation, drinking, 
-            smoking, exercise, exerciseDetails, religion, education, profession
+        hamburgerBtn.addEventListener('click', () => {
+            mobileMenu.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
         });
 
-        // Verificar se user_details existe
-        const { data: existingDetails } = await supabase
-            .from('user_details')
-            .select('id')
-            .eq('user_id', currentUser.id)
-            .single();
+        closeMobileMenu.addEventListener('click', () => {
+            mobileMenu.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        });
 
-        let error;
-        
-        if (existingDetails) {
-            // Atualizar
-            const { error: updateError } = await supabase
-                .from('user_details')
-                .update({
-                    zodiac: zodiac,
-                    has_pets: hasPets,
-                    pets_details: petsDetails,
-                    sexual_orientation: sexualOrientation,
-                    drinking: drinking,
-                    smoking: smoking,
-                    exercise: exercise,
-                    exercise_details: exerciseDetails,
-                    religion: religion,
-                    education: education,
-                    profession: profession,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('user_id', currentUser.id);
+        mobileLogoutBtn.addEventListener('click', logout);
 
-            error = updateError;
-        } else {
-            // Inserir
-            const { error: insertError } = await supabase
-                .from('user_details')
-                .insert([
-                    {
-                        user_id: currentUser.id,
-                        zodiac: zodiac,
-                        has_pets: hasPets,
-                        pets_details: petsDetails,
-                        sexual_orientation: sexualOrientation,
-                        drinking: drinking,
-                        smoking: smoking,
-                        exercise: exercise,
-                        exercise_details: exerciseDetails,
-                        religion: religion,
-                        education: education,
-                        profession: profession,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    }
-                ]);
-
-            error = insertError;
-        }
-
-        if (error) throw error;
-
-        // Recarregar dados
-        await loadUserData();
-        toggleEdit('moreAboutInfo');
-        showAlert('successAlert', '✅ Informações atualizadas com sucesso!');
-        
-    } catch (error) {
-        console.error('❌ Erro ao salvar informações:', error);
-        showAlert('errorAlert', '❌ Erro ao salvar informações: ' + error.message);
-    }
-}
-
-// ✅ FUNÇÕES DE UPLOAD DE FOTO - CORRIGIDAS
-function openUploadModal() {
-    console.log('🎯 Abrindo modal de upload...');
-    const modal = document.getElementById('uploadModal');
-    if (modal) {
-        modal.style.display = 'flex';
-        resetUploadModal();
-    }
-}
-
-function closeUploadModal() {
-    console.log('🎯 Fechando modal...');
-    const modal = document.getElementById('uploadModal');
-    if (modal) {
-        modal.style.display = 'none';
-        resetUploadModal();
-    }
-}
-
-function resetUploadModal() {
-    selectedFile = null;
-    
-    if (filePreviewUrl) {
-        URL.revokeObjectURL(filePreviewUrl);
-        filePreviewUrl = null;
-    }
-    
-    const modalPreview = document.getElementById('modalPreview');
-    if (modalPreview) {
-        modalPreview.style.display = 'none';
-        modalPreview.src = '';
-    }
-    
-    const fileInfo = document.getElementById('fileInfo');
-    const uploadError = document.getElementById('uploadError');
-    const uploadBtn = document.getElementById('uploadBtn');
-    const modalPhotoInput = document.getElementById('modalPhotoInput');
-    
-    if (fileInfo) fileInfo.textContent = '';
-    if (uploadError) uploadError.textContent = '';
-    if (uploadBtn) uploadBtn.disabled = true;
-    if (modalPhotoInput) modalPhotoInput.value = '';
-}
-
-function handleModalPhotoSelect(event) {
-    console.log('📁 Arquivo selecionado no modal');
-    handlePhotoSelection(event.target.files[0]);
-}
-
-function handlePhotoSelect(event) {
-    console.log('📁 Arquivo selecionado diretamente');
-    handlePhotoSelection(event.target.files[0]);
-    if (event.target.files[0]) {
-        openUploadModal();
-    }
-}
-
-function handlePhotoSelection(file) {
-    console.log('🔄 Processando seleção de arquivo:', file?.name);
-    
-    // Limpar estado anterior
-    if (filePreviewUrl) {
-        URL.revokeObjectURL(filePreviewUrl);
-    }
-    
-    // Validar arquivo
-    const error = validateFile(file);
-    if (error) {
-        const uploadError = document.getElementById('uploadError');
-        const uploadBtn = document.getElementById('uploadBtn');
-        if (uploadError) uploadError.textContent = error;
-        if (uploadBtn) uploadBtn.disabled = true;
-        return;
-    }
-    
-    selectedFile = file;
-    
-    // Criar preview
-    filePreviewUrl = URL.createObjectURL(file);
-    const modalPreview = document.getElementById('modalPreview');
-    if (modalPreview) {
-        modalPreview.src = filePreviewUrl;
-        modalPreview.style.display = 'block';
-    }
-    
-    // Mostrar informações do arquivo
-    const fileSizeKB = Math.round(file.size / 1024);
-    const fileInfo = document.getElementById('fileInfo');
-    const uploadError = document.getElementById('uploadError');
-    const uploadBtn = document.getElementById('uploadBtn');
-    
-    if (fileInfo) fileInfo.textContent = `${file.name} (${fileSizeKB} KB)`;
-    if (uploadError) uploadError.textContent = '';
-    if (uploadBtn) uploadBtn.disabled = false;
-    
-    console.log('✅ Preview criado com sucesso');
-}
-
-function validateFile(file) {
-    if (!file) return 'Nenhum arquivo selecionado.';
-    
-    // Validar tipo
-    if (!ALLOWED_TYPES.includes(file.type)) {
-        return 'Formato não permitido. Use apenas JPG ou PNG.';
-    }
-    
-    // Validar tamanho
-    if (file.size > MAX_FILE_SIZE) {
-        const maxSizeKB = MAX_FILE_SIZE / 1024;
-        const fileSizeKB = Math.round(file.size / 1024);
-        return `Arquivo muito grande: ${fileSizeKB}KB. Máximo: ${maxSizeKB}KB.`;
-    }
-    
-    return null;
-}
-
-async function uploadPhoto() {
-    if (!selectedFile) {
-        showUploadError('Nenhum arquivo selecionado.');
-        return;
-    }
-
-    try {
-        console.log('🚀 Iniciando upload...');
-        
-        // Mostrar loading
-        const uploadLoading = document.getElementById('uploadLoading');
-        const uploadBtn = document.getElementById('uploadBtn');
-        const uploadError = document.getElementById('uploadError');
-        
-        if (uploadLoading) uploadLoading.style.display = 'block';
-        if (uploadBtn) uploadBtn.disabled = true;
-        if (uploadError) uploadError.textContent = '';
-
-        // Nome único para o arquivo
-        const fileExt = selectedFile.name.split('.').pop();
-        const fileName = `${currentUser.id}-${Date.now()}.${fileExt}`;
-        
-        console.log('📤 Fazendo upload para:', fileName);
-
-        // Fazer upload para Supabase Storage
-        const { data, error } = await supabase.storage
-            .from('avatars')
-            .upload(fileName, selectedFile, {
-                cacheControl: '3600',
-                upsert: true
+        // Fechar menu ao clicar em um link
+        mobileMenu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.style.display = 'none';
+                document.body.style.overflow = 'auto';
             });
+        });
 
-        if (error) {
-            console.error('❌ Erro no upload:', error);
-            throw new Error(`Falha no upload: ${error.message}`);
+        // Verificar tamanho da tela
+        function checkScreenSize() {
+            if (window.innerWidth <= 768) {
+                const userMenu = document.querySelector('.user-menu');
+                if (userMenu) userMenu.style.display = 'none';
+                hamburgerBtn.style.display = 'flex';
+            } else {
+                const userMenu = document.querySelector('.user-menu');
+                if (userMenu) userMenu.style.display = 'flex';
+                hamburgerBtn.style.display = 'none';
+                mobileMenu.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
         }
 
-        console.log('✅ Upload concluído:', data);
-
-        // Salvar URL no perfil
-        const { error: updateError } = await supabase
-            .from('profiles')
-            .update({ 
-                avatar_url: fileName,
-                updated_at: new Date().toISOString()
-            })
-            .eq('id', currentUser.id);
-
-        if (updateError) {
-            console.error('❌ Erro ao salvar URL:', updateError);
-            throw new Error('Erro ao salvar foto no perfil');
-        }
-
-        console.log('✅ URL salva no perfil');
-
-        // Atualizar interface
-        await loadUserData();
-        
-        // Fechar modal e mostrar sucesso
-        closeUploadModal();
-        showAlert('successAlert', '✅ Foto atualizada com sucesso!');
-        
-        console.log('🎉 Foto do perfil atualizada com sucesso!');
-
-    } catch (error) {
-        console.error('❌ Erro no upload da foto:', error);
-        showUploadError(error.message || 'Erro ao fazer upload da foto.');
-    } finally {
-        const uploadLoading = document.getElementById('uploadLoading');
-        const uploadBtn = document.getElementById('uploadBtn');
-        
-        if (uploadLoading) uploadLoading.style.display = 'none';
-        if (uploadBtn) uploadBtn.disabled = false;
+        window.addEventListener('resize', checkScreenSize);
+        checkScreenSize();
     }
-}
 
-function showUploadError(message) {
-    const uploadError = document.getElementById('uploadError');
-    if (uploadError) {
-        uploadError.textContent = message;
-    }
-}
-
-// ✅ FUNÇÕES DE UTILIDADE
-function showAlert(alertId, message) {
-    try {
-        const alert = document.getElementById(alertId);
-        if (alert) {
-            alert.textContent = message;
-            alert.style.display = 'block';
+    // ==================== AUTENTICAÇÃO ====================
+    async function checkAuth() {
+        try {
+            const { data: { user }, error } = await supabase.auth.getUser();
             
-            setTimeout(() => {
-                if (alert) {
-                    alert.style.display = 'none';
+            if (error) throw error;
+            
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            currentUser = user;
+            await loadUserData();
+            setupEventListeners();
+            await loadProfileData();
+            
+        } catch (error) {
+            console.error('Erro na autenticação:', error);
+            window.location.href = 'login.html';
+        }
+    }
+
+    // ==================== DADOS DO USUÁRIO ====================
+    async function loadUserData() {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            
+            let displayName = 'Usuário';
+            
+            if (user.user_metadata && user.user_metadata.nickname) {
+                displayName = user.user_metadata.nickname;
+            } else if (user.user_metadata && user.user_metadata.full_name) {
+                displayName = user.user_metadata.full_name;
+            } else if (user.email) {
+                displayName = user.email.split('@')[0];
+            }
+
+            // Atualizar nome em todos os lugares
+            const userNickname = document.getElementById('userNickname');
+            const mobileUserNickname = document.getElementById('mobileUserNickname');
+            
+            if (userNickname) userNickname.textContent = displayName;
+            if (mobileUserNickname) mobileUserNickname.textContent = displayName;
+            
+            // Carregar foto do usuário logado
+            await loadCurrentUserAvatar();
+
+        } catch (error) {
+            console.error('Erro ao carregar dados do usuário:', error);
+        }
+    }
+
+    async function loadCurrentUserAvatar() {
+        try {
+            const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('avatar_url, nickname')
+                .eq('id', currentUser.id)
+                .single();
+
+            if (error || !profile) {
+                console.log('Perfil não encontrado ou erro:', error);
+                return;
+            }
+
+            const avatarElements = [
+                document.getElementById('userAvatar'),
+                document.getElementById('mobileUserAvatar'),
+                document.getElementById('profileAvatar')
+            ];
+
+            for (const avatarElement of avatarElements) {
+                if (!avatarElement) continue;
+                
+                const userAvatarFallback = avatarElement.querySelector('.user-avatar-fallback') || 
+                                          avatarElement.querySelector('.profile-avatar-fallback');
+                const userAvatarImg = avatarElement.querySelector('.user-avatar-img') || 
+                                     avatarElement.querySelector('img');
+                
+                if (!userAvatarFallback || !userAvatarImg) continue;
+
+                // Iniciar com fallback visível
+                userAvatarImg.style.display = 'none';
+                userAvatarFallback.style.display = 'flex';
+                
+                if (profile.avatar_url) {
+                    const photoUrl = await loadUserPhoto(profile.avatar_url);
+                    if (photoUrl) {
+                        userAvatarImg.src = photoUrl;
+                        userAvatarImg.style.display = 'block';
+                        userAvatarFallback.style.display = 'none';
+                        avatarElement.style.backgroundImage = `url(${photoUrl})`;
+                        avatarElement.style.backgroundSize = 'cover';
+                        avatarElement.style.backgroundPosition = 'center';
+                    } else {
+                        // Mostrar inicial do nome
+                        const displayName = profile.nickname || 'Usuário';
+                        userAvatarFallback.textContent = displayName.charAt(0).toUpperCase();
+                    }
+                } else {
+                    // Mostrar inicial do nome
+                    const displayName = profile.nickname || 'Usuário';
+                    userAvatarFallback.textContent = displayName.charAt(0).toUpperCase();
                 }
-            }, 5000);
+            }
+
+        } catch (error) {
+            console.error('Erro ao carregar avatar do usuário:', error);
+        }
+    }
+
+    async function loadUserPhoto(avatarUrl) {
+        try {
+            if (!avatarUrl) return null;
+
+            const { data, error } = await supabase.storage
+                .from('avatars')
+                .download(avatarUrl);
+
+            if (error) {
+                console.error('Erro ao baixar imagem:', error);
+                return null;
+            }
+
+            return URL.createObjectURL(data);
+
+        } catch (error) {
+            console.error('Erro ao carregar foto:', error);
+            return null;
+        }
+    }
+
+    // ==================== EVENT LISTENERS ====================
+    function setupEventListeners() {
+        // Logout
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', logout);
+        }
+
+        // Botão para alterar avatar
+        const changeAvatarBtn = document.getElementById('changeAvatarBtn');
+        if (changeAvatarBtn) {
+            changeAvatarBtn.addEventListener('click', changeAvatar);
+        }
+
+        // Botão para toggle de visibilidade
+        const toggleVisibilityBtn = document.getElementById('toggleVisibilityBtn');
+        if (toggleVisibilityBtn) {
+            toggleVisibilityBtn.addEventListener('click', toggleProfileVisibility);
+        }
+    }
+
+    // ==================== LOGOUT ====================
+    async function logout() {
+        try {
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
+            window.location.href = 'login.html';
+        } catch (error) {
+            console.error('Erro ao fazer logout:', error);
+            alert('Erro ao fazer logout. Tente novamente.');
+        }
+    }
+
+    // ==================== CARREGAR DADOS DO PERFIL ====================
+    async function loadProfileData() {
+        try {
+            // Buscar dados do perfil
+            const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', currentUser.id)
+                .single();
+
+            if (error) throw error;
+
+            // Buscar detalhes do usuário
+            const { data: userDetails, error: detailsError } = await supabase
+                .from('user_details')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .single();
+
+            // Atualizar informações na interface
+            updateProfileInfo(profile, userDetails);
+
+            // Carregar estatísticas
+            await loadUserStats();
+
+        } catch (error) {
+            console.error('Erro ao carregar dados do perfil:', error);
+        }
+    }
+
+    function updateProfileInfo(profile, userDetails) {
+        // Informações básicas
+        document.getElementById('profileName').textContent = profile.nickname || profile.full_name || 'Não informado';
+        
+        // Idade
+        if (profile.birth_date) {
+            const age = calculateAge(profile.birth_date);
+            document.getElementById('profileAge').textContent = `${age} anos`;
         } else {
-            console.warn(`Alerta não encontrado: ${alertId}`);
-        }
-    } catch (error) {
-        console.error('Erro no showAlert:', error);
-    }
-}
-
-// ✅ FUNÇÕES DE EDITOR DE IMAGEM (placeholders)
-function cropImage() {
-    showAlert('errorAlert', '🚧 Funcionalidade de recorte em desenvolvimento');
-}
-
-function rotateImage() {
-    showAlert('errorAlert', '🚧 Funcionalidade de rotação em desenvolvimento');
-}
-
-function resizeImage() {
-    showAlert('errorAlert', '🚧 Funcionalidade de redimensionamento em desenvolvimento');
-}
-
-function adjustImage() {
-    showAlert('errorAlert', '🚧 Funcionalidade de ajustes em desenvolvimento');
-}
-
-// ✅ FUNÇÕES DE AÇÃO
-async function logout() {
-    try {
-        await supabase.auth.signOut();
-        window.location.href = 'index.html';
-    } catch (error) {
-        console.error('Erro ao fazer logout:', error);
-    }
-}
-
-function exportProfileData() {
-    const profileData = {
-        perfil: userProfile,
-        detalhes: userDetails
-    };
-    
-    const dataStr = JSON.stringify(profileData, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `perfil-${currentUser.id}.json`;
-    link.click();
-    
-    URL.revokeObjectURL(url);
-    showAlert('successAlert', '✅ Dados exportados com sucesso!');
-}
-
-async function deleteAccount() {
-    if (!confirm('🚨 EXCLUIR CONTA PERMANENTEMENTE?\n\nISSO VAI APAGAR TUDO!')) {
-        return;
-    }
-
-    try {
-        console.log('EXCLUINDO CONTA DO USUÁRIO:', currentUser.id);
-        
-        // ✅ PASSO 1: Apagar todos os dados das tabelas
-        await supabase.from('user_details').delete().eq('user_id', currentUser.id);
-        await supabase.from('messages').delete().or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`);
-        
-        // ✅ PASSO 2: Apagar foto se existir
-        if (userProfile?.avatar_url) {
-            await supabase.storage.from('avatars').remove([userProfile.avatar_url]);
-        }
-        
-        // ✅ PASSO 3: Apagar o perfil
-        const { error: deleteError } = await supabase
-            .from('profiles')
-            .delete()
-            .eq('id', currentUser.id);
-
-        if (deleteError) {
-            console.log('Erro ao deletar perfil:', deleteError);
+            document.getElementById('profileAge').textContent = 'Não informado';
         }
 
-        // ✅ PASSO 4: Fazer logout
-        await supabase.auth.signOut();
-        
-        // ✅ PASSO 5: Limpar tudo
-        localStorage.clear();
-        
-        // ✅ PASSO 6: Mostrar mensagem final
-        alert('✅ CONTA EXCLUÍDA!\n\nTodos os seus dados foram removidos.');
-        
-        // ✅ PASSO 7: Redirecionar
-        window.location.href = 'index.html';
+        // Gênero
+        if (userDetails && userDetails.gender) {
+            document.getElementById('profileGender').textContent = formatGender(userDetails.gender);
+        } else {
+            document.getElementById('profileGender').textContent = 'Não informado';
+        }
 
-    } catch (error) {
-        console.error('Erro:', error);
-        alert('Erro ao excluir: ' + error.message);
+        // Localização
+        if (userDetails && userDetails.address) {
+            document.getElementById('profileLocation').textContent = userDetails.address;
+        } else {
+            document.getElementById('profileLocation').textContent = 'Não informado';
+        }
+
+        // Interesses
+        if (userDetails && userDetails.interests) {
+            const interests = Array.isArray(userDetails.interests) ? userDetails.interests : [userDetails.interests];
+            document.getElementById('profileInterests').textContent = interests.join(', ');
+        } else {
+            document.getElementById('profileInterests').textContent = 'Não informado';
+        }
+
+        // Procura por
+        if (userDetails && userDetails.looking_for) {
+            document.getElementById('profileLookingFor').textContent = formatLookingFor(userDetails.looking_for);
+        } else {
+            document.getElementById('profileLookingFor').textContent = 'Não informado';
+        }
+
+        // Signo
+        if (userDetails && userDetails.zodiac) {
+            document.getElementById('profileZodiac').textContent = formatZodiac(userDetails.zodiac);
+        } else {
+            document.getElementById('profileZodiac').textContent = 'Não informado';
+        }
+
+        // Profissão
+        if (userDetails && userDetails.profession) {
+            document.getElementById('profileProfession').textContent = userDetails.profession;
+        } else {
+            document.getElementById('profileProfession').textContent = 'Não informado';
+        }
     }
-}
 
-// ✅ INICIALIZAÇÃO DE COMPONENTES ADICIONAIS
-document.addEventListener('DOMContentLoaded', function() {
-    // Adicionar tooltips para os botões do editor de imagem
-    const editorButtons = document.querySelectorAll('.editor-btn');
-    editorButtons.forEach(button => {
-        button.title = 'Funcionalidade em desenvolvimento';
-    });
-});
+    // ==================== ESTATÍSTICAS DO USUÁRIO ====================
+    async function loadUserStats() {
+        try {
+            // Buscar estatísticas do usuário
+            const { data: stats, error } = await supabase
+                .from('user_stats')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .single();
+
+            if (error && error.code !== 'PGRST116') {
+                console.error('Erro ao buscar estatísticas:', error);
+            }
+
+            // Atualizar estatísticas na interface
+            if (stats) {
+                document.getElementById('profileViews').textContent = stats.profile_views || 0;
+                document.getElementById('matchesCount').textContent = stats.matches_count || 0;
+                document.getElementById('messagesCount').textContent = stats.messages_count || 0;
+                document.getElementById('likesCount').textContent = stats.likes_count || 0;
+            } else {
+                // Valores padrão se não houver estatísticas
+                document.getElementById('profileViews').textContent = 0;
+                document.getElementById('matchesCount').textContent = 0;
+                document.getElementById('messagesCount').textContent = 0;
+                document.getElementById('likesCount').textContent = 0;
+            }
+
+        } catch (error) {
+            console.error('Erro ao carregar estatísticas:', error);
+        }
+    }
+
+    // ==================== FUNÇÕES AUXILIARES ====================
+    function calculateAge(birthDate) {
+        const today = new Date();
+        const birth = new Date(birthDate);
+        let age = today.getFullYear() - birth.getFullYear();
+        const monthDiff = today.getMonth() - birth.getMonth();
+        
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+            age--;
+        }
+        
+        return age;
+    }
+
+    function formatGender(gender) {
+        const genderMap = {
+            'feminino': 'Feminino',
+            'masculino': 'Masculino',
+            'mulher': 'Feminino',
+            'homem': 'Masculino'
+        };
+        return genderMap[gender] || gender;
+    }
+
+    function formatLookingFor(lookingFor) {
+        const lookingForMap = {
+            'amizade': '🤝 Amizade',
+            'namoro': '💕 Namoro',
+            'relacionamento_serio': '💍 Relacionamento Sério',
+            'conversa': '💬 Apenas Conversa'
+        };
+        return lookingForMap[lookingFor] || lookingFor;
+    }
+
+    function formatZodiac(zodiac) {
+        const zodiacMap = {
+            'aries': '♈ Áries',
+            'touro': '♉ Touro',
+            'gemeos': '♊ Gêmeos',
+            'cancer': '♋ Câncer',
+            'leao': '♌ Leão',
+            'virgem': '♍ Virgem',
+            'libra': '♎ Libra',
+            'escorpiao': '♏ Escorpião',
+            'sagitario': '♐ Sagitário',
+            'capricornio': '♑ Capricórnio',
+            'aquario': '♒ Aquário',
+            'peixes': '♓ Peixes'
+        };
+        return zodiacMap[zodiac] || zodiac;
+    }
+
+    // ==================== FUNÇÕES DE INTERAÇÃO ====================
+    async function changeAvatar() {
+        alert('Funcionalidade de alterar foto em desenvolvimento!');
+        // Aqui você pode implementar o upload de nova foto
+    }
+
+    async function toggleProfileVisibility() {
+        try {
+            // Buscar configuração atual de visibilidade
+            const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('is_public')
+                .eq('id', currentUser.id)
+                .single();
+
+            if (error) throw error;
+
+            // Alternar visibilidade
+            const newVisibility = !profile.is_public;
+
+            const { error: updateError } = await supabase
+                .from('profiles')
+                .update({ is_public: newVisibility })
+                .eq('id', currentUser.id);
+
+            if (updateError) throw updateError;
+
+            // Atualizar texto do botão
+            const toggleBtn = document.getElementById('toggleVisibilityBtn');
+            if (toggleBtn) {
+                toggleBtn.textContent = newVisibility ? '👁️ Perfil Público' : '👁️ Tornar Perfil Público';
+            }
+
+            alert(`Perfil ${newVisibility ? 'tornado público' : 'tornado privado'} com sucesso!`);
+
+        } catch (error) {
+            console.error('Erro ao alterar visibilidade do perfil:', error);
+            alert('Erro ao alterar visibilidade do perfil. Tente novamente.');
+        }
+    }
 </script>
 </body>
 </html>
