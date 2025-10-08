@@ -337,6 +337,9 @@
             font-size: 1.5rem;
             color: var(--vermelho-rosado);
             margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .profile-grid {
@@ -366,6 +369,12 @@
             border: 3px solid var(--branco);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             overflow: hidden;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .profile-avatar-img:hover {
+            transform: scale(1.05);
         }
 
         .profile-avatar-img img {
@@ -402,6 +411,45 @@
         .info-group .value {
             padding: 0.5rem 0;
             color: var(--text-light);
+        }
+
+        .info-group .edit-input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 2px solid var(--lilas);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background: var(--bege);
+            transition: var(--transition);
+        }
+
+        .info-group .edit-input:focus {
+            outline: none;
+            border-color: var(--vermelho-rosado);
+            background: var(--branco);
+        }
+
+        .info-group .edit-select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 2px solid var(--lilas);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background: var(--bege);
+            transition: var(--transition);
+        }
+
+        .info-group .edit-textarea {
+            width: 100%;
+            padding: 0.5rem;
+            border: 2px solid var(--lilas);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background: var(--bege);
+            transition: var(--transition);
+            resize: vertical;
+            min-height: 80px;
+            font-family: inherit;
         }
 
         .actions {
@@ -555,6 +603,31 @@
         .hidden {
             display: none;
         }
+
+        .edit-mode .value {
+            display: none;
+        }
+
+        .edit-mode .edit-input,
+        .edit-mode .edit-select,
+        .edit-mode .edit-textarea {
+            display: block;
+        }
+
+        .edit-input,
+        .edit-select,
+        .edit-textarea {
+            display: none;
+        }
+
+        .completion-badge {
+            background: var(--vermelho-rosado);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -599,7 +672,6 @@
             <a href="home.html" class="btn btn-outline">🏠 Home</a>
             <a href="busca.html" class="btn btn-outline">🔍 Buscar</a>
             <a href="mensagens.html" class="btn btn-outline">💌 Mensagens</a>
-            <a href="editar-perfil.html" class="btn btn-outline">✏️ Editar Perfil</a>
             <a href="configuracoes.html" class="btn btn-outline">⚙️ Configurações</a>
             <button class="btn btn-outline" id="mobileLogoutBtn">🚪 Sair</button>
         </div>
@@ -643,7 +715,7 @@
                     <h3>🚀 Ações Rápidas</h3>
                     <p>Atualize seu perfil e interaja com outros usuários</p>
                     <div class="actions">
-                        <a href="editar-perfil.html" class="btn btn-primary">✏️ Editar Perfil</a>
+                        <button class="btn btn-primary" id="editProfileBtn">✏️ Editar Perfil</button>
                         <a href="busca.html" class="btn btn-secondary">🔍 Buscar Pessoas</a>
                         <a href="mensagens.html" class="btn btn-secondary">💌 Ver Mensagens</a>
                     </div>
@@ -651,53 +723,148 @@
             </section>
 
             <!-- Profile Information -->
-            <section class="profile-section">
-                <h2>📋 Informações do Perfil</h2>
+            <section class="profile-section" id="profileSection">
+                <h2>
+                    <span>📋 Informações do Perfil</span>
+                    <span class="completion-badge" id="completionBadge">0% completo</span>
+                </h2>
                 <div class="profile-grid">
                     <div class="profile-avatar">
-                        <div class="profile-avatar-img" id="profileAvatar">
+                        <div class="profile-avatar-img" id="profileAvatar" onclick="changeAvatar()">
                             <img src="" alt="Avatar">
                             <div class="profile-avatar-fallback">U</div>
                         </div>
-                        <button class="btn btn-primary" id="changeAvatarBtn">🖼️ Alterar Foto</button>
+                        <button class="btn btn-primary" onclick="changeAvatar()">🖼️ Alterar Foto</button>
                     </div>
                     <div class="profile-info">
+                        <!-- Informações Básicas -->
                         <div class="info-group">
-                            <label>Nome</label>
-                            <div class="value" id="profileName">Carregando...</div>
+                            <label>Nome Completo</label>
+                            <div class="value" id="profileName">Não informado</div>
+                            <input type="text" class="edit-input" id="editName" placeholder="Seu nome completo">
                         </div>
+
+                        <div class="info-group">
+                            <label>Apelido/Nickname</label>
+                            <div class="value" id="profileNickname">Não informado</div>
+                            <input type="text" class="edit-input" id="editNickname" placeholder="Como quer ser chamado">
+                        </div>
+
+                        <div class="info-group">
+                            <label>Data de Nascimento</label>
+                            <div class="value" id="profileBirthDate">Não informado</div>
+                            <input type="date" class="edit-input" id="editBirthDate">
+                        </div>
+
                         <div class="info-group">
                             <label>Idade</label>
-                            <div class="value" id="profileAge">Carregando...</div>
+                            <div class="value" id="profileAge">Não informado</div>
                         </div>
+
+                        <!-- Informações Pessoais -->
                         <div class="info-group">
                             <label>Gênero</label>
-                            <div class="value" id="profileGender">Carregando...</div>
+                            <div class="value" id="profileGender">Não informado</div>
+                            <select class="edit-select" id="editGender">
+                                <option value="">Selecione...</option>
+                                <option value="feminino">Feminino</option>
+                                <option value="masculino">Masculino</option>
+                            </select>
                         </div>
+
                         <div class="info-group">
                             <label>Localização</label>
-                            <div class="value" id="profileLocation">Carregando...</div>
+                            <div class="value" id="profileLocation">Não informado</div>
+                            <input type="text" class="edit-input" id="editLocation" placeholder="Cidade, Estado">
                         </div>
-                        <div class="info-group">
-                            <label>Interesses</label>
-                            <div class="value" id="profileInterests">Carregando...</div>
-                        </div>
-                        <div class="info-group">
-                            <label>Procura por</label>
-                            <div class="value" id="profileLookingFor">Carregando...</div>
-                        </div>
-                        <div class="info-group">
-                            <label>Signo</label>
-                            <div class="value" id="profileZodiac">Carregando...</div>
-                        </div>
+
                         <div class="info-group">
                             <label>Profissão</label>
-                            <div class="value" id="profileProfession">Carregando...</div>
+                            <div class="value" id="profileProfession">Não informado</div>
+                            <input type="text" class="edit-input" id="editProfession" placeholder="Sua profissão">
+                        </div>
+
+                        <!-- Preferências -->
+                        <div class="info-group">
+                            <label>Procura por</label>
+                            <div class="value" id="profileLookingFor">Não informado</div>
+                            <select class="edit-select" id="editLookingFor">
+                                <option value="">Selecione...</option>
+                                <option value="amizade">🤝 Amizade</option>
+                                <option value="namoro">💕 Namoro</option>
+                                <option value="relacionamento_serio">💍 Relacionamento Sério</option>
+                                <option value="conversa">💬 Apenas Conversa</option>
+                            </select>
+                        </div>
+
+                        <div class="info-group">
+                            <label>Signo</label>
+                            <div class="value" id="profileZodiac">Não informado</div>
+                            <select class="edit-select" id="editZodiac">
+                                <option value="">Selecione...</option>
+                                <option value="aries">♈ Áries</option>
+                                <option value="touro">♉ Touro</option>
+                                <option value="gemeos">♊ Gêmeos</option>
+                                <option value="cancer">♋ Câncer</option>
+                                <option value="leao">♌ Leão</option>
+                                <option value="virgem">♍ Virgem</option>
+                                <option value="libra">♎ Libra</option>
+                                <option value="escorpiao">♏ Escorpião</option>
+                                <option value="sagitario">♐ Sagitário</option>
+                                <option value="capricornio">♑ Capricórnio</option>
+                                <option value="aquario">♒ Aquário</option>
+                                <option value="peixes">♓ Peixes</option>
+                            </select>
+                        </div>
+
+                        <!-- Interesses -->
+                        <div class="info-group full-width">
+                            <label>Interesses</label>
+                            <div class="value" id="profileInterests">Não informado</div>
+                            <div class="edit-interests" id="editInterests" style="display: none;">
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.5rem; margin-bottom: 1rem;">
+                                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <input type="checkbox" value="Cinema"> 🎬 Cinema
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <input type="checkbox" value="Música"> 🎵 Música
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <input type="checkbox" value="Esportes"> ⚽ Esportes
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <input type="checkbox" value="Viagens"> ✈️ Viagens
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <input type="checkbox" value="Leitura"> 📚 Leitura
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <input type="checkbox" value="Culinária"> 🍳 Culinária
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <input type="checkbox" value="Jogos"> 🎮 Jogos
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <input type="checkbox" value="Arte"> 🎨 Arte
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Descrição -->
+                        <div class="info-group full-width">
+                            <label>Descrição Pessoal</label>
+                            <div class="value" id="profileDescription">Não informado</div>
+                            <textarea class="edit-textarea" id="editDescription" placeholder="Conte um pouco sobre você... (máx. 100 caracteres)" maxlength="100"></textarea>
+                            <div style="font-size: 0.8rem; color: var(--text-light); text-align: right; margin-top: 0.3rem;">
+                                <span id="charCount">0</span>/100 caracteres
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="actions">
-                    <a href="editar-perfil.html" class="btn btn-primary">✏️ Editar Perfil Completo</a>
+                    <button class="btn btn-primary" id="saveProfileBtn" style="display: none;">💾 Salvar Alterações</button>
+                    <button class="btn btn-secondary" id="cancelEditBtn" style="display: none;">❌ Cancelar</button>
                     <button class="btn btn-secondary" id="toggleVisibilityBtn">👁️ Tornar Perfil Público</button>
                 </div>
             </section>
@@ -744,10 +911,13 @@
 
     // Estado da aplicação
     let currentUser = null;
+    let isEditing = false;
+    let originalData = {};
 
     document.addEventListener('DOMContentLoaded', function() {
         checkAuth();
         setupMobileMenu();
+        setupEventListeners();
     });
 
     // ==================== MENU MOBILE ====================
@@ -756,11 +926,6 @@
         const mobileMenu = document.getElementById('mobileMenu');
         const closeMobileMenu = document.getElementById('closeMobileMenu');
         const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
-
-        if (!hamburgerBtn || !mobileMenu) {
-            console.error('Elementos do menu mobile não encontrados');
-            return;
-        }
 
         hamburgerBtn.addEventListener('click', () => {
             mobileMenu.style.display = 'flex';
@@ -815,7 +980,6 @@
             
             currentUser = user;
             await loadUserData();
-            setupEventListeners();
             await loadProfileData();
             
         } catch (error) {
@@ -942,16 +1106,21 @@
             logoutBtn.addEventListener('click', logout);
         }
 
-        // Botão para alterar avatar
-        const changeAvatarBtn = document.getElementById('changeAvatarBtn');
-        if (changeAvatarBtn) {
-            changeAvatarBtn.addEventListener('click', changeAvatar);
-        }
-
-        // Botão para toggle de visibilidade
+        // Botões de edição
+        const editProfileBtn = document.getElementById('editProfileBtn');
+        const saveProfileBtn = document.getElementById('saveProfileBtn');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
         const toggleVisibilityBtn = document.getElementById('toggleVisibilityBtn');
-        if (toggleVisibilityBtn) {
-            toggleVisibilityBtn.addEventListener('click', toggleProfileVisibility);
+
+        if (editProfileBtn) editProfileBtn.addEventListener('click', startEditing);
+        if (saveProfileBtn) saveProfileBtn.addEventListener('click', saveProfile);
+        if (cancelEditBtn) cancelEditBtn.addEventListener('click', cancelEditing);
+        if (toggleVisibilityBtn) toggleVisibilityBtn.addEventListener('click', toggleProfileVisibility);
+
+        // Contador de caracteres
+        const descriptionTextarea = document.getElementById('editDescription');
+        if (descriptionTextarea) {
+            descriptionTextarea.addEventListener('input', updateCharCount);
         }
     }
 
@@ -992,6 +1161,9 @@
             // Carregar estatísticas
             await loadUserStats();
 
+            // Calcular completude do perfil
+            await calculateProfileCompletion();
+
         } catch (error) {
             console.error('Erro ao carregar dados do perfil:', error);
         }
@@ -999,57 +1171,228 @@
 
     function updateProfileInfo(profile, userDetails) {
         // Informações básicas
-        document.getElementById('profileName').textContent = profile.nickname || profile.full_name || 'Não informado';
+        document.getElementById('profileName').textContent = profile.full_name || 'Não informado';
+        document.getElementById('profileNickname').textContent = profile.nickname || 'Não informado';
         
-        // Idade
+        // Data de nascimento e idade
         if (profile.birth_date) {
-            const age = calculateAge(profile.birth_date);
-            document.getElementById('profileAge').textContent = `${age} anos`;
+            const birthDate = new Date(profile.birth_date);
+            document.getElementById('profileBirthDate').textContent = birthDate.toLocaleDateString('pt-BR');
+            document.getElementById('profileAge').textContent = `${calculateAge(profile.birth_date)} anos`;
         } else {
+            document.getElementById('profileBirthDate').textContent = 'Não informado';
             document.getElementById('profileAge').textContent = 'Não informado';
         }
 
-        // Gênero
-        if (userDetails && userDetails.gender) {
-            document.getElementById('profileGender').textContent = formatGender(userDetails.gender);
-        } else {
-            document.getElementById('profileGender').textContent = 'Não informado';
+        // Informações pessoais
+        if (userDetails) {
+            document.getElementById('profileGender').textContent = formatGender(userDetails.gender) || 'Não informado';
+            document.getElementById('profileLocation').textContent = userDetails.address || 'Não informado';
+            document.getElementById('profileProfession').textContent = userDetails.profession || 'Não informado';
+            document.getElementById('profileLookingFor').textContent = formatLookingFor(userDetails.looking_for) || 'Não informado';
+            document.getElementById('profileZodiac').textContent = formatZodiac(userDetails.zodiac) || 'Não informado';
+            document.getElementById('profileDescription').textContent = userDetails.description || 'Não informado';
+            
+            // Interesses
+            if (userDetails.interests && userDetails.interests.length > 0) {
+                document.getElementById('profileInterests').textContent = userDetails.interests.join(', ');
+            } else {
+                document.getElementById('profileInterests').textContent = 'Não informado';
+            }
         }
 
-        // Localização
-        if (userDetails && userDetails.address) {
-            document.getElementById('profileLocation').textContent = userDetails.address;
-        } else {
-            document.getElementById('profileLocation').textContent = 'Não informado';
-        }
+        // Salvar dados originais para cancelamento
+        originalData = {
+            profile: { ...profile },
+            userDetails: userDetails ? { ...userDetails } : {}
+        };
+    }
 
-        // Interesses
-        if (userDetails && userDetails.interests) {
-            const interests = Array.isArray(userDetails.interests) ? userDetails.interests : [userDetails.interests];
-            document.getElementById('profileInterests').textContent = interests.join(', ');
-        } else {
-            document.getElementById('profileInterests').textContent = 'Não informado';
-        }
+    // ==================== EDIÇÃO DO PERFIL ====================
+    function startEditing() {
+        isEditing = true;
+        
+        // Ativar modo de edição
+        document.getElementById('profileSection').classList.add('edit-mode');
+        
+        // Mostrar botões de salvar/cancelar
+        document.getElementById('saveProfileBtn').style.display = 'block';
+        document.getElementById('cancelEditBtn').style.display = 'block';
+        document.getElementById('editProfileBtn').style.display = 'none';
+        
+        // Preencher campos de edição com dados atuais
+        fillEditFields();
+    }
 
-        // Procura por
-        if (userDetails && userDetails.looking_for) {
-            document.getElementById('profileLookingFor').textContent = formatLookingFor(userDetails.looking_for);
-        } else {
-            document.getElementById('profileLookingFor').textContent = 'Não informado';
+    function fillEditFields() {
+        // Preencher campos básicos
+        document.getElementById('editName').value = originalData.profile.full_name || '';
+        document.getElementById('editNickname').value = originalData.profile.nickname || '';
+        
+        // Data de nascimento
+        if (originalData.profile.birth_date) {
+            const birthDate = new Date(originalData.profile.birth_date);
+            document.getElementById('editBirthDate').value = birthDate.toISOString().split('T')[0];
         }
-
-        // Signo
-        if (userDetails && userDetails.zodiac) {
-            document.getElementById('profileZodiac').textContent = formatZodiac(userDetails.zodiac);
-        } else {
-            document.getElementById('profileZodiac').textContent = 'Não informado';
+        
+        // Preencher selects
+        if (originalData.userDetails) {
+            document.getElementById('editGender').value = originalData.userDetails.gender || '';
+            document.getElementById('editLocation').value = originalData.userDetails.address || '';
+            document.getElementById('editProfession').value = originalData.userDetails.profession || '';
+            document.getElementById('editLookingFor').value = originalData.userDetails.looking_for || '';
+            document.getElementById('editZodiac').value = originalData.userDetails.zodiac || '';
+            document.getElementById('editDescription').value = originalData.userDetails.description || '';
+            
+            // Preencher interesses
+            const interestCheckboxes = document.querySelectorAll('#editInterests input[type="checkbox"]');
+            interestCheckboxes.forEach(checkbox => {
+                checkbox.checked = originalData.userDetails.interests?.includes(checkbox.value) || false;
+            });
         }
+        
+        // Mostrar seção de interesses
+        document.getElementById('editInterests').style.display = 'block';
+        
+        // Atualizar contador de caracteres
+        updateCharCount();
+    }
 
-        // Profissão
-        if (userDetails && userDetails.profession) {
-            document.getElementById('profileProfession').textContent = userDetails.profession;
-        } else {
-            document.getElementById('profileProfession').textContent = 'Não informado';
+    async function saveProfile() {
+        try {
+            // Coletar dados do formulário
+            const profileData = {
+                full_name: document.getElementById('editName').value.trim(),
+                nickname: document.getElementById('editNickname').value.trim(),
+                birth_date: document.getElementById('editBirthDate').value || null
+            };
+
+            const userDetailsData = {
+                gender: document.getElementById('editGender').value || null,
+                address: document.getElementById('editLocation').value.trim() || null,
+                profession: document.getElementById('editProfession').value.trim() || null,
+                looking_for: document.getElementById('editLookingFor').value || null,
+                zodiac: document.getElementById('editZodiac').value || null,
+                description: document.getElementById('editDescription').value.trim() || null
+            };
+
+            // Coletar interesses selecionados
+            const selectedInterests = [];
+            document.querySelectorAll('#editInterests input[type="checkbox"]:checked').forEach(checkbox => {
+                selectedInterests.push(checkbox.value);
+            });
+            userDetailsData.interests = selectedInterests.length > 0 ? selectedInterests : null;
+
+            // Validar dados obrigatórios
+            if (!profileData.nickname) {
+                alert('Por favor, informe um apelido/nickname.');
+                return;
+            }
+
+            // Atualizar perfil
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .update(profileData)
+                .eq('id', currentUser.id);
+
+            if (profileError) throw profileError;
+
+            // Atualizar detalhes do usuário
+            const { error: detailsError } = await supabase
+                .from('user_details')
+                .update(userDetailsData)
+                .eq('user_id', currentUser.id);
+
+            if (detailsError) throw detailsError;
+
+            // Sair do modo de edição
+            cancelEditing();
+
+            // Recarregar dados
+            await loadProfileData();
+            await loadUserData();
+
+            alert('Perfil atualizado com sucesso! ✅');
+
+        } catch (error) {
+            console.error('Erro ao salvar perfil:', error);
+            alert('Erro ao salvar perfil. Tente novamente.');
+        }
+    }
+
+    function cancelEditing() {
+        isEditing = false;
+        
+        // Desativar modo de edição
+        document.getElementById('profileSection').classList.remove('edit-mode');
+        
+        // Ocultar botões de salvar/cancelar
+        document.getElementById('saveProfileBtn').style.display = 'none';
+        document.getElementById('cancelEditBtn').style.display = 'none';
+        document.getElementById('editProfileBtn').style.display = 'block';
+        
+        // Ocultar seção de interesses
+        document.getElementById('editInterests').style.display = 'none';
+        
+        // Restaurar dados originais na visualização
+        updateProfileInfo(originalData.profile, originalData.userDetails);
+    }
+
+    // ==================== FUNÇÕES AUXILIARES ====================
+    function calculateAge(birthDate) {
+        const today = new Date();
+        const birth = new Date(birthDate);
+        let age = today.getFullYear() - birth.getFullYear();
+        const monthDiff = today.getMonth() - birth.getMonth();
+        
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+            age--;
+        }
+        
+        return age;
+    }
+
+    function formatGender(gender) {
+        const genderMap = {
+            'feminino': 'Feminino',
+            'masculino': 'Masculino'
+        };
+        return genderMap[gender] || gender;
+    }
+
+    function formatLookingFor(lookingFor) {
+        const lookingForMap = {
+            'amizade': '🤝 Amizade',
+            'namoro': '💕 Namoro',
+            'relacionamento_serio': '💍 Relacionamento Sério',
+            'conversa': '💬 Apenas Conversa'
+        };
+        return lookingForMap[lookingFor] || lookingFor;
+    }
+
+    function formatZodiac(zodiac) {
+        const zodiacMap = {
+            'aries': '♈ Áries',
+            'touro': '♉ Touro',
+            'gemeos': '♊ Gêmeos',
+            'cancer': '♋ Câncer',
+            'leao': '♌ Leão',
+            'virgem': '♍ Virgem',
+            'libra': '♎ Libra',
+            'escorpiao': '♏ Escorpião',
+            'sagitario': '♐ Sagitário',
+            'capricornio': '♑ Capricórnio',
+            'aquario': '♒ Aquário',
+            'peixes': '♓ Peixes'
+        };
+        return zodiacMap[zodiac] || zodiac;
+    }
+
+    function updateCharCount() {
+        const textarea = document.getElementById('editDescription');
+        const charCount = document.getElementById('charCount');
+        if (textarea && charCount) {
+            charCount.textContent = textarea.value.length;
         }
     }
 
@@ -1086,56 +1429,31 @@
         }
     }
 
-    // ==================== FUNÇÕES AUXILIARES ====================
-    function calculateAge(birthDate) {
-        const today = new Date();
-        const birth = new Date(birthDate);
-        let age = today.getFullYear() - birth.getFullYear();
-        const monthDiff = today.getMonth() - birth.getMonth();
-        
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-            age--;
+    // ==================== COMPLETUDE DO PERFIL ====================
+    async function calculateProfileCompletion() {
+        try {
+            const { data, error } = await supabase
+                .rpc('calculate_profile_completion', { user_uuid: currentUser.id });
+
+            if (error) throw error;
+
+            const completionBadge = document.getElementById('completionBadge');
+            if (completionBadge) {
+                completionBadge.textContent = `${data || 0}% completo`;
+                
+                // Cor baseada na porcentagem
+                if (data >= 80) {
+                    completionBadge.style.background = '#4CAF50';
+                } else if (data >= 50) {
+                    completionBadge.style.background = '#FF9800';
+                } else {
+                    completionBadge.style.background = '#F44336';
+                }
+            }
+
+        } catch (error) {
+            console.error('Erro ao calcular completude:', error);
         }
-        
-        return age;
-    }
-
-    function formatGender(gender) {
-        const genderMap = {
-            'feminino': 'Feminino',
-            'masculino': 'Masculino',
-            'mulher': 'Feminino',
-            'homem': 'Masculino'
-        };
-        return genderMap[gender] || gender;
-    }
-
-    function formatLookingFor(lookingFor) {
-        const lookingForMap = {
-            'amizade': '🤝 Amizade',
-            'namoro': '💕 Namoro',
-            'relacionamento_serio': '💍 Relacionamento Sério',
-            'conversa': '💬 Apenas Conversa'
-        };
-        return lookingForMap[lookingFor] || lookingFor;
-    }
-
-    function formatZodiac(zodiac) {
-        const zodiacMap = {
-            'aries': '♈ Áries',
-            'touro': '♉ Touro',
-            'gemeos': '♊ Gêmeos',
-            'cancer': '♋ Câncer',
-            'leao': '♌ Leão',
-            'virgem': '♍ Virgem',
-            'libra': '♎ Libra',
-            'escorpiao': '♏ Escorpião',
-            'sagitario': '♐ Sagitário',
-            'capricornio': '♑ Capricórnio',
-            'aquario': '♒ Aquário',
-            'peixes': '♓ Peixes'
-        };
-        return zodiacMap[zodiac] || zodiac;
     }
 
     // ==================== FUNÇÕES DE INTERAÇÃO ====================
