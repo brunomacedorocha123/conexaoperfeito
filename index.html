@@ -465,27 +465,23 @@ footer {
         min-height: 50px;
     }
 
-    /* LOGO - MUITO GRANDE E CENTRALIZADA */
+    /* LOGO - MUITO GRANDE */
     .logo {
         order: 1;
-        flex: 1;
-        justify-content: center; /* Centraliza a logo */
+        flex: 0 auto;
+        justify-content: flex-start;
         align-items: center;
         height: 60px;
-        width: 100%;
-        position: relative;
+        margin-left: 10px;
     }
 
     .logo img {
-        height: 220px !important; /* LOGO MUITO GRANDE */
+        height: 220px !important;
         width: auto;
         max-height: 100%;
         object-fit: contain;
         margin-top: -40px;
         margin-bottom: -40px;
-        display: block;
-        margin-left: auto;
-        margin-right: auto;
     }
 
     .logo h1 {
@@ -499,11 +495,6 @@ footer {
         margin-left: auto;
         padding: 8px;
         margin-top: 0;
-        position: absolute;
-        right: 15px;
-        top: 50%;
-        transform: translateY(-50%);
-        z-index: 101;
     }
 
     /* BOTÕES LOGIN/CADASTRO - LADO DIREITO */
@@ -513,11 +504,6 @@ footer {
         width: auto;
         justify-content: flex-end;
         margin-top: 0;
-        position: absolute;
-        right: 60px;
-        top: 50%;
-        transform: translateY(-50%);
-        z-index: 101;
     }
 
     .auth-buttons .btn {
@@ -606,24 +592,18 @@ footer {
 
 @media (max-width: 480px) {
     .logo img {
-        height: 400px !important; /* ⬅️ AUMENTEI DE 280px PARA 400px */
-        margin-top: -80px; /* ⬅️ AUMENTEI DE -50px PARA -80px */
-        margin-bottom: -80px; /* ⬅️ AUMENTEI DE -50px PARA -80px */
+        height: 600px !important; /* ⬅️ AUMENTEI PARA 600px - MUITO MAIOR */
+        margin-top: -120px; /* ⬅️ COMPENSAÇÃO MAIOR */
+        margin-bottom: -120px; /* ⬅️ COMPENSAÇÃO MAIOR */
     }
-}
 
     .auth-buttons {
         gap: 0.3rem;
-        right: 50px;
     }
 
     .auth-buttons .btn {
         padding: 0.4rem 0.8rem;
         font-size: 0.8rem;
-    }
-
-    .menu-toggle {
-        right: 10px;
     }
 
     .hero h2 {
@@ -647,22 +627,14 @@ footer {
 
 @media (max-width: 360px) {
     .logo img {
-        height: 240px !important; /* LOGO AINDA GRANDE */
-        margin-top: -45px;
-        margin-bottom: -45px;
-    }
-
-    .auth-buttons {
-        right: 45px;
+        height: 550px !important; /* ⬅️ AINDA MUITO GRANDE */
+        margin-top: -110px; /* ⬅️ COMPENSAÇÃO */
+        margin-bottom: -110px; /* ⬅️ COMPENSAÇÃO */
     }
 
     .auth-buttons .btn {
         padding: 0.3rem 0.6rem;
         font-size: 0.75rem;
-    }
-
-    .menu-toggle {
-        right: 8px;
     }
 }
 </style>
