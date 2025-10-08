@@ -28,6 +28,7 @@ body {
     background-color: var(--bege);
     color: var(--text);
     line-height: 1.6;
+    overflow-x: hidden; /* IMPEDE SCROLL HORIZONTAL */
 }
 
 .container {
@@ -448,50 +449,29 @@ footer {
     color: var(--text-light);
 }
 
-/* ========== MOBILE - LOGO CORRIGIDA ========== */
+/* ========== MOBILE - APENAS LOGO CORRIGIDA ========== */
 @media (max-width: 768px) {
-    header {
-        padding: 0.3rem 0;
-        min-height: 50px;
-        overflow: visible !important;
-    }
-
     .header-content {
         flex-wrap: wrap;
         height: auto;
-        padding: 0;
-        gap: 0.5rem;
+        padding: 10px 0;
+        gap: 10px;
         align-items: center;
-        min-height: 50px;
-        position: relative;
-        overflow: visible !important;
     }
 
-    /* LOGO - TAMANHO NORMAL */
+    /* LOGO - TAMANHO NORMAL PARA MOBILE */
     .logo {
         order: 1;
-        flex: 0 auto;
-        justify-content: flex-start;
-        align-items: center;
-        height: 50px;
-        margin-left: 0;
-        position: relative;
-        z-index: 100;
-        overflow: hidden;
+        flex: 0 0 auto;
     }
 
     .logo img {
-        height: 50px !important;
+        height: 50px !important; /* TAMANHO PEQUENO E FIXO */
         width: auto !important;
-        max-height: 50px !important;
+        max-width: 150px !important;
         object-fit: contain;
-        margin-top: 0 !important;
-        margin-bottom: 0 !important;
-        margin-left: 0 !important;
+        margin: 0 !important;
         display: block;
-        position: relative;
-        z-index: 101;
-        transform: scale(1) !important;
     }
 
     .logo h1 {
@@ -502,20 +482,11 @@ footer {
         display: flex;
         order: 2;
         margin-left: auto;
-        padding: 8px;
-        margin-top: 0;
-        position: relative;
-        z-index: 102;
     }
 
     .auth-buttons {
         order: 3;
         gap: 0.5rem;
-        width: auto;
-        justify-content: flex-end;
-        margin-top: 0;
-        position: relative;
-        z-index: 102;
     }
 
     .auth-buttons .btn {
@@ -528,19 +499,11 @@ footer {
         display: none;
         width: 100%;
         order: 4;
-        margin-top: 0.5rem;
-        position: relative;
-        z-index: 99;
+        margin-top: 1rem;
     }
 
     nav.active {
         display: block;
-        animation: fadeIn 0.3s ease;
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-10px); }
-        to { opacity: 1; transform: translateY(0); }
     }
 
     nav ul {
@@ -569,19 +532,6 @@ footer {
         font-size: 2.2rem;
     }
 
-    .hero p,
-    .section-title p,
-    .cta p,
-    .footer-column p {
-        text-align: justify;
-        text-justify: inter-word;
-    }
-
-    .feature-card p,
-    .step p {
-        text-align: center;
-    }
-
     .steps {
         flex-direction: column;
     }
@@ -602,12 +552,8 @@ footer {
 
 @media (max-width: 480px) {
     .logo img {
-        height: 45px !important;
-        max-height: 45px !important;
-    }
-
-    .auth-buttons {
-        gap: 0.3rem;
+        height: 45px !important; /* AINDA MENOR EM TELAS PEQUENAS */
+        max-width: 140px !important;
     }
 
     .auth-buttons .btn {
@@ -622,22 +568,12 @@ footer {
     .hero p {
         font-size: 1rem;
     }
-
-    .section-title h2 {
-        font-size: 2rem;
-    }
-
-    .feature-card,
-    .step,
-    .testimonial-card {
-        padding: 1.5rem;
-    }
 }
 
 @media (max-width: 360px) {
     .logo img {
-        height: 40px !important;
-        max-height: 40px !important;
+        height: 40px !important; /* MÍNIMO PARA TELAS MUITO PEQUENAS */
+        max-width: 130px !important;
     }
 
     .auth-buttons .btn {
