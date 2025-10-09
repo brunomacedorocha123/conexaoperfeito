@@ -1758,22 +1758,32 @@
         if (!content || !currentChatPartner) return;
 
         try {
-            // ✅ VERIFICAR SE PODE ENVIAR MENSAGEM (SISTEMA PREMIUM)
-            const canSend = await PremiumManager.canSendMessage();
+            // ✅ VERIFICAR SE PODE ENVIAR MENSAGEM (SISTEMA PREMIUM) - CORREÇÃO CRÍTICA
+            const { data: canSend, error: checkError } = await supabase
+                .rpc('can_send_message', { user_uuid: currentUser.id });
             
-            if (!canSend) {
-                showNotification('❌ Limite de 5 mensagens por dia atingido! Faça upgrade para Premium.', 'error');
+            if (checkError) {
+                console.error('❌ Erro ao verificar limite de mensagens:', checkError);
+                // Em caso de erro, permite enviar (fail-open)
+            } else {
+                console.log('🔍 Pode enviar mensagem?', canSend);
                 
-                // Mostrar botão para upgrade
-                setTimeout(() => {
-                    if (confirm('Deseja fazer upgrade para Premium e ter mensagens ilimitadas?')) {
-                        window.location.href = 'pricing.html';
-                    }
-                }, 1000);
-                
-                return;
+                // ✅ BLOQUEAR FISICAMENTE SE NÃO PUDER ENVIAR
+                if (canSend === false) {
+                    showNotification('❌ Limite de 5 mensagens por dia atingido! Faça upgrade para Premium.', 'error');
+                    
+                    // Mostrar botão para upgrade
+                    setTimeout(() => {
+                        if (confirm('Deseja fazer upgrade para Premium e ter mensagens ilimitadas?')) {
+                            window.location.href = 'pricing.html';
+                        }
+                    }, 1000);
+                    
+                    return; // ⬅️⬅️⬅️ IMPORTANTE: BLOQUEIA O ENVIO!
+                }
             }
 
+            // ✅ SE PODE ENVIAR, PROSSEGUE COM O ENVIO
             const { error } = await supabase
                 .from('messages')
                 .insert({
@@ -1783,11 +1793,17 @@
                     is_read: false
                 });
 
-            if (error) return;
+            if (error) {
+                console.error('Erro ao enviar mensagem:', error);
+                throw error;
+            }
 
-            // ✅ INCREMENTAR CONTADOR (apenas se não for premium)
-            const isPremium = await PremiumManager.checkPremiumStatus();
-            if (!isPremium) {
+            // ✅ INCREMENTAR CONTADOR (apenas se não for premium) - CORREÇÃO CRÍTICA
+            const { data: isPremium, error: premiumError } = await supabase
+                .rpc('is_user_premium', { user_uuid: currentUser.id });
+            
+            if (!premiumError && !isPremium) {
+                console.log('📊 Incrementando contador de mensagens...');
                 await PremiumManager.incrementMessageCount();
             }
 
