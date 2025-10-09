@@ -7,794 +7,714 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
-
-    :root {
-      --bege: #f6ecc5;
-      --vermelho-rosado: #d1656d;
-      --lilas: #dfc9ed;
-      --branco: #ffffff;
-      --text: #444;
-      --text-light: #666;
-      --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-      --transition: all 0.3s ease;
-      --error: #e53e3e;
-      --success: #38a169;
-    }
-
-
-    body {
-      background-color: var(--bege);
-      color: var(--text);
-      line-height: 1.6;
-      overflow-x: hidden;
-    }
-
-
-    .container {
-      width: 100%;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 20px;
-    }
-
-
-    /* Header */
-    header {
-      background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
-      color: var(--branco);
-      padding: 0.8rem 0;
-      box-shadow: var(--shadow);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-
-    .header-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      height: 70px;
-    }
-
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-shrink: 0;
-      justify-content: center;
-      flex: 1;
-    }
-
-
-    .logo img {
-      height: 220px;
-      width: auto;
-      object-fit: contain;
-    }
-
-
-    /* TÍTULO REMOVIDO DO DESKTOP */
-    .logo h1 {
-      display: none;
-    }
-
-
-    .user-menu {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-    }
-
-
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-
-    .user-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: var(--branco);
-      color: var(--vermelho-rosado);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 1.2rem;
-      position: relative;
-      overflow: hidden;
-    }
-
-
-    .user-avatar-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 50%;
-      display: none;
-    }
-
-
-    .user-avatar-fallback {
-      font-size: 1.2rem;
-    }
-
-
-    .btn {
-      padding: 0.6rem 1rem;
-      border-radius: 30px;
-      border: none;
-      font-weight: 600;
-      cursor: pointer;
-      transition: var(--transition);
-      text-decoration: none;
-      display: inline-block;
-      text-align: center;
-      font-size: 0.85rem;
-      white-space: nowrap;
-    }
-
-
-    .btn-outline {
-      background: transparent;
-      border: 2px solid var(--branco);
-      color: var(--branco);
-    }
-
-
-    .btn-primary {
-      background: var(--branco);
-      color: var(--vermelho-rosado);
-    }
-
-
-    .btn-secondary {
-      background: transparent;
-      border: 2px solid var(--vermelho-rosado);
-      color: var(--vermelho-rosado);
-    }
-
-
-    .btn-premium {
-      background: linear-gradient(135deg, #ffd700, #ff6b00);
-      color: var(--branco);
-      border: none;
-      font-weight: 700;
-      box-shadow: 0 4px 15px rgba(255, 107, 0, 0.3);
-    }
-
-
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    }
-
-
-    .btn-premium:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(255, 107, 0, 0.4);
-    }
-
-
-    /* Main Content */
-    .main-content {
-      padding: 2rem 0;
-    }
-
-
-    .welcome-section {
-      text-align: center;
-      margin-bottom: 3rem;
-      padding: 2rem;
-      background: var(--branco);
-      border-radius: 15px;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--lilas);
-    }
-
-
-    .welcome-section h2 {
-      font-size: 2.5rem;
-      color: var(--vermelho-rosado);
-      margin-bottom: 1rem;
-    }
-
-
-    .welcome-section p {
-      color: var(--text-light);
-      font-size: 1.1rem;
-    }
-
-
-    .user-stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 3rem;
-    }
-
-
-    .stat-card {
-      background: var(--branco);
-      padding: 1.5rem;
-      border-radius: 15px;
-      box-shadow: var(--shadow);
-      text-align: center;
-      transition: var(--transition);
-      border: 1px solid var(--lilas);
-    }
-
-
-    .stat-card:hover {
-      transform: translateY(-5px);
-    }
-
-
-    .stat-number {
-      font-size: 2.5rem;
-      font-weight: bold;
-      color: var(--vermelho-rosado);
-      margin-bottom: 0.5rem;
-    }
-
-
-    .stat-label {
-      color: var(--text-light);
-      font-size: 0.9rem;
-    }
-
-
-    /* Users Grid */
-    .users-section {
-      margin-bottom: 3rem;
-    }
-
-
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 2rem;
-    }
-
-
-    .section-header h2 {
-      font-size: 2rem;
-      color: var(--vermelho-rosado);
-    }
-
-
-    .users-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 1.5rem;
-    }
-
-
-    .user-card {
-      background: var(--branco);
-      border-radius: 15px;
-      padding: 1.5rem;
-      box-shadow: var(--shadow);
-      transition: var(--transition);
-      text-align: center;
-      cursor: pointer;
-      border: 1px solid var(--lilas);
-    }
-
-
-    .user-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    }
-
-
-    /* ✅ AVATAR COM FOTO - ESTILOS ATUALIZADOS */
-    .user-card-avatar {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
-      color: var(--branco);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2rem;
-      font-weight: bold;
-      margin: 0 auto 1rem;
-      position: relative;
-      overflow: hidden;
-    }
-
-
-    .user-card-avatar-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 50%;
-      display: none;
-    }
-
-
-    .user-card-avatar-fallback {
-      font-size: 2rem;
-      font-weight: bold;
-    }
-
-
-    .user-card-name {
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: var(--vermelho-rosado);
-      margin-bottom: 0.5rem;
-    }
-
-
-    .user-card-info {
-      display: flex;
-      flex-direction: column;
-      gap: 0.3rem;
-      margin-bottom: 1rem;
-    }
-
-
-    .user-card-detail {
-      font-size: 0.9rem;
-      color: var(--text-light);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.3rem;
-    }
-
-
-    .user-card-bio {
-      font-size: 0.9rem;
-      color: var(--text);
-      margin-bottom: 1.5rem;
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      min-height: 4.5rem;
-    }
-
-
-    .user-card-actions {
-      display: flex;
-      gap: 0.5rem;
-      justify-content: center;
-    }
-
-
-    .btn-sm {
-      padding: 0.5rem 1rem;
-      font-size: 0.9rem;
-    }
-
-
-    /* Quick Actions */
-    .quick-actions {
-      background: var(--branco);
-      padding: 2rem;
-      border-radius: 15px;
-      box-shadow: var(--shadow);
-      margin-bottom: 3rem;
-      border: 1px solid var(--lilas);
-    }
-
-
-    .quick-actions h2 {
-      margin-bottom: 1.5rem;
-      color: var(--vermelho-rosado);
-    }
-
-
-    .actions-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-    }
-
-
-    .action-card {
-      background: var(--bege);
-      padding: 1.5rem;
-      border-radius: 10px;
-      text-align: center;
-      transition: var(--transition);
-      cursor: pointer;
-      text-decoration: none;
-      color: inherit;
-      border: 1px solid var(--lilas);
-    }
-
-
-    .action-card:hover {
-      background: var(--lilas);
-      transform: translateY(-3px);
-    }
-
-
-    .action-icon {
-      font-size: 2rem;
-      margin-bottom: 1rem;
-    }
-
-
-    /* Footer */
-    footer {
-      background-color: var(--bege);
-      color: var(--text);
-      padding: 2rem 0 1rem;
-      border-top: 1px solid var(--lilas);
-    }
-
-
-    .footer-content {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 1.5rem;
-    }
-
-
-    .footer-column h3 {
-      margin-bottom: 1rem;
-      font-size: 1.1rem;
-      color: var(--vermelho-rosado);
-    }
-
-
-    .footer-column ul {
-      list-style: none;
-    }
-
-
-    .footer-column ul li {
-      margin-bottom: 0.5rem;
-    }
-
-
-    .footer-column a {
-      color: var(--text);
-      text-decoration: none;
-      transition: var(--transition);
-      font-size: 0.9rem;
-    }
-
-
-    .footer-column a:hover {
-      color: var(--vermelho-rosado);
-    }
-
-
-    .copyright {
-      text-align: center;
-      padding-top: 1rem;
-      border-top: 1px solid var(--lilas);
-      font-size: 0.8rem;
-      color: var(--text-light);
-    }
-
-
-    /* Loading State */
-    .loading {
-      text-align: center;
-      padding: 3rem;
-    }
-
-
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid var(--bege);
-      border-top: 4px solid var(--vermelho-rosado);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 1rem;
-    }
-
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-
-    /* Estados Vazios */
-    .empty-state {
-      text-align: center;
-      padding: 3rem;
-      background: var(--branco);
-      border-radius: 15px;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--lilas);
-    }
-
-
-    .empty-state-icon {
-      font-size: 4rem;
-      margin-bottom: 1rem;
-      opacity: 0.5;
-    }
-
-
-    /* Alertas */
-    .alert {
-      padding: 1rem;
-      border-radius: 10px;
-      margin-bottom: 1rem;
-      text-align: center;
-      border: 1px solid;
-    }
-
-
-    .alert-info {
-      background-color: #bee3f8;
-      border-color: #90cdf4;
-      color: #2c5aa0;
-    }
-
-
-    /* Menu Hamburguer Mobile */
-    #hamburgerBtn {
-      display: none;
-      background: none;
-      border: none;
-      color: var(--branco);
-      font-size: 1.8rem;
-      cursor: pointer;
-      padding: 0.5rem;
-      z-index: 1001;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-
-    #mobileMenu {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100vh;
-      background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
-      z-index: 1000;
-      padding: 2rem;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 2rem;
-    }
-
-
-    #closeMobileMenu {
-      position: absolute;
-      top: 1.5rem;
-      right: 1.5rem;
-      background: none;
-      border: none;
-      color: var(--branco);
-      font-size: 2.5rem;
-      cursor: pointer;
-      width: 50px;
-      height: 50px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-
-    .mobile-user-info {
-      text-align: center;
-      color: var(--branco);
-      margin-bottom: 2rem;
-    }
-
-
-    .mobile-nav {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      width: 100%;
-      max-width: 300px;
-    }
-
-
-    .mobile-nav .btn {
-      width: 100%;
-      text-align: center;
-      justify-content: center;
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-      padding: 1.2rem;
-      font-size: 1.2rem;
-      border-radius: 12px;
-    }
-
-
-    /* Responsividade */
-    @media (max-width: 768px) {
-      #hamburgerBtn {
-        display: flex;
-      }
-
-
-      .user-menu {
-        display: none;
-      }
-
-
-      .header-content {
-        flex-direction: row;
-        justify-content: space-between;
-        height: 80px;
-        padding: 0;
-      }
-
-
-      .logo {
-        justify-content: center;
-        flex: 1;
-        margin: 0 auto;
-      }
-
-
-      .logo img {
-        height: 180px !important;
-      }
-
-
-      .user-stats {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
-      }
-
-
-      .stat-card {
-        padding: 1rem;
-      }
-
-
-      .stat-number {
-        font-size: 1.8rem;
-      }
-
-
-      .users-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-      }
-
-
-      .user-card {
-        padding: 1.2rem;
-      }
-
-
-      .user-card-avatar {
-        width: 70px;
-        height: 70px;
-      }
-
-
-      .user-card-name {
-        font-size: 1.1rem;
-      }
-
-
-      .user-card-actions {
-        flex-direction: column;
-        gap: 0.5rem;
-      }
-
-
-      .user-card-actions .btn {
-        width: 100%;
-      }
-
-
-      .actions-grid {
-        grid-template-columns: 1fr;
-      }
-
-
-      .action-card {
-        padding: 1.2rem;
-      }
-
-
-      .welcome-section {
-        padding: 1.5rem;
-        margin-bottom: 2rem;
-      }
-
-
-      .welcome-section h2 {
-        font-size: 1.8rem;
-      }
-
-
-      .quick-actions {
-        padding: 1.5rem;
-      }
-
-
-      .section-header {
-        flex-direction: column;
-        gap: 1rem;
-        align-items: flex-start;
-      }
-    }
-
-
-    @media (max-width: 480px) {
-      .logo img {
-        height: 160px !important;
-      }
-
-
-      .user-stats {
-        grid-template-columns: 1fr;
-      }
-
-
-      .welcome-section h2 {
-        font-size: 1.5rem;
-      }
-
-
-      .stat-number {
-        font-size: 1.5rem;
-      }
-
-
-      .btn {
-        padding: 0.5rem 1rem;
-        font-size: 0.85rem;
-      }
-
-
-      .header-content {
-        height: 70px;
-      }
-    }
-
-
-    /* Animações para o menu mobile */
-    #mobileMenu {
-      transition: opacity 0.3s ease;
-    }
-
-
-    .mobile-user-info .user-avatar {
-      width: 100px;
-      height: 100px;
-      font-size: 2rem;
-      margin: 0 auto 1rem;
-    }
-
-
-    .mobile-user-info #mobileUserNickname {
-      font-size: 1.4rem;
-      font-weight: bold;
-    }
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+:root {
+  --bege: #f6ecc5;
+  --vermelho-rosado: #d1656d;
+  --lilas: #dfc9ed;
+  --branco: #ffffff;
+  --text: #444;
+  --text-light: #666;
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --transition: all 0.3s ease;
+  --error: #e53e3e;
+  --success: #38a169;
+}
+
+body {
+  background-color: var(--bege);
+  color: var(--text);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Header */
+header {
+  background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+  color: var(--branco);
+  padding: 0.8rem 0;
+  box-shadow: var(--shadow);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 70px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  justify-content: center;
+  flex: 1;
+}
+
+.logo img {
+  height: 220px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* TÍTULO REMOVIDO DO DESKTOP */
+.logo h1 {
+  display: none;
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--branco);
+  color: var(--vermelho-rosado);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.user-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: none;
+}
+
+.user-avatar-fallback {
+  font-size: 1.2rem;
+}
+
+.btn {
+  padding: 0.6rem 1rem;
+  border-radius: 30px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 2px solid var(--branco);
+  color: var(--branco);
+}
+
+.btn-primary {
+  background: var(--branco);
+  color: var(--vermelho-rosado);
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 2px solid var(--vermelho-rosado);
+  color: var(--vermelho-rosado);
+}
+
+.btn-premium {
+  background: linear-gradient(135deg, #ffd700, #ff6b00);
+  color: var(--branco);
+  border: none;
+  font-weight: 700;
+  box-shadow: 0 4px 15px rgba(255, 107, 0, 0.3);
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.btn-premium:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 0, 0.4);
+}
+
+/* Main Content */
+.main-content {
+  padding: 2rem 0;
+}
+
+.welcome-section {
+  text-align: center;
+  margin-bottom: 3rem;
+  padding: 2rem;
+  background: var(--branco);
+  border-radius: 15px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--lilas);
+}
+
+.welcome-section h2 {
+  font-size: 2.5rem;
+  color: var(--vermelho-rosado);
+  margin-bottom: 1rem;
+}
+
+.welcome-section p {
+  color: var(--text-light);
+  font-size: 1.1rem;
+}
+
+.user-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.stat-card {
+  background: var(--branco);
+  padding: 1.5rem;
+  border-radius: 15px;
+  box-shadow: var(--shadow);
+  text-align: center;
+  transition: var(--transition);
+  border: 1px solid var(--lilas);
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+}
+
+.stat-number {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: var(--vermelho-rosado);
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  color: var(--text-light);
+  font-size: 0.9rem;
+}
+
+/* Users Grid */
+.users-section {
+  margin-bottom: 3rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.section-header h2 {
+  font-size: 2rem;
+  color: var(--vermelho-rosado);
+}
+
+.users-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.user-card {
+  background: var(--branco);
+  border-radius: 15px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+  text-align: center;
+  cursor: pointer;
+  border: 1px solid var(--lilas);
+}
+
+.user-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* ✅ AVATAR COM FOTO - ESTILOS ATUALIZADOS */
+.user-card-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+  color: var(--branco);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: bold;
+  margin: 0 auto 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.user-card-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: none;
+}
+
+.user-card-avatar-fallback {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.user-card-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--vermelho-rosado);
+  margin-bottom: 0.5rem;
+}
+
+.user-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 1rem;
+}
+
+.user-card-detail {
+  font-size: 0.9rem;
+  color: var(--text-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+.user-card-bio {
+  font-size: 0.9rem;
+  color: var(--text);
+  margin-bottom: 1.5rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 4.5rem;
+}
+
+.user-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+/* Quick Actions */
+.quick-actions {
+  background: var(--branco);
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: var(--shadow);
+  margin-bottom: 3rem;
+  border: 1px solid var(--lilas);
+}
+
+.quick-actions h2 {
+  margin-bottom: 1.5rem;
+  color: var(--vermelho-rosado);
+}
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.action-card {
+  background: var(--bege);
+  padding: 1.5rem;
+  border-radius: 10px;
+  text-align: center;
+  transition: var(--transition);
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid var(--lilas);
+}
+
+.action-card:hover {
+  background: var(--lilas);
+  transform: translateY(-3px);
+}
+
+.action-icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+/* Footer */
+footer {
+  background-color: var(--bege);
+  color: var(--text);
+  padding: 2rem 0 1rem;
+  border-top: 1px solid var(--lilas);
+}
+
+.footer-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.footer-column h3 {
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  color: var(--vermelho-rosado);
+}
+
+.footer-column ul {
+  list-style: none;
+}
+
+.footer-column ul li {
+  margin-bottom: 0.5rem;
+}
+
+.footer-column a {
+  color: var(--text);
+  text-decoration: none;
+  transition: var(--transition);
+  font-size: 0.9rem;
+}
+
+.footer-column a:hover {
+  color: var(--vermelho-rosado);
+}
+
+.copyright {
+  text-align: center;
+  padding-top: 1rem;
+  border-top: 1px solid var(--lilas);
+  font-size: 0.8rem;
+  color: var(--text-light);
+}
+
+/* Loading State */
+.loading {
+  text-align: center;
+  padding: 3rem;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--bege);
+  border-top: 4px solid var(--vermelho-rosado);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Estados Vazios */
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  background: var(--branco);
+  border-radius: 15px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--lilas);
+}
+
+.empty-state-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+/* Alertas */
+.alert {
+  padding: 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  text-align: center;
+  border: 1px solid;
+}
+
+.alert-info {
+  background-color: #bee3f8;
+  border-color: #90cdf4;
+  color: #2c5aa0;
+}
+
+/* Menu Hamburguer Mobile - CORRIGIDO */
+#hamburgerBtn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--branco);
+  font-size: 1.8rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  z-index: 1001;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#mobileMenu {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+  z-index: 1000;
+  padding: 1.5rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1rem;
+  overflow-y: auto;
+}
+
+#closeMobileMenu {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: var(--branco);
+  font-size: 2rem;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1002;
+}
+
+.mobile-user-info {
+  text-align: center;
+  color: var(--branco);
+  margin-bottom: 1rem;
+  margin-top: 2rem;
+}
+
+.mobile-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  width: 100%;
+  max-width: 280px;
+  flex: 1;
+  justify-content: center;
+}
+
+.mobile-nav .btn {
+  width: 100%;
+  text-align: center;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem;
+  font-size: 0.95rem;
+  border-radius: 10px;
+  min-height: 48px;
+}
+
+.mobile-nav .btn-premium {
+  background: linear-gradient(135deg, #ffd700, #ff6b00);
+  color: var(--branco);
+  border: none;
+  font-weight: 700;
+  box-shadow: 0 4px 15px rgba(255, 107, 0, 0.3);
+  order: -1;
+}
+
+.mobile-user-info .user-avatar {
+  width: 70px;
+  height: 70px;
+  font-size: 1.3rem;
+  margin: 0 auto 0.5rem;
+}
+
+.mobile-user-info #mobileUserNickname {
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.mobile-nav .btn:last-child {
+  margin-top: auto;
+  margin-bottom: 1rem;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  #hamburgerBtn {
+    display: flex;
+  }
+
+  .user-menu {
+    display: none;
+  }
+
+  .header-content {
+    flex-direction: row;
+    justify-content: space-between;
+    height: 80px;
+    padding: 0;
+  }
+
+  .logo {
+    justify-content: center;
+    flex: 1;
+    margin: 0 auto;
+  }
+
+  .logo img {
+    height: 180px !important;
+  }
+
+  .user-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .stat-card {
+    padding: 1rem;
+  }
+
+  .stat-number {
+    font-size: 1.8rem;
+  }
+
+  .users-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .user-card {
+    padding: 1.2rem;
+  }
+
+  .user-card-avatar {
+    width: 70px;
+    height: 70px;
+  }
+
+  .user-card-name {
+    font-size: 1.1rem;
+  }
+
+  .user-card-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .user-card-actions .btn {
+    width: 100%;
+  }
+
+  .actions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .action-card {
+    padding: 1.2rem;
+  }
+
+  .welcome-section {
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .welcome-section h2 {
+    font-size: 1.8rem;
+  }
+
+  .quick-actions {
+    padding: 1.5rem;
+  }
+
+  .section-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo img {
+    height: 160px !important;
+  }
+
+  .user-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .welcome-section h2 {
+    font-size: 1.5rem;
+  }
+
+  .stat-number {
+    font-size: 1.5rem;
+  }
+
+  .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .header-content {
+    height: 70px;
+  }
+}
+
+/* Animações para o menu mobile */
+#mobileMenu {
+  transition: opacity 0.3s ease;
+}
    </style>
 </head>
 <body>
@@ -962,287 +882,259 @@
   </footer>
 
   <script>
-  // Configuração do Supabase
-  const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+ // Configuração do Supabase
+const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Estado da aplicação
+let currentUser = null;
+let userProfile = null;
 
-
-  // Estado da aplicação
-  let currentUser = null;
-  let userProfile = null;
-
-
-  document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
     checkAuth();
     setupEventListeners();
     setupMobileMenu();
-  });
+});
 
-
-  // Configurar menu mobile
-  function setupMobileMenu() {
+// Configurar menu mobile - CORRIGIDO
+function setupMobileMenu() {
     const hamburgerBtn = document.getElementById('hamburgerBtn');
     const mobileMenu = document.getElementById('mobileMenu');
     const closeMobileMenu = document.getElementById('closeMobileMenu');
     const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
 
+    if (!hamburgerBtn || !mobileMenu) return;
 
     hamburgerBtn.addEventListener('click', () => {
-      mobileMenu.style.display = 'flex';
-      document.body.style.overflow = 'hidden';
+        mobileMenu.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
     });
-
 
     closeMobileMenu.addEventListener('click', () => {
-      mobileMenu.style.display = 'none';
-      document.body.style.overflow = 'auto';
+        mobileMenu.style.display = 'none';
+        document.body.style.overflow = 'auto';
     });
 
-
-    mobileLogoutBtn.addEventListener('click', logout);
-
+    if (mobileLogoutBtn) {
+        mobileLogoutBtn.addEventListener('click', logout);
+    }
 
     // Fechar menu ao clicar em um link
     mobileMenu.querySelectorAll('a').forEach(link => {
-      link.addEventListener('click', () => {
-        mobileMenu.style.display = 'none';
-        document.body.style.overflow = 'auto';
-      });
+        link.addEventListener('click', () => {
+            mobileMenu.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        });
     });
-
 
     // Verificar tamanho da tela
     function checkScreenSize() {
-      if (window.innerWidth <= 768) {
-        document.querySelector('.user-menu').style.display = 'none';
-        hamburgerBtn.style.display = 'flex';
-      } else {
-        document.querySelector('.user-menu').style.display = 'flex';
-        hamburgerBtn.style.display = 'none';
-        mobileMenu.style.display = 'none';
-        document.body.style.overflow = 'auto';
-      }
+        if (window.innerWidth <= 768) {
+            document.querySelector('.user-menu').style.display = 'none';
+            hamburgerBtn.style.display = 'flex';
+        } else {
+            document.querySelector('.user-menu').style.display = 'flex';
+            hamburgerBtn.style.display = 'none';
+            mobileMenu.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
     }
-
 
     window.addEventListener('resize', checkScreenSize);
     checkScreenSize();
-  }
+}
 
-
-  // Verificar autenticação
-  async function checkAuth() {
+// Verificar autenticação
+async function checkAuth() {
     try {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      
-      if (error) throw error;
-      
-      if (!user) {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error) throw error;
+        
+        if (!user) {
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        currentUser = user;
+        await loadUserData();
+        await loadRealUsers();
+        updateStats();
+        
+    } catch (error) {
+        console.error('Erro na autenticação:', error);
         window.location.href = 'login.html';
-        return;
-      }
-      
-      currentUser = user;
-      await loadUserData();
-      await loadRealUsers();
-      updateStats();
-      
-    } catch (error) {
-      console.error('Erro na autenticação:', error);
-      window.location.href = 'login.html';
     }
-  }
+}
 
-
-  // ✅ CARREGAR FOTO DO USUÁRIO
-  async function loadUserPhoto(avatarUrl) {
+// ✅ CARREGAR FOTO DO USUÁRIO
+async function loadUserPhoto(avatarUrl) {
     try {
-      if (!avatarUrl) {
-        return null;
-      }
+        if (!avatarUrl) {
+            return null;
+        }
 
+        console.log('🔄 Buscando foto:', avatarUrl);
+        const { data, error } = await supabase.storage
+            .from('avatars')
+            .download(avatarUrl);
 
-      console.log(' Buscando foto:', avatarUrl);
-      const { data, error } = await supabase.storage
-        .from('avatars')
-        .download(avatarUrl);
+        if (error) {
+            console.log('❌ Erro ao carregar foto:', error);
+            return null;
+        }
 
-
-      if (error) {
-        console.log('❌ Erro ao carregar foto:', error);
-        return null;
-      }
-
-
-      const photoUrl = URL.createObjectURL(data);
-      console.log('✅ Foto carregada com sucesso');
-      return photoUrl;
-
+        const photoUrl = URL.createObjectURL(data);
+        console.log('✅ Foto carregada com sucesso');
+        return photoUrl;
 
     } catch (error) {
-      console.error('❌ Erro ao carregar foto:', error);
-      return null;
+        console.error('❌ Erro ao carregar foto:', error);
+        return null;
     }
-  }
+}
 
-
-  // Carregar dados do usuário atual
-  async function loadUserData() {
+// Carregar dados do usuário atual
+async function loadUserData() {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      // Buscar perfil do banco
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', currentUser.id)
-        .single();
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        // Buscar perfil do banco
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', currentUser.id)
+            .single();
 
+        userProfile = profile;
 
-      userProfile = profile;
+        // Definir nome de exibição
+        let displayName = 'Usuário';
+        
+        if (user.user_metadata?.nickname) {
+            displayName = user.user_metadata.nickname;
+        } else if (user.user_metadata?.full_name) {
+            displayName = user.user_metadata.full_name;
+        } else if (user.email) {
+            displayName = user.email.split('@')[0];
+        }
 
+        // ✅ ATUALIZAR AVATAR COM FOTO (Desktop e Mobile)
+        await updateUserAvatar(displayName, profile);
 
-      // Definir nome de exibição
-      let displayName = 'Usuário';
-      
-      if (user.user_metadata?.nickname) {
-        displayName = user.user_metadata.nickname;
-      } else if (user.user_metadata?.full_name) {
-        displayName = user.user_metadata.full_name;
-      } else if (user.email) {
-        displayName = user.email.split('@')[0];
-      }
-
-
-      // ✅ ATUALIZAR AVATAR COM FOTO (Desktop e Mobile)
-      await updateUserAvatar(displayName, profile);
-
-
-      // Atualizar interface
-      document.getElementById('userNickname').textContent = displayName;
-      document.getElementById('mobileUserNickname').textContent = displayName;
-      document.getElementById('welcomeNickname').textContent = displayName;
-
+        // Atualizar interface
+        document.getElementById('userNickname').textContent = displayName;
+        document.getElementById('mobileUserNickname').textContent = displayName;
+        document.getElementById('welcomeNickname').textContent = displayName;
 
     } catch (error) {
-      console.error('Erro ao carregar dados do usuário:', error);
+        console.error('Erro ao carregar dados do usuário:', error);
     }
-  }
+}
 
-
-  // ✅ FUNÇÃO AUXILIAR PARA ATUALIZAR AVATAR
-  async function updateUserAvatar(displayName, profile) {
+// ✅ FUNÇÃO AUXILIAR PARA ATUALIZAR AVATAR
+async function updateUserAvatar(displayName, profile) {
     const avatarElements = [
-      document.getElementById('userAvatar'),
-      document.getElementById('mobileUserAvatar')
+        document.getElementById('userAvatar'),
+        document.getElementById('mobileUserAvatar')
     ];
 
-
     for (const avatarElement of avatarElements) {
-      if (!avatarElement) continue;
-      
-      const userAvatarFallback = avatarElement.querySelector('.user-avatar-fallback');
-      
-      if (profile?.avatar_url) {
-        const photoUrl = await loadUserPhoto(profile.avatar_url);
-        if (photoUrl) {
-          const imgElement = avatarElement.querySelector('.user-avatar-img');
-          imgElement.src = photoUrl;
-          imgElement.style.display = 'block';
-          userAvatarFallback.style.display = 'none';
+        if (!avatarElement) continue;
+        
+        const userAvatarFallback = avatarElement.querySelector('.user-avatar-fallback');
+        
+        if (profile?.avatar_url) {
+            const photoUrl = await loadUserPhoto(profile.avatar_url);
+            if (photoUrl) {
+                const imgElement = avatarElement.querySelector('.user-avatar-img');
+                imgElement.src = photoUrl;
+                imgElement.style.display = 'block';
+                userAvatarFallback.style.display = 'none';
+            }
         }
-      }
-      
-      userAvatarFallback.textContent = displayName.charAt(0).toUpperCase();
+        
+        userAvatarFallback.textContent = displayName.charAt(0).toUpperCase();
     }
-  }
+}
 
-
-  // ✅ CARREGAR USUÁRIOS REAIS DO BANCO COM FOTOS
-  async function loadRealUsers() {
+// ✅ CARREGAR USUÁRIOS REAIS DO BANCO COM FOTOS
+async function loadRealUsers() {
     try {
-      console.log(' Buscando usuários reais do banco...');
-      
-      // Ajustar limite baseado no tamanho da tela
-      const limit = window.innerWidth <= 768 ? 4 : 8;
-      
-      // Buscar perfis com detalhes públicos E avatar_url
-      const { data: users, error } = await supabase
-        .from('profiles')
-        .select(`
-          id,
-          nickname,
-          full_name,
-          birth_date,
-          avatar_url,
-          user_details (
-            gender,
-            zodiac,
-            profession,
-            interests,
-            looking_for,
-            description
-          )
-        `)
-        .neq('id', currentUser.id) // Excluir próprio usuário
-        .limit(limit)
-        .order('created_at', { ascending: false });
+        console.log('🔄 Buscando usuários reais do banco...');
+        
+        // Ajustar limite baseado no tamanho da tela
+        const limit = window.innerWidth <= 768 ? 4 : 8;
+        
+        // Buscar perfis com detalhes públicos E avatar_url
+        const { data: users, error } = await supabase
+            .from('profiles')
+            .select(`
+                id,
+                nickname,
+                full_name,
+                birth_date,
+                avatar_url,
+                user_details (
+                    gender,
+                    zodiac,
+                    profession,
+                    interests,
+                    looking_for,
+                    description
+                )
+            `)
+            .neq('id', currentUser.id) // Excluir próprio usuário
+            .limit(limit)
+            .order('created_at', { ascending: false });
 
+        const usersGrid = document.getElementById('usersGrid');
+        
+        if (error) {
+            console.error('❌ Erro ao buscar usuários:', error);
+            showEmptyState('Erro ao carregar usuários. Tente novamente.');
+            return;
+        }
 
-      const usersGrid = document.getElementById('usersGrid');
-      
-      if (error) {
-        console.error('❌ Erro ao buscar usuários:', error);
-        showEmptyState('Erro ao carregar usuários. Tente novamente.');
-        return;
-      }
+        if (!users || users.length === 0) {
+            showEmptyState('Ainda não há outros usuários cadastrados. Seja o primeiro!');
+            return;
+        }
 
-
-      if (!users || users.length === 0) {
-        showEmptyState('Ainda não há outros usuários cadastrados. Seja o primeiro!');
-        return;
-      }
-
-
-      console.log(`✅ ${users.length} usuários reais carregados`);
-      
-      // ✅ CARREGAR FOTOS ASSINCRONAMENTE
-      await displayUsersWithPhotos(users);
-
+        console.log(`✅ ${users.length} usuários reais carregados`);
+        
+        // ✅ CARREGAR FOTOS ASSINCRONAMENTE
+        await displayUsersWithPhotos(users);
 
     } catch (error) {
-      console.error('❌ Erro ao carregar usuários:', error);
-      showEmptyState('Erro ao carregar usuários. Tente novamente.');
+        console.error('❌ Erro ao carregar usuários:', error);
+        showEmptyState('Erro ao carregar usuários. Tente novamente.');
     }
-  }
+}
 
-
-  // ✅ EXIBIR USUÁRIOS COM FOTOS - ASSÍNCRONO
-  async function displayUsersWithPhotos(users) {
+// ✅ EXIBIR USUÁRIOS COM FOTOS - ASSÍNCRONO
+async function displayUsersWithPhotos(users) {
     const usersGrid = document.getElementById('usersGrid');
     
     // ✅ CARREGAR FOTOS PARA CADA USUÁRIO
     const userCards = [];
     for (const user of users) {
-      const card = await createUserCardWithPhoto(user);
-      userCards.push(card);
+        const card = await createUserCardWithPhoto(user);
+        userCards.push(card);
     }
     
     usersGrid.innerHTML = userCards.join('');
     console.log('✅ Cards com fotos renderizados');
-  }
+}
 
-
-  // ✅ CRIAR CARD DE USUÁRIO COM FOTO - ASSÍNCRONO
-  async function createUserCardWithPhoto(user) {
+// ✅ CRIAR CARD DE USUÁRIO COM FOTO - ASSÍNCRONO
+async function createUserCardWithPhoto(user) {
     if (!user.user_details || !user.nickname) {
-      console.warn('⚠️ Usuário sem dados suficientes:', user);
-      return '';
+        console.warn('⚠️ Usuário sem dados suficientes:', user);
+        return '';
     }
-
 
     const nickname = user.nickname || user.full_name?.split(' ')[0] || 'Usuário';
     const age = user.birth_date ? calculateAge(user.birth_date) : null;
@@ -1251,32 +1143,31 @@
     // ✅ CARREGAR FOTO DO USUÁRIO
     let avatarHtml = '';
     if (user.avatar_url) {
-      const photoUrl = await loadUserPhoto(user.avatar_url);
-      if (photoUrl) {
-        avatarHtml = `
-          <div class="user-card-avatar" style="background: none;">
-            <img src="${photoUrl}" alt="${nickname}" class="user-card-avatar-img" style="display: block;">
-            <div class="user-card-avatar-fallback" style="display: none;">${nickname.charAt(0).toUpperCase()}</div>
-          </div>
-        `;
-        console.log(`✅ Foto carregada para: ${nickname}`);
-      } else {
-        avatarHtml = `
-          <div class="user-card-avatar">
-            <div class="user-card-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
-          </div>
-        `;
-        console.log(`❌ Sem foto para: ${nickname}`);
-      }
+        const photoUrl = await loadUserPhoto(user.avatar_url);
+        if (photoUrl) {
+            avatarHtml = `
+                <div class="user-card-avatar" style="background: none;">
+                    <img src="${photoUrl}" alt="${nickname}" class="user-card-avatar-img" style="display: block;">
+                    <div class="user-card-avatar-fallback" style="display: none;">${nickname.charAt(0).toUpperCase()}</div>
+                </div>
+            `;
+            console.log(`✅ Foto carregada para: ${nickname}`);
+        } else {
+            avatarHtml = `
+                <div class="user-card-avatar">
+                    <div class="user-card-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
+                </div>
+            `;
+            console.log(`❌ Sem foto para: ${nickname}`);
+        }
     } else {
-      avatarHtml = `
-        <div class="user-card-avatar">
-          <div class="user-card-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
-        </div>
-      `;
-      console.log(`❌ Sem avatar_url para: ${nickname}`);
+        avatarHtml = `
+            <div class="user-card-avatar">
+                <div class="user-card-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
+            </div>
+        `;
+        console.log(`❌ Sem avatar_url para: ${nickname}`);
     }
-
 
     // Informações públicas para mostrar
     const zodiac = details.zodiac ? getZodiacIcon(details.zodiac) + ' ' + formatZodiac(details.zodiac) : null;
@@ -1285,146 +1176,135 @@
     const lookingFor = details.looking_for ? formatLookingFor(details.looking_for) : null;
     const bio = details.description || 'Este usuário ainda não adicionou uma descrição.';
 
-
     return `
-      <div class="user-card" onclick="viewProfile('${user.id}')">
-        ${avatarHtml}
-        <div class="user-card-name">${nickname}${age ? `, ${age}` : ''}</div>
-        
-        <div class="user-card-info">
-          ${zodiac ? `<div class="user-card-detail">${zodiac}</div>` : ''}
-          ${profession ? `<div class="user-card-detail"> ${profession}</div>` : ''}
-          ${lookingFor ? `<div class="user-card-detail"> ${lookingFor}</div>` : ''}
+        <div class="user-card" onclick="viewProfile('${user.id}')">
+            ${avatarHtml}
+            <div class="user-card-name">${nickname}${age ? `, ${age}` : ''}</div>
+            
+            <div class="user-card-info">
+                ${zodiac ? `<div class="user-card-detail">${zodiac}</div>` : ''}
+                ${profession ? `<div class="user-card-detail">💼 ${profession}</div>` : ''}
+                ${lookingFor ? `<div class="user-card-detail">🎯 ${lookingFor}</div>` : ''}
+            </div>
+            
+            <div class="user-card-bio">${bio}</div>
+            
+            <div class="user-card-actions">
+                <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); sendMessage('${user.id}')">
+                    💌 Mensagem
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewProfile('${user.id}')">
+                    👀 Ver Perfil
+                </button>
+            </div>
         </div>
-        
-        <div class="user-card-bio">${bio}</div>
-        
-        <div class="user-card-actions">
-          <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); sendMessage('${user.id}')">
-             Mensagem
-          </button>
-          <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewProfile('${user.id}')">
-             Ver Perfil
-          </button>
-        </div>
-      </div>
     `;
-  }
+}
 
-
-  // ✅ FUNÇÃO PARA VISUALIZAR PERFIL (AGORA FUNCIONAL)
-  function viewProfile(userId) {
+// ✅ FUNÇÃO PARA VISUALIZAR PERFIL (AGORA FUNCIONAL)
+function viewProfile(userId) {
     if (!isProfileComplete()) {
-      alert(' Complete seu perfil primeiro para ver outros perfis!');
-      window.location.href = 'painel.html';
-      return;
+        alert('📝 Complete seu perfil primeiro para ver outros perfis!');
+        window.location.href = 'painel.html';
+        return;
     }
     
     // Salvar o ID do perfil a ser visualizado e redirecionar
     localStorage.setItem('viewingProfileId', userId);
     window.location.href = 'perfil.html';
-  }
+}
 
-
-  // ✅ VERIFICAR SE PERFIL ESTÁ COMPLETO
-  function isProfileComplete() {
+// ✅ VERIFICAR SE PERFIL ESTÁ COMPLETO
+function isProfileComplete() {
     return userProfile &&
         userProfile.full_name &&
         userProfile.full_name.trim() !== '' &&
         userProfile.birth_date;
-  }
+}
 
-
-  // ✅ ATUALIZAR ESTATÍSTICAS REAIS
-  async function updateStats() {
+// ✅ ATUALIZAR ESTATÍSTICAS REAIS
+async function updateStats() {
     try {
-      // Total de usuários
-      const { count: totalUsers } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
-      
-      // Mensagens não lidas
-      const { count: newMessages } = await supabase
-        .from('messages')
-        .select('*', { count: 'exact', head: true })
-        .eq('receiver_id', currentUser.id)
-        .eq('is_read', false);
+        // Total de usuários
+        const { count: totalUsers } = await supabase
+            .from('profiles')
+            .select('*', { count: 'exact', head: true });
+        
+        // Mensagens não lidas
+        const { count: newMessages } = await supabase
+            .from('messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('receiver_id', currentUser.id)
+            .eq('is_read', false);
 
-
-      document.getElementById('totalUsers').textContent = totalUsers || 0;
-      document.getElementById('newMatches').textContent = newMessages || 0;
-      document.getElementById('usersOnline').textContent = Math.floor((totalUsers || 1) * 0.3); // 30% online
-      document.getElementById('profileViews').textContent = Math.floor(Math.random() * 20); // Simulado por enquanto
-
+        document.getElementById('totalUsers').textContent = totalUsers || 0;
+        document.getElementById('newMatches').textContent = newMessages || 0;
+        document.getElementById('usersOnline').textContent = Math.floor((totalUsers || 1) * 0.3); // 30% online
+        document.getElementById('profileViews').textContent = Math.floor(Math.random() * 20); // Simulado por enquanto
 
     } catch (error) {
-      console.error('Erro ao carregar estatísticas:', error);
-      // Valores padrão
-      document.getElementById('totalUsers').textContent = '1';
-      document.getElementById('newMatches').textContent = '0';
-      document.getElementById('usersOnline').textContent = '1';
-      document.getElementById('profileViews').textContent = '0';
+        console.error('Erro ao carregar estatísticas:', error);
+        // Valores padrão
+        document.getElementById('totalUsers').textContent = '1';
+        document.getElementById('newMatches').textContent = '0';
+        document.getElementById('usersOnline').textContent = '1';
+        document.getElementById('profileViews').textContent = '0';
     }
-  }
+}
 
-
-  // ✅ ENVIAR MENSAGEM
-  function sendMessage(userId) {
+// ✅ ENVIAR MENSAGEM
+function sendMessage(userId) {
     if (!isProfileComplete()) {
-      alert(' Complete seu perfil primeiro para enviar mensagens!');
-      window.location.href = 'painel.html';
-      return;
+        alert('📝 Complete seu perfil primeiro para enviar mensagens!');
+        window.location.href = 'painel.html';
+        return;
     }
     
     const message = prompt('Digite sua mensagem:');
     if (message && message.trim()) {
-      sendMessageToUser(userId, message.trim());
+        sendMessageToUser(userId, message.trim());
     }
-  }
+}
 
-
-  async function sendMessageToUser(receiverId, content) {
+async function sendMessageToUser(receiverId, content) {
     try {
-      const { error } = await supabase
-        .from('messages')
-        .insert([
-          {
-            sender_id: currentUser.id,
-            receiver_id: receiverId,
-            content: content
-          }
-        ]);
+        const { error } = await supabase
+            .from('messages')
+            .insert([
+                {
+                    sender_id: currentUser.id,
+                    receiver_id: receiverId,
+                    content: content
+                }
+            ]);
 
-
-      if (error) throw error;
-      
-      alert('Mensagem enviada com sucesso! ');
-      
+        if (error) throw error;
+        
+        alert('Mensagem enviada com sucesso! 💌');
+        
     } catch (error) {
-      console.error('Erro ao enviar mensagem:', error);
-      alert('✅ Mensagem registrada!');
+        console.error('Erro ao enviar mensagem:', error);
+        alert('✅ Mensagem registrada!');
     }
-  }
+}
 
-
-  // ✅ MOSTRAR ESTADO VAZIO
-  function showEmptyState(message) {
+// ✅ MOSTRAR ESTADO VAZIO
+function showEmptyState(message) {
     const usersGrid = document.getElementById('usersGrid');
     usersGrid.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon"></div>
-        <h3>Nenhum usuário encontrado</h3>
-        <p>${message}</p>
-        <button class="btn btn-primary" onclick="window.location.href='busca.html'">
-           Ir para Busca
-        </button>
-      </div>
+        <div class="empty-state">
+            <div class="empty-state-icon">👥</div>
+            <h3>Nenhum usuário encontrado</h3>
+            <p>${message}</p>
+            <button class="btn btn-primary" onclick="window.location.href='busca.html'">
+                🔍 Ir para Busca
+            </button>
+        </div>
     `;
-  }
+}
 
-
-  // ✅ FUNÇÕES AUXILIARES
-  function calculateAge(birthDate) {
+// ✅ FUNÇÕES AUXILIARES
+function calculateAge(birthDate) {
     if (!birthDate) return null;
     const today = new Date();
     const birth = new Date(birthDate);
@@ -1432,65 +1312,60 @@
     const monthDiff = today.getMonth() - birth.getMonth();
     
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      age--;
+        age--;
     }
     
     return age;
-  }
+}
 
-
-  function getZodiacIcon(zodiac) {
+function getZodiacIcon(zodiac) {
     const icons = {
-      'aries': '♈', 'touro': '♉', 'gemeos': '♊', 'cancer': '♋',
-      'leao': '♌', 'virgem': '♍', 'libra': '♎', 'escorpiao': '♏',
-      'sagitario': '♐', 'capricornio': '♑', 'aquario': '♒', 'peixes': '♓'
+        'aries': '♈', 'touro': '♉', 'gemeos': '♊', 'cancer': '♋',
+        'leao': '♌', 'virgem': '♍', 'libra': '♎', 'escorpiao': '♏',
+        'sagitario': '♐', 'capricornio': '♑', 'aquario': '♒', 'peixes': '♓'
     };
     return icons[zodiac] || '⭐';
-  }
+}
 
-
-  function formatZodiac(zodiac) {
+function formatZodiac(zodiac) {
     const names = {
-      'aries': 'Áries', 'touro': 'Touro', 'gemeos': 'Gêmeos', 'cancer': 'Câncer',
-      'leao': 'Leão', 'virgem': 'Virgem', 'libra': 'Libra', 'escorpiao': 'Escorpião',
-      'sagitario': 'Sagitário', 'capricornio': 'Capricórnio', 'aquario': 'Aquário', 'peixes': 'Peixes'
+        'aries': 'Áries', 'touro': 'Touro', 'gemeos': 'Gêmeos', 'cancer': 'Câncer',
+        'leao': 'Leão', 'virgem': 'Virgem', 'libra': 'Libra', 'escorpiao': 'Escorpião',
+        'sagitario': 'Sagitário', 'capricornio': 'Capricórnio', 'aquario': 'Aquário', 'peixes': 'Peixes'
     };
     return names[zodiac] || zodiac;
-  }
+}
 
-
-  function formatLookingFor(lookingFor) {
+function formatLookingFor(lookingFor) {
     const options = {
-      'amizade': 'Amizade',
-      'namoro': 'Namoro',
-      'relacionamento_serio': 'Relacionamento Sério',
-      'conversa': 'Apenas Conversa'
+        'amizade': 'Amizade',
+        'namoro': 'Namoro',
+        'relacionamento_serio': 'Relacionamento Sério',
+        'conversa': 'Apenas Conversa'
     };
     return options[lookingFor] || lookingFor;
-  }
+}
 
-
-  // Configurar event listeners
-  function setupEventListeners() {
+// Configurar event listeners
+function setupEventListeners() {
     document.getElementById('logoutBtn').addEventListener('click', logout);
     
     // Prevenir zoom em inputs no iOS
     document.addEventListener('touchstart', function() {}, { passive: true });
-  }
+}
 
-
-  // Logout
-  async function logout() {
+// Logout
+async function logout() {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
-      window.location.href = 'index.html';
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+        
+        window.location.href = 'index.html';
     } catch (error) {
-      console.error('Erro ao fazer logout:', error);
-      alert('Erro ao fazer logout. Tente novamente.');
+        console.error('Erro ao fazer logout:', error);
+        alert('Erro ao fazer logout. Tente novamente.');
     }
-  }
+}
 </script>
 </body>
 </html>
