@@ -3,82 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro Realizado - Conexão Perfeita Amor</title>
+    <title>Cadastro Realizado - Amor Conect</title>
     <style>
+        /* Use o mesmo CSS do cadastro */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        
+
+        :root {
+            --bege: #f6ecc5;
+            --vermelho-rosado: #d1656d;
+            --lilas: #dfc9ed;
+            --branco: #ffffff;
+            --text: #444;
+            --text-light: #666;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+
         body {
-            background: linear-gradient(135deg, #ff6b8b, #a78bfa);
+            background-color: var(--bege);
+            color: var(--text);
+            line-height: 1.6;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
+            text-align: center;
             padding: 2rem;
         }
-        
-        .container {
-            background: white;
+
+        .success-container {
+            background: var(--branco);
             padding: 3rem;
             border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: var(--shadow);
             max-width: 500px;
-            width: 100%;
-            text-align: center;
+            border: 1px solid var(--lilas);
         }
-        
+
         .success-icon {
             font-size: 4rem;
+            color: #22c55e;
             margin-bottom: 1rem;
         }
-        
+
         h1 {
-            color: #4a044e;
+            color: var(--vermelho-rosado);
             margin-bottom: 1rem;
         }
-        
+
+        p {
+            margin-bottom: 2rem;
+            color: var(--text-light);
+        }
+
         .btn {
-            background: linear-gradient(135deg, #ff6b8b, #a78bfa);
-            color: white;
-            border: none;
             padding: 1rem 2rem;
+            background: var(--vermelho-rosado);
+            color: var(--branco);
+            border: none;
             border-radius: 30px;
             font-size: 1.1rem;
             cursor: pointer;
-            margin: 1rem 0;
             text-decoration: none;
             display: inline-block;
+            transition: var(--transition);
         }
-        
-        .info-box {
-            background: #fdf2f8;
-            padding: 1.5rem;
-            border-radius: 10px;
-            margin: 1.5rem 0;
-            text-align: left;
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="success-container">
         <div class="success-icon">✅</div>
-        <h1>Cadastro Realizado!</h1>
-        
-        <div class="info-box">
-            <p><strong>📧 Verificação de E-mail:</strong></p>
-            <p>Enviamos um link de verificação para seu e-mail.</p>
-            <p><strong>Clique no link do e-mail para ativar sua conta.</strong></p>
-        </div>
-
-        <p>Após verificar o e-mail, você poderá fazer login.</p>
-        
+        <h1>Cadastro Realizado com Sucesso!</h1>
+        <p>Enviamos um e-mail de confirmação para você. Por favor, verifique sua caixa de entrada e clique no link para ativar sua conta.</p>
+        <p><strong>Dica:</strong> Verifique também sua pasta de spam caso não encontre o e-mail.</p>
         <a href="login.html" class="btn">Fazer Login</a>
-        <br>
-        <a href="index.html" style="color: #ff6b8b;">Voltar para Home</a>
     </div>
 </body>
 </html>
