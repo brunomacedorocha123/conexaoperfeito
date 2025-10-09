@@ -8,7 +8,6 @@ let selectedAvatarFile = null;
 
 // Sistema Premium
 const PremiumManager = {
-    // VERIFICAR SE USUÁRIO É PREMIUM
     async checkPremiumStatus() {
         try {
             const { data: { user } } = await supabase.auth.getUser();
@@ -26,44 +25,6 @@ const PremiumManager = {
         } catch (error) {
             console.error('Erro:', error);
             return false;
-        }
-    },
-
-    // VERIFICAR SE PODE ENVIAR MENSAGEM
-    async canSendMessage() {
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return false;
-            
-            const { data, error } = await supabase
-                .rpc('can_send_message', { user_uuid: user.id });
-            
-            if (error) {
-                console.error('Erro ao verificar mensagens:', error);
-                return false;
-            }
-            
-            return data;
-        } catch (error) {
-            console.error('Erro:', error);
-            return false;
-        }
-    },
-
-    // INCREMENTAR CONTADOR DE MENSAGENS
-    async incrementMessageCount() {
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-            
-            const { error } = await supabase
-                .rpc('increment_message_count', { user_uuid: user.id });
-            
-            if (error) {
-                console.error('Erro ao incrementar mensagem:', error);
-            }
-        } catch (error) {
-            console.error('Erro:', error);
         }
     }
 };
@@ -87,10 +48,11 @@ async function checkAuth() {
     setupEventListeners();
     await loadUserData();
     await loadProfileData();
-    await updatePremiumStatus(); // ✅ NOVO: Verificar status premium
+    await updatePremiumStatus();
+    await updateProfileCompletion(); // ✅ NOVO: Atualizar progresso
 }
 
-// CONFIGURA EVENTOS - CORRIGIDO
+// CONFIGURA EVENTOS
 function setupEventListeners() {
     console.log('🎯 Configurando event listeners...');
     
@@ -101,7 +63,7 @@ function setupEventListeners() {
         console.log('✅ Formulário configurado');
     }
 
-    // Avatar upload - CORREÇÃO PRINCIPAL
+    // Avatar upload
     const avatarButton = document.getElementById('avatarButton');
     const avatarInput = document.getElementById('avatarInput');
     
@@ -118,6 +80,15 @@ function setupEventListeners() {
         avatarInput.addEventListener('change', handleAvatarSelect);
         console.log('✅ Input de arquivo configurado');
     }
+
+    // ✅ NOVO: Máscaras para CPF, Telefone e CEP
+    const cpfInput = document.getElementById('cpf');
+    const phoneInput = document.getElementById('phone');
+    const zipCodeInput = document.getElementById('zipCode');
+
+    if (cpfInput) cpfInput.addEventListener('input', maskCPF);
+    if (phoneInput) phoneInput.addEventListener('input', maskPhone);
+    if (zipCodeInput) zipCodeInput.addEventListener('input', maskCEP);
 
     // Character count
     const description = document.getElementById('description');
@@ -166,7 +137,35 @@ function setupEventListeners() {
     console.log('🎯 Todos os event listeners configurados');
 }
 
-// ✅ NOVA FUNÇÃO: ATUALIZAR STATUS PREMIUM
+// ✅ NOVO: MÁSCARAS DE FORMULÁRIO
+function maskCPF(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length <= 11) {
+        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+        value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    }
+    e.target.value = value;
+}
+
+function maskPhone(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length <= 11) {
+        value = value.replace(/(\d{2})(\d)/, '($1) $2');
+        value = value.replace(/(\d{5})(\d)/, '$1-$2');
+    }
+    e.target.value = value;
+}
+
+function maskCEP(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length <= 8) {
+        value = value.replace(/(\d{5})(\d)/, '$1-$2');
+    }
+    e.target.value = value;
+}
+
+// ✅ NOVO: ATUALIZAR STATUS PREMIUM
 async function updatePremiumStatus() {
     try {
         const isPremium = await PremiumManager.checkPremiumStatus();
@@ -211,6 +210,43 @@ async function updatePremiumStatus() {
         }
     } catch (error) {
         console.error('❌ Erro ao verificar status premium:', error);
+    }
+}
+
+// ✅ NOVO: ATUALIZAR PROGRESSO DO PERFIL
+async function updateProfileCompletion() {
+    try {
+        const { data: completion, error } = await supabase
+            .rpc('calculate_profile_completion', { user_uuid: currentUser.id });
+        
+        if (error) {
+            console.error('❌ Erro ao calcular completude:', error);
+            return;
+        }
+
+        const percentage = completion || 0;
+        const progressFill = document.getElementById('progressFill');
+        const completionPercentage = document.getElementById('completionPercentage');
+        const progressText = document.getElementById('progressText');
+
+        if (progressFill) progressFill.style.width = `${percentage}%`;
+        if (completionPercentage) completionPercentage.textContent = `${percentage}%`;
+        
+        if (progressText) {
+            if (percentage < 30) {
+                progressText.textContent = 'Complete seu perfil para melhorar suas conexões';
+            } else if (percentage < 70) {
+                progressText.textContent = 'Seu perfil está ficando interessante! Continue...';
+            } else if (percentage < 100) {
+                progressText.textContent = 'Quase lá! Complete os últimos detalhes';
+            } else {
+                progressText.textContent = '🎉 Perfil 100% completo!';
+            }
+        }
+
+        console.log(`📊 Progresso do perfil: ${percentage}%`);
+    } catch (error) {
+        console.error('❌ Erro ao atualizar progresso:', error);
     }
 }
 
@@ -260,7 +296,6 @@ async function createUserProfile() {
             .insert({
                 id: currentUser.id,
                 nickname: currentUser.email.split('@')[0],
-                full_name: '',
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             });
@@ -293,7 +328,6 @@ async function loadAvatar(avatarPath) {
     try {
         console.log('🔄 Carregando avatar:', avatarPath);
         
-        // Pega URL pública direto do storage
         const { data } = supabase.storage
             .from('avatars')
             .getPublicUrl(avatarPath);
@@ -352,7 +386,7 @@ function showFallbackAvatars() {
     });
 }
 
-// CARREGA DADOS DO PERFIL
+// ✅ ATUALIZADO: CARREGA DADOS DO PERFIL COM NOVOS CAMPOS
 async function loadProfileData() {
     try {
         console.log('📋 Carregando dados do perfil...');
@@ -378,16 +412,27 @@ async function loadProfileData() {
             return;
         }
 
-        // PREENCHE FORMULÁRIO
+        // ✅ PREENCHE FORMULÁRIO COM NOVOS CAMPOS
         if (profile) {
+            // 🔒 Dados Privados
             document.getElementById('fullName').value = profile.full_name || '';
-            document.getElementById('nickname').value = profile.nickname || '';
+            document.getElementById('cpf').value = profile.cpf || '';
             document.getElementById('birthDate').value = profile.birth_date || '';
+            document.getElementById('phone').value = profile.phone || '';
+            document.getElementById('street').value = profile.street || '';
+            document.getElementById('number').value = profile.number || '';
+            document.getElementById('neighborhood').value = profile.neighborhood || '';
+            document.getElementById('city').value = profile.city || '';
+            document.getElementById('state').value = profile.state || '';
+            document.getElementById('zipCode').value = profile.zip_code || '';
+            
+            // 👁️ Dados Públicos
+            document.getElementById('nickname').value = profile.nickname || '';
         }
 
         if (userDetails) {
-            document.getElementById('phone').value = userDetails.phone || '';
-            document.getElementById('location').value = userDetails.address || '';
+            // 👁️ Dados Públicos
+            document.getElementById('displayCity').value = userDetails.display_city || '';
             document.getElementById('gender').value = userDetails.gender || '';
             document.getElementById('sexualOrientation').value = userDetails.sexual_orientation || '';
             document.getElementById('profession').value = userDetails.profession || '';
@@ -420,7 +465,7 @@ async function loadProfileData() {
     }
 }
 
-// HANDLE AVATAR SELECT - CORRIGIDO
+// HANDLE AVATAR SELECT
 function handleAvatarSelect(event) {
     console.log('📁 Arquivo selecionado:', event.target.files[0]);
     const file = event.target.files[0];
@@ -485,14 +530,12 @@ async function uploadAvatar(file) {
     try {
         console.log('📤 Iniciando upload do avatar...');
         
-        // Nome do arquivo - usa nome fixo para sobrescrever
         const fileExt = file.name.split('.').pop();
         const fileName = `avatar.${fileExt}`;
         const filePath = `${currentUser.id}/${fileName}`;
 
         console.log('📁 Fazendo upload para:', filePath);
 
-        // Faz upload COM UPSERT
         const { data, error } = await supabase.storage
             .from('avatars')
             .upload(filePath, file, {
@@ -515,7 +558,7 @@ async function uploadAvatar(file) {
     }
 }
 
-// SALVA PERFIL
+// ✅ ATUALIZADO: SALVA PERFIL COM NOVOS CAMPOS
 async function saveProfile(event) {
     event.preventDefault();
     console.log('💾 Salvando perfil...');
@@ -541,11 +584,22 @@ async function saveProfile(event) {
             }
         }
 
-        // Dados do perfil
+        // ✅ DADOS DO PERFIL (PRIVADOS + PÚBLICOS)
         const profileData = {
+            // 🔒 Dados Privados
             full_name: document.getElementById('fullName').value.trim(),
-            nickname: document.getElementById('nickname').value.trim(),
+            cpf: document.getElementById('cpf').value.replace(/\D/g, ''),
             birth_date: document.getElementById('birthDate').value,
+            phone: document.getElementById('phone').value.replace(/\D/g, ''),
+            street: document.getElementById('street').value.trim(),
+            number: document.getElementById('number').value.trim(),
+            neighborhood: document.getElementById('neighborhood').value.trim(),
+            city: document.getElementById('city').value.trim(),
+            state: document.getElementById('state').value,
+            zip_code: document.getElementById('zipCode').value.replace(/\D/g, ''),
+            
+            // 👁️ Dados Públicos
+            nickname: document.getElementById('nickname').value.trim(),
             updated_at: new Date().toISOString()
         };
 
@@ -554,10 +608,10 @@ async function saveProfile(event) {
             profileData.avatar_url = avatarPath;
         }
 
-        // Dados detalhados
+        // ✅ DADOS DETALHADOS (APENAS PÚBLICOS)
         const userDetailsData = {
-            phone: document.getElementById('phone').value.trim(),
-            address: document.getElementById('location').value.trim(),
+            // 👁️ Dados Públicos
+            display_city: document.getElementById('displayCity').value.trim(),
             gender: document.getElementById('gender').value,
             sexual_orientation: document.getElementById('sexualOrientation').value,
             profession: document.getElementById('profession').value.trim(),
@@ -582,7 +636,7 @@ async function saveProfile(event) {
         });
         userDetailsData.interests = selectedInterests;
 
-        // Validações obrigatórias
+        // ✅ VALIDAÇÕES OBRIGATÓRIAS
         if (!profileData.nickname) {
             showNotification('❌ Informe um nickname!', 'error');
             return;
@@ -613,6 +667,18 @@ async function saveProfile(event) {
         }
         if (!userDetailsData.looking_for) {
             showNotification('❌ Informe o que você procura!', 'error');
+            return;
+        }
+
+        // ✅ VALIDAÇÃO DE CPF (básica)
+        if (profileData.cpf && profileData.cpf.length !== 11) {
+            showNotification('❌ CPF inválido!', 'error');
+            return;
+        }
+
+        // ✅ VALIDAÇÃO DE CEP (básica)
+        if (profileData.zip_code && profileData.zip_code.length !== 8) {
+            showNotification('❌ CEP inválido!', 'error');
             return;
         }
 
@@ -651,7 +717,8 @@ async function saveProfile(event) {
         console.log('✅ Perfil salvo com sucesso!');
         showNotification('✅ Perfil salvo com sucesso!', 'success');
         
-        // Atualiza status premium (pode ter mudado se era premium)
+        // ✅ ATUALIZA PROGRESSO APÓS SALVAR
+        await updateProfileCompletion();
         await updatePremiumStatus();
         
         // Recarrega o avatar se foi atualizado
@@ -686,7 +753,6 @@ function showNotification(message, type = 'info') {
         </div>
     `;
 
-    // Adicionar estilos
     notification.style.cssText = `
         position: fixed;
         top: 100px;

@@ -14,6 +14,8 @@
     --text-light: #666;
     --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     --transition: all 0.3s ease;
+    --private-color: #f56565;
+    --public-color: #48bb78;
 }
 
 body {
@@ -254,24 +256,87 @@ header {
     font-size: 1rem;
 }
 
-/* Profile Form */
-.profile-form {
+/* ✅ NOVO: Status do Perfil */
+.profile-status {
     background: var(--branco);
-    padding: 2rem;
+    padding: 1.5rem;
     border-radius: 15px;
     box-shadow: var(--shadow);
+    margin-bottom: 2rem;
     border: 1px solid var(--lilas);
 }
 
+.status-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 12px;
+    background: var(--bege);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 0.5rem 0;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+
+.progress-text {
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--text-light);
+}
+
+/* ✅ NOVO: Badges de Seção */
+.section-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+.badge-private {
+    background: var(--private-color);
+    color: white;
+}
+
+.badge-public {
+    background: var(--public-color);
+    color: white;
+}
+
+/* ✅ NOVO: Estilos Diferentes para Seções Públicas/Privadas */
 .form-section {
     margin-bottom: 2rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 2px solid var(--bege);
+    padding: 1.5rem;
+    border-radius: 10px;
+    transition: var(--transition);
+}
+
+.section-private {
+    border-left: 4px solid var(--private-color);
+    background: linear-gradient(135deg, #fff5f5, #fed7d7);
+}
+
+.section-public {
+    border-left: 4px solid var(--public-color);
+    background: linear-gradient(135deg, #f0fff4, #c6f6d5);
 }
 
 .form-section h3 {
     font-size: 1.3rem;
-    color: var(--vermelho-rosado);
+    color: var(--text);
     margin-bottom: 1rem;
     display: flex;
     align-items: center;
@@ -303,7 +368,7 @@ header {
     border-radius: 10px;
     font-size: 1rem;
     transition: var(--transition);
-    background-color: var(--bege);
+    background-color: var(--branco);
 }
 
 .form-control:focus {
@@ -332,6 +397,7 @@ select.form-control {
     background-size: 1em;
 }
 
+/* Avatar Upload */
 .avatar-upload {
     text-align: center;
     padding: 2rem;
@@ -372,6 +438,7 @@ select.form-control {
     height: 100%;
 }
 
+/* Interests */
 .interests-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -399,6 +466,7 @@ select.form-control {
     height: 18px;
 }
 
+/* Form Actions */
 .form-actions {
     display: flex;
     gap: 1rem;
@@ -463,7 +531,7 @@ footer {
     }
 
     .user-menu {
-        display: none; /* Esconde o menu desktop no mobile */
+        display: none;
     }
 
     .header-content {
@@ -540,11 +608,16 @@ footer {
     .profile-form {
         padding: 1rem;
     }
+
+    .form-section {
+        padding: 1rem;
+    }
 }
 
 .hidden {
     display: none;
 }
+
 /* Notifications */
 @keyframes slideIn {
     from {
@@ -614,32 +687,10 @@ footer {
     background: rgba(255, 255, 255, 0.2);
 }
 
-/* Avatar Upload Improvements */
-.avatar-upload {
-    position: relative;
-    transition: var(--transition);
-}
-
-.avatar-upload:hover {
-    border-color: var(--vermelho-rosado);
-    background: var(--lilas);
-}
-
-.avatar-preview {
-    transition: var(--transition);
-}
-
-.avatar-preview:hover {
-    transform: scale(1.05);
-}
-
-/* Form Validation */
-.form-control:invalid {
-    border-color: #f56565;
-}
-
-.form-control:valid {
-    border-color: #48bb78;
+/* Character Count */
+.char-count-warning {
+    color: #f56565;
+    font-weight: bold;
 }
 
 /* Loading States */
@@ -652,22 +703,6 @@ footer {
 .btn:disabled:hover {
     transform: none !important;
     box-shadow: none !important;
-}
-
-/* Character Count Warning */
-.char-count-warning {
-    color: #f56565;
-    font-weight: bold;
-}
-
-/* Responsive Notifications */
-@media (max-width: 768px) {
-    .notification {
-        top: 80px;
-        right: 10px;
-        left: 10px;
-        max-width: none;
-    }
 }
 
 /* Interest Checkboxes Improvements */
@@ -689,4 +724,15 @@ footer {
 .interest-checkbox:has(input[type="checkbox"]:checked) {
     background: var(--lilas);
     border-color: var(--vermelho-rosado);
+}
+
+/* ✅ NOVO: Premium Badge */
+.premium-badge {
+    background: linear-gradient(135deg, #ffd700, #ff6b00);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-weight: bold;
+    font-size: 0.8rem;
+    margin-left: 8px;
 }
