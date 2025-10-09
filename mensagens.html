@@ -1180,13 +1180,74 @@
       </div>
     </div>
   </footer>
-
 <script>
     // Configuração do Supabase
     const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Sistema Premium
+    const PremiumManager = {
+        // VERIFICAR SE USUÁRIO É PREMIUM
+        async checkPremiumStatus() {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return false;
+                
+                const { data, error } = await supabase
+                    .rpc('is_user_premium', { user_uuid: user.id });
+                
+                if (error) {
+                    console.error('Erro ao verificar premium:', error);
+                    return false;
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('Erro:', error);
+                return false;
+            }
+        },
+
+        // VERIFICAR SE PODE ENVIAR MENSAGEM
+        async canSendMessage() {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return false;
+                
+                const { data, error } = await supabase
+                    .rpc('can_send_message', { user_uuid: user.id });
+                
+                if (error) {
+                    console.error('Erro ao verificar mensagens:', error);
+                    return false;
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('Erro:', error);
+                return false;
+            }
+        },
+
+        // INCREMENTAR CONTADOR DE MENSAGENS
+        async incrementMessageCount() {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return;
+                
+                const { error } = await supabase
+                    .rpc('increment_message_count', { user_uuid: user.id });
+                
+                if (error) {
+                    console.error('Erro ao incrementar mensagem:', error);
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+            }
+        }
+    };
 
     // Estado da aplicação
     let currentUser = null;
@@ -1689,6 +1750,7 @@
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
+    // ==================== FUNÇÃO SENDMESSAGE COM CONTROLE PREMIUM ====================
     async function sendMessage() {
         const messageInput = document.getElementById('messageInput');
         const content = messageInput.value.trim();
@@ -1696,6 +1758,22 @@
         if (!content || !currentChatPartner) return;
 
         try {
+            // ✅ VERIFICAR SE PODE ENVIAR MENSAGEM (SISTEMA PREMIUM)
+            const canSend = await PremiumManager.canSendMessage();
+            
+            if (!canSend) {
+                showNotification('❌ Limite de 5 mensagens por dia atingido! Faça upgrade para Premium.', 'error');
+                
+                // Mostrar botão para upgrade
+                setTimeout(() => {
+                    if (confirm('Deseja fazer upgrade para Premium e ter mensagens ilimitadas?')) {
+                        window.location.href = 'pricing.html';
+                    }
+                }, 1000);
+                
+                return;
+            }
+
             const { error } = await supabase
                 .from('messages')
                 .insert({
@@ -1707,14 +1785,60 @@
 
             if (error) return;
 
+            // ✅ INCREMENTAR CONTADOR (apenas se não for premium)
+            const isPremium = await PremiumManager.checkPremiumStatus();
+            if (!isPremium) {
+                await PremiumManager.incrementMessageCount();
+            }
+
             // ATUALIZAÇÃO IMEDIATA
             messageInput.value = '';
             await loadMessages(currentChatPartner.id);
             await loadConversations();
 
+            showNotification('✅ Mensagem enviada!', 'success');
+
         } catch (error) {
             console.error('Erro ao enviar mensagem:', error);
+            showNotification('❌ Erro ao enviar mensagem', 'error');
         }
+    }
+
+    // ==================== FUNÇÃO SHOW NOTIFICATION ====================
+    function showNotification(message, type = 'info') {
+        const existingNotification = document.querySelector('.notification');
+        if (existingNotification) {
+            existingNotification.remove();
+        }
+
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.innerHTML = `
+            <div class="notification-content">
+                <span class="notification-message">${message}</span>
+                <button class="notification-close">×</button>
+            </div>
+        `;
+
+        // Adicionar estilos
+        notification.style.cssText = `
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: ${type === 'error' ? '#f56565' : type === 'success' ? '#48bb78' : '#4299e1'};
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 10000;
+            max-width: 300px;
+            animation: slideIn 0.3s ease;
+        `;
+
+        notification.querySelector('.notification-close').onclick = () => notification.remove();
+        document.body.appendChild(notification);
+
+        setTimeout(() => notification.remove(), 5000);
     }
 
     async function markMessagesAsRead(partnerId) {
