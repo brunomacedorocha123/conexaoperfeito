@@ -641,193 +641,167 @@
         </div>
     </main>
 
-    <script>
-        // Configuração do Supabase
-        const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+   <script>
+    // Configuração do Supabase
+    const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        let currentUser = null;
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let currentUser = null;
 
-        // Sistema Premium
-        const PremiumManager = {
-            // VERIFICAR SE USUÁRIO É PREMIUM
-            async checkPremiumStatus() {
-                try {
-                    const { data: { user } } = await supabase.auth.getUser();
-                    if (!user) return false;
-                    
-                    const { data, error } = await supabase
-                        .rpc('is_user_premium', { user_uuid: user.id });
-                    
-                    if (error) {
-                        console.error('Erro ao verificar premium:', error);
-                        return false;
-                    }
-                    
-                    return data;
-                } catch (error) {
-                    console.error('Erro:', error);
+    // Sistema Premium
+    const PremiumManager = {
+        // VERIFICAR SE USUÁRIO É PREMIUM
+        async checkPremiumStatus() {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return false;
+                
+                const { data, error } = await supabase
+                    .rpc('is_user_premium', { user_uuid: user.id });
+                
+                if (error) {
+                    console.error('Erro ao verificar premium:', error);
                     return false;
                 }
-            }
-        };
-
-        document.addEventListener('DOMContentLoaded', function() {
-            checkAuth();
-        });
-
-        // VERIFICA SE USUÁRIO ESTÁ LOGADO
-        async function checkAuth() {
-            try {
-                const { data: { user }, error } = await supabase.auth.getUser();
                 
-                if (error || !user) {
-                    window.location.href = 'login.html';
-                    return;
-                }
-                
-                currentUser = user;
-                await checkUserPremiumStatus();
-                
+                return data;
             } catch (error) {
-                console.error('Erro na autenticação:', error);
+                console.error('Erro:', error);
+                return false;
+            }
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        checkAuth();
+    });
+
+    // VERIFICA SE USUÁRIO ESTÁ LOGADO
+    async function checkAuth() {
+        try {
+            const { data: { user }, error } = await supabase.auth.getUser();
+            
+            if (error || !user) {
                 window.location.href = 'login.html';
-            }
-        }
-
-        // VERIFICA SE USUÁRIO JÁ É PREMIUM
-        async function checkUserPremiumStatus() {
-            try {
-                const isPremium = await PremiumManager.checkPremiumStatus();
-                
-                if (isPremium) {
-                    showPremiumStatus();
-                }
-            } catch (error) {
-                console.error('Erro ao verificar status premium:', error);
-            }
-        }
-
-        // MOSTRA STATUS PREMIUM
-        function showPremiumStatus() {
-            const premiumStatus = document.getElementById('premiumStatus');
-            const premiumInfo = document.getElementById('premiumInfo');
-            
-            if (premiumStatus && premiumInfo) {
-                premiumStatus.classList.remove('hidden');
-                premiumInfo.textContent = 'Sua assinatura está ativa e você tem acesso a todos os benefícios!';
-                
-                // Esconde os botões de assinatura
-                document.querySelectorAll('.btn-primary').forEach(btn => {
-                    if (btn.textContent.includes('Assinar') || btn.textContent.includes('Escolher')) {
-                        btn.style.display = 'none';
-                    }
-                });
-            }
-        }
-
-        // SELECIONAR PLANO
-        function selectPlan(planType) {
-            const plans = {
-                'weekly': { name: 'Semanal', price: '4,90' },
-                'monthly': { name: 'Mensal', price: '14,90' },
-                'semestral': { name: 'Semestral', price: '74,90' },
-                'annual': { name: 'Anual', price: '129,90' }
-            };
-            
-            const selectedPlan = plans[planType];
-            
-            if (!selectedPlan) {
-                showNotification('❌ Plano não encontrado!', 'error');
                 return;
             }
             
-            // Verificar se já é premium
-            PremiumManager.checkPremiumStatus().then(isPremium => {
-                if (isPremium) {
-                    showNotification('✅ Você já é usuário Premium!', 'success');
-                    return;
+            currentUser = user;
+            await checkUserPremiumStatus();
+            
+        } catch (error) {
+            console.error('Erro na autenticação:', error);
+            window.location.href = 'login.html';
+        }
+    }
+
+    // VERIFICA SE USUÁRIO JÁ É PREMIUM
+    async function checkUserPremiumStatus() {
+        try {
+            const isPremium = await PremiumManager.checkPremiumStatus();
+            
+            if (isPremium) {
+                showPremiumStatus();
+            }
+        } catch (error) {
+            console.error('Erro ao verificar status premium:', error);
+        }
+    }
+
+    // MOSTRA STATUS PREMIUM
+    function showPremiumStatus() {
+        const premiumStatus = document.getElementById('premiumStatus');
+        const premiumInfo = document.getElementById('premiumInfo');
+        
+        if (premiumStatus && premiumInfo) {
+            premiumStatus.classList.remove('hidden');
+            premiumInfo.textContent = 'Sua assinatura está ativa e você tem acesso a todos os benefícios!';
+            
+            // Esconde os botões de assinatura
+            document.querySelectorAll('.btn-primary').forEach(btn => {
+                if (btn.textContent.includes('Assinar') || btn.textContent.includes('Escolher')) {
+                    btn.style.display = 'none';
                 }
-                
-                showNotification(`🎯 Ótima escolha! Plano ${selectedPlan.name} selecionado por R$ ${selectedPlan.price}`, 'info');
-                
-                // Simular redirecionamento para pagamento
-                setTimeout(() => {
-                    if (confirm(`Deseja prosseguir com o plano ${selectedPlan.name} por R$ ${selectedPlan.price}?`)) {
-                        // Em produção: window.location.href = `pagamento.html?plano=${planType}`;
-                        simulatePayment(planType, selectedPlan);
-                    }
-                }, 1000);
             });
         }
+    }
 
-        // SIMULAR PAGAMENTO (para testes)
-        async function simulatePayment(planType, plan) {
-            showNotification('💳 Processando pagamento...', 'info');
+    // SELECIONAR PLANO - ATUALIZADA!
+    function selectPlan(planType) {
+        const plans = {
+            'weekly': { name: 'Semanal', price: '4,90' },
+            'monthly': { name: 'Mensal', price: '14,90' },
+            'semestral': { name: 'Semestral', price: '74,90' },
+            'annual': { name: 'Anual', price: '129,90' }
+        };
+        
+        const selectedPlan = plans[planType];
+        
+        if (!selectedPlan) {
+            showNotification('❌ Plano não encontrado!', 'error');
+            return;
+        }
+        
+        // Verificar se já é premium
+        PremiumManager.checkPremiumStatus().then(isPremium => {
+            if (isPremium) {
+                showNotification('✅ Você já é usuário Premium!', 'success');
+                return;
+            }
             
-            setTimeout(async () => {
-                try {
-                    // Simular pagamento bem-sucedido
-                    showNotification('✅ Pagamento processado com sucesso!', 'success');
-                    
-                    // Aqui você integraria com o gateway de pagamento real
-                    // Por enquanto, apenas mostra mensagem de sucesso
-                    setTimeout(() => {
-                        if (confirm(`🎉 Parabéns! Você agora é usuário Premium ${plan.name}!\n\nDeseja ir para as mensagens?`)) {
-                            window.location.href = 'mensagens.html';
-                        }
-                    }, 1500);
-                    
-                } catch (error) {
-                    showNotification('❌ Erro no processamento do pagamento', 'error');
-                }
-            }, 2000);
-        }
-
-        // MOSTRAR NOTIFICAÇÃO
-        function showNotification(message, type = 'info') {
-            const existingNotification = document.querySelector('.notification');
-            if (existingNotification) {
-                existingNotification.remove();
-            }
-
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.textContent = message;
-            notification.style.cssText = `
-                position: fixed;
-                top: 100px;
-                right: 20px;
-                background: ${type === 'error' ? '#f56565' : type === 'success' ? '#48bb78' : '#4299e1'};
-                color: white;
-                padding: 12px 20px;
-                border-radius: 8px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                z-index: 10000;
-                max-width: 300px;
-                animation: slideIn 0.3s ease;
-            `;
-
-            document.body.appendChild(notification);
-
+            showNotification(`🎯 Redirecionando para checkout...`, 'info');
+            
+            // REDIRECIONAR DIRETAMENTE PARA CHECKOUT
             setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.remove();
-                }
-            }, 5000);
+                window.location.href = `checkout.html?plano=${planType}`;
+            }, 1000);
+        });
+    }
+
+    // MOSTRAR NOTIFICAÇÃO
+    function showNotification(message, type = 'info') {
+        const existingNotification = document.querySelector('.notification');
+        if (existingNotification) {
+            existingNotification.remove();
         }
 
-        // CSS para hidden
-        const style = document.createElement('style');
-        style.textContent = `
-            .hidden { display: none !important; }
-            @keyframes slideIn {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+        notification.style.cssText = `
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: ${type === 'error' ? '#f56565' : type === 'success' ? '#48bb78' : '#4299e1'};
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 10000;
+            max-width: 300px;
+            animation: slideIn 0.3s ease;
         `;
-        document.head.appendChild(style);
-    </script>
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 5000);
+    }
+
+    // CSS para hidden
+    const style = document.createElement('style');
+    style.textContent = `
+        .hidden { display: none !important; }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    `;
+    document.head.appendChild(style);
+</script>
 </body>
 </html>

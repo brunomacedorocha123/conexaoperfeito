@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagamento Aprovado - Amor Conect</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --bege: #f6ecc5;
+            --vermelho-rosado: #d1656d;
+            --lilas: #dfc9ed;
+            --branco: #ffffff;
+            --text: #444;
+            --text-light: #666;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            background-color: var(--bege);
+            color: var(--text);
+            line-height: 1.6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .success-card {
+            background: var(--branco);
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            box-shadow: var(--shadow);
+            text-align: center;
+            border: 2px solid var(--lilas);
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .success-title {
+            font-size: 2rem;
+            color: var(--vermelho-rosado);
+            margin-bottom: 1rem;
+        }
+
+        .success-message {
+            font-size: 1.1rem;
+            color: var(--text-light);
+            margin-bottom: 2rem;
+        }
+
+        .plan-info {
+            background: var(--bege);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+        }
+
+        .plan-name {
+            font-size: 1.3rem;
+            color: var(--vermelho-rosado);
+            margin-bottom: 0.5rem;
+        }
+
+        .plan-price {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .benefits-list {
+            text-align: left;
+            margin: 1.5rem 0;
+        }
+
+        .benefits-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--bege);
+        }
+
+        .benefits-list li:last-child {
+            border-bottom: none;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 30px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            font-size: 1.1rem;
+            margin: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--vermelho-rosado);
+            color: var(--branco);
+            border: none;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--vermelho-rosado);
+            color: var(--vermelho-rosado);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .security-note {
+            margin-top: 1.5rem;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .countdown {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-card">
+            <div class="success-icon">🎉</div>
+            <h1 class="success-title">Pagamento Aprovado!</h1>
+            <p class="success-message">Parabéns! Você agora é usuário Premium do Amor Conect</p>
+
+            <div class="plan-info">
+                <div class="plan-name" id="planName">Plano Mensal</div>
+                <div class="plan-price" id="planPrice">R$ 14,90</div>
+                <div class="plan-period" id="planPeriod">por mês</div>
+            </div>
+
+            <div class="benefits-list">
+                <li>✅ Mensagens ilimitadas liberadas</li>
+                <li>✅ Modo invisível ativado</li>
+                <li>✅ Upload de até 7 fotos</li>
+                <li>✅ Suporte prioritário</li>
+                <li>✅ Ver visitantes do perfil</li>
+            </div>
+
+            <button class="btn btn-primary" onclick="goToMessages()">
+                🚀 Acessar Recursos Premium
+            </button>
+
+            <button class="btn btn-secondary" onclick="goToProfile()">
+                ⚙️ Configurar Perfil
+            </button>
+
+            <div class="countdown" id="countdown">
+                Redirecionando em <span id="countdownNumber">5</span> segundos...
+            </div>
+
+            <div class="security-note">
+                📧 Um e-mail de confirmação foi enviado para você
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let countdown = 5;
+        let countdownInterval;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPlanFromURL();
+            startCountdown();
+            updateUserPremiumStatus();
+        });
+
+        function loadPlanFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const planType = urlParams.get('plano');
+            const price = urlParams.get('valor');
+
+            const plans = {
+                'weekly': { name: 'Semanal', price: '4,90', period: 'por semana' },
+                'monthly': { name: 'Mensal', price: '14,90', period: 'por mês' },
+                'semestral': { name: 'Semestral', price: '74,90', period: 'por 6 meses' },
+                'annual': { name: 'Anual', price: '129,90', period: 'por ano' }
+            };
+
+            const selectedPlan = plans[planType] || plans['monthly'];
+            
+            document.getElementById('planName').textContent = `Plano ${selectedPlan.name}`;
+            document.getElementById('planPrice').textContent = `R$ ${selectedPlan.price}`;
+            document.getElementById('planPeriod').textContent = selectedPlan.period;
+        }
+
+        async function updateUserPremiumStatus() {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return;
+
+                // Atualizar usuário para premium no Supabase
+                const { error } = await supabase
+                    .from('profiles')
+                    .update({ 
+                        is_premium: true,
+                        premium_since: new Date().toISOString(),
+                        premium_plan: new URLSearchParams(window.location.search).get('plano') || 'monthly'
+                    })
+                    .eq('id', user.id);
+
+                if (error) {
+                    console.error('Erro ao atualizar status premium:', error);
+                }
+
+            } catch (error) {
+                console.error('Erro:', error);
+            }
+        }
+
+        function startCountdown() {
+            countdownInterval = setInterval(() => {
+                countdown--;
+                document.getElementById('countdownNumber').textContent = countdown;
+                
+                if (countdown <= 0) {
+                    clearInterval(countdownInterval);
+                    goToMessages();
+                }
+            }, 1000);
+        }
+
+        function goToMessages() {
+            clearInterval(countdownInterval);
+            window.location.href = 'mensagens.html';
+        }
+
+        function goToProfile() {
+            clearInterval(countdownInterval);
+            window.location.href = 'painel.html';
+        }
+    </script>
+</body>
+</html>

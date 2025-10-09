@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processando Pagamento - Amor Conect</title>
+    <style>
+        /* Estilos similares aos anteriores */
+        body {
+            background-color: #f6ecc5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .processing-card {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #d1656d;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1.5rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="processing-card">
+        <div class="spinner"></div>
+        <h2>Processando seu pagamento...</h2>
+        <p>Aguarde enquanto confirmamos sua transação</p>
+    </div>
+
+    <script>
+        // Simula processamento e redireciona para sucesso
+        setTimeout(() => {
+            const urlParams = new URLSearchParams(window.location.search);
+            window.location.href = `pagamento-sucesso.html?${urlParams.toString()}`;
+        }, 3000);
+    </script>
+</body>
+</html>

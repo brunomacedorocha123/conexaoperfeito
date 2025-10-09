@@ -5,265 +5,118 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout - Amor Conect</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- SDK Mercado Pago -->
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        :root {
-            --bege: #f6ecc5;
-            --vermelho-rosado: #d1656d;
-            --lilas: #dfc9ed;
-            --branco: #ffffff;
-            --text: #444;
-            --text-light: #666;
-            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            --transition: all 0.3s ease;
-        }
-
-        body {
-            background-color: var(--bege);
-            color: var(--text);
-            line-height: 1.6;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        /* Header */
-        header {
-            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
-            color: var(--branco);
-            padding: 0.8rem 0;
-            box-shadow: var(--shadow);
-        }
-
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .logo img {
-            height: 80px;
-            width: auto;
-        }
-
-        .logo h1 {
-            font-size: 1.2rem;
-            color: var(--branco);
-        }
-
-        .btn {
-            padding: 0.8rem 2rem;
-            border-radius: 30px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-            font-size: 1rem;
-        }
-
-        .btn-primary {
-            background: var(--vermelho-rosado);
-            color: var(--branco);
-            border: none;
-            width: 100%;
-            margin-top: 1rem;
-        }
-
-        .btn-secondary {
-            background: transparent;
-            border: 2px solid var(--vermelho-rosado);
-            color: var(--vermelho-rosado);
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Main Content */
-        .main-content {
-            padding: 2rem 0;
-        }
-
-        .checkout-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        @media (max-width: 768px) {
-            .checkout-container {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .order-summary, .payment-methods {
+        /* [MANTENHA TODOS OS ESTILOS ANTERIORES] */
+        
+        /* Novos estilos para simulação de pagamento */
+        .payment-simulation {
+            display: none;
             background: var(--branco);
             border-radius: 15px;
             padding: 2rem;
             box-shadow: var(--shadow);
-            border: 1px solid var(--lilas);
-        }
-
-        .section-title {
-            font-size: 1.5rem;
-            color: var(--vermelho-rosado);
-            margin-bottom: 1.5rem;
-            text-align: center;
-        }
-
-        .plan-selected {
-            background: var(--bege);
-            padding: 1.5rem;
-            border-radius: 10px;
-            margin-bottom: 1.5rem;
-            text-align: center;
-        }
-
-        .plan-name {
-            font-size: 1.4rem;
-            color: var(--vermelho-rosado);
-            margin-bottom: 0.5rem;
-        }
-
-        .plan-price {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-
-        .plan-period {
-            color: var(--text-light);
-        }
-
-        .benefits-list {
-            list-style: none;
-            margin-bottom: 1.5rem;
-        }
-
-        .benefits-list li {
-            padding: 0.5rem 0;
-            border-bottom: 1px solid var(--bege);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .benefits-list li:last-child {
-            border-bottom: none;
-        }
-
-        .payment-option {
-            background: var(--bege);
-            padding: 1.5rem;
-            border-radius: 10px;
-            margin-bottom: 1rem;
-            cursor: pointer;
-            transition: var(--transition);
-            border: 2px solid transparent;
-        }
-
-        .payment-option:hover {
-            border-color: var(--vermelho-rosado);
-        }
-
-        .payment-option.selected {
-            border-color: var(--vermelho-rosado);
-            background: #f0e6ff;
-        }
-
-        .payment-icon {
-            font-size: 1.5rem;
-            margin-right: 10px;
-        }
-
-        .payment-title {
-            font-weight: 600;
-            margin-bottom: 0.3rem;
-        }
-
-        .payment-desc {
-            font-size: 0.9rem;
-            color: var(--text-light);
-        }
-
-        .security-note {
-            text-align: center;
-            color: var(--text-light);
-            font-size: 0.9rem;
-            margin-top: 1rem;
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            margin-top: 1rem;
-        }
-
-        .spinner {
-            border: 4px solid var(--bege);
-            border-top: 4px solid var(--vermelho-rosado);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 1rem;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .back-link {
-            text-align: center;
             margin-top: 2rem;
+            border: 2px solid var(--lilas);
         }
 
-        .back-link a {
+        .pix-container, .card-container {
+            text-align: center;
+        }
+
+        .pix-qr-code {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            border: 2px dashed var(--vermelho-rosado);
+        }
+
+        .qr-code {
+            font-family: monospace;
+            background: white;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem auto;
+            max-width: 300px;
+            border: 1px solid #ddd;
+        }
+
+        .pix-code {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            border: 1px solid #ddd;
+            font-family: monospace;
+            word-break: break-all;
+        }
+
+        .copy-btn {
+            background: var(--vermelho-rosado);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 0.5rem;
+        }
+
+        .timer {
+            font-size: 1.2rem;
+            font-weight: bold;
             color: var(--vermelho-rosado);
-            text-decoration: none;
+            margin: 1rem 0;
+        }
+
+        .card-form {
+            text-align: left;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .card-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1rem;
+        }
+
+        .test-cards {
+            background: var(--bege);
+            padding: 1rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+            font-size: 0.9rem;
         }
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <img src="logoamorconect.png" alt="Amor Conect">
-                    <h1>Amor Conect</h1>
-                </div>
-            </div>
-        </div>
-    </header>
+    <!-- [MANTENHA O HEADER E ESTRUTURA ANTERIOR] -->
 
     <!-- Main Content -->
     <main class="main-content">
         <div class="container">
             <div class="checkout-container">
-                <!-- Order Summary -->
+                <!-- Order Summary (mantido igual) -->
                 <div class="order-summary">
                     <h2 class="section-title">📋 Resumo do Pedido</h2>
                     
@@ -313,9 +166,96 @@
                         </div>
                     </div>
 
-                    <button class="btn btn-primary" onclick="processPayment()">
-                        🚀 Finalizar Compra
+                    <!-- Botão para mostrar simulação -->
+                    <button class="btn btn-primary" id="continueButton" onclick="showPaymentSimulation()">
+                        ▶️ Continuar para Pagamento
                     </button>
+
+                    <!-- Simulação PIX -->
+                    <div class="payment-simulation" id="pixSimulation">
+                        <div class="pix-container">
+                            <h3>📱 Pagamento PIX</h3>
+                            <p>Escaneie o QR Code ou copie o código</p>
+                            
+                            <div class="pix-qr-code">
+                                <div style="font-size: 3rem; margin-bottom: 1rem;">🎯</div>
+                                <div style="font-weight: bold;">QR CODE SIMULADO</div>
+                                <div style="color: var(--text-light); font-size: 0.9rem; margin-top: 0.5rem;">
+                                    Abra seu app de banco e escaneie
+                                </div>
+                            </div>
+
+                            <div class="pix-code" id="pixCode">
+                                00020126580014br.gov.bcb.pix0136123e4567-e89b-12d3-a456-426614174000520400005303986540614.905802BR5913AMOR CONECT6008BRASILIA62070503***6304A1A2
+                            </div>
+                            
+                            <button class="copy-btn" onclick="copyPixCode()">
+                                📋 Copiar Código PIX
+                            </button>
+
+                            <div class="timer" id="pixTimer">
+                                ⏳ Tempo restante: 29:59
+                            </div>
+
+                            <button class="btn btn-primary" onclick="simulatePixPayment()">
+                                ✅ Simular Pagamento Concluído
+                            </button>
+
+                            <div style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-light);">
+                                💡 <strong>Para teste:</strong> Clique no botão acima para simular pagamento
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Simulação Cartão -->
+                    <div class="payment-simulation" id="cardSimulation">
+                        <div class="card-container">
+                            <h3>💳 Pagamento com Cartão</h3>
+                            
+                            <div class="card-form">
+                                <div class="form-group">
+                                    <label>Número do Cartão</label>
+                                    <input type="text" class="form-control" id="cardNumber" 
+                                           placeholder="1234 5678 9012 3456" maxlength="19">
+                                </div>
+
+                                <div class="card-row">
+                                    <div class="form-group">
+                                        <label>Validade</label>
+                                        <input type="text" class="form-control" id="cardExpiry" 
+                                               placeholder="MM/AA" maxlength="5">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>CVV</label>
+                                        <input type="text" class="form-control" id="cardCvv" 
+                                               placeholder="123" maxlength="3">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Nome no Cartão</label>
+                                    <input type="text" class="form-control" id="cardName" 
+                                           placeholder="SEU NOME AQUI">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>CPF do Titular</label>
+                                    <input type="text" class="form-control" id="cardCpf" 
+                                           placeholder="123.456.789-00">
+                                </div>
+                            </div>
+
+                            <div class="test-cards">
+                                <strong>💳 Cartões para Teste (Mercado Pago Sandbox):</strong><br>
+                                • <strong>Cartão Aprovado:</strong> 5031 4332 1540 6351<br>
+                                • <strong>CVV:</strong> 123 | <strong>Validade:</strong> 11/25
+                            </div>
+
+                            <button class="btn btn-primary" onclick="processCardPayment()" style="margin-top: 1rem;">
+                                💳 Finalizar Pagamento
+                            </button>
+                        </div>
+                    </div>
 
                     <div class="loading" id="loading">
                         <div class="spinner"></div>
@@ -323,7 +263,7 @@
                     </div>
 
                     <div class="security-note">
-                        ✅ Seu acesso ao Premium será liberado instantaneamente
+                        ✅ Ambiente de testes - Pagamentos são simulados
                     </div>
                 </div>
             </div>
@@ -335,18 +275,30 @@
     </main>
 
     <script>
-        // Configuração do Supabase
+        // ==================== CONFIGURAÇÕES ====================
         const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        // SUAS CREDENCIAIS DO MERCADO PAGO
+        const MP_PUBLIC_KEY = 'TEST-06575f63-c208-4997-9b77-bc3369133eba';
+        const MP_ACCESS_TOKEN = 'TEST-7321668828219226-100917-d8fe7d648faf11d7ade86eedae4d2ea7-1057080095';
+
+        // Inicializar Mercado Pago
+        const mp = new MercadoPago(MP_PUBLIC_KEY, {
+            locale: 'pt-BR'
+        });
+
         let selectedPlan = {};
         let selectedPayment = 'pix';
+        let pixTimer = 30 * 60; // 30 minutos em segundos
+        let timerInterval;
 
-        // Carregar dados do plano da URL
+        // ==================== INICIALIZAÇÃO ====================
         document.addEventListener('DOMContentLoaded', function() {
             loadPlanFromURL();
             checkAuth();
+            setupCardInputs();
         });
 
         function loadPlanFromURL() {
@@ -354,16 +306,16 @@
             const planType = urlParams.get('plano');
             
             const plans = {
-                'weekly': { name: 'Semanal', price: '4,90', period: 'por semana' },
-                'monthly': { name: 'Mensal', price: '14,90', period: 'por mês' },
-                'semestral': { name: 'Semestral', price: '74,90', period: 'por 6 meses' },
-                'annual': { name: 'Anual', price: '129,90', period: 'por ano' }
+                'weekly': { name: 'Semanal', price: 4.90, period: 'por semana' },
+                'monthly': { name: 'Mensal', price: 14.90, period: 'por mês' },
+                'semestral': { name: 'Semestral', price: 74.90, period: 'por 6 meses' },
+                'annual': { name: 'Anual', price: 129.90, period: 'por ano' }
             };
 
             selectedPlan = plans[planType] || plans['monthly'];
             
             document.getElementById('planName').textContent = `Plano ${selectedPlan.name}`;
-            document.getElementById('planPrice').textContent = `R$ ${selectedPlan.price}`;
+            document.getElementById('planPrice').textContent = `R$ ${selectedPlan.price.toFixed(2).replace('.', ',')}`;
             document.getElementById('planPeriod').textContent = selectedPlan.period;
         }
 
@@ -373,6 +325,123 @@
                 option.classList.remove('selected');
             });
             event.currentTarget.classList.add('selected');
+        }
+
+        function showPaymentSimulation() {
+            const continueBtn = document.getElementById('continueButton');
+            const pixSimulation = document.getElementById('pixSimulation');
+            const cardSimulation = document.getElementById('cardSimulation');
+            
+            continueBtn.style.display = 'none';
+            
+            if (selectedPayment === 'pix') {
+                pixSimulation.style.display = 'block';
+                startPixTimer();
+            } else {
+                cardSimulation.style.display = 'block';
+            }
+        }
+
+        // ==================== PIX SIMULATION ====================
+        function startPixTimer() {
+            pixTimer = 30 * 60; // Reset para 30 minutos
+            
+            timerInterval = setInterval(() => {
+                pixTimer--;
+                const minutes = Math.floor(pixTimer / 60);
+                const seconds = pixTimer % 60;
+                
+                document.getElementById('pixTimer').textContent = 
+                    `⏳ Tempo restante: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (pixTimer <= 0) {
+                    clearInterval(timerInterval);
+                    alert('Tempo esgotado! Por favor, gere um novo código PIX.');
+                }
+            }, 1000);
+        }
+
+        function copyPixCode() {
+            const pixCode = document.getElementById('pixCode').textContent;
+            navigator.clipboard.writeText(pixCode).then(() => {
+                alert('Código PIX copiado! Cole no seu app de banco.');
+            });
+        }
+
+        function simulatePixPayment() {
+            clearInterval(timerInterval);
+            document.getElementById('loading').style.display = 'block';
+            
+            // Simular processamento do PIX
+            setTimeout(() => {
+                window.location.href = `pagamento-sucesso.html?plano=${getPlanType()}&valor=${selectedPlan.price}&metodo=pix`;
+            }, 2000);
+        }
+
+        // ==================== CARD SIMULATION ====================
+        function setupCardInputs() {
+            // Formatação do número do cartão
+            document.getElementById('cardNumber').addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                value = value.replace(/(\d{4})(?=\d)/g, '$1 ');
+                e.target.value = value.substring(0, 19);
+            });
+
+            // Formatação da validade
+            document.getElementById('cardExpiry').addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length >= 2) {
+                    value = value.substring(0, 2) + '/' + value.substring(2, 4);
+                }
+                e.target.value = value.substring(0, 5);
+            });
+
+            // Apenas números no CVV
+            document.getElementById('cardCvv').addEventListener('input', function(e) {
+                e.target.value = e.target.value.replace(/\D/g, '').substring(0, 3);
+            });
+
+            // Formatação do CPF
+            document.getElementById('cardCpf').addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length <= 11) {
+                    value = value.replace(/(\d{3})(\d)/, '$1.$2')
+                                .replace(/(\d{3})(\d)/, '$1.$2')
+                                .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                }
+                e.target.value = value.substring(0, 14);
+            });
+        }
+
+        function processCardPayment() {
+            const cardNumber = document.getElementById('cardNumber').value.replace(/\D/g, '');
+            const cardExpiry = document.getElementById('cardExpiry').value;
+            const cardCvv = document.getElementById('cardCvv').value;
+            const cardName = document.getElementById('cardName').value;
+            const cardCpf = document.getElementById('cardCpf').value.replace(/\D/g, '');
+
+            // Validações básicas
+            if (!cardNumber || !cardExpiry || !cardCvv || !cardName || !cardCpf) {
+                alert('Por favor, preencha todos os campos do cartão.');
+                return;
+            }
+
+            if (cardNumber.length !== 16) {
+                alert('Número do cartão inválido.');
+                return;
+            }
+
+            document.getElementById('loading').style.display = 'block';
+
+            // Simular processamento do cartão
+            setTimeout(() => {
+                // Verificar se é cartão de teste aprovado
+                if (cardNumber === '5031433215406351') {
+                    window.location.href = `pagamento-sucesso.html?plano=${getPlanType()}&valor=${selectedPlan.price}&metodo=cartao`;
+                } else {
+                    window.location.href = `pagamento-falhou.html?plano=${getPlanType()}&motivo=cartao_recusado`;
+                }
+            }, 3000);
         }
 
         async function checkAuth() {
@@ -388,33 +457,12 @@
             }
         }
 
-        function processPayment() {
-            const loading = document.getElementById('loading');
-            const payButton = document.querySelector('.btn-primary');
-            
-            // Mostrar loading
-            loading.style.display = 'block';
-            payButton.style.display = 'none';
-
-            // Simular processamento
-            setTimeout(() => {
-                // Aqui você integrará com Mercado Pago
-                // Por enquanto, simula sucesso
-                simulateMercadoPagoPayment();
-            }, 2000);
-        }
-
-        function simulateMercadoPagoPayment() {
-            // Simular redirecionamento para página de sucesso
-            window.location.href = `pagamento-sucesso.html?plano=${getPlanType()}&valor=${selectedPlan.price}`;
-        }
-
         function getPlanType() {
             for (const [key, value] of Object.entries({
-                'weekly': { name: 'Semanal', price: '4,90' },
-                'monthly': { name: 'Mensal', price: '14,90' },
-                'semestral': { name: 'Semestral', price: '74,90' },
-                'annual': { name: 'Anual', price: '129,90' }
+                'weekly': { name: 'Semanal', price: 4.90 },
+                'monthly': { name: 'Mensal', price: 14.90 },
+                'semestral': { name: 'Semestral', price: 74.90 },
+                'annual': { name: 'Anual', price: 129.90 }
             })) {
                 if (value.price === selectedPlan.price) return key;
             }

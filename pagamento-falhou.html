@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagamento Falhou - Amor Conect</title>
+    <style>
+        /* Estilos similares ao sucesso */
+        body {
+            background-color: #f6ecc5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .error-card {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .error-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-card">
+        <div class="error-icon">❌</div>
+        <h2 style="color: #e74c3c;">Pagamento Não Processado</h2>
+        <p>Houve um problema com seu pagamento. Tente novamente.</p>
+        
+        <button onclick="retryPayment()" style="background: #d1656d; color: white; border: none; padding: 1rem 2rem; border-radius: 30px; margin: 1rem; cursor: pointer;">
+            🔄 Tentar Novamente
+        </button>
+        
+        <button onclick="goToPricing()" style="background: transparent; border: 2px solid #d1656d; color: #d1656d; padding: 1rem 2rem; border-radius: 30px; margin: 1rem; cursor: pointer;">
+            📋 Ver Planos
+        </button>
+    </div>
+
+    <script>
+        function retryPayment() {
+            window.history.back();
+        }
+        function goToPricing() {
+            window.location.href = 'pricing.html';
+        }
+    </script>
+</body>
+</html>
