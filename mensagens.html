@@ -1761,22 +1761,23 @@
             
             if (checkError) {
                 console.error('❌ Erro ao verificar limite:', checkError);
-                // Em caso de erro, permite enviar (fail-open)
-            } else {
-                // ✅ BLOQUEAR FISICAMENTE SE NÃO PUDER ENVIAR
-                if (canSend === false) {
-                    console.log('🚫 LIMITE ATINGIDO! Bloqueando envio...');
-                    showNotification('❌ Limite de 5 mensagens por dia atingido! Faça upgrade para Premium.', 'error');
-                    
-                    // Mostrar botão para upgrade
-                    setTimeout(() => {
-                        if (confirm('Deseja fazer upgrade para Premium e ter mensagens ilimitadas?')) {
-                            window.location.href = 'pricing.html';
-                        }
-                    }, 1000);
-                    
-                    return; // ⬅️⬅️⬅️ BLOQUEIA O ENVIO FISICAMENTE!
-                }
+                showNotification('❌ Erro ao verificar limite de mensagens', 'error');
+                return;
+            }
+
+            // ✅ BLOQUEAR FISICAMENTE SE NÃO PUDER ENVIAR
+            if (canSend === false) {
+                console.log('🚫 LIMITE ATINGIDO! Bloqueando envio...');
+                showNotification('❌ Limite de 5 mensagens por dia atingido! Faça upgrade para Premium.', 'error');
+                
+                // Mostrar botão para upgrade
+                setTimeout(() => {
+                    if (confirm('Deseja fazer upgrade para Premium e ter mensagens ilimitadas?')) {
+                        window.location.href = 'princing.html';
+                    }
+                }, 1000);
+                
+                return; // ⬅️⬅️⬅️ BLOQUEIA O ENVIO FISICAMENTE!
             }
 
             // ✅ VERIFICAR SE É PREMIUM ANTES DE ENVIAR
@@ -1804,7 +1805,12 @@
             // ✅ INCREMENTAR CONTADOR (apenas se não for premium)
             if (!isPremium) {
                 console.log('📈 Incrementando contador para usuário gratuito...');
-                await PremiumManager.incrementMessageCount();
+                const { error: incrementError } = await supabase
+                    .rpc('increment_message_count', { user_uuid: currentUser.id });
+                
+                if (incrementError) {
+                    console.error('❌ Erro ao incrementar contador:', incrementError);
+                }
             }
 
             // ATUALIZAÇÃO IMEDIATA
@@ -1820,42 +1826,75 @@
         }
     }
 
-    // ==================== FUNÇÃO SHOW NOTIFICATION ====================
+    // ==================== SISTEMA DE NOTIFICAÇÕES ====================
     function showNotification(message, type = 'info') {
+        // Remover notificação existente
         const existingNotification = document.querySelector('.notification');
         if (existingNotification) {
             existingNotification.remove();
         }
 
+        // Criar nova notificação
         const notification = document.createElement('div');
         notification.className = `notification notification-${type}`;
-        notification.innerHTML = `
-            <div class="notification-content">
-                <span class="notification-message">${message}</span>
-                <button class="notification-close">×</button>
-            </div>
-        `;
+        
+        // Definir cores baseadas no tipo
+        let backgroundColor, textColor;
+        switch(type) {
+            case 'error':
+                backgroundColor = '#f56565';
+                textColor = 'white';
+                break;
+            case 'success':
+                backgroundColor = '#48bb78';
+                textColor = 'white';
+                break;
+            default:
+                backgroundColor = '#4299e1';
+                textColor = 'white';
+        }
 
-        // Adicionar estilos
         notification.style.cssText = `
             position: fixed;
             top: 100px;
             right: 20px;
-            background: ${type === 'error' ? '#f56565' : type === 'success' ? '#48bb78' : '#4299e1'};
-            color: white;
+            background: ${backgroundColor};
+            color: ${textColor};
             padding: 12px 20px;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             z-index: 10000;
             max-width: 300px;
             animation: slideIn 0.3s ease;
+            font-weight: 500;
         `;
 
-        notification.querySelector('.notification-close').onclick = () => notification.remove();
+        notification.textContent = message;
         document.body.appendChild(notification);
 
-        setTimeout(() => notification.remove(), 5000);
+        // Auto-remover após 5 segundos
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 5000);
     }
+
+    // Adicionar estilo de animação para notificações
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    `;
+    document.head.appendChild(style);
 
     async function markMessagesAsRead(partnerId) {
         try {
