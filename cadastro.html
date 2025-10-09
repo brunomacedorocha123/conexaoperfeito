@@ -22,6 +22,8 @@
         --text-light: #666;
         --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         --transition: all 0.3s ease;
+        --success: #22c55e;
+        --error: #ef4444;
     }
 
     body {
@@ -233,13 +235,13 @@
     .alert-error {
         background: #fee;
         border: 1px solid #fcc;
-        color: #c33;
+        color: var(--error);
     }
 
     .alert-success {
         background: #efe;
         border: 1px solid #cfc;
-        color: #363;
+        color: var(--success);
     }
 
     /* Loading */
@@ -252,17 +254,17 @@
 
     /* Error Messages */
     .error-message {
-        color: #c33;
+        color: var(--error);
         font-size: 0.8rem;
         margin-top: 0.25rem;
         display: none;
     }
 
     .form-control.error {
-        border-color: #c33;
+        border-color: var(--error);
     }
 
-    /* Password Requirements */
+    /* Password Requirements - MELHORADO */
     .password-requirements {
         background: var(--bege);
         padding: 1rem;
@@ -280,7 +282,6 @@
     .requirements-list {
         list-style: none;
         font-size: 0.8rem;
-        color: var(--text-light);
     }
 
     .requirements-list li {
@@ -288,14 +289,52 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        transition: var(--transition);
     }
 
     .requirement-met {
-        color: #22c55e;
+        color: var(--success);
+        font-weight: 600;
+    }
+
+    .requirement-met::before {
+        content: "✅ ";
     }
 
     .requirement-unmet {
         color: var(--text-light);
+    }
+
+    .requirement-unmet::before {
+        content: "❌ ";
+    }
+
+    /* Password Strength Meter */
+    .password-strength {
+        margin-top: 0.5rem;
+        height: 4px;
+        border-radius: 2px;
+        background: #e5e7eb;
+        overflow: hidden;
+    }
+
+    .strength-bar {
+        height: 100%;
+        width: 0%;
+        transition: var(--transition);
+        border-radius: 2px;
+    }
+
+    .strength-weak { background: var(--error); width: 25%; }
+    .strength-fair { background: #f59e0b; width: 50%; }
+    .strength-good { background: #eab308; width: 75%; }
+    .strength-strong { background: var(--success); width: 100%; }
+
+    .strength-text {
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+        text-align: right;
+        font-weight: 500;
     }
 
     /* Terms Checkbox */
@@ -564,6 +603,32 @@
                         <label for="password">Senha</label>
                         <input type="password" id="password" class="form-control" required>
                         <div id="passwordError" class="error-message"></div>
+                        
+                        <!-- REQUISITOS DA SENHA - CORRIGIDOS -->
+                        <div class="password-requirements">
+                            <h4>Requisitos da senha:</h4>
+                            <ul class="requirements-list">
+                                <li id="reqLength" class="requirement-unmet">
+                                    Mínimo 8 caracteres
+                                </li>
+                                <li id="reqUppercase" class="requirement-unmet">
+                                    Pelo menos 1 letra maiúscula (A-Z)
+                                </li>
+                                <li id="reqLowercase" class="requirement-unmet">
+                                    Pelo menos 1 letra minúscula (a-z)
+                                </li>
+                                <li id="reqNumber" class="requirement-unmet">
+                                    Pelo menos 1 número (0-9)
+                                </li>
+                                <li id="reqSpecial" class="requirement-unmet">
+                                    Pelo menos 1 símbolo (!@#$% etc.)
+                                </li>
+                            </ul>
+                            <div class="password-strength">
+                                <div id="strengthBar" class="strength-bar"></div>
+                            </div>
+                            <div id="strengthText" class="strength-text"></div>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -629,6 +694,96 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ==================== FUNÇÕES DE VALIDAÇÃO DE SENHA ====================
+    
+    // Função para verificar força da senha
+    function checkPasswordStrength(password) {
+        const requirements = {
+            length: password.length >= 8,
+            uppercase: /[A-Z]/.test(password),
+            lowercase: /[a-z]/.test(password),
+            number: /[0-9]/.test(password),
+            special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+        };
+        
+        const strength = Object.values(requirements).filter(Boolean).length;
+        return { requirements, strength };
+    }
+
+    // Função para atualizar visualização dos requisitos
+    function updatePasswordRequirements(password) {
+        const { requirements, strength } = checkPasswordStrength(password);
+        const requirementElements = {
+            length: document.getElementById('reqLength'),
+            uppercase: document.getElementById('reqUppercase'),
+            lowercase: document.getElementById('reqLowercase'),
+            number: document.getElementById('reqNumber'),
+            special: document.getElementById('reqSpecial')
+        };
+        
+        // Atualizar cada requisito
+        Object.keys(requirements).forEach(key => {
+            const element = requirementElements[key];
+            if (element) {
+                if (requirements[key]) {
+                    element.classList.add('requirement-met');
+                    element.classList.remove('requirement-unmet');
+                } else {
+                    element.classList.remove('requirement-met');
+                    element.classList.add('requirement-unmet');
+                }
+            }
+        });
+
+        // Atualizar barra de força
+        const strengthBar = document.getElementById('strengthBar');
+        const strengthText = document.getElementById('strengthText');
+        
+        strengthBar.className = 'strength-bar';
+        strengthText.textContent = '';
+        
+        if (password.length > 0) {
+            switch(strength) {
+                case 1:
+                case 2:
+                    strengthBar.classList.add('strength-weak');
+                    strengthText.textContent = 'Fraca';
+                    strengthText.style.color = '#ef4444';
+                    break;
+                case 3:
+                    strengthBar.classList.add('strength-fair');
+                    strengthText.textContent = 'Razoável';
+                    strengthText.style.color = '#f59e0b';
+                    break;
+                case 4:
+                    strengthBar.classList.add('strength-good');
+                    strengthText.textContent = 'Boa';
+                    strengthText.style.color = '#eab308';
+                    break;
+                case 5:
+                    strengthBar.classList.add('strength-strong');
+                    strengthText.textContent = 'Forte';
+                    strengthText.style.color = '#22c55e';
+                    break;
+            }
+        }
+    }
+
+    // Validação completa da senha
+    function validatePassword(password) {
+        const { requirements, strength } = checkPasswordStrength(password);
+        
+        // Verificar se atende a todos os requisitos
+        const allMet = Object.values(requirements).every(Boolean);
+        
+        return {
+            isValid: allMet,
+            requirements,
+            strength,
+            message: allMet ? '' : 'A senha não atende a todos os requisitos de segurança'
+        };
+    }
 
     document.addEventListener('DOMContentLoaded', function() {
         const form = document.getElementById('registerForm');
@@ -731,8 +886,10 @@
                     }
                 }
 
-                if (password.length < 6) {
-                    document.getElementById('passwordError').textContent = 'A senha deve ter pelo menos 6 caracteres';
+                // VALIDAÇÃO FORTE DA SENHA - CORRIGIDA
+                const passwordValidation = validatePassword(password);
+                if (!passwordValidation.isValid) {
+                    document.getElementById('passwordError').textContent = passwordValidation.message;
                     document.getElementById('passwordError').style.display = 'block';
                     document.getElementById('password').classList.add('error');
                     hasError = true;
@@ -808,7 +965,7 @@
                 if (error.message.includes('already registered') || error.message.includes('user already exists')) {
                     errorMessage = '❌ Este e-mail já está cadastrado. Tente fazer login.';
                 } else if (error.message.includes('password')) {
-                    errorMessage = '❌ A senha deve ter pelo menos 6 caracteres.';
+                    errorMessage = '❌ A senha deve atender a todos os requisitos de segurança.';
                 } else if (error.message.includes('email')) {
                     errorMessage = '❌ Por favor, insira um e-mail válido.';
                 } else if (error.message.includes('rate limit')) {
@@ -837,7 +994,10 @@
         document.getElementById('nickname').addEventListener('blur', validateNickname);
         document.getElementById('email').addEventListener('blur', validateEmail);
         document.getElementById('birthDate').addEventListener('change', validateBirthDate);
-        document.getElementById('password').addEventListener('blur', validatePassword);
+        document.getElementById('password').addEventListener('input', function() {
+            updatePasswordRequirements(this.value);
+            validatePasswordRealTime();
+        });
         document.getElementById('confirmPassword').addEventListener('blur', validateConfirmPassword);
 
         function validateName(e) {
@@ -900,11 +1060,13 @@
             }
         }
 
-        function validatePassword() {
+        function validatePasswordRealTime() {
             const field = document.getElementById('password');
             const errorElement = document.getElementById('passwordError');
-            if (field.value.length < 6) {
-                errorElement.textContent = 'A senha deve ter pelo menos 6 caracteres';
+            const passwordValidation = validatePassword(field.value);
+            
+            if (field.value && !passwordValidation.isValid) {
+                errorElement.textContent = passwordValidation.message;
                 errorElement.style.display = 'block';
                 field.classList.add('error');
             } else {
