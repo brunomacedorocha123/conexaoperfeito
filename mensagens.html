@@ -1216,7 +1216,7 @@
             currentUser = user;
             await loadUserData();
             await checkUserPremiumStatus();
-            await loadMessageCount(); // ✅ CARREGAR CONTADOR ANTES DE TUDO
+            await loadMessageCount();
             await loadConversations();
             setupRealtimeUpdates();
             
@@ -1251,7 +1251,7 @@
         }
     }
 
-    // ==================== CARREGAR CONTADOR DO BANCO (VERSÃO CORRIGIDA) ====================
+    // ==================== CARREGAR CONTADOR DO BANCO ====================
     async function loadMessageCount() {
         try {
             console.log('🔄 Carregando contador de mensagens do banco...');
@@ -1783,7 +1783,6 @@
 
         noMessages.classList.add('hidden');
 
-        // 🔥 CORREÇÃO DEFINITIVA - Avatares individuais para cada mensagem
         chatMessages.innerHTML = messages.map(message => {
             const isSent = message.sender_id === currentUser.id;
             
@@ -1918,9 +1917,9 @@
             if (!isPremiumUser) {
                 console.log('📈 Incrementando contador...');
                 
-                // ✅ USAR A FUNÇÃO RPC DO SUPABASE PARA INCREMENTAR
+                // ✅ USAR A NOVA FUNÇÃO RPC increment_daily_message_count
                 const { error: incrementError } = await supabase
-                    .rpc('increment_message_count', { user_uuid: currentUser.id });
+                    .rpc('increment_daily_message_count', { user_uuid: currentUser.id });
                 
                 if (incrementError) {
                     console.error('❌ Erro ao incrementar contador:', incrementError);
