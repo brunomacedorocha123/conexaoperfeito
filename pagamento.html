@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagamento - Amor Conect</title>
+    <style>
+        /* Use o mesmo CSS do pricing.html */
+    </style>
+</head>
+<body>
+    <header>
+        <!-- Mesmo header das outras páginas -->
+    </header>
+
+    <main>
+        <div class="container">
+            <h1>Finalizar Assinatura</h1>
+            <div id="paymentForm">
+                <h3>Plano Selecionado: <span id="selectedPlan">Premium Mensal</span></h3>
+                <p>Valor: <span id="planPrice">R$ 14,90</span></p>
+                
+                <div class="form-group">
+                    <label>Número do Cartão:</label>
+                    <input type="text" placeholder="1234 5678 9012 3456" id="cardNumber">
+                </div>
+                
+                <button class="btn btn-primary" onclick="processPayment()">
+                    💳 Finalizar Pagamento
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Função simulada de pagamento
+        async function processPayment() {
+            alert('Sistema de pagamento em desenvolvimento! Em produção, integre com Stripe/Mercado Pago.');
+            
+            // Simular pagamento bem-sucedido
+            const planType = 'monthly'; // ou pegar da URL
+            if (confirm('Pagamento simulado com sucesso! Ativar assinatura?')) {
+                // Aqui você chamaria a função create_user_subscription do banco
+                window.location.href = 'mensagens.html?premium=activated';
+            }
+        }
+    </script>
+</body>
+</html>

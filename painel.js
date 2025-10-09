@@ -6,6 +6,68 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let currentUser = null;
 let selectedAvatarFile = null;
 
+// Sistema Premium
+const PremiumManager = {
+    // VERIFICAR SE USUÁRIO É PREMIUM
+    async checkPremiumStatus() {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return false;
+            
+            const { data, error } = await supabase
+                .rpc('is_user_premium', { user_uuid: user.id });
+            
+            if (error) {
+                console.error('Erro ao verificar premium:', error);
+                return false;
+            }
+            
+            return data;
+        } catch (error) {
+            console.error('Erro:', error);
+            return false;
+        }
+    },
+
+    // VERIFICAR SE PODE ENVIAR MENSAGEM
+    async canSendMessage() {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return false;
+            
+            const { data, error } = await supabase
+                .rpc('can_send_message', { user_uuid: user.id });
+            
+            if (error) {
+                console.error('Erro ao verificar mensagens:', error);
+                return false;
+            }
+            
+            return data;
+        } catch (error) {
+            console.error('Erro:', error);
+            return false;
+        }
+    },
+
+    // INCREMENTAR CONTADOR DE MENSAGENS
+    async incrementMessageCount() {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+            
+            const { error } = await supabase
+                .rpc('increment_message_count', { user_uuid: user.id });
+            
+            if (error) {
+                console.error('Erro ao incrementar mensagem:', error);
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+        }
+    }
+};
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Inicializando painel...');
     checkAuth();
@@ -25,6 +87,7 @@ async function checkAuth() {
     setupEventListeners();
     await loadUserData();
     await loadProfileData();
+    await updatePremiumStatus(); // ✅ NOVO: Verificar status premium
 }
 
 // CONFIGURA EVENTOS - CORRIGIDO
@@ -101,6 +164,54 @@ function setupEventListeners() {
     });
 
     console.log('🎯 Todos os event listeners configurados');
+}
+
+// ✅ NOVA FUNÇÃO: ATUALIZAR STATUS PREMIUM
+async function updatePremiumStatus() {
+    try {
+        const isPremium = await PremiumManager.checkPremiumStatus();
+        
+        if (isPremium) {
+            // Adicionar badge premium no header
+            const userInfo = document.querySelector('.user-info');
+            if (userInfo && !userInfo.querySelector('.premium-badge')) {
+                const badge = document.createElement('span');
+                badge.className = 'premium-badge';
+                badge.textContent = '⭐ PREMIUM';
+                badge.style.background = 'var(--vermelho-rosado)';
+                badge.style.color = 'white';
+                badge.style.padding = '2px 8px';
+                badge.style.borderRadius = '10px';
+                badge.style.fontSize = '0.7rem';
+                badge.style.marginLeft = '8px';
+                badge.style.fontWeight = 'bold';
+                userInfo.appendChild(badge);
+            }
+
+            // Adicionar badge no menu mobile
+            const mobileUserInfo = document.querySelector('.mobile-user-info');
+            if (mobileUserInfo && !mobileUserInfo.querySelector('.premium-badge')) {
+                const mobileBadge = document.createElement('span');
+                mobileBadge.className = 'premium-badge';
+                mobileBadge.textContent = '⭐ PREMIUM';
+                mobileBadge.style.background = 'var(--vermelho-rosado)';
+                mobileBadge.style.color = 'white';
+                mobileBadge.style.padding = '4px 12px';
+                mobileBadge.style.borderRadius = '10px';
+                mobileBadge.style.fontSize = '0.8rem';
+                mobileBadge.style.marginTop = '8px';
+                mobileBadge.style.fontWeight = 'bold';
+                mobileBadge.style.display = 'block';
+                mobileUserInfo.appendChild(mobileBadge);
+            }
+
+            console.log('✅ Usuário é Premium - badges adicionados');
+        } else {
+            console.log('ℹ️ Usuário é Gratuito');
+        }
+    } catch (error) {
+        console.error('❌ Erro ao verificar status premium:', error);
+    }
 }
 
 // CARREGA DADOS BÁSICOS DO USUÁRIO
@@ -540,6 +651,9 @@ async function saveProfile(event) {
         console.log('✅ Perfil salvo com sucesso!');
         showNotification('✅ Perfil salvo com sucesso!', 'success');
         
+        // Atualiza status premium (pode ter mudado se era premium)
+        await updatePremiumStatus();
+        
         // Recarrega o avatar se foi atualizado
         if (avatarPath) {
             setTimeout(() => {
@@ -570,6 +684,21 @@ function showNotification(message, type = 'info') {
             <span class="notification-message">${message}</span>
             <button class="notification-close">×</button>
         </div>
+    `;
+
+    // Adicionar estilos
+    notification.style.cssText = `
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        background: ${type === 'error' ? '#f56565' : type === 'success' ? '#48bb78' : '#4299e1'};
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10000;
+        max-width: 300px;
+        animation: slideIn 0.3s ease;
     `;
 
     notification.querySelector('.notification-close').onclick = () => notification.remove();
