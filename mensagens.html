@@ -1699,15 +1699,6 @@
                 senderAvatar = partnerInfo?.avatar || null;
             }
 
-            console.log('🔍 DEBUG MENSAGEM:', {
-                messageId: message.id,
-                isSent: isSent,
-                senderName: senderName,
-                hasAvatar: !!senderAvatar,
-                currentUser: currentUser.id,
-                partner: currentChatPartner?.id
-            });
-
             // Criar HTML do avatar
             const avatarHtml = senderAvatar ? 
                 `<img class="message-avatar-img" src="${senderAvatar}" alt="${senderName}" style="display: block;">` :
@@ -1758,18 +1749,23 @@
         if (!content || !currentChatPartner) return;
 
         try {
-            // ✅ VERIFICAR SE PODE ENVIAR MENSAGEM (SISTEMA PREMIUM) - CORREÇÃO CRÍTICA
+            console.log('🔍 INICIANDO ENVIO DE MENSAGEM...');
+            
+            // ✅ VERIFICAR DIRETAMENTE COM RPC SE PODE ENVIAR
+            console.log('📊 Verificando limite de mensagens para usuário:', currentUser.id);
+            
             const { data: canSend, error: checkError } = await supabase
                 .rpc('can_send_message', { user_uuid: currentUser.id });
             
+            console.log('📊 Resultado da verificação:', { canSend, checkError });
+            
             if (checkError) {
-                console.error('❌ Erro ao verificar limite de mensagens:', checkError);
+                console.error('❌ Erro ao verificar limite:', checkError);
                 // Em caso de erro, permite enviar (fail-open)
             } else {
-                console.log('🔍 Pode enviar mensagem?', canSend);
-                
                 // ✅ BLOQUEAR FISICAMENTE SE NÃO PUDER ENVIAR
                 if (canSend === false) {
+                    console.log('🚫 LIMITE ATINGIDO! Bloqueando envio...');
                     showNotification('❌ Limite de 5 mensagens por dia atingido! Faça upgrade para Premium.', 'error');
                     
                     // Mostrar botão para upgrade
@@ -1779,11 +1775,18 @@
                         }
                     }, 1000);
                     
-                    return; // ⬅️⬅️⬅️ IMPORTANTE: BLOQUEIA O ENVIO!
+                    return; // ⬅️⬅️⬅️ BLOQUEIA O ENVIO FISICAMENTE!
                 }
             }
 
+            // ✅ VERIFICAR SE É PREMIUM ANTES DE ENVIAR
+            const { data: isPremium, error: premiumError } = await supabase
+                .rpc('is_user_premium', { user_uuid: currentUser.id });
+            
+            console.log('⭐ Status Premium:', isPremium);
+            
             // ✅ SE PODE ENVIAR, PROSSEGUE COM O ENVIO
+            console.log('✅ Pode enviar, realizando insert...');
             const { error } = await supabase
                 .from('messages')
                 .insert({
@@ -1794,16 +1797,13 @@
                 });
 
             if (error) {
-                console.error('Erro ao enviar mensagem:', error);
+                console.error('❌ Erro ao enviar mensagem:', error);
                 throw error;
             }
 
-            // ✅ INCREMENTAR CONTADOR (apenas se não for premium) - CORREÇÃO CRÍTICA
-            const { data: isPremium, error: premiumError } = await supabase
-                .rpc('is_user_premium', { user_uuid: currentUser.id });
-            
-            if (!premiumError && !isPremium) {
-                console.log('📊 Incrementando contador de mensagens...');
+            // ✅ INCREMENTAR CONTADOR (apenas se não for premium)
+            if (!isPremium) {
+                console.log('📈 Incrementando contador para usuário gratuito...');
                 await PremiumManager.incrementMessageCount();
             }
 
