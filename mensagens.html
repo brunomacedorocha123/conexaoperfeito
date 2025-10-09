@@ -1216,7 +1216,7 @@
             currentUser = user;
             await loadUserData();
             await checkUserPremiumStatus();
-            await loadMessageCount();
+            await loadMessageCount(); // ✅ CARREGAR CONTADOR ANTES DE TUDO
             await loadConversations();
             setupRealtimeUpdates();
             
@@ -1251,7 +1251,7 @@
         }
     }
 
-    // ==================== CARREGAR CONTADOR DO BANCO ====================
+    // ==================== CARREGAR CONTADOR DO BANCO (VERSÃO CORRIGIDA) ====================
     async function loadMessageCount() {
         try {
             console.log('🔄 Carregando contador de mensagens do banco...');
@@ -1259,7 +1259,7 @@
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
-            // ✅ VERIFICAR STATUS PREMIUM
+            // ✅ VERIFICAR STATUS PREMIUM PRIMEIRO
             await checkUserPremiumStatus();
             
             if (isPremiumUser) {
@@ -1268,7 +1268,7 @@
                 return;
             }
 
-            // ✅ BUSCAR DO BANCO - FORMATO CORRETO DA DATA
+            // ✅ BUSCAR CONTADOR ATUAL DO BANCO
             const today = new Date().toISOString().split('T')[0];
             console.log('📅 Buscando contador para data:', today);
             
@@ -1306,17 +1306,44 @@
                     currentMessageCount = 0;
                 }
             } else {
-                // ✅ REGISTRO ENCONTRADO
+                // ✅ REGISTRO ENCONTRADO - USAR VALOR DO BANCO
                 currentMessageCount = data.message_count || 0;
                 console.log('✅ Contador carregado do banco:', currentMessageCount);
             }
             
+            // ✅ ATUALIZAR DISPLAY E BLOQUEAR SE NECESSÁRIO
             updateMessageCounter(currentMessageCount);
+            checkMessageLimit();
 
         } catch (error) {
             console.error('Erro ao carregar contador:', error);
             currentMessageCount = 0;
             updateMessageCounter(0);
+            checkMessageLimit();
+        }
+    }
+
+    // ==================== VERIFICAR LIMITE E BLOQUEAR ENVIO ====================
+    function checkMessageLimit() {
+        const messageInput = document.getElementById('messageInput');
+        const sendMessageBtn = document.getElementById('sendMessageBtn');
+        
+        if (!messageInput || !sendMessageBtn) return;
+
+        if (!isPremiumUser && currentMessageCount >= 5) {
+            // ✅ BLOQUEAR COMPLETAMENTE - LIMITE ATINGIDO
+            messageInput.disabled = true;
+            messageInput.placeholder = 'Limite de 5 mensagens atingido! Faça upgrade para Premium.';
+            sendMessageBtn.disabled = true;
+            sendMessageBtn.innerHTML = '🚫 Limite';
+            
+            console.log('🚫 Interface bloqueada - limite atingido');
+        } else {
+            // ✅ LIBERAR PARA USO
+            messageInput.disabled = false;
+            messageInput.placeholder = 'Digite sua mensagem...';
+            sendMessageBtn.disabled = false;
+            sendMessageBtn.innerHTML = '📤 Enviar';
         }
     }
 
@@ -1350,7 +1377,12 @@
                 counterElement.style.background = '#48bb78';
             } else {
                 counterElement.textContent = `${count}/5`;
-                counterElement.style.background = count >= 5 ? '#f56565' : '#d1656d';
+                if (count >= 5) {
+                    counterElement.style.background = '#f56565';
+                    counterElement.title = 'Limite atingido! Faça upgrade.';
+                } else {
+                    counterElement.style.background = '#d1656d';
+                }
             }
         }
     }
@@ -1654,8 +1686,9 @@
             
             document.getElementById('chatHeader').classList.remove('hidden');
             document.getElementById('chatInput').classList.remove('hidden');
-            document.getElementById('messageInput').disabled = false;
-            document.getElementById('sendMessageBtn').disabled = false;
+            
+            // ✅ VERIFICAR LIMITE ANTES DE LIBERAR INPUT
+            checkMessageLimit();
 
             await loadMessages(partnerId);
             await markMessagesAsRead(partnerId);
@@ -1839,6 +1872,9 @@
                 console.log('🚫 LIMITE ATINGIDO! Bloqueando envio...');
                 showNotification('❌ Limite de 5 mensagens por dia atingido! Faça upgrade para Premium.', 'error');
                 
+                // ✅ BLOQUEAR INTERFACE DEFINITIVAMENTE
+                checkMessageLimit();
+                
                 setTimeout(() => {
                     if (confirm('Deseja fazer upgrade para Premium e ter mensagens ilimitadas?')) {
                         window.location.href = 'princing.html';
@@ -1906,6 +1942,11 @@
             await loadConversations();
 
             showNotification('✅ Mensagem enviada!', 'success');
+
+            // ✅ VERIFICAR SE ATINGIU O LIMITE APÓS ENVIO
+            if (!isPremiumUser) {
+                checkMessageLimit();
+            }
 
         } catch (error) {
             console.error('Erro no envio direto:', error);
