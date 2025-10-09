@@ -1251,38 +1251,72 @@
         }
     }
 
-    // ==================== CARREGAR CONTADOR DE MENSAGENS ====================
+    // ==================== CARREGAR CONTADOR DO BANCO ====================
     async function loadMessageCount() {
         try {
+            console.log('🔄 Carregando contador de mensagens do banco...');
+            
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            // ✅ VERIFICAR STATUS PREMIUM
+            await checkUserPremiumStatus();
+            
             if (isPremiumUser) {
-                // Usuário premium não tem limite
+                console.log('⭐ Usuário Premium - sem limites');
                 updateMessageCounter('∞');
                 return;
             }
 
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-
-            // Buscar contador atual do dia
+            // ✅ BUSCAR DO BANCO - FORMATO CORRETO DA DATA
+            const today = new Date().toISOString().split('T')[0];
+            console.log('📅 Buscando contador para data:', today);
+            
             const { data, error } = await supabase
                 .from('daily_message_count')
                 .select('message_count')
                 .eq('user_id', user.id)
-                .eq('date', new Date().toISOString().split('T')[0])
+                .eq('date', today)
                 .single();
 
-            if (error && error.code !== 'PGRST116') {
-                console.error('Erro ao carregar contador:', error);
-                return;
-            }
+            console.log('📊 Resultado da busca:', { data, error });
 
-            currentMessageCount = data?.message_count || 0;
-            console.log('📊 Contador carregado:', currentMessageCount);
+            if (error) {
+                if (error.code === 'PGRST116') {
+                    // ✅ NENHUM REGISTRO - INICIALIZAR COM 0
+                    console.log('➕ Nenhum registro encontrado, inicializando com 0');
+                    currentMessageCount = 0;
+                    
+                    // Criar registro inicial
+                    const { error: insertError } = await supabase
+                        .from('daily_message_count')
+                        .insert({
+                            user_id: user.id,
+                            date: today,
+                            message_count: 0
+                        });
+                    
+                    if (insertError) {
+                        console.error('❌ Erro ao criar registro:', insertError);
+                    } else {
+                        console.log('✅ Registro criado com sucesso');
+                    }
+                } else {
+                    console.error('❌ Erro ao buscar contador:', error);
+                    currentMessageCount = 0;
+                }
+            } else {
+                // ✅ REGISTRO ENCONTRADO
+                currentMessageCount = data.message_count || 0;
+                console.log('✅ Contador carregado do banco:', currentMessageCount);
+            }
             
             updateMessageCounter(currentMessageCount);
 
         } catch (error) {
             console.error('Erro ao carregar contador:', error);
+            currentMessageCount = 0;
+            updateMessageCounter(0);
         }
     }
 
@@ -1778,7 +1812,7 @@
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    // ==================== FUNÇÃO SENDMESSAGE CORRIGIDA ====================
+    // ==================== FUNÇÃO ENVIAR MENSAGEM CORRIGIDA ====================
     async function sendMessage() {
         const messageInput = document.getElementById('messageInput');
         const content = messageInput.value.trim();
@@ -1788,7 +1822,7 @@
         try {
             console.log('🔍 INICIANDO ENVIO DE MENSAGEM...');
             
-            // ✅ ATUALIZAR STATUS PREMIUM ANTES DE VERIFICAR
+            // ✅ ATUALIZAR STATUS PREMIUM
             await checkUserPremiumStatus();
             
             // ✅ SE FOR PREMIUM, PODE ENVIAR DIRETAMENTE
@@ -1798,24 +1832,23 @@
                 return;
             }
 
-            // ✅ VERIFICAR LIMITE APENAS PARA USUÁRIOS GRATUITOS
-            console.log('📊 Verificando limite para usuário gratuito:', currentUser.id);
+            // ✅ VERIFICAR LIMITE APENAS PARA GRATUITOS
+            console.log('📊 Contador atual:', currentMessageCount);
             
             if (currentMessageCount >= 5) {
                 console.log('🚫 LIMITE ATINGIDO! Bloqueando envio...');
                 showNotification('❌ Limite de 5 mensagens por dia atingido! Faça upgrade para Premium.', 'error');
                 
-                // Mostrar botão para upgrade
                 setTimeout(() => {
                     if (confirm('Deseja fazer upgrade para Premium e ter mensagens ilimitadas?')) {
                         window.location.href = 'princing.html';
                     }
                 }, 1000);
                 
-                return; // ⬅️ BLOQUEIA O ENVIO
+                return;
             }
 
-            // ✅ SE PODE ENVIAR (menos de 5 mensagens)
+            // ✅ PODE ENVIAR
             console.log('✅ Pode enviar mensagem', currentMessageCount + 1, '/5');
             await sendMessageDirectly(content);
 
@@ -1825,10 +1858,12 @@
         }
     }
 
-    // ==================== FUNÇÃO AUXILIAR PARA ENVIAR MENSAGEM ====================
+    // ==================== ENVIAR MENSAGEM DIRETO ====================
     async function sendMessageDirectly(content) {
+        const messageInput = document.getElementById('messageInput');
+        
         try {
-            // ✅ ENVIAR MENSAGEM
+            // ✅ 1. ENVIAR MENSAGEM
             const { error } = await supabase
                 .from('messages')
                 .insert({
@@ -1843,24 +1878,29 @@
                 throw error;
             }
 
-            // ✅ INCREMENTAR CONTADOR APENAS SE NÃO FOR PREMIUM
+            // ✅ 2. INCREMENTAR CONTADOR APENAS SE NÃO FOR PREMIUM
             if (!isPremiumUser) {
                 console.log('📈 Incrementando contador...');
-                currentMessageCount++;
                 
-                // Atualizar no Supabase
+                // ✅ USAR A FUNÇÃO RPC DO SUPABASE PARA INCREMENTAR
                 const { error: incrementError } = await supabase
                     .rpc('increment_message_count', { user_uuid: currentUser.id });
                 
                 if (incrementError) {
                     console.error('❌ Erro ao incrementar contador:', incrementError);
+                    // Fallback: incrementar localmente
+                    currentMessageCount++;
+                } else {
+                    console.log('✅ Contador incrementado no banco');
+                    // Recarregar contador do banco para garantir sincronia
+                    await loadMessageCount();
                 }
                 
                 // Atualizar display
                 updateMessageCounter(currentMessageCount);
             }
 
-            // ✅ ATUALIZAÇÃO DA UI
+            // ✅ 3. ATUALIZAÇÃO DA UI
             messageInput.value = '';
             await loadMessages(currentChatPartner.id);
             await loadConversations();
