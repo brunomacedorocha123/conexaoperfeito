@@ -988,7 +988,7 @@
     </footer>
 
 <script>
- // Configuração do Supabase
+// Configuração do Supabase
 const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 
@@ -1370,7 +1370,8 @@ function getCurrentFilters() {
 
 async function filterAndDisplayUsers() {
     try {
-        console.log('🔍 Filtrando usuários...');
+        console.log('🔍 ============ INICIANDO FILTRAGEM ============');
+        console.log('🔍 Filtros aplicados:', currentFilters);
         
         if (!allUsers || allUsers.length === 0) {
             console.log('ℹ️ Nenhum usuário para filtrar');
@@ -1378,17 +1379,18 @@ async function filterAndDisplayUsers() {
             return;
         }
 
+        console.log('👥 TOTAL de usuários carregados:', allUsers.length);
+        
         // Aplicar filtros
         let filteredUsers = allUsers.filter(user => {
-            console.log(`🔍 Analisando usuário: ${user.nickname || 'Sem nome'}`);
-            console.log('📊 Dados completos do usuário:', user);
+            const userName = user.nickname || 'Sem nome';
+            const userGender = user.user_details?.gender || 'NÃO DEFINIDO';
             
             let passesFilters = true;
 
             // Filtro de idade
             if (currentFilters.ageMin || currentFilters.ageMax) {
                 if (!user.birth_date) {
-                    console.log(`❌ Usuário ${user.nickname} - Sem data de nascimento`);
                     passesFilters = false;
                 } else {
                     const age = calculateAge(user.birth_date);
@@ -1396,53 +1398,25 @@ async function filterAndDisplayUsers() {
                     const maxAge = currentFilters.ageMax || 100;
                     
                     if (age < minAge || age > maxAge) {
-                        console.log(`❌ Usuário ${user.nickname} - Idade ${age} fora do range ${minAge}-${maxAge}`);
                         passesFilters = false;
-                    } else {
-                        console.log(`✅ Usuário ${user.nickname} - Idade ${age} dentro do range`);
                     }
                 }
             }
 
-            // ✅ CORREÇÃO COMPLETA: Filtro de gênero
+            // ✅ CORREÇÃO CRÍTICA: FILTRO DE GÊNERO SIMPLIFICADO
             if (passesFilters && currentFilters.gender) {
-                const userGender = user.user_details?.gender;
-                
-                if (!userGender) {
-                    console.log(`❌ Usuário ${user.nickname} - Sem gênero definido`);
+                if (!user.user_details || !user.user_details.gender) {
                     passesFilters = false;
                 } else {
-                    // Normalizar para comparação flexível
-                    const normalizeGender = (gender) => {
-                        if (!gender) return '';
-                        return gender.toString()
-                            .toLowerCase()
-                            .trim()
-                            .normalize('NFD')
-                            .replace(/[\u0300-\u036f]/g, ''); // Remove acentos
-                    };
-
-                    const userGenderNormalized = normalizeGender(userGender);
-                    const filterGenderNormalized = normalizeGender(currentFilters.gender);
-
-                    console.log(`🔍 Comparando gênero:`);
-                    console.log(`   Usuário: "${userGender}" -> "${userGenderNormalized}"`);
-                    console.log(`   Filtro: "${currentFilters.gender}" -> "${filterGenderNormalized}"`);
-
-                    // Mapeamento de correspondências
-                    const genderMap = {
-                        'feminino': ['feminino', 'mulher', 'f', 'female', 'mulher'],
-                        'masculino': ['masculino', 'homem', 'm', 'male', 'homem']
-                    };
-
-                    const validGenders = genderMap[filterGenderNormalized];
-                    const matches = validGenders && validGenders.includes(userGenderNormalized);
-
-                    if (!matches) {
-                        console.log(`❌ Usuário ${user.nickname} - Gênero não corresponde`);
+                    // Converte ambos para minúsculo para comparação
+                    const userGenderLower = user.user_details.gender.toString().toLowerCase().trim();
+                    const filterGenderLower = currentFilters.gender.toString().toLowerCase().trim();
+                    
+                    console.log(`🔍 ${userName}: Comparando "${userGenderLower}" com "${filterGenderLower}"`);
+                    
+                    // Verifica correspondência direta
+                    if (userGenderLower !== filterGenderLower) {
                         passesFilters = false;
-                    } else {
-                        console.log(`✅ Usuário ${user.nickname} - Gênero corresponde`);
                     }
                 }
             }
@@ -1454,10 +1428,7 @@ async function filterAndDisplayUsers() {
                 const normalizedFilterLocation = currentFilters.location.toLowerCase();
                 
                 if (!normalizedUserLocation.includes(normalizedFilterLocation)) {
-                    console.log(`❌ Usuário ${user.nickname} - Localização não corresponde`);
                     passesFilters = false;
-                } else {
-                    console.log(`✅ Usuário ${user.nickname} - Localização corresponde`);
                 }
             }
 
@@ -1465,17 +1436,13 @@ async function filterAndDisplayUsers() {
             if (passesFilters && currentFilters.zodiac) {
                 const userZodiac = user.user_details?.zodiac || '';
                 if (userZodiac.toString().toLowerCase() !== currentFilters.zodiac.toLowerCase()) {
-                    console.log(`❌ Usuário ${user.nickname} - Signo não corresponde`);
                     passesFilters = false;
-                } else {
-                    console.log(`✅ Usuário ${user.nickname} - Signo corresponde`);
                 }
             }
 
             // Filtro de interesses
             if (passesFilters && currentFilters.interests && currentFilters.interests.length > 0) {
                 if (!user.user_details?.interests) {
-                    console.log(`❌ Usuário ${user.nickname} - Sem interesses`);
                     passesFilters = false;
                 } else {
                     const userInterests = Array.isArray(user.user_details.interests) 
@@ -1487,10 +1454,7 @@ async function filterAndDisplayUsers() {
                     );
                     
                     if (!hasMatchingInterest) {
-                        console.log(`❌ Usuário ${user.nickname} - Nenhum interesse corresponde`);
                         passesFilters = false;
-                    } else {
-                        console.log(`✅ Usuário ${user.nickname} - Interesse corresponde`);
                     }
                 }
             }
@@ -1499,23 +1463,18 @@ async function filterAndDisplayUsers() {
             if (passesFilters && currentFilters.lookingFor) {
                 const userLookingFor = user.user_details?.looking_for || '';
                 if (userLookingFor.toString().toLowerCase() !== currentFilters.lookingFor.toLowerCase()) {
-                    console.log(`❌ Usuário ${user.nickname} - Objetivo não corresponde`);
                     passesFilters = false;
-                } else {
-                    console.log(`✅ Usuário ${user.nickname} - Objetivo corresponde`);
                 }
             }
 
             if (passesFilters) {
-                console.log(`🎉 Usuário ${user.nickname} - PASSOU em todos os filtros`);
-            } else {
-                console.log(`❌ Usuário ${user.nickname} - NÃO passou nos filtros`);
+                console.log(`✅ ${userName} - PASSOU nos filtros (Gênero: "${userGender}")`);
             }
             
             return passesFilters;
         });
 
-        console.log('🎉 RESULTADO FINAL após filtros:', filteredUsers.length, 'usuários');
+        console.log('🎉 RESULTADO FINAL:', filteredUsers.length, 'usuários encontrados');
 
         // Paginação
         totalUsers = filteredUsers.length;
@@ -1572,8 +1531,6 @@ async function displayUsersWithPhotos(users) {
 async function createUserCardWithPhoto(user) {
     const nickname = user.nickname || user.full_name?.split(' ')[0] || 'Usuário';
     const age = user.birth_date ? calculateAge(user.birth_date) : null;
-    
-    console.log(`🔄 Criando card para: ${nickname}`);
     
     let avatarHtml = '';
     let photoUrl = null;
@@ -1689,11 +1646,7 @@ function formatGender(gender) {
         'feminino': 'Feminino',
         'masculino': 'Masculino',
         'mulher': 'Feminino',
-        'homem': 'Masculino',
-        'f': 'Feminino',
-        'm': 'Masculino',
-        'female': 'Feminino',
-        'male': 'Masculino'
+        'homem': 'Masculino'
     };
     return genderMap[gender?.toLowerCase()] || gender;
 }
@@ -1819,8 +1772,6 @@ function viewProfile(userId) {
 }
 
 function isProfileComplete() {
-    // Por enquanto retorna true para testes
-    // Depois implemente a lógica real de verificação
     return true;
 }
 
