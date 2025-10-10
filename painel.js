@@ -496,6 +496,13 @@ async function loadProfileData() {
             return;
         }
 
+        // ✅ CORREÇÃO: PREENCHER E-MAIL DO USUÁRIO LOGADO
+        const emailInput = document.getElementById('email');
+        if (emailInput) {
+            emailInput.value = currentUser.email || '';
+            console.log('✅ E-mail preenchido:', currentUser.email);
+        }
+
         // ✅ PREENCHE FORMULÁRIO COM NOVOS CAMPOS - CORRIGIDA
         if (profile) {
             // 🔒 Dados Privados
