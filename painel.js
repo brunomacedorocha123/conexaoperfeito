@@ -311,11 +311,10 @@ async function updateProfileCompletion() {
     }
 }
 
-// CARREGA DADOS BÁSICOS DO USUÁRIO
+// CARREGA DADOS BÁSICOS DO USUÁRIO - CORRIGIDA
 async function loadUserData() {
     try {
         console.log('👤 Carregando dados do usuário...');
-        document.getElementById('email').value = currentUser.email;
         
         const { data: profile, error } = await supabase
             .from('profiles')
@@ -330,9 +329,14 @@ async function loadUserData() {
         }
         
         if (profile) {
-            const nickname = profile.nickname || currentUser.email.split('@')[0];
-            document.getElementById('userNickname').textContent = nickname;
-            document.getElementById('mobileUserNickname').textContent = nickname;
+            // ✅ CORREÇÃO: Usar nickname OU primeiro nome do email
+            const displayName = profile.nickname || currentUser.email.split('@')[0];
+            
+            // ✅ ATUALIZAR HEADER E MENU MOBILE
+            document.getElementById('userNickname').textContent = displayName;
+            document.getElementById('mobileUserNickname').textContent = displayName;
+            
+            console.log('✅ Nickname no header:', displayName);
             
             // Carrega avatar se existir
             if (profile.avatar_url) {
@@ -342,9 +346,20 @@ async function loadUserData() {
                 console.log('❌ Nenhum avatar encontrado');
                 showFallbackAvatars();
             }
+        } else {
+            // Fallback se não encontrar perfil
+            const fallbackName = currentUser.email.split('@')[0];
+            document.getElementById('userNickname').textContent = fallbackName;
+            document.getElementById('mobileUserNickname').textContent = fallbackName;
         }
     } catch (error) {
         console.error('❌ Erro ao carregar dados do usuário:', error);
+        
+        // Fallback em caso de erro
+        const fallbackName = currentUser?.email?.split('@')[0] || 'Usuário';
+        document.getElementById('userNickname').textContent = fallbackName;
+        document.getElementById('mobileUserNickname').textContent = fallbackName;
+        
         showNotification('❌ Erro ao carregar dados do perfil', 'error');
     }
 }
@@ -447,7 +462,7 @@ function showFallbackAvatars() {
     });
 }
 
-// CARREGA DADOS DO PERFIL COM NOVOS CAMPOS
+// CARREGA DADOS DO PERFIL COM NOVOS CAMPOS - CORRIGIDA
 async function loadProfileData() {
     try {
         console.log('📋 Carregando dados do perfil...');
@@ -470,10 +485,18 @@ async function loadProfileData() {
             .single();
 
         if (detailsError && detailsError.code === 'PGRST116') {
+            // Cria user_details se não existir
+            await supabase
+                .from('user_details')
+                .insert({
+                    user_id: currentUser.id,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                });
             return;
         }
 
-        // PREENCHE FORMULÁRIO COM NOVOS CAMPOS
+        // ✅ PREENCHE FORMULÁRIO COM NOVOS CAMPOS - CORRIGIDA
         if (profile) {
             // 🔒 Dados Privados
             document.getElementById('fullName').value = profile.full_name || '';
@@ -487,13 +510,20 @@ async function loadProfileData() {
             document.getElementById('state').value = profile.state || '';
             document.getElementById('zipCode').value = profile.zip_code || '';
             
-            // 👁️ Dados Públicos
+            // 👁️ Dados Públicos - ✅ CORREÇÃO: JÁ PREENCHE COM OS DADOS DO CADASTRO
             document.getElementById('nickname').value = profile.nickname || '';
+            
+            // ✅ CORREÇÃO: Preenche displayCity automaticamente se tiver cidade/estado
+            if (profile.city && profile.state && (!userDetails || !userDetails.display_city)) {
+                document.getElementById('displayCity').value = `${profile.city}, ${profile.state}`;
+            }
         }
 
         if (userDetails) {
-            // 👁️ Dados Públicos
-            document.getElementById('displayCity').value = userDetails.display_city || '';
+            // 👁️ Dados Públicos - ✅ SÓ COMPLEMENTA SE JÁ EXISTIR
+            if (userDetails.display_city) {
+                document.getElementById('displayCity').value = userDetails.display_city;
+            }
             document.getElementById('gender').value = userDetails.gender || '';
             document.getElementById('sexualOrientation').value = userDetails.sexual_orientation || '';
             document.getElementById('profession').value = userDetails.profession || '';
