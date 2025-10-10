@@ -988,769 +988,820 @@
     </footer>
 
 <script>
-    // Configuração do Supabase
-    const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+   // Configuração do Supabase
+const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Estado da aplicação
-    let currentUser = null;
-    let currentPage = 1;
-    const usersPerPage = 12;
-    let totalUsers = 0;
-    let currentFilters = {};
+// Estado da aplicação
+let currentUser = null;
+let currentPage = 1;
+const usersPerPage = 12;
+let totalUsers = 0;
+let currentFilters = {};
+let allUsers = []; // Armazena todos os usuários para filtragem
 
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('🚀 Inicializando busca...');
-        checkAuth();
-    });
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Inicializando busca...');
+    checkAuth();
+});
 
-    // ==================== AUTENTICAÇÃO ====================
-    async function checkAuth() {
-        try {
-            const { data: { user }, error } = await supabase.auth.getUser();
-            
-            if (error) {
-                console.error('❌ Erro de autenticação:', error);
-                throw error;
-            }
-            
-            if (!user) {
-                console.log('❌ Usuário não logado, redirecionando...');
-                window.location.href = 'login.html';
-                return;
-            }
-            
-            currentUser = user;
-            console.log('✅ Usuário autenticado:', user.email);
-            
-            await loadUserData();
-            setupEventListeners();
-            setupMobileMenu();
-            await loadInitialUsers();
-            
-        } catch (error) {
-            console.error('❌ Erro na autenticação:', error);
+// ==================== AUTENTICAÇÃO ====================
+async function checkAuth() {
+    try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error) {
+            console.error('❌ Erro de autenticação:', error);
+            throw error;
+        }
+        
+        if (!user) {
+            console.log('❌ Usuário não logado, redirecionando...');
             window.location.href = 'login.html';
+            return;
         }
+        
+        currentUser = user;
+        console.log('✅ Usuário autenticado:', user.email);
+        
+        await loadUserData();
+        setupEventListeners();
+        setupMobileMenu();
+        await loadAllUsers(); // Carrega todos os usuários de uma vez
+        
+    } catch (error) {
+        console.error('❌ Erro na autenticação:', error);
+        window.location.href = 'login.html';
     }
+}
 
-    // ==================== DADOS DO USUÁRIO ====================
-    async function loadUserData() {
-        try {
-            console.log('👤 Carregando dados do usuário...');
-            
-            // Primeiro tenta pegar do perfil
-            const { data: profile, error } = await supabase
-                .from('profiles')
-                .select('nickname, avatar_url')
-                .eq('id', currentUser.id)
-                .single();
+// ==================== DADOS DO USUÁRIO ====================
+async function loadUserData() {
+    try {
+        console.log('👤 Carregando dados do usuário...');
+        
+        // Primeiro tenta pegar do perfil
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('nickname, avatar_url')
+            .eq('id', currentUser.id)
+            .single();
 
-            let displayName = 'Usuário';
-            
-            if (profile && profile.nickname) {
-                displayName = profile.nickname;
-            } else if (currentUser.user_metadata && currentUser.user_metadata.nickname) {
-                displayName = currentUser.user_metadata.nickname;
-            } else if (currentUser.email) {
-                displayName = currentUser.email.split('@')[0];
-            }
-
-            // Atualizar nome em todos os lugares
-            const userNickname = document.getElementById('userNickname');
-            const mobileUserNickname = document.getElementById('mobileUserNickname');
-            
-            if (userNickname) userNickname.textContent = displayName;
-            if (mobileUserNickname) mobileUserNickname.textContent = displayName;
-            
-            console.log('✅ Nome do usuário:', displayName);
-            
-            // Carregar foto do usuário logado
-            await loadCurrentUserAvatar();
-
-        } catch (error) {
-            console.error('❌ Erro ao carregar dados do usuário:', error);
+        let displayName = 'Usuário';
+        
+        if (profile && profile.nickname) {
+            displayName = profile.nickname;
+        } else if (currentUser.user_metadata && currentUser.user_metadata.nickname) {
+            displayName = currentUser.user_metadata.nickname;
+        } else if (currentUser.email) {
+            displayName = currentUser.email.split('@')[0];
         }
+
+        // Atualizar nome em todos os lugares
+        const userNickname = document.getElementById('userNickname');
+        const mobileUserNickname = document.getElementById('mobileUserNickname');
+        
+        if (userNickname) userNickname.textContent = displayName;
+        if (mobileUserNickname) mobileUserNickname.textContent = displayName;
+        
+        console.log('✅ Nome do usuário:', displayName);
+        
+        // Carregar foto do usuário logado
+        await loadCurrentUserAvatar();
+
+    } catch (error) {
+        console.error('❌ Erro ao carregar dados do usuário:', error);
     }
+}
 
-    async function loadCurrentUserAvatar() {
-        try {
-            const { data: profile, error } = await supabase
-                .from('profiles')
-                .select('avatar_url, nickname')
-                .eq('id', currentUser.id)
-                .single();
+async function loadCurrentUserAvatar() {
+    try {
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('avatar_url, nickname')
+            .eq('id', currentUser.id)
+            .single();
 
-            if (error || !profile) {
-                console.log('ℹ️ Perfil não encontrado, usando fallback');
-                return;
-            }
+        if (error || !profile) {
+            console.log('ℹ️ Perfil não encontrado, usando fallback');
+            return;
+        }
 
-            const avatarElements = [
-                document.getElementById('userAvatar'),
-                document.getElementById('mobileUserAvatar')
-            ];
+        const avatarElements = [
+            document.getElementById('userAvatar'),
+            document.getElementById('mobileUserAvatar')
+        ];
 
-            for (const avatarElement of avatarElements) {
-                if (!avatarElement) continue;
-                
-                const userAvatarFallback = avatarElement.querySelector('.user-avatar-fallback');
-                const userAvatarImg = avatarElement.querySelector('.user-avatar-img');
-                
-                if (!userAvatarFallback || !userAvatarImg) continue;
+        for (const avatarElement of avatarElements) {
+            if (!avatarElement) continue;
+            
+            const userAvatarFallback = avatarElement.querySelector('.user-avatar-fallback');
+            const userAvatarImg = avatarElement.querySelector('.user-avatar-img');
+            
+            if (!userAvatarFallback || !userAvatarImg) continue;
 
-                // Iniciar com fallback visível
-                userAvatarImg.style.display = 'none';
-                userAvatarFallback.style.display = 'flex';
-                
-                if (profile.avatar_url) {
-                    const photoUrl = await loadUserPhoto(profile.avatar_url);
-                    if (photoUrl) {
-                        userAvatarImg.src = photoUrl;
-                        userAvatarImg.style.display = 'block';
-                        userAvatarFallback.style.display = 'none';
-                    } else {
-                        // Mostrar inicial do nome
-                        const displayName = profile.nickname || 'Usuário';
-                        userAvatarFallback.textContent = displayName.charAt(0).toUpperCase();
-                    }
+            // Iniciar com fallback visível
+            userAvatarImg.style.display = 'none';
+            userAvatarFallback.style.display = 'flex';
+            
+            if (profile.avatar_url) {
+                const photoUrl = await loadUserPhoto(profile.avatar_url);
+                if (photoUrl) {
+                    userAvatarImg.src = photoUrl;
+                    userAvatarImg.style.display = 'block';
+                    userAvatarFallback.style.display = 'none';
                 } else {
                     // Mostrar inicial do nome
                     const displayName = profile.nickname || 'Usuário';
                     userAvatarFallback.textContent = displayName.charAt(0).toUpperCase();
                 }
-            }
-
-        } catch (error) {
-            console.error('❌ Erro ao carregar avatar do usuário:', error);
-        }
-    }
-
-    // ✅ FUNÇÃO CORRIGIDA - getPublicUrl em vez de download
-    async function loadUserPhoto(avatarUrl) {
-        try {
-            if (!avatarUrl) {
-                console.log('ℹ️ Nenhuma URL de avatar fornecida');
-                return null;
-            }
-
-            console.log('🔄 Tentando carregar foto:', avatarUrl);
-            
-            // ✅ CORREÇÃO: Usar getPublicUrl em vez de download
-            const { data } = supabase.storage
-                .from('avatars')
-                .getPublicUrl(avatarUrl);
-
-            if (data && data.publicUrl) {
-                console.log('✅ URL pública encontrada:', data.publicUrl);
-                return data.publicUrl;
             } else {
-                console.log('❌ Não foi possível obter URL pública');
-                return null;
+                // Mostrar inicial do nome
+                const displayName = profile.nickname || 'Usuário';
+                userAvatarFallback.textContent = displayName.charAt(0).toUpperCase();
             }
+        }
 
-        } catch (error) {
-            console.error('❌ Erro ao carregar foto:', error);
+    } catch (error) {
+        console.error('❌ Erro ao carregar avatar do usuário:', error);
+    }
+}
+
+// ✅ FUNÇÃO CORRIGIDA - getPublicUrl em vez de download
+async function loadUserPhoto(avatarUrl) {
+    try {
+        if (!avatarUrl) {
+            console.log('ℹ️ Nenhuma URL de avatar fornecida');
             return null;
         }
-    }
 
-    // ==================== MENU MOBILE ====================
-    function setupMobileMenu() {
-        const hamburgerBtn = document.getElementById('hamburgerBtn');
-        const mobileMenu = document.getElementById('mobileMenu');
-        const closeMobileMenu = document.getElementById('closeMobileMenu');
-        const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+        console.log('🔄 Tentando carregar foto:', avatarUrl);
+        
+        // ✅ CORREÇÃO: Usar getPublicUrl em vez de download
+        const { data } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(avatarUrl);
 
-        if (!hamburgerBtn || !mobileMenu) {
-            console.error('❌ Elementos do menu mobile não encontrados');
-            return;
+        if (data && data.publicUrl) {
+            console.log('✅ URL pública encontrada:', data.publicUrl);
+            return data.publicUrl;
+        } else {
+            console.log('❌ Não foi possível obter URL pública');
+            return null;
         }
 
-        hamburgerBtn.addEventListener('click', () => {
-            mobileMenu.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        });
+    } catch (error) {
+        console.error('❌ Erro ao carregar foto:', error);
+        return null;
+    }
+}
 
-        closeMobileMenu.addEventListener('click', () => {
+// ==================== MENU MOBILE ====================
+function setupMobileMenu() {
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    const closeMobileMenu = document.getElementById('closeMobileMenu');
+    const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+
+    if (!hamburgerBtn || !mobileMenu) {
+        console.error('❌ Elementos do menu mobile não encontrados');
+        return;
+    }
+
+    hamburgerBtn.addEventListener('click', () => {
+        mobileMenu.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    });
+
+    closeMobileMenu.addEventListener('click', () => {
+        mobileMenu.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    });
+
+    if (mobileLogoutBtn) {
+        mobileLogoutBtn.addEventListener('click', logout);
+    }
+
+    // Fechar menu ao clicar em um link
+    mobileMenu.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
             mobileMenu.style.display = 'none';
             document.body.style.overflow = 'auto';
         });
+    });
 
-        if (mobileLogoutBtn) {
-            mobileLogoutBtn.addEventListener('click', logout);
+    console.log('✅ Menu mobile configurado');
+}
+
+// ==================== EVENT LISTENERS ====================
+function setupEventListeners() {
+    console.log('🎯 Configurando event listeners...');
+    
+    // Logout
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', logout);
+    }
+
+    // Filtros
+    const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+    const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+    const clearFiltersNoResults = document.getElementById('clearFiltersNoResults');
+
+    if (applyFiltersBtn) {
+        applyFiltersBtn.addEventListener('click', applyFilters);
+        console.log('✅ Botão aplicar filtros configurado');
+    }
+    
+    if (clearFiltersBtn) {
+        clearFiltersBtn.addEventListener('click', clearFilters);
+        console.log('✅ Botão limpar filtros configurado');
+    }
+    
+    if (clearFiltersNoResults) {
+        clearFiltersNoResults.addEventListener('click', clearFilters);
+    }
+
+    console.log('✅ Todos os event listeners configurados');
+}
+
+// ==================== LOGOUT ====================
+async function logout() {
+    try {
+        console.log('🚪 Fazendo logout...');
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+        window.location.href = 'login.html';
+    } catch (error) {
+        console.error('❌ Erro ao fazer logout:', error);
+        alert('Erro ao fazer logout. Tente novamente.');
+    }
+}
+
+// ==================== SISTEMA DE BUSCA ====================
+async function loadAllUsers() {
+    try {
+        console.log('🔍 Carregando todos os usuários...');
+        showLoadingState();
+        
+        // Buscar todos os perfis
+        const { data: profiles, error: profilesError } = await supabase
+            .from('profiles')
+            .select('id, nickname, full_name, birth_date, avatar_url')
+            .neq('id', currentUser.id)
+            .not('birth_date', 'is', null);
+
+        if (profilesError) {
+            console.error('❌ Erro ao carregar perfis:', profilesError);
+            throw profilesError;
         }
 
-        // Fechar menu ao clicar em um link
-        mobileMenu.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => {
-                mobileMenu.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            });
+        console.log('📊 Perfis encontrados:', profiles?.length);
+
+        if (!profiles || profiles.length === 0) {
+            console.log('ℹ️ Nenhum perfil encontrado');
+            displayUsersWithPhotos([]);
+            return;
+        }
+
+        // Buscar detalhes de todos os usuários
+        console.log('🔄 Buscando detalhes dos usuários...');
+        
+        const usersWithDetails = await Promise.all(
+            profiles.map(async (profile) => {
+                try {
+                    const { data: userDetails, error: detailsError } = await supabase
+                        .from('user_details')
+                        .select('gender, looking_for, interests, zodiac, address, description, profession')
+                        .eq('user_id', profile.id)
+                        .single();
+
+                    return {
+                        ...profile,
+                        user_details: userDetails || {}
+                    };
+                } catch (error) {
+                    console.log(`ℹ️ Erro ao buscar detalhes do usuário ${profile.id}:`, error);
+                    return {
+                        ...profile,
+                        user_details: {}
+                    };
+                }
+            })
+        );
+
+        console.log('✅ Usuários carregados com detalhes:', usersWithDetails.length);
+        
+        // Armazenar todos os usuários para filtragem
+        allUsers = usersWithDetails;
+        
+        // Aplicar filtros iniciais
+        await applyFilters();
+        
+    } catch (error) {
+        console.error('❌ Erro ao carregar usuários:', error);
+        showError('Erro ao carregar usuários: ' + error.message);
+    }
+}
+
+async function applyFilters() {
+    try {
+        console.log('🎯 Aplicando filtros...');
+        currentPage = 1;
+        currentFilters = getCurrentFilters();
+        
+        console.log('🔍 Filtros atuais:', currentFilters);
+        
+        showLoadingState();
+        await filterAndDisplayUsers();
+        
+    } catch (error) {
+        console.error('❌ Erro ao aplicar filtros:', error);
+        showError('Erro ao buscar usuários. Tente novamente.');
+    }
+}
+
+function clearFilters() {
+    console.log('🗑️ Limpando filtros...');
+    
+    // Limpar inputs
+    const ageMin = document.getElementById('ageMin');
+    const ageMax = document.getElementById('ageMax');
+    const gender = document.getElementById('gender');
+    const lookingFor = document.getElementById('lookingFor');
+    const location = document.getElementById('location');
+    const zodiac = document.getElementById('zodiac');
+    
+    if (ageMin) ageMin.value = '';
+    if (ageMax) ageMax.value = '';
+    if (gender) gender.value = '';
+    if (lookingFor) lookingFor.value = '';
+    if (location) location.value = '';
+    if (zodiac) zodiac.value = '';
+    
+    // Limpar seleção múltipla de interesses
+    const interestsSelect = document.getElementById('interests');
+    if (interestsSelect) {
+        for (let option of interestsSelect.options) {
+            option.selected = option.value === 'nao_importa';
+        }
+    }
+    
+    applyFilters();
+}
+
+function getCurrentFilters() {
+    const ageMin = document.getElementById('ageMin');
+    const ageMax = document.getElementById('ageMax');
+    const gender = document.getElementById('gender');
+    const lookingFor = document.getElementById('lookingFor');
+    const location = document.getElementById('location');
+    const zodiac = document.getElementById('zodiac');
+    
+    // Obter interesses selecionados
+    const interestsSelect = document.getElementById('interests');
+    const selectedInterests = [];
+    
+    if (interestsSelect) {
+        for (let option of interestsSelect.options) {
+            if (option.selected && option.value !== 'nao_importa') {
+                selectedInterests.push(option.value);
+            }
+        }
+    }
+
+    return {
+        ageMin: ageMin && ageMin.value ? parseInt(ageMin.value) : null,
+        ageMax: ageMax && ageMax.value ? parseInt(ageMax.value) : null,
+        gender: gender && gender.value ? gender.value : null,
+        lookingFor: lookingFor && lookingFor.value ? lookingFor.value : null,
+        location: location && location.value ? location.value.trim().toLowerCase() : null,
+        zodiac: zodiac && zodiac.value ? zodiac.value : null,
+        interests: selectedInterests.length > 0 ? selectedInterests : null
+    };
+}
+
+async function filterAndDisplayUsers() {
+    try {
+        console.log('🔍 Filtrando usuários...');
+        
+        if (!allUsers || allUsers.length === 0) {
+            console.log('ℹ️ Nenhum usuário para filtrar');
+            displayUsersWithPhotos([]);
+            return;
+        }
+
+        // Aplicar filtros
+        let filteredUsers = allUsers.filter(user => {
+            // Filtro de idade
+            if (currentFilters.ageMin || currentFilters.ageMax) {
+                if (!user.birth_date) return false;
+                
+                const age = calculateAge(user.birth_date);
+                const minAge = currentFilters.ageMin || 0;
+                const maxAge = currentFilters.ageMax || 100;
+                
+                if (age < minAge || age > maxAge) {
+                    console.log(`❌ Usuário ${user.nickname} - Idade ${age} fora do range ${minAge}-${maxAge}`);
+                    return false;
+                }
+            }
+
+            // ✅ CORREÇÃO: Filtro de gênero - agora funciona corretamente
+            if (currentFilters.gender) {
+                if (!user.user_details.gender) {
+                    console.log(`❌ Usuário ${user.nickname} - Sem gênero definido`);
+                    return false;
+                }
+                
+                // Normalizar comparação (case insensitive)
+                const userGender = user.user_details.gender.toLowerCase();
+                const filterGender = currentFilters.gender.toLowerCase();
+                
+                if (userGender !== filterGender) {
+                    console.log(`❌ Usuário ${user.nickname} - Gênero ${userGender} não corresponde a ${filterGender}`);
+                    return false;
+                }
+                
+                console.log(`✅ Usuário ${user.nickname} - Gênero ${userGender} corresponde a ${filterGender}`);
+            }
+
+            // Filtro de localização
+            if (currentFilters.location) {
+                if (!user.user_details.address) {
+                    console.log(`❌ Usuário ${user.nickname} - Sem endereço`);
+                    return false;
+                }
+                
+                const userAddress = user.user_details.address.toLowerCase();
+                if (!userAddress.includes(currentFilters.location)) {
+                    console.log(`❌ Usuário ${user.nickname} - Endereço ${userAddress} não contém ${currentFilters.location}`);
+                    return false;
+                }
+            }
+
+            // Filtro de signo
+            if (currentFilters.zodiac) {
+                if (!user.user_details.zodiac || user.user_details.zodiac !== currentFilters.zodiac) {
+                    console.log(`❌ Usuário ${user.nickname} - Signo não corresponde`);
+                    return false;
+                }
+            }
+
+            // Filtro de interesses
+            if (currentFilters.interests && currentFilters.interests.length > 0) {
+                if (!user.user_details.interests) {
+                    console.log(`❌ Usuário ${user.nickname} - Sem interesses`);
+                    return false;
+                }
+                
+                const userInterests = Array.isArray(user.user_details.interests) 
+                    ? user.user_details.interests 
+                    : [user.user_details.interests];
+                
+                const hasMatchingInterest = currentFilters.interests.some(interest => 
+                    userInterests.includes(interest)
+                );
+                
+                if (!hasMatchingInterest) {
+                    console.log(`❌ Usuário ${user.nickname} - Nenhum interesse corresponde`);
+                    return false;
+                }
+            }
+
+            // Filtro de looking_for
+            if (currentFilters.lookingFor) {
+                if (!user.user_details.looking_for || user.user_details.looking_for !== currentFilters.lookingFor) {
+                    console.log(`❌ Usuário ${user.nickname} - Objetivo não corresponde`);
+                    return false;
+                }
+            }
+
+            console.log(`✅ Usuário ${user.nickname} - PASSOU em todos os filtros`);
+            return true;
         });
 
-        console.log('✅ Menu mobile configurado');
+        console.log('🎉 RESULTADO FINAL após filtros:', filteredUsers.length, 'usuários');
+
+        // Paginação
+        totalUsers = filteredUsers.length;
+        const startIndex = (currentPage - 1) * usersPerPage;
+        const endIndex = startIndex + usersPerPage;
+        const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+
+        await displayUsersWithPhotos(paginatedUsers);
+        updatePagination();
+        updateResultsCount(paginatedUsers.length, totalUsers);
+
+    } catch (error) {
+        console.error('❌ Erro ao filtrar usuários:', error);
+        showError('Erro ao filtrar usuários: ' + error.message);
     }
+}
 
-    // ==================== EVENT LISTENERS ====================
-    function setupEventListeners() {
-        console.log('🎯 Configurando event listeners...');
-        
-        // Logout
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', logout);
-        }
+// ==================== EXIBIÇÃO DE USUÁRIOS ====================
+async function displayUsersWithPhotos(users) {
+    const usersGrid = document.getElementById('usersGrid');
+    const noResults = document.getElementById('noResults');
+    const loadingResults = document.getElementById('loadingResults');
 
-        // Filtros
-        const applyFiltersBtn = document.getElementById('applyFiltersBtn');
-        const clearFiltersBtn = document.getElementById('clearFiltersBtn');
-        const clearFiltersNoResults = document.getElementById('clearFiltersNoResults');
+    if (loadingResults) loadingResults.classList.add('hidden');
 
-        if (applyFiltersBtn) {
-            applyFiltersBtn.addEventListener('click', applyFilters);
-            console.log('✅ Botão aplicar filtros configurado');
-        }
-        
-        if (clearFiltersBtn) {
-            clearFiltersBtn.addEventListener('click', clearFilters);
-            console.log('✅ Botão limpar filtros configurado');
-        }
-        
-        if (clearFiltersNoResults) {
-            clearFiltersNoResults.addEventListener('click', clearFilters);
-        }
-
-        console.log('✅ Todos os event listeners configurados');
-    }
-
-    // ==================== LOGOUT ====================
-    async function logout() {
-        try {
-            console.log('🚪 Fazendo logout...');
-            const { error } = await supabase.auth.signOut();
-            if (error) throw error;
-            window.location.href = 'login.html';
-        } catch (error) {
-            console.error('❌ Erro ao fazer logout:', error);
-            alert('Erro ao fazer logout. Tente novamente.');
-        }
-    }
-
-    // ==================== SISTEMA DE BUSCA ====================
-    async function loadInitialUsers() {
-        console.log('🔍 Carregando usuários iniciais...');
-        await applyFilters();
-    }
-
-    async function applyFilters() {
-        try {
-            console.log('🎯 Aplicando filtros...');
-            currentPage = 1;
-            currentFilters = getCurrentFilters();
-            
-            showLoadingState();
-            await searchUsers();
-            
-        } catch (error) {
-            console.error('❌ Erro ao aplicar filtros:', error);
-            showError('Erro ao buscar usuários. Tente novamente.');
-        }
-    }
-
-    function clearFilters() {
-        console.log('🗑️ Limpando filtros...');
-        
-        // Limpar inputs
-        const ageMin = document.getElementById('ageMin');
-        const ageMax = document.getElementById('ageMax');
-        const gender = document.getElementById('gender');
-        const lookingFor = document.getElementById('lookingFor');
-        const location = document.getElementById('location');
-        const zodiac = document.getElementById('zodiac');
-        
-        if (ageMin) ageMin.value = '';
-        if (ageMax) ageMax.value = '';
-        if (gender) gender.value = '';
-        if (lookingFor) lookingFor.value = '';
-        if (location) location.value = '';
-        if (zodiac) zodiac.value = '';
-        
-        // Limpar seleção múltipla de interesses
-        const interestsSelect = document.getElementById('interests');
-        if (interestsSelect) {
-            for (let option of interestsSelect.options) {
-                option.selected = option.value === 'nao_importa';
-            }
-        }
-        
-        applyFilters();
-    }
-
-    function getCurrentFilters() {
-        const ageMin = document.getElementById('ageMin');
-        const ageMax = document.getElementById('ageMax');
-        const gender = document.getElementById('gender');
-        const lookingFor = document.getElementById('lookingFor');
-        const location = document.getElementById('location');
-        const zodiac = document.getElementById('zodiac');
-        
-        // Obter interesses selecionados
-        const interestsSelect = document.getElementById('interests');
-        const selectedInterests = [];
-        
-        if (interestsSelect) {
-            for (let option of interestsSelect.options) {
-                if (option.selected) {
-                    if (option.value === 'nao_importa') {
-                        return {
-                            ageMin: ageMin && ageMin.value ? parseInt(ageMin.value) : null,
-                            ageMax: ageMax && ageMax.value ? parseInt(ageMax.value) : null,
-                            gender: gender && gender.value ? gender.value : null,
-                            lookingFor: lookingFor && lookingFor.value ? lookingFor.value : null,
-                            location: location && location.value ? location.value : null,
-                            zodiac: zodiac && zodiac.value ? zodiac.value : null,
-                            interests: null
-                        };
-                    }
-                    selectedInterests.push(option.value);
-                }
-            }
-        }
-
-        return {
-            ageMin: ageMin && ageMin.value ? parseInt(ageMin.value) : null,
-            ageMax: ageMax && ageMax.value ? parseInt(ageMax.value) : null,
-            gender: gender && gender.value ? gender.value : null,
-            lookingFor: lookingFor && lookingFor.value ? lookingFor.value : null,
-            location: location && location.value ? location.value : null,
-            zodiac: zodiac && zodiac.value ? zodiac.value : null,
-            interests: selectedInterests.length > 0 ? selectedInterests : null
-        };
-    }
-
-    async function searchUsers() {
-        try {
-            console.log('🔍 Buscando usuários com filtros:', currentFilters);
-            
-            // ✅ BUSCA SIMPLIFICADA - Só pega dados básicos primeiro
-            let query = supabase
-                .from('profiles')
-                .select('id, nickname, full_name, birth_date, avatar_url')
-                .neq('id', currentUser.id)
-                .not('birth_date', 'is', null);
-
-            const { data: users, error } = await query;
-
-            if (error) {
-                console.error('❌ Erro na busca:', error);
-                throw error;
-            }
-
-            console.log('📊 Usuários encontrados (brutos):', users?.length);
-
-            if (!users || users.length === 0) {
-                console.log('ℹ️ Nenhum usuário encontrado');
-                displayUsersWithPhotos([]);
-                return;
-            }
-
-            // ✅ AGORA BUSCA OS DETALHES PARA CADA USUÁRIO
-            console.log('🔄 Buscando detalhes dos usuários...');
-            
-            const usersWithDetails = await Promise.all(
-                users.map(async (user) => {
-                    try {
-                        const { data: userDetails, error: detailsError } = await supabase
-                            .from('user_details')
-                            .select('gender, looking_for, interests, zodiac, address, description, profession')
-                            .eq('user_id', user.id)
-                            .single();
-
-                        return {
-                            ...user,
-                            user_details: userDetails || {}
-                        };
-                    } catch (error) {
-                        console.log(`ℹ️ Erro ao buscar detalhes do usuário ${user.id}:`, error);
-                        return {
-                            ...user,
-                            user_details: {}
-                        };
-                    }
-                })
-            );
-
-            console.log('✅ Usuários com detalhes:', usersWithDetails.length);
-
-            // Aplicar filtros no client-side
-            let filteredUsers = usersWithDetails.filter(user => {
-                // Filtro de idade
-                if (currentFilters.ageMin || currentFilters.ageMax) {
-                    if (!user.birth_date) return false;
-                    
-                    const age = calculateAge(user.birth_date);
-                    const minAge = currentFilters.ageMin || 0;
-                    const maxAge = currentFilters.ageMax || 100;
-                    
-                    if (age < minAge || age > maxAge) return false;
-                }
-
-                // Filtro de gênero
-                if (currentFilters.gender && user.user_details.gender !== currentFilters.gender) {
-                    return false;
-                }
-
-                // Filtro de localização
-                if (currentFilters.location) {
-                    if (!user.user_details.address || 
-                        !user.user_details.address.toLowerCase().includes(currentFilters.location.toLowerCase())) {
-                        return false;
-                    }
-                }
-
-                // Filtro de signo
-                if (currentFilters.zodiac && user.user_details.zodiac !== currentFilters.zodiac) {
-                    return false;
-                }
-
-                // Filtro de interesses
-                if (currentFilters.interests && currentFilters.interests.length > 0) {
-                    if (!user.user_details.interests || 
-                        !currentFilters.interests.some(interest => user.user_details.interests.includes(interest))) {
-                        return false;
-                    }
-                }
-
-                // Filtro de looking_for
-                if (currentFilters.lookingFor && user.user_details.looking_for !== currentFilters.lookingFor) {
-                    return false;
-                }
-
-                return true;
-            });
-
-            console.log('🎉 RESULTADO FINAL após filtros:', filteredUsers.length, 'usuários');
-
-            // Paginação
-            totalUsers = filteredUsers.length;
-            const startIndex = (currentPage - 1) * usersPerPage;
-            const endIndex = startIndex + usersPerPage;
-            const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
-
-            await displayUsersWithPhotos(paginatedUsers);
-            updatePagination();
-            updateResultsCount(paginatedUsers.length, totalUsers);
-
-        } catch (error) {
-            console.error('❌ Erro ao buscar usuários:', error);
-            showError('Erro ao carregar usuários: ' + error.message);
-        }
-    }
-
-    // ==================== EXIBIÇÃO DE USUÁRIOS ====================
-    async function displayUsersWithPhotos(users) {
-        const usersGrid = document.getElementById('usersGrid');
-        const noResults = document.getElementById('noResults');
-        const loadingResults = document.getElementById('loadingResults');
-
-        if (loadingResults) loadingResults.classList.add('hidden');
-
-        if (!users || users.length === 0) {
-            console.log('ℹ️ Nenhum usuário para exibir');
-            if (usersGrid) usersGrid.innerHTML = '';
-            if (noResults) noResults.classList.remove('hidden');
-            return;
-        }
-
-        console.log('🖼️ Exibindo', users.length, 'usuários');
-
-        if (noResults) noResults.classList.add('hidden');
-
-        // Carregar fotos para cada usuário
-        const userCards = [];
-        for (const user of users) {
-            try {
-                const card = await createUserCardWithPhoto(user);
-                userCards.push(card);
-            } catch (error) {
-                console.error('❌ Erro ao criar card para usuário', user.id, error);
-                // Criar card fallback
-                userCards.push(createFallbackUserCard(user));
-            }
-        }
-        
-        if (usersGrid) {
-            usersGrid.innerHTML = userCards.join('');
-            console.log('✅ Cards inseridos no grid');
-        }
-    }
-
-    async function createUserCardWithPhoto(user) {
-        const nickname = user.nickname || user.full_name?.split(' ')[0] || 'Usuário';
-        const age = user.birth_date ? calculateAge(user.birth_date) : null;
-        
-        console.log(`🔄 Criando card para: ${nickname}`);
-        
-        // Carregar a foto ANTES de construir o HTML
-        let avatarHtml = '';
-        let photoUrl = null;
-        
-        if (user.avatar_url) {
-            photoUrl = await loadUserPhoto(user.avatar_url);
-        }
-        
-        // Construir o HTML baseado no resultado do carregamento
-        if (photoUrl) {
-            avatarHtml = `
-                <div class="user-card-avatar" style="background-image: url('${photoUrl}'); background-size: cover; background-position: center;">
-                    <div class="user-card-avatar-fallback" style="display: none;">${nickname.charAt(0).toUpperCase()}</div>
-                </div>
-            `;
-        } else {
-            avatarHtml = `
-                <div class="user-card-avatar">
-                    <div class="user-card-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
-                </div>
-            `;
-        }
-
-        // Usar dados de user_details
-        const userDetails = user.user_details || {};
-        const gender = userDetails.gender ? formatGender(userDetails.gender) : null;
-        const location = userDetails.address || null;
-        const bio = userDetails.description || 'Este usuário ainda não adicionou uma descrição.';
-        const profession = userDetails.profession || null;
-        
-        // Mostrar interesses se disponíveis
-        let interestsHtml = '';
-        if (userDetails.interests && userDetails.interests.length > 0) {
-            const interests = Array.isArray(userDetails.interests) ? userDetails.interests : [userDetails.interests];
-            interestsHtml = `
-                <div class="user-card-interests">
-                    ${interests.slice(0, 3).map(interest => 
-                        `<span class="interest-tag">${interest}</span>`
-                    ).join('')}
-                    ${interests.length > 3 ? `<span class="interest-tag">+${interests.length - 3}</span>` : ''}
-                </div>
-            `;
-        }
-
-        return `
-            <div class="user-card" onclick="viewProfile('${user.id}')">
-                ${avatarHtml}
-                <div class="user-card-name">${nickname}${age ? `, ${age}` : ''}</div>
-                
-                <div class="user-card-info">
-                    ${gender ? `<div class="user-card-detail">👤 ${gender}</div>` : ''}
-                    ${location ? `<div class="user-card-detail">📍 ${location}</div>` : ''}
-                    ${profession ? `<div class="user-card-detail">💼 ${profession}</div>` : ''}
-                </div>
-                
-                ${interestsHtml}
-                
-                <div class="user-card-bio">${bio}</div>
-                
-                <div class="user-card-actions">
-                    <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); sendMessage('${user.id}')">
-                        💌 Mensagem
-                    </button>
-                    <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewProfile('${user.id}')">
-                        👀 Ver Perfil
-                    </button>
-                </div>
-            </div>
-        `;
-    }
-
-    function createFallbackUserCard(user) {
-        const nickname = user.nickname || user.full_name?.split(' ')[0] || 'Usuário';
-        const age = user.birth_date ? calculateAge(user.birth_date) : null;
-        
-        return `
-            <div class="user-card" onclick="viewProfile('${user.id}')">
-                <div class="user-card-avatar">
-                    <div class="user-card-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
-                </div>
-                <div class="user-card-name">${nickname}${age ? `, ${age}` : ''}</div>
-                <div class="user-card-bio">Clique para ver o perfil completo</div>
-                <div class="user-card-actions">
-                    <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); sendMessage('${user.id}')">
-                        💌 Mensagem
-                    </button>
-                    <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewProfile('${user.id}')">
-                        👀 Ver Perfil
-                    </button>
-                </div>
-            </div>
-        `;
-    }
-
-    // ==================== FUNÇÕES AUXILIARES ====================
-    function calculateAge(birthDate) {
-        try {
-            const today = new Date();
-            const birth = new Date(birthDate);
-            let age = today.getFullYear() - birth.getFullYear();
-            const monthDiff = today.getMonth() - birth.getMonth();
-            
-            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-                age--;
-            }
-            
-            return age;
-        } catch (error) {
-            console.error('❌ Erro ao calcular idade:', error);
-            return null;
-        }
-    }
-
-    function formatGender(gender) {
-        const genderMap = {
-            'feminino': 'Feminino',
-            'masculino': 'Masculino',
-            'mulher': 'Feminino',
-            'homem': 'Masculino'
-        };
-        return genderMap[gender] || gender;
-    }
-
-    function updateResultsCount(currentCount, totalCount) {
-        const resultsCount = document.getElementById('resultsCount');
-        if (!resultsCount) return;
-        
-        if (totalCount === 0) {
-            resultsCount.textContent = 'Nenhum resultado encontrado';
-        } else {
-            const startUser = ((currentPage - 1) * usersPerPage) + 1;
-            const endUser = Math.min(startUser + currentCount - 1, totalCount);
-            resultsCount.textContent = `Mostrando ${startUser}-${endUser} de ${totalCount} pessoas`;
-        }
-    }
-
-    function updatePagination() {
-        const pagination = document.getElementById('pagination');
-        if (!pagination) return;
-        
-        const totalPages = Math.ceil(totalUsers / usersPerPage);
-        
-        if (totalPages <= 1) {
-            pagination.classList.add('hidden');
-            return;
-        }
-        
-        pagination.classList.remove('hidden');
-        
-        let paginationHTML = `
-            <button class="pagination-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(${currentPage - 1})">
-                ← Anterior
-            </button>
-            <span class="pagination-info">Página ${currentPage} de ${totalPages}</span>
-            <button class="pagination-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="changePage(${currentPage + 1})">
-                Próxima →
-            </button>
-        `;
-        
-        pagination.innerHTML = paginationHTML;
-    }
-
-    async function changePage(page) {
-        currentPage = page;
-        showLoadingState();
-        await searchUsers();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function showLoadingState() {
-        const loadingResults = document.getElementById('loadingResults');
-        const usersGrid = document.getElementById('usersGrid');
-        const noResults = document.getElementById('noResults');
-        const pagination = document.getElementById('pagination');
-        const resultsCount = document.getElementById('resultsCount');
-
-        if (loadingResults) loadingResults.classList.remove('hidden');
+    if (!users || users.length === 0) {
+        console.log('ℹ️ Nenhum usuário para exibir');
         if (usersGrid) usersGrid.innerHTML = '';
-        if (noResults) noResults.classList.add('hidden');
-        if (pagination) pagination.classList.add('hidden');
-        if (resultsCount) resultsCount.textContent = 'Buscando...';
+        if (noResults) noResults.classList.remove('hidden');
+        return;
     }
 
-    function showError(message) {
-        console.error('❌ Erro:', message);
-        alert(message);
-        const loadingResults = document.getElementById('loadingResults');
-        if (loadingResults) loadingResults.classList.add('hidden');
-    }
+    console.log('🖼️ Exibindo', users.length, 'usuários');
 
-    // ==================== FUNÇÕES DE INTERAÇÃO ====================
-    function sendMessage(userId) {
-        console.log('💌 Enviando mensagem para:', userId);
-        
-        if (!isProfileComplete()) {
-            alert('📝 Complete seu perfil primeiro para enviar mensagens!');
-            window.location.href = 'painel.html';
-            return;
-        }
-        
-        const message = prompt('Digite sua mensagem:');
-        if (message && message.trim()) {
-            sendMessageToUser(userId, message.trim());
-        }
-    }
+    if (noResults) noResults.classList.add('hidden');
 
-    async function sendMessageToUser(receiverId, content) {
+    // Carregar fotos para cada usuário
+    const userCards = [];
+    for (const user of users) {
         try {
-            console.log('📤 Enviando mensagem para', receiverId);
-            
-            const { error } = await supabase
-                .from('messages')
-                .insert([
-                    {
-                        sender_id: currentUser.id,
-                        receiver_id: receiverId,
-                        content: content
-                    }
-                ]);
-
-            if (error) throw error;
-            
-            alert('Mensagem enviada com sucesso! 💌');
-            
+            const card = await createUserCardWithPhoto(user);
+            userCards.push(card);
         } catch (error) {
-            console.error('❌ Erro ao enviar mensagem:', error);
-            alert('✅ Mensagem registrada!');
+            console.error('❌ Erro ao criar card para usuário', user.id, error);
+            // Criar card fallback
+            userCards.push(createFallbackUserCard(user));
         }
     }
+    
+    if (usersGrid) {
+        usersGrid.innerHTML = userCards.join('');
+        console.log('✅ Cards inseridos no grid');
+    }
+}
 
-    function viewProfile(userId) {
-        console.log('👀 Visualizando perfil:', userId);
+async function createUserCardWithPhoto(user) {
+    const nickname = user.nickname || user.full_name?.split(' ')[0] || 'Usuário';
+    const age = user.birth_date ? calculateAge(user.birth_date) : null;
+    
+    console.log(`🔄 Criando card para: ${nickname}`);
+    
+    // Carregar a foto ANTES de construir o HTML
+    let avatarHtml = '';
+    let photoUrl = null;
+    
+    if (user.avatar_url) {
+        photoUrl = await loadUserPhoto(user.avatar_url);
+    }
+    
+    // Construir o HTML baseado no resultado do carregamento
+    if (photoUrl) {
+        avatarHtml = `
+            <div class="user-card-avatar" style="background-image: url('${photoUrl}'); background-size: cover; background-position: center;">
+                <div class="user-card-avatar-fallback" style="display: none;">${nickname.charAt(0).toUpperCase()}</div>
+            </div>
+        `;
+    } else {
+        avatarHtml = `
+            <div class="user-card-avatar">
+                <div class="user-card-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
+            </div>
+        `;
+    }
+
+    // Usar dados de user_details
+    const userDetails = user.user_details || {};
+    const gender = userDetails.gender ? formatGender(userDetails.gender) : null;
+    const location = userDetails.address || null;
+    const bio = userDetails.description || 'Este usuário ainda não adicionou uma descrição.';
+    const profession = userDetails.profession || null;
+    
+    // Mostrar interesses se disponíveis
+    let interestsHtml = '';
+    if (userDetails.interests && userDetails.interests.length > 0) {
+        const interests = Array.isArray(userDetails.interests) ? userDetails.interests : [userDetails.interests];
+        interestsHtml = `
+            <div class="user-card-interests">
+                ${interests.slice(0, 3).map(interest => 
+                    `<span class="interest-tag">${interest}</span>`
+                ).join('')}
+                ${interests.length > 3 ? `<span class="interest-tag">+${interests.length - 3}</span>` : ''}
+            </div>
+        `;
+    }
+
+    return `
+        <div class="user-card" onclick="viewProfile('${user.id}')">
+            ${avatarHtml}
+            <div class="user-card-name">${nickname}${age ? `, ${age}` : ''}</div>
+            
+            <div class="user-card-info">
+                ${gender ? `<div class="user-card-detail">👤 ${gender}</div>` : ''}
+                ${location ? `<div class="user-card-detail">📍 ${location}</div>` : ''}
+                ${profession ? `<div class="user-card-detail">💼 ${profession}</div>` : ''}
+            </div>
+            
+            ${interestsHtml}
+            
+            <div class="user-card-bio">${bio}</div>
+            
+            <div class="user-card-actions">
+                <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); sendMessage('${user.id}')">
+                    💌 Mensagem
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewProfile('${user.id}')">
+                    👀 Ver Perfil
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function createFallbackUserCard(user) {
+    const nickname = user.nickname || user.full_name?.split(' ')[0] || 'Usuário';
+    const age = user.birth_date ? calculateAge(user.birth_date) : null;
+    
+    return `
+        <div class="user-card" onclick="viewProfile('${user.id}')">
+            <div class="user-card-avatar">
+                <div class="user-card-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
+            </div>
+            <div class="user-card-name">${nickname}${age ? `, ${age}` : ''}</div>
+            <div class="user-card-bio">Clique para ver o perfil completo</div>
+            <div class="user-card-actions">
+                <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); sendMessage('${user.id}')">
+                    💌 Mensagem
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewProfile('${user.id}')">
+                    👀 Ver Perfil
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+// ==================== FUNÇÕES AUXILIARES ====================
+function calculateAge(birthDate) {
+    try {
+        const today = new Date();
+        const birth = new Date(birthDate);
+        let age = today.getFullYear() - birth.getFullYear();
+        const monthDiff = today.getMonth() - birth.getMonth();
         
-        if (!isProfileComplete()) {
-            alert('📝 Complete seu perfil primeiro para ver outros perfis!');
-            window.location.href = 'painel.html';
-            return;
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+            age--;
         }
         
-        // Salvar o ID do perfil a ser visualizado e redirecionar
-        localStorage.setItem('viewingProfileId', userId);
-        window.location.href = 'perfil.html';
+        return age;
+    } catch (error) {
+        console.error('❌ Erro ao calcular idade:', error);
+        return null;
     }
+}
 
-    function isProfileComplete() {
-        // Verificar se o perfil está completo
-        // Por enquanto retorna true para testes
-        return true;
+function formatGender(gender) {
+    const genderMap = {
+        'feminino': 'Feminino',
+        'masculino': 'Masculino',
+        'mulher': 'Feminino',
+        'homem': 'Masculino'
+    };
+    return genderMap[gender] || gender;
+}
+
+function updateResultsCount(currentCount, totalCount) {
+    const resultsCount = document.getElementById('resultsCount');
+    if (!resultsCount) return;
+    
+    if (totalCount === 0) {
+        resultsCount.textContent = 'Nenhum resultado encontrado';
+    } else {
+        const startUser = ((currentPage - 1) * usersPerPage) + 1;
+        const endUser = Math.min(startUser + currentCount - 1, totalCount);
+        resultsCount.textContent = `Mostrando ${startUser}-${endUser} de ${totalCount} pessoas`;
     }
+}
 
-    // ==================== INICIALIZAÇÃO ====================
-    // Exportar funções para o escopo global
-    window.sendMessage = sendMessage;
-    window.viewProfile = viewProfile;
-    window.changePage = changePage;
+function updatePagination() {
+    const pagination = document.getElementById('pagination');
+    if (!pagination) return;
+    
+    const totalPages = Math.ceil(totalUsers / usersPerPage);
+    
+    if (totalPages <= 1) {
+        pagination.classList.add('hidden');
+        return;
+    }
+    
+    pagination.classList.remove('hidden');
+    
+    let paginationHTML = `
+        <button class="pagination-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(${currentPage - 1})">
+            ← Anterior
+        </button>
+        <span class="pagination-info">Página ${currentPage} de ${totalPages}</span>
+        <button class="pagination-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="changePage(${currentPage + 1})">
+            Próxima →
+        </button>
+    `;
+    
+    pagination.innerHTML = paginationHTML;
+}
 
-    console.log('✅ Busca.js carregado e pronto!');
+async function changePage(page) {
+    currentPage = page;
+    showLoadingState();
+    await filterAndDisplayUsers();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showLoadingState() {
+    const loadingResults = document.getElementById('loadingResults');
+    const usersGrid = document.getElementById('usersGrid');
+    const noResults = document.getElementById('noResults');
+    const pagination = document.getElementById('pagination');
+    const resultsCount = document.getElementById('resultsCount');
+
+    if (loadingResults) loadingResults.classList.remove('hidden');
+    if (usersGrid) usersGrid.innerHTML = '';
+    if (noResults) noResults.classList.add('hidden');
+    if (pagination) pagination.classList.add('hidden');
+    if (resultsCount) resultsCount.textContent = 'Buscando...';
+}
+
+function showError(message) {
+    console.error('❌ Erro:', message);
+    alert(message);
+    const loadingResults = document.getElementById('loadingResults');
+    if (loadingResults) loadingResults.classList.add('hidden');
+}
+
+// ==================== FUNÇÕES DE INTERAÇÃO ====================
+function sendMessage(userId) {
+    console.log('💌 Enviando mensagem para:', userId);
+    
+    if (!isProfileComplete()) {
+        alert('📝 Complete seu perfil primeiro para enviar mensagens!');
+        window.location.href = 'painel.html';
+        return;
+    }
+    
+    const message = prompt('Digite sua mensagem:');
+    if (message && message.trim()) {
+        sendMessageToUser(userId, message.trim());
+    }
+}
+
+async function sendMessageToUser(receiverId, content) {
+    try {
+        console.log('📤 Enviando mensagem para', receiverId);
+        
+        const { error } = await supabase
+            .from('messages')
+            .insert([
+                {
+                    sender_id: currentUser.id,
+                    receiver_id: receiverId,
+                    content: content
+                }
+            ]);
+
+        if (error) throw error;
+        
+        alert('Mensagem enviada com sucesso! 💌');
+        
+    } catch (error) {
+        console.error('❌ Erro ao enviar mensagem:', error);
+        alert('✅ Mensagem registrada!');
+    }
+}
+
+function viewProfile(userId) {
+    console.log('👀 Visualizando perfil:', userId);
+    
+    if (!isProfileComplete()) {
+        alert('📝 Complete seu perfil primeiro para ver outros perfis!');
+        window.location.href = 'painel.html';
+        return;
+    }
+    
+    // Salvar o ID do perfil a ser visualizado e redirecionar
+    localStorage.setItem('viewingProfileId', userId);
+    window.location.href = 'perfil.html';
+}
+
+function isProfileComplete() {
+    // Verificar se o perfil está completo
+    // Por enquanto retorna true para testes
+    return true;
+}
+
+// ==================== INICIALIZAÇÃO ====================
+// Exportar funções para o escopo global
+window.sendMessage = sendMessage;
+window.viewProfile = viewProfile;
+window.changePage = changePage;
+
+console.log('✅ Busca.js carregado e pronto!');
 </script>
 </body>
 </html>
