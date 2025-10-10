@@ -1009,6 +1009,20 @@
       padding: 2rem;
       color: var(--text-light);
     }
+    /* Botão de atualizar */
+#refreshBtn {
+    padding: 0.5rem;
+    font-size: 1rem;
+    width: 40px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    transition: var(--transition);
+}
+
+#refreshBtn:hover {
+    background: var(--lilas);
+    transform: rotate(45deg);
+}
   </style>
 </head>
 <body>
@@ -1087,35 +1101,39 @@
 
 
         <!-- Chat Area -->
-        <div class="chat-area">
-          <div class="chat-header hidden" id="chatHeader">
-            <div class="chat-header-avatar" id="chatHeaderAvatar">
-              <img class="chat-header-avatar-img" src="" alt="Avatar">
-              <div class="user-avatar-fallback">U</div>
-            </div>
-            <div class="chat-header-info">
-              <h3 id="chatPartnerName">Selecione uma conversa</h3>
-              <p id="chatPartnerStatus">Clique em uma conversa para começar</p>
-            </div>
-          </div>
-          
-          <div class="chat-messages" id="chatMessages">
-            <div class="no-messages" id="noMessages">
-              Selecione uma conversa para ver as mensagens
-            </div>
-          </div>
-          
-          <div class="chat-input hidden" id="chatInput">
-            <div class="input-group">
-              <input type="text" id="messageInput" placeholder="Digite sua mensagem..." disabled>
-              <button class="btn btn-primary" id="sendMessageBtn" disabled>Enviar</button>
-            </div>
-          </div>
+       <div class="chat-area">
+    <div class="chat-header hidden" id="chatHeader">
+        <div class="chat-header-avatar" id="chatHeaderAvatar">
+            <img class="chat-header-avatar-img" src="" alt="Avatar">
+            <div class="user-avatar-fallback">U</div>
         </div>
-      </section>
+        <div class="chat-header-info">
+            <h3 id="chatPartnerName">Selecione uma conversa</h3>
+            <p id="chatPartnerStatus">Clique em uma conversa para começar</p>
+        </div>
     </div>
-  </main>
-
+    
+    <div class="chat-messages" id="chatMessages">
+        <div class="no-messages" id="noMessages">
+            Selecione uma conversa para ver as mensagens
+        </div>
+    </div>
+    
+    <div class="chat-input hidden" id="chatInput">
+        <div class="input-group">
+            <!-- 🎯 BOTÃO DE ATUALIZAR ADICIONADO AQUI -->
+            <button class="btn btn-secondary" id="refreshBtn" title="Atualizar conversas">
+                🔄
+            </button>
+            
+            <input type="text" id="messageInput" placeholder="Digite sua mensagem..." disabled>
+            <button class="btn btn-primary" id="sendMessageBtn" disabled>Enviar</button>
+        </div>
+    </div>
+</div>
+</section>
+</div>
+</main>
 
   <!-- Modal do Perfil -->
   <div class="profile-modal" id="profileModal">
@@ -2363,157 +2381,184 @@
 
     // ==================== EVENT LISTENERS ====================
     function setupEventListeners() {
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', logout);
-        }
-
-        const messageInput = document.getElementById('messageInput');
-        const sendMessageBtn = document.getElementById('sendMessageBtn');
-        
-        if (messageInput && sendMessageBtn) {
-            sendMessageBtn.addEventListener('click', sendMessage);
-            
-            messageInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    sendMessage();
-                }
-            });
-        }
-
-        addIconsToButtons();
-        
-        // ✅ VERIFICAR RESET QUANDO A PÁGINA GANHA FOCO
-        window.addEventListener('focus', checkAndResetDailyCounter);
-        
-        // ✅ VERIFICAR PREMIUM PERIODICAMENTE
-        setInterval(async () => {
-            await forcePremiumCheck();
-        }, 30000); // A cada 30 segundos
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', logout);
     }
 
-    async function logout() {
-        try {
-            if (messagesSubscription) {
-                supabase.removeSubscription(messagesSubscription);
+    const messageInput = document.getElementById('messageInput');
+    const sendMessageBtn = document.getElementById('sendMessageBtn');
+    
+    if (messageInput && sendMessageBtn) {
+        sendMessageBtn.addEventListener('click', sendMessage);
+        
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
             }
+        });
+    }
 
-            const { error } = await supabase.auth.signOut();
-            
-            if (error) {
-                console.error('Erro ao fazer logout:', error);
-            }
-            
-            window.location.href = 'login.html';
-            
-        } catch (error) {
+    addIconsToButtons();
+    
+// ✅ VERIFICAR RESET QUANDO A PÁGINA GANHA FOCO
+window.addEventListener('focus', checkAndResetDailyCounter);
+    
+// ✅ VERIFICAR PREMIUM PERIODICAMENTE
+setInterval(async () => {
+    await forcePremiumCheck();
+}, 30000); // A cada 30 segundos
+
+// 🎯 ADICIONAR BOTÃO DE ATUALIZAR
+const refreshBtn = document.getElementById('refreshBtn');
+if (refreshBtn) {
+    refreshBtn.addEventListener('click', refreshConversations);
+}
+}
+
+async function logout() {
+    try {
+        if (messagesSubscription) {
+            supabase.removeSubscription(messagesSubscription);
+        }
+
+        const { error } = await supabase.auth.signOut();
+        
+        if (error) {
             console.error('Erro ao fazer logout:', error);
-            window.location.href = 'login.html';
         }
+        
+        window.location.href = 'login.html';
+        
+    } catch (error) {
+        console.error('Erro ao fazer logout:', error);
+        window.location.href = 'login.html';
+    }
+}
+
+function addIconsToButtons() {
+    const sendMessageBtn = document.getElementById('sendMessageBtn');
+    if (sendMessageBtn) {
+        sendMessageBtn.innerHTML = '📤 Enviar';
     }
 
-    function addIconsToButtons() {
-        const sendMessageBtn = document.getElementById('sendMessageBtn');
-        if (sendMessageBtn) {
-            sendMessageBtn.innerHTML = '📤 Enviar';
-        }
-
-        const sendMessageFromModal = document.getElementById('sendMessageFromModal');
-        const viewFullProfile = document.getElementById('viewFullProfile');
-        
-        if (sendMessageFromModal) {
-            sendMessageFromModal.innerHTML = '💌 Enviar Mensagem';
-        }
-        if (viewFullProfile) {
-            viewFullProfile.innerHTML = '👀 Ver Perfil Completo';
-        }
-
-        const headerButtons = document.querySelectorAll('.user-menu .btn-outline');
-        headerButtons.forEach(btn => {
-            if (btn.textContent.includes('Home')) btn.innerHTML = '🏠 Home';
-            if (btn.textContent.includes('Buscar')) btn.innerHTML = '🔍 Buscar';
-            if (btn.textContent.includes('Sair')) btn.innerHTML = '🚪 Sair';
-        });
-
-        const mobileButtons = document.querySelectorAll('.mobile-nav .btn-outline');
-        mobileButtons.forEach(btn => {
-            if (btn.textContent.includes('Home')) btn.innerHTML = '🏠 Home';
-            if (btn.textContent.includes('Buscar')) btn.innerHTML = '🔍 Buscar';
-            if (btn.textContent.includes('Mensagens')) btn.innerHTML = '💌 Mensagens';
-            if (btn.textContent.includes('Configurações')) btn.innerHTML = '⚙️ Configurações';
-            if (btn.textContent.includes('Sair')) btn.innerHTML = '🚪 Sair';
-        });
+    const sendMessageFromModal = document.getElementById('sendMessageFromModal');
+    const viewFullProfile = document.getElementById('viewFullProfile');
+    
+    if (sendMessageFromModal) {
+        sendMessageFromModal.innerHTML = '💌 Enviar Mensagem';
+    }
+    if (viewFullProfile) {
+        viewFullProfile.innerHTML = '👀 Ver Perfil Completo';
     }
 
-    // ==================== FUNÇÕES AUXILIARES ====================
-    function formatTime(dateString) {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffMs = now - date;
-        const diffMins = Math.floor(diffMs / (1000 * 60));
-        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const headerButtons = document.querySelectorAll('.user-menu .btn-outline');
+    headerButtons.forEach(btn => {
+        if (btn.textContent.includes('Home')) btn.innerHTML = '🏠 Home';
+        if (btn.textContent.includes('Buscar')) btn.innerHTML = '🔍 Buscar';
+        if (btn.textContent.includes('Sair')) btn.innerHTML = '🚪 Sair';
+    });
 
-        if (diffMins < 1) return 'Agora';
-        if (diffMins < 60) return `${diffMins}m`;
-        if (diffHours < 24) return `${diffHours}h`;
-        if (diffDays === 1) return 'Ontem';
-        if (diffDays < 7) return `${diffDays}d`;
+    const mobileButtons = document.querySelectorAll('.mobile-nav .btn-outline');
+    mobileButtons.forEach(btn => {
+        if (btn.textContent.includes('Home')) btn.innerHTML = '🏠 Home';
+        if (btn.textContent.includes('Buscar')) btn.innerHTML = '🔍 Buscar';
+        if (btn.textContent.includes('Mensagens')) btn.innerHTML = '💌 Mensagens';
+        if (btn.textContent.includes('Configurações')) btn.innerHTML = '⚙️ Configurações';
+        if (btn.textContent.includes('Sair')) btn.innerHTML = '🚪 Sair';
+    });
+}
+
+// ==================== FUNÇÕES AUXILIARES ====================
+function formatTime(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 1) return 'Agora';
+    if (diffMins < 60) return `${diffMins}m`;
+    if (diffHours < 24) return `${diffHours}h`;
+    if (diffDays === 1) return 'Ontem';
+    if (diffDays < 7) return `${diffDays}d`;
+    
+    return date.toLocaleDateString('pt-BR');
+}
+
+// 🎯 ADICIONAR FUNÇÃO DE ATUALIZAR CONVERSAS
+async function refreshConversations() {
+    try {
+        console.log('🔄 Atualizando conversas manualmente...');
         
-        return date.toLocaleDateString('pt-BR');
+        // Recarregar conversas
+        await loadConversations();
+        
+        // Se tiver uma conversa selecionada, recarregar mensagens também
+        if (currentChatPartner) {
+            await loadMessages(currentChatPartner.id);
+        }
+        
+        showNotification('✅ Conversas atualizadas!', 'success');
+        
+    } catch (error) {
+        console.error('Erro ao atualizar:', error);
+        showNotification('❌ Erro ao atualizar', 'error');
     }
+}
 
-    // ==================== ESTILOS DAS NOTIFICAÇÕES ====================
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
+// ==================== ESTILOS DAS NOTIFICAÇÕES ====================
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
         }
-        
-        .message-counter {
-            background: #d1656d;
-            color: white;
-            border-radius: 12px;
-            padding: 2px 8px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            margin-left: 8px;
+        to {
+            transform: translateX(0);
+            opacity: 1;
         }
-        
-        .notification {
-            position: fixed;
-            top: 100px;
-            right: 20px;
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 10000;
-            max-width: 300px;
-            animation: slideIn 0.3s ease;
-            font-weight: 500;
-            color: white;
-        }
-        
-        .notification-success {
-            background: #48bb78;
-        }
-        
-        .notification-error {
-            background: #f56565;
-        }
-        
-        .notification-info {
-            background: #4299e1;
-        }
-    `;
-    document.head.appendChild(style);
+    }
+    
+    .message-counter {
+        background: #d1656d;
+        color: white;
+        border-radius: 12px;
+        padding: 2px 8px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        margin-left: 8px;
+    }
+    
+    .notification {
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10000;
+        max-width: 300px;
+        animation: slideIn 0.3s ease;
+        font-weight: 500;
+        color: white;
+    }
+    
+    .notification-success {
+        background: #48bb78;
+    }
+    
+    .notification-error {
+        background: #f56565;
+    }
+    
+    .notification-info {
+        background: #4299e1;
+    }
+`;
+document.head.appendChild(style);
 </script>
 
  
