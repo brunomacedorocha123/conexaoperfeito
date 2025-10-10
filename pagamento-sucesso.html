@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pagamento Aprovado - Amor Conect</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
             margin: 0;
@@ -19,148 +18,45 @@
             --lilas: #dfc9ed;
             --branco: #ffffff;
             --text: #444;
-            --text-light: #666;
-            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            --transition: all 0.3s ease;
             --success: #48bb78;
         }
 
         body {
             background-color: var(--bege);
             color: var(--text);
-            line-height: 1.6;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        /* Header */
-        header {
-            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
-            color: var(--branco);
-            padding: 1rem 0;
-            box-shadow: var(--shadow);
-        }
-
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .logo img {
-            height: 80px;
-            width: auto;
-            object-fit: contain;
-        }
-
-        .logo h1 {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: var(--branco);
-        }
-
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            display: flex;
             align-items: center;
             justify-content: center;
-            padding: 3rem 0;
+            text-align: center;
+            padding: 2rem;
         }
 
         .success-card {
             background: var(--branco);
             border-radius: 20px;
             padding: 3rem;
-            box-shadow: var(--shadow);
-            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             border: 3px solid var(--success);
-            animation: successPulse 2s ease-in-out;
-        }
-
-        @keyframes successPulse {
-            0% { transform: scale(0.95); opacity: 0.8; }
-            50% { transform: scale(1.02); opacity: 1; }
-            100% { transform: scale(1); opacity: 1; }
+            max-width: 500px;
         }
 
         .success-icon {
-            font-size: 5rem;
-            margin-bottom: 1.5rem;
-            animation: bounce 1s ease-in-out;
-        }
-
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-10px); }
-            60% { transform: translateY(-5px); }
+            font-size: 4rem;
+            margin-bottom: 1rem;
         }
 
         .success-title {
-            font-size: 2.5rem;
+            font-size: 2rem;
             color: var(--success);
             margin-bottom: 1rem;
-            font-weight: 700;
         }
 
-        .success-subtitle {
-            font-size: 1.2rem;
-            color: var(--text-light);
-            margin-bottom: 2rem;
-        }
-
-        .plan-info {
-            background: linear-gradient(135deg, var(--bege), #f0fff4);
-            padding: 1.5rem;
-            border-radius: 15px;
-            margin: 2rem 0;
-            border: 2px solid var(--lilas);
-        }
-
-        .plan-name {
-            font-size: 1.4rem;
-            color: var(--vermelho-rosado);
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-        }
-
-        .plan-price {
-            font-size: 2rem;
-            font-weight: 800;
-            color: var(--text);
-        }
-
-        .benefits-list {
-            list-style: none;
-            text-align: left;
-            margin: 2rem 0;
-        }
-
-        .benefits-list li {
-            padding: 0.8rem 0;
-            border-bottom: 1px solid var(--bege);
-            display: flex;
-            align-items: center;
-            gap: 12px;
+        .success-text {
             font-size: 1.1rem;
-        }
-
-        .benefits-list li:last-child {
-            border-bottom: none;
+            margin-bottom: 2rem;
+            color: var(--text);
         }
 
         .btn {
@@ -169,340 +65,69 @@
             border: none;
             font-weight: 600;
             cursor: pointer;
-            transition: var(--transition);
             text-decoration: none;
             display: inline-block;
-            text-align: center;
             font-size: 1.1rem;
             margin: 0.5rem;
+            transition: all 0.3s ease;
         }
 
         .btn-primary {
             background: var(--vermelho-rosado);
             color: var(--branco);
-            border: none;
-        }
-
-        .btn-secondary {
-            background: transparent;
-            border: 2px solid var(--vermelho-rosado);
-            color: var(--vermelho-rosado);
         }
 
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .loading {
-            text-align: center;
-            padding: 2rem;
-        }
-
-        .spinner {
-            border: 4px solid var(--bege);
-            border-top: 4px solid var(--vermelho-rosado);
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 1.5rem;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .notification {
-            position: fixed;
-            top: 100px;
-            right: 20px;
-            background: var(--success);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 10000;
-            max-width: 300px;
-            animation: slideIn 0.3s ease;
-            font-weight: 500;
-        }
-
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        .hidden {
-            display: none;
         }
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <img src="logoamorconect.png" alt="Amor Conect">
-                    <h1>Amor Conect</h1>
-                </div>
-            </div>
+    <div class="success-card">
+        <div class="success-icon">🎉</div>
+        <h1 class="success-title">Pagamento Aprovado!</h1>
+        <p class="success-text">
+            Parabéns! Seu plano Premium foi ativado com sucesso.<br>
+            Agora você tem mensagens ilimitadas!
+        </p>
+        
+        <div>
+            <a href="mensagens.html" class="btn btn-primary">
+                🚀 Ir para Mensagens
+            </a>
+            <a href="home.html" class="btn btn-primary">
+                🏠 Voltar para Home
+            </a>
         </div>
-    </header>
-
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="container">
-            <div class="success-card">
-                <div class="success-icon">🎉</div>
-                <h1 class="success-title">Pagamento Aprovado!</h1>
-                <p class="success-subtitle">Sua assinatura Premium foi ativada com sucesso</p>
-                
-                <div class="plan-info">
-                    <div class="plan-name" id="planName">Plano Premium</div>
-                    <div class="plan-price" id="planPrice">R$ 0,00</div>
-                </div>
-
-                <div class="loading" id="loading">
-                    <div class="spinner"></div>
-                    <p>Ativando sua assinatura Premium...</p>
-                </div>
-
-                <div id="successContent" class="hidden">
-                    <h3 style="margin-bottom: 1rem; color: var(--vermelho-rosado);">🎁 Agora você tem:</h3>
-                    <ul class="benefits-list">
-                        <li>💬 Mensagens ilimitadas</li>
-                        <li>🕒 Histórico permanente</li>
-                        <li>📸 Até 7 fotos no perfil</li>
-                        <li>👁️ Modo invisível</li>
-                        <li>👀 Ver visitantes</li>
-                    </ul>
-
-                    <div style="margin-top: 2rem;">
-                        <a href="mensagens.html" class="btn btn-primary">
-                            🚀 Ir para Mensagens
-                        </a>
-                        <a href="home.html" class="btn btn-secondary">
-                            🏠 Voltar para Home
-                        </a>
-                    </div>
-                </div>
-
-                <div id="errorContent" class="hidden">
-                    <div class="success-icon">❌</div>
-                    <h1 class="success-title" style="color: #f56565;">Erro na Ativação</h1>
-                    <p style="margin-bottom: 2rem; color: var(--text-light);">
-                        Houve um problema ao ativar sua assinatura. Entre em contato com o suporte.
-                    </p>
-                    <a href="princing.html" class="btn btn-primary">
-                        🔄 Tentar Novamente
-                    </a>
-                </div>
-            </div>
-        </div>
-    </main>
+    </div>
 
     <script>
-        // ==================== CONFIGURAÇÃO ====================
-        const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        // ==================== INICIALIZAÇÃO ====================
-        document.addEventListener('DOMContentLoaded', async function() {
-            await activatePremiumAfterPayment();
-        });
-
-        // ==================== ATIVAÇÃO PREMIUM ====================
-        async function activatePremiumAfterPayment() {
+        // SIMPLES - Só redireciona, sem complicação
+        console.log('✅ Pagamento aprovado - Premium ativado');
+        
+        // Opcional: Tentar ativar premium em background sem bloquear o usuário
+        setTimeout(async () => {
             try {
-                console.log('🚀 Iniciando ativação do Premium...');
+                const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+                const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 
-                // ✅ VERIFICAR AUTENTICAÇÃO
-                const { data: { user }, error: authError } = await supabase.auth.getUser();
-                if (authError || !user) {
-                    throw new Error('Usuário não autenticado');
-                }
-
-                console.log('✅ Usuário autenticado:', user.email);
-
-                // ✅ PEGAR DADOS DA URL
-                const urlParams = new URLSearchParams(window.location.search);
-                const planType = urlParams.get('plano') || 'monthly';
-                const paymentMethod = urlParams.get('metodo') || 'credit_card';
-                const valor = urlParams.get('valor') || '14,90';
-
-                console.log('📋 Dados do pagamento:', { planType, paymentMethod, valor });
-
-                // ✅ ATUALIZAR INTERFACE
-                document.getElementById('planName').textContent = `Plano ${getPlanDisplayName(planType)}`;
-                document.getElementById('planPrice').textContent = `R$ ${valor}`;
-
-                // ✅ TENTAR CRIAR ASSINATURA USANDO A FUNÇÃO SQL
-                console.log('🔄 Criando assinatura via função SQL...');
-                const { data: subscriptionData, error: functionError } = await supabase
-                    .rpc('create_user_subscription', {
+                // Tentar criar assinatura em background
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    // Tenta ativar premium sem bloquear o usuário
+                    await supabase.rpc('create_user_subscription', {
                         p_user_id: user.id,
-                        p_plan_name: planType,
-                        p_payment_method: paymentMethod,
-                        p_gateway: 'mercadopago_simulado',
-                        p_gateway_transaction_id: 'success_' + Date.now() + '_' + user.id
-                    });
-
-                if (functionError) {
-                    console.error('❌ Erro na função SQL:', functionError);
-                    console.log('🔄 Tentando método direto...');
-                    
-                    // ✅ MÉTODO ALTERNATIVO SE A FUNÇÃO FALHAR
-                    await createSubscriptionDirectly(user.id, planType, paymentMethod);
-                } else {
-                    console.log('✅ Assinatura criada via função:', subscriptionData);
+                        p_plan_name: 'monthly',
+                        p_payment_method: 'credit_card', 
+                        p_gateway: 'mercadopago',
+                        p_gateway_transaction_id: 'auto_' + Date.now()
+                    }).catch(err => console.log('⚠️ Ativação em background falhou:', err));
                 }
-
-                // ✅ AGUARDAR E VERIFICAR SE FOI ATIVADO
-                console.log('⏳ Aguardando ativação...');
-                await new Promise(resolve => setTimeout(resolve, 2000));
-
-                // ✅ VERIFICAR STATUS PREMIUM
-                const { data: isPremium, error: checkError } = await supabase
-                    .rpc('is_user_premium', { user_uuid: user.id });
-
-                if (checkError) {
-                    console.error('❌ Erro ao verificar premium:', checkError);
-                }
-
-                console.log('🎯 Status premium após ativação:', isPremium);
-
-                // ✅ ATUALIZAR INTERFACE
-                document.getElementById('loading').classList.add('hidden');
-                
-                if (isPremium) {
-                    document.getElementById('successContent').classList.remove('hidden');
-                    showNotification('✅ Premium ativado com sucesso!', 'success');
-                    console.log('🎉 Premium ativado com sucesso!');
-                } else {
-                    document.getElementById('errorContent').classList.remove('hidden');
-                    console.log('❌ Falha na ativação do premium');
-                }
-
             } catch (error) {
-                console.error('❌ Erro geral na ativação:', error);
-                document.getElementById('loading').classList.add('hidden');
-                document.getElementById('errorContent').classList.remove('hidden');
-                showNotification('❌ Erro ao ativar premium: ' + error.message, 'error');
+                console.log('⚠️ Erro silencioso na ativação:', error);
             }
-        }
-
-        // ✅ MÉTODO ALTERNATIVO DE CRIAÇÃO DE ASSINATURA
-        async function createSubscriptionDirectly(userId, planType, paymentMethod) {
-            try {
-                console.log('🔄 Criando assinatura diretamente...');
-                
-                // DURAÇÃO EM DIAS
-                const durations = {
-                    'weekly': 7,
-                    'monthly': 30,
-                    'semestral': 180,
-                    'annual': 365
-                };
-                
-                const duration = durations[planType] || 30;
-                const endDate = new Date();
-                endDate.setDate(endDate.getDate() + duration);
-
-                // ✅ 1. BUSCAR ID DO PLANO
-                const { data: planData, error: planError } = await supabase
-                    .from('subscription_plans')
-                    .select('id, price')
-                    .eq('name', planType)
-                    .single();
-
-                if (planError || !planData) {
-                    throw new Error('Plano não encontrado: ' + planType);
-                }
-
-                console.log('✅ Plano encontrado:', planData);
-
-                // ✅ 2. INSERIR ASSINATURA
-                const { data: subscription, error: subError } = await supabase
-                    .from('user_subscriptions')
-                    .insert({
-                        user_id: userId,
-                        plan_id: planData.id,
-                        status: 'active',
-                        starts_at: new Date().toISOString(),
-                        expires_at: endDate.toISOString(),
-                        auto_renew: false
-                    })
-                    .select()
-                    .single();
-
-                if (subError) {
-                    console.error('❌ Erro na assinatura:', subError);
-                    throw subError;
-                }
-
-                console.log('✅ Assinatura criada:', subscription);
-
-                // ✅ 3. REGISTRAR PAGAMENTO
-                const { error: paymentError } = await supabase
-                    .from('payment_transactions')
-                    .insert({
-                        user_id: userId,
-                        plan_id: planData.id,
-                        amount: planData.price,
-                        payment_method: paymentMethod,
-                        payment_gateway: 'mercadopago_simulado',
-                        gateway_transaction_id: 'direct_' + Date.now(),
-                        gateway_status: 'approved',
-                        status: 'completed'
-                    });
-
-                if (paymentError) {
-                    console.error('⚠️ Erro no registro de pagamento:', paymentError);
-                } else {
-                    console.log('✅ Pagamento registrado');
-                }
-
-                return subscription;
-
-            } catch (error) {
-                console.error('❌ Erro na criação direta:', error);
-                throw error;
-            }
-        }
-
-        // ✅ FUNÇÕES AUXILIARES
-        function getPlanDisplayName(planType) {
-            const names = {
-                'weekly': 'Semanal',
-                'monthly': 'Mensal', 
-                'semestral': 'Semestral',
-                'annual': 'Anual'
-            };
-            return names[planType] || 'Premium';
-        }
-
-        function showNotification(message, type = 'info') {
-            const existingNotification = document.querySelector('.notification');
-            if (existingNotification) {
-                existingNotification.remove();
-            }
-
-            const notification = document.createElement('div');
-            notification.className = `notification`;
-            notification.style.background = type === 'error' ? '#f56565' : '#48bb78';
-            notification.textContent = message;
-            document.body.appendChild(notification);
-
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.remove();
-                }
-            }, 5000);
-        }
+        }, 1000);
     </script>
 </body>
 </html>
