@@ -2487,12 +2487,11 @@ function formatTime(dateString) {
     return date.toLocaleDateString('pt-BR');
 }
 
-// 🎯 SOLUÇÃO DIRETA - ATUALIZA SÓ O QUADRO DE MENSAGENS
+// 🎯 SOLUÇÃO COMPLETA - ATUALIZA MENSAGENS SEM DEPENDÊNCIAS
 async function refreshConversations() {
     try {
-        console.log('🔄 ATUALIZANDO QUADRO DE MENSAGENS...');
+        console.log('🔄 ATUALIZANDO MENSAGENS...');
         
-        // Se não tem conversa selecionada, não faz nada
         if (!currentChatPartner) {
             showNotification('ℹ️ Selecione uma conversa primeiro', 'info');
             return;
@@ -2509,8 +2508,8 @@ async function refreshConversations() {
             `;
         }
         
-        // ✅ BUSCAR MENSAGENS MAIS RECENTES DIRETAMENTE
-        console.log('📊 Buscando mensagens atualizadas...');
+        // ✅ BUSCAR MENSAGENS DIRETAMENTE
+        console.log('📊 Buscando mensagens para:', currentChatPartner.id);
         const { data: freshMessages, error } = await supabase
             .from('messages')
             .select('*')
@@ -2524,13 +2523,14 @@ async function refreshConversations() {
 
         console.log(`✅ ${freshMessages?.length || 0} mensagens encontradas`);
         
-        // ✅ ATUALIZAR AS MENSAGENS NA TELA
+        // ✅ RENDERIZAR MENSAGENS DIRETAMENTE
         if (freshMessages && freshMessages.length > 0) {
-            await loadMessagesUserAvatars(freshMessages);
-            renderMessages(freshMessages);
+            await renderMessagesDirectly(freshMessages);
             showNotification(`✅ ${freshMessages.length} mensagens carregadas`, 'success');
         } else {
-            chatMessages.innerHTML = '<div class="no-messages">Nenhuma mensagem encontrada</div>';
+            if (chatMessages) {
+                chatMessages.innerHTML = '<div class="no-messages">Nenhuma mensagem encontrada</div>';
+            }
             showNotification('ℹ️ Nenhuma mensagem nova', 'info');
         }
         
@@ -2538,26 +2538,155 @@ async function refreshConversations() {
         console.error('❌ Erro ao atualizar:', error);
         showNotification('❌ Erro ao carregar mensagens', 'error');
         
-        // Restaurar tela de erro
         const chatMessages = document.getElementById('chatMessages');
         if (chatMessages) {
-            chatMessages.innerHTML = '<div class="no-messages">Erro ao carregar</div>';
+            chatMessages.innerHTML = '<div class="no-messages">Erro ao carregar mensagens</div>';
         }
     }
 }
 
-// ==================== ESTILOS DAS NOTIFICAÇÕES ====================
+// ✅ FUNÇÃO PARA RENDERIZAR MENSAGENS DIRETAMENTE
+async function renderMessagesDirectly(messages) {
+    const chatMessages = document.getElementById('chatMessages');
+    const noMessages = document.getElementById('noMessages');
+    
+    if (!chatMessages) return;
+    
+    if (messages.length === 0) {
+        if (noMessages) noMessages.classList.remove('hidden');
+        chatMessages.innerHTML = '';
+        return;
+    }
+    
+    if (noMessages) noMessages.classList.add('hidden');
+    
+    // Carregar avatares primeiro
+    await loadAvatarsForMessages(messages);
+    
+    // Renderizar mensagens
+    chatMessages.innerHTML = messages.map(message => {
+        const isSent = message.sender_id === currentUser.id;
+        
+        let senderAvatar = null;
+        let senderName = 'Usuário';
+        
+        if (isSent) {
+            const currentUserInfo = userAvatarsCache.get(currentUser.id);
+            senderName = currentUserInfo?.name || 'Você';
+            senderAvatar = currentUserInfo?.avatar || null;
+        } else {
+            const partnerInfo = userAvatarsCache.get(currentChatPartner.id);
+            senderName = partnerInfo?.name || currentChatPartner?.name || 'Usuário';
+            senderAvatar = partnerInfo?.avatar || null;
+        }
+
+        const avatarHtml = senderAvatar ? 
+            `<img class="message-avatar-img" src="${senderAvatar}" alt="${senderName}" style="display: block;">` :
+            senderName.charAt(0).toUpperCase();
+
+        const avatarStyle = senderAvatar ? 
+            `style="background-image: url(${senderAvatar}); background-size: cover; background-position: center;"` : 
+            '';
+
+        if (isSent) {
+            return `
+                <div class="message-container sent">
+                    <div class="message sent">
+                        <div class="message-text">${message.content}</div>
+                        <div class="message-time">${formatTime(message.created_at)}</div>
+                    </div>
+                    <div class="message-avatar" ${avatarStyle}>
+                        ${avatarHtml}
+                    </div>
+                </div>
+            `;
+        } else {
+            return `
+                <div class="message-container received">
+                    <div class="message-avatar" ${avatarStyle}>
+                        ${avatarHtml}
+                    </div>
+                    <div class="message received">
+                        <div class="message-text">${message.content}</div>
+                        <div class="message-time">${formatTime(message.created_at)}</div>
+                    </div>
+                </div>
+            `;
+        }
+    }).join('');
+
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// ✅ FUNÇÃO PARA CARREGAR AVATARES
+async function loadAvatarsForMessages(messages) {
+    const userIds = new Set();
+    
+    messages.forEach(message => {
+        userIds.add(message.sender_id);
+        userIds.add(message.receiver_id);
+    });
+
+    // Carregar avatar do usuário atual se não estiver em cache
+    if (!userAvatarsCache.has(currentUser.id)) {
+        const { data: currentUserProfile } = await supabase
+            .from('profiles')
+            .select('nickname, avatar_url')
+            .eq('id', currentUser.id)
+            .single();
+            
+        if (currentUserProfile) {
+            let currentUserAvatar = null;
+            if (currentUserProfile.avatar_url) {
+                const { data } = supabase.storage
+                    .from('avatars')
+                    .getPublicUrl(currentUserProfile.avatar_url);
+                currentUserAvatar = data?.publicUrl || null;
+            }
+            
+            userAvatarsCache.set(currentUser.id, {
+                name: currentUserProfile.nickname || 'Você',
+                avatar: currentUserAvatar
+            });
+        }
+    }
+
+    // Carregar avatar do parceiro se não estiver em cache
+    if (currentChatPartner && !userAvatarsCache.has(currentChatPartner.id)) {
+        const { data: partnerProfile } = await supabase
+            .from('profiles')
+            .select('nickname, avatar_url')
+            .eq('id', currentChatPartner.id)
+            .single();
+            
+        if (partnerProfile) {
+            let partnerAvatar = null;
+            if (partnerProfile.avatar_url) {
+                const { data } = supabase.storage
+                    .from('avatars')
+                    .getPublicUrl(partnerProfile.avatar_url);
+                partnerAvatar = data?.publicUrl || null;
+            }
+            
+            userAvatarsCache.set(currentChatPartner.id, {
+                name: partnerProfile.nickname || 'Usuário',
+                avatar: partnerAvatar
+            });
+        }
+    }
+}
+
+// ==================== ESTILOS ====================
 const style = document.createElement('style');
 style.textContent = `
     @keyframes slideIn {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
     }
     
     .message-counter {
@@ -2584,17 +2713,9 @@ style.textContent = `
         color: white;
     }
     
-    .notification-success {
-        background: #48bb78;
-    }
-    
-    .notification-error {
-        background: #f56565;
-    }
-    
-    .notification-info {
-        background: #4299e1;
-    }
+    .notification-success { background: #48bb78; }
+    .notification-error { background: #f56565; }
+    .notification-info { background: #4299e1; }
     
     /* Loading no chat */
     .chat-messages .loading {
