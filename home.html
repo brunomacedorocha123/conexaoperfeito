@@ -945,8 +945,8 @@ footer {
     </div>
   </footer>
 
-  <script>
- // Configuração do Supabase
+ <script>
+// Configuração do Supabase
 const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 
@@ -1026,11 +1026,18 @@ async function checkAuth() {
         await loadUserData();
         await loadRealUsers();
         updateStats();
+        startStatsAutoUpdate(); // ✅ INICIAR ATUALIZAÇÃO AUTOMÁTICA
         
     } catch (error) {
         console.error('Erro na autenticação:', error);
         window.location.href = 'login.html';
     }
+}
+
+// ✅ ADICIONAR ATUALIZAÇÃO PERIÓDICA DAS ESTATÍSTICAS
+function startStatsAutoUpdate() {
+    // Atualizar stats a cada 30 segundos
+    setInterval(updateStats, 30000);
 }
 
 // ✅ CARREGAR FOTO DO USUÁRIO
@@ -1041,18 +1048,17 @@ async function loadUserPhoto(avatarUrl) {
         }
 
         console.log('🔄 Buscando foto:', avatarUrl);
-        const { data, error } = await supabase.storage
+        const { data } = supabase.storage
             .from('avatars')
-            .download(avatarUrl);
+            .getPublicUrl(avatarUrl);
 
-        if (error) {
-            console.log('❌ Erro ao carregar foto:', error);
+        if (data && data.publicUrl) {
+            console.log('✅ URL pública encontrada:', data.publicUrl);
+            return data.publicUrl;
+        } else {
+            console.log('❌ Não foi possível obter URL pública');
             return null;
         }
-
-        const photoUrl = URL.createObjectURL(data);
-        console.log('✅ Foto carregada com sucesso');
-        return photoUrl;
 
     } catch (error) {
         console.error('❌ Erro ao carregar foto:', error);
@@ -1109,13 +1115,18 @@ async function updateUserAvatar(displayName, profile) {
         if (!avatarElement) continue;
         
         const userAvatarFallback = avatarElement.querySelector('.user-avatar-fallback');
+        const userAvatarImg = avatarElement.querySelector('.user-avatar-img');
+        
+        if (!userAvatarFallback || !userAvatarImg) continue;
+
+        userAvatarImg.style.display = 'none';
+        userAvatarFallback.style.display = 'flex';
         
         if (profile?.avatar_url) {
             const photoUrl = await loadUserPhoto(profile.avatar_url);
             if (photoUrl) {
-                const imgElement = avatarElement.querySelector('.user-avatar-img');
-                imgElement.src = photoUrl;
-                imgElement.style.display = 'block';
+                userAvatarImg.src = photoUrl;
+                userAvatarImg.style.display = 'block';
                 userAvatarFallback.style.display = 'none';
             }
         }
@@ -1206,31 +1217,24 @@ async function createUserCardWithPhoto(user) {
     
     // ✅ CARREGAR FOTO DO USUÁRIO
     let avatarHtml = '';
+    let photoUrl = null;
+    
     if (user.avatar_url) {
-        const photoUrl = await loadUserPhoto(user.avatar_url);
-        if (photoUrl) {
-            avatarHtml = `
-                <div class="user-card-avatar" style="background: none;">
-                    <img src="${photoUrl}" alt="${nickname}" class="user-card-avatar-img" style="display: block;">
-                    <div class="user-card-avatar-fallback" style="display: none;">${nickname.charAt(0).toUpperCase()}</div>
-                </div>
-            `;
-            console.log(`✅ Foto carregada para: ${nickname}`);
-        } else {
-            avatarHtml = `
-                <div class="user-card-avatar">
-                    <div class="user-card-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
-                </div>
-            `;
-            console.log(`❌ Sem foto para: ${nickname}`);
-        }
+        photoUrl = await loadUserPhoto(user.avatar_url);
+    }
+    
+    if (photoUrl) {
+        avatarHtml = `
+            <div class="user-card-avatar" style="background-image: url('${photoUrl}'); background-size: cover; background-position: center;">
+                <div class="user-card-avatar-fallback" style="display: none;">${nickname.charAt(0).toUpperCase()}</div>
+            </div>
+        `;
     } else {
         avatarHtml = `
             <div class="user-card-avatar">
                 <div class="user-card-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
             </div>
         `;
-        console.log(`❌ Sem avatar_url para: ${nickname}`);
     }
 
     // Informações públicas para mostrar
@@ -1265,28 +1269,43 @@ async function createUserCardWithPhoto(user) {
     `;
 }
 
-// ✅ FUNÇÃO PARA VISUALIZAR PERFIL (AGORA FUNCIONAL)
+// ==================== FUNÇÕES DE INTERAÇÃO CORRIGIDAS ====================
+function sendMessage(userId) {
+    console.log('💌 Redirecionando para mensagens com usuário:', userId);
+    
+    if (!isProfileComplete()) {
+        alert('📝 Complete seu perfil primeiro para enviar mensagens!');
+        window.location.href = 'painel.html';
+        return;
+    }
+    
+    // ✅ CORREÇÃO: REDIRECIONAR PARA PÁGINA DE MENSAGENS (igual ao busca.html)
+    localStorage.setItem('openChatWithUserId', userId);
+    window.location.href = 'mensagens.html';
+}
+
 function viewProfile(userId) {
+    console.log('👀 Visualizando perfil:', userId);
+    
     if (!isProfileComplete()) {
         alert('📝 Complete seu perfil primeiro para ver outros perfis!');
         window.location.href = 'painel.html';
         return;
     }
     
-    // Salvar o ID do perfil a ser visualizado e redirecionar
     localStorage.setItem('viewingProfileId', userId);
     window.location.href = 'perfil.html';
 }
 
-// ✅ VERIFICAR SE PERFIL ESTÁ COMPLETO
 function isProfileComplete() {
+    // ✅ VERIFICAÇÃO SIMPLIFICADA IGUAL AO BUSCA.HTML
     return userProfile &&
-        userProfile.full_name &&
-        userProfile.full_name.trim() !== '' &&
-        userProfile.birth_date;
+           userProfile.full_name &&
+           userProfile.full_name.trim() !== '' &&
+           userProfile.birth_date;
 }
 
-// ✅ ATUALIZAR ESTATÍSTICAS REAIS
+// ✅ ATUALIZAR ESTATÍSTICAS REAIS - FUNÇÃO MELHORADA
 async function updateStats() {
     try {
         // Total de usuários
@@ -1294,7 +1313,7 @@ async function updateStats() {
             .from('profiles')
             .select('*', { count: 'exact', head: true });
         
-        // Mensagens não lidas
+        // ✅ CONTAGEM DE MENSAGENS NÃO LIDAS - MELHORADA
         const { count: newMessages } = await supabase
             .from('messages')
             .select('*', { count: 'exact', head: true })
@@ -1316,20 +1335,7 @@ async function updateStats() {
     }
 }
 
-// ✅ ENVIAR MENSAGEM
-function sendMessage(userId) {
-    if (!isProfileComplete()) {
-        alert('📝 Complete seu perfil primeiro para enviar mensagens!');
-        window.location.href = 'painel.html';
-        return;
-    }
-    
-    const message = prompt('Digite sua mensagem:');
-    if (message && message.trim()) {
-        sendMessageToUser(userId, message.trim());
-    }
-}
-
+// ✅ ENVIAR MENSAGEM - FUNÇÃO ATUALIZADA
 async function sendMessageToUser(receiverId, content) {
     try {
         const { error } = await supabase
@@ -1343,6 +1349,9 @@ async function sendMessageToUser(receiverId, content) {
             ]);
 
         if (error) throw error;
+        
+        // ✅ ATUALIZAR CONTADOR APÓS ENVIAR MENSAGEM
+        await updateStats();
         
         alert('Mensagem enviada com sucesso! 💌');
         
@@ -1412,7 +1421,10 @@ function formatLookingFor(lookingFor) {
 
 // Configurar event listeners
 function setupEventListeners() {
-    document.getElementById('logoutBtn').addEventListener('click', logout);
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', logout);
+    }
     
     // Prevenir zoom em inputs no iOS
     document.addEventListener('touchstart', function() {}, { passive: true });
@@ -1430,6 +1442,13 @@ async function logout() {
         alert('Erro ao fazer logout. Tente novamente.');
     }
 }
+
+// ==================== EXPORTAR FUNÇÕES PARA O HTML ====================
+window.sendMessage = sendMessage;
+window.viewProfile = viewProfile;
+window.sendMessageToUser = sendMessageToUser;
+
+console.log('✅ Home.js carregado e pronto!');
 </script>
 </body>
 </html>
