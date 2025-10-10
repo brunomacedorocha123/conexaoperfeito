@@ -2487,9 +2487,15 @@ function formatTime(dateString) {
     return date.toLocaleDateString('pt-BR');
 }
 
-// 🎯 SOLUÇÃO RADICAL - RECARREGA A PÁGINA DE VERDADE
+// 🎯 SOLUÇÃO DEFINITIVA - RECARREGA MANTENDO A CONVERSA
 async function refreshConversations() {
-    console.log('🔄 RECARREGANDO PÁGINA...');
+    console.log('🔄 RECARREGANDO PÁGINA INTELIGENTE...');
+    
+    // Salvar conversa atual antes de recarregar
+    if (currentChatPartner) {
+        localStorage.setItem('lastOpenChat', currentChatPartner.id);
+        console.log('💾 Conversa salva:', currentChatPartner.id);
+    }
     
     // Mostrar que está atualizando
     showNotification('🔄 Atualizando conversas...', 'info');
@@ -2498,7 +2504,22 @@ async function refreshConversations() {
     setTimeout(() => {
         // Recarrega a página completamente
         window.location.reload();
-    }, 500);
+    }, 800);
+}
+
+// Função auxiliar para verificar se conversa existe
+async function conversationExists(partnerId) {
+    try {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', partnerId)
+            .single();
+            
+        return !error && data;
+    } catch (error) {
+        return false;
+    }
 }
 
 // ==================== ESTILOS DAS NOTIFICAÇÕES ====================
