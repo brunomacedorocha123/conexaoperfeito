@@ -1002,82 +1002,36 @@
     let currentFilters = {};
 
     document.addEventListener('DOMContentLoaded', function() {
+        console.log('🚀 Inicializando busca...');
         checkAuth();
-        setupMobileMenu();
     });
-
-    // ==================== MENU MOBILE ====================
-    function setupMobileMenu() {
-        const hamburgerBtn = document.getElementById('hamburgerBtn');
-        const mobileMenu = document.getElementById('mobileMenu');
-        const closeMobileMenu = document.getElementById('closeMobileMenu');
-        const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
-
-        if (!hamburgerBtn || !mobileMenu) {
-            console.error('Elementos do menu mobile não encontrados');
-            return;
-        }
-
-        hamburgerBtn.addEventListener('click', () => {
-            mobileMenu.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        });
-
-        closeMobileMenu.addEventListener('click', () => {
-            mobileMenu.style.display = 'none';
-            document.body.style.overflow = 'auto';
-        });
-
-        if (mobileLogoutBtn) {
-            mobileLogoutBtn.addEventListener('click', logout);
-        }
-
-        // Fechar menu ao clicar em um link
-        mobileMenu.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => {
-                mobileMenu.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            });
-        });
-
-        // Verificar tamanho da tela
-        function checkScreenSize() {
-            if (window.innerWidth <= 768) {
-                const userMenu = document.querySelector('.user-menu');
-                if (userMenu) userMenu.style.display = 'none';
-                if (hamburgerBtn) hamburgerBtn.style.display = 'flex';
-            } else {
-                const userMenu = document.querySelector('.user-menu');
-                if (userMenu) userMenu.style.display = 'flex';
-                if (hamburgerBtn) hamburgerBtn.style.display = 'none';
-                if (mobileMenu) mobileMenu.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            }
-        }
-
-        window.addEventListener('resize', checkScreenSize);
-        checkScreenSize();
-    }
 
     // ==================== AUTENTICAÇÃO ====================
     async function checkAuth() {
         try {
             const { data: { user }, error } = await supabase.auth.getUser();
             
-            if (error) throw error;
+            if (error) {
+                console.error('❌ Erro de autenticação:', error);
+                throw error;
+            }
             
             if (!user) {
+                console.log('❌ Usuário não logado, redirecionando...');
                 window.location.href = 'login.html';
                 return;
             }
             
             currentUser = user;
+            console.log('✅ Usuário autenticado:', user.email);
+            
             await loadUserData();
             setupEventListeners();
+            setupMobileMenu();
             await loadInitialUsers();
             
         } catch (error) {
-            console.error('Erro na autenticação:', error);
+            console.error('❌ Erro na autenticação:', error);
             window.location.href = 'login.html';
         }
     }
@@ -1085,16 +1039,23 @@
     // ==================== DADOS DO USUÁRIO ====================
     async function loadUserData() {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
+            console.log('👤 Carregando dados do usuário...');
             
+            // Primeiro tenta pegar do perfil
+            const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('nickname, avatar_url')
+                .eq('id', currentUser.id)
+                .single();
+
             let displayName = 'Usuário';
             
-            if (user.user_metadata && user.user_metadata.nickname) {
-                displayName = user.user_metadata.nickname;
-            } else if (user.user_metadata && user.user_metadata.full_name) {
-                displayName = user.user_metadata.full_name;
-            } else if (user.email) {
-                displayName = user.email.split('@')[0];
+            if (profile && profile.nickname) {
+                displayName = profile.nickname;
+            } else if (currentUser.user_metadata && currentUser.user_metadata.nickname) {
+                displayName = currentUser.user_metadata.nickname;
+            } else if (currentUser.email) {
+                displayName = currentUser.email.split('@')[0];
             }
 
             // Atualizar nome em todos os lugares
@@ -1104,11 +1065,13 @@
             if (userNickname) userNickname.textContent = displayName;
             if (mobileUserNickname) mobileUserNickname.textContent = displayName;
             
+            console.log('✅ Nome do usuário:', displayName);
+            
             // Carregar foto do usuário logado
             await loadCurrentUserAvatar();
 
         } catch (error) {
-            console.error('Erro ao carregar dados do usuário:', error);
+            console.error('❌ Erro ao carregar dados do usuário:', error);
         }
     }
 
@@ -1121,7 +1084,7 @@
                 .single();
 
             if (error || !profile) {
-                console.log('Perfil não encontrado ou erro:', error);
+                console.log('ℹ️ Perfil não encontrado, usando fallback');
                 return;
             }
 
@@ -1148,9 +1111,6 @@
                         userAvatarImg.src = photoUrl;
                         userAvatarImg.style.display = 'block';
                         userAvatarFallback.style.display = 'none';
-                        avatarElement.style.backgroundImage = `url(${photoUrl})`;
-                        avatarElement.style.backgroundSize = 'cover';
-                        avatarElement.style.backgroundPosition = 'center';
                     } else {
                         // Mostrar inicial do nome
                         const displayName = profile.nickname || 'Usuário';
@@ -1164,14 +1124,17 @@
             }
 
         } catch (error) {
-            console.error('Erro ao carregar avatar do usuário:', error);
+            console.error('❌ Erro ao carregar avatar do usuário:', error);
         }
     }
 
     // ✅ FUNÇÃO CORRIGIDA - getPublicUrl em vez de download
     async function loadUserPhoto(avatarUrl) {
         try {
-            if (!avatarUrl) return null;
+            if (!avatarUrl) {
+                console.log('ℹ️ Nenhuma URL de avatar fornecida');
+                return null;
+            }
 
             console.log('🔄 Tentando carregar foto:', avatarUrl);
             
@@ -1194,8 +1157,47 @@
         }
     }
 
+    // ==================== MENU MOBILE ====================
+    function setupMobileMenu() {
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const closeMobileMenu = document.getElementById('closeMobileMenu');
+        const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+
+        if (!hamburgerBtn || !mobileMenu) {
+            console.error('❌ Elementos do menu mobile não encontrados');
+            return;
+        }
+
+        hamburgerBtn.addEventListener('click', () => {
+            mobileMenu.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        });
+
+        closeMobileMenu.addEventListener('click', () => {
+            mobileMenu.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        });
+
+        if (mobileLogoutBtn) {
+            mobileLogoutBtn.addEventListener('click', logout);
+        }
+
+        // Fechar menu ao clicar em um link
+        mobileMenu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            });
+        });
+
+        console.log('✅ Menu mobile configurado');
+    }
+
     // ==================== EVENT LISTENERS ====================
     function setupEventListeners() {
+        console.log('🎯 Configurando event listeners...');
+        
         // Logout
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
@@ -1207,52 +1209,45 @@
         const clearFiltersBtn = document.getElementById('clearFiltersBtn');
         const clearFiltersNoResults = document.getElementById('clearFiltersNoResults');
 
-        if (applyFiltersBtn) applyFiltersBtn.addEventListener('click', applyFilters);
-        if (clearFiltersBtn) clearFiltersBtn.addEventListener('click', clearFilters);
-        if (clearFiltersNoResults) clearFiltersNoResults.addEventListener('click', clearFilters);
+        if (applyFiltersBtn) {
+            applyFiltersBtn.addEventListener('click', applyFilters);
+            console.log('✅ Botão aplicar filtros configurado');
+        }
+        
+        if (clearFiltersBtn) {
+            clearFiltersBtn.addEventListener('click', clearFilters);
+            console.log('✅ Botão limpar filtros configurado');
+        }
+        
+        if (clearFiltersNoResults) {
+            clearFiltersNoResults.addEventListener('click', clearFilters);
+        }
 
-        // Buscar ao mudar filtros (opcional)
-        const filterInputs = document.querySelectorAll('.form-control, .range-inputs input');
-        filterInputs.forEach(input => {
-            input.addEventListener('change', debounce(applyFilters, 500));
-        });
-
-        // Prevenir zoom em inputs no iOS
-        document.addEventListener('touchstart', function() {}, { passive: true });
-    }
-
-    // Debounce para otimizar buscas
-    function debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
+        console.log('✅ Todos os event listeners configurados');
     }
 
     // ==================== LOGOUT ====================
     async function logout() {
         try {
+            console.log('🚪 Fazendo logout...');
             const { error } = await supabase.auth.signOut();
             if (error) throw error;
             window.location.href = 'login.html';
         } catch (error) {
-            console.error('Erro ao fazer logout:', error);
+            console.error('❌ Erro ao fazer logout:', error);
             alert('Erro ao fazer logout. Tente novamente.');
         }
     }
 
     // ==================== SISTEMA DE BUSCA ====================
     async function loadInitialUsers() {
+        console.log('🔍 Carregando usuários iniciais...');
         await applyFilters();
     }
 
     async function applyFilters() {
         try {
+            console.log('🎯 Aplicando filtros...');
             currentPage = 1;
             currentFilters = getCurrentFilters();
             
@@ -1260,12 +1255,14 @@
             await searchUsers();
             
         } catch (error) {
-            console.error('Erro ao aplicar filtros:', error);
+            console.error('❌ Erro ao aplicar filtros:', error);
             showError('Erro ao buscar usuários. Tente novamente.');
         }
     }
 
     function clearFilters() {
+        console.log('🗑️ Limpando filtros...');
+        
         // Limpar inputs
         const ageMin = document.getElementById('ageMin');
         const ageMax = document.getElementById('ageMax');
@@ -1285,7 +1282,7 @@
         const interestsSelect = document.getElementById('interests');
         if (interestsSelect) {
             for (let option of interestsSelect.options) {
-                option.selected = false;
+                option.selected = option.value === 'nao_importa';
             }
         }
         
@@ -1336,88 +1333,106 @@
 
     async function searchUsers() {
         try {
-            console.log('🔍 Aplicando filtros:', currentFilters);
+            console.log('🔍 Buscando usuários com filtros:', currentFilters);
             
-            // Buscar com JOIN entre profiles e user_details
+            // ✅ BUSCA SIMPLIFICADA - Só pega dados básicos primeiro
             let query = supabase
                 .from('profiles')
-                .select(`
-                    *,
-                    user_details (
-                        gender,
-                        looking_for,
-                        interests,
-                        zodiac,
-                        address,
-                        description,
-                        profession
-                    )
-                `)
+                .select('id, nickname, full_name, birth_date, avatar_url')
                 .neq('id', currentUser.id)
                 .not('birth_date', 'is', null);
 
             const { data: users, error } = await query;
 
-            if (error) throw error;
+            if (error) {
+                console.error('❌ Erro na busca:', error);
+                throw error;
+            }
 
-            console.log('📊 Usuários encontrados:', users?.length);
+            console.log('📊 Usuários encontrados (brutos):', users?.length);
+
+            if (!users || users.length === 0) {
+                console.log('ℹ️ Nenhum usuário encontrado');
+                displayUsersWithPhotos([]);
+                return;
+            }
+
+            // ✅ AGORA BUSCA OS DETALHES PARA CADA USUÁRIO
+            console.log('🔄 Buscando detalhes dos usuários...');
+            
+            const usersWithDetails = await Promise.all(
+                users.map(async (user) => {
+                    try {
+                        const { data: userDetails, error: detailsError } = await supabase
+                            .from('user_details')
+                            .select('gender, looking_for, interests, zodiac, address, description, profession')
+                            .eq('user_id', user.id)
+                            .single();
+
+                        return {
+                            ...user,
+                            user_details: userDetails || {}
+                        };
+                    } catch (error) {
+                        console.log(`ℹ️ Erro ao buscar detalhes do usuário ${user.id}:`, error);
+                        return {
+                            ...user,
+                            user_details: {}
+                        };
+                    }
+                })
+            );
+
+            console.log('✅ Usuários com detalhes:', usersWithDetails.length);
 
             // Aplicar filtros no client-side
-            let filteredUsers = users || [];
-            
-            // Filtro de idade
-            if (currentFilters.ageMin || currentFilters.ageMax) {
-                filteredUsers = filteredUsers.filter(user => {
+            let filteredUsers = usersWithDetails.filter(user => {
+                // Filtro de idade
+                if (currentFilters.ageMin || currentFilters.ageMax) {
                     if (!user.birth_date) return false;
                     
                     const age = calculateAge(user.birth_date);
                     const minAge = currentFilters.ageMin || 0;
                     const maxAge = currentFilters.ageMax || 100;
                     
-                    return age >= minAge && age <= maxAge;
-                });
-            }
+                    if (age < minAge || age > maxAge) return false;
+                }
 
-            // Filtro de gênero
-            if (currentFilters.gender) {
-                filteredUsers = filteredUsers.filter(user => 
-                    user.user_details?.gender === currentFilters.gender
-                );
-            }
+                // Filtro de gênero
+                if (currentFilters.gender && user.user_details.gender !== currentFilters.gender) {
+                    return false;
+                }
 
-            // Filtro de localização
-            if (currentFilters.location) {
-                filteredUsers = filteredUsers.filter(user => 
-                    user.user_details?.address && 
-                    user.user_details.address.toLowerCase().includes(currentFilters.location.toLowerCase())
-                );
-            }
+                // Filtro de localização
+                if (currentFilters.location) {
+                    if (!user.user_details.address || 
+                        !user.user_details.address.toLowerCase().includes(currentFilters.location.toLowerCase())) {
+                        return false;
+                    }
+                }
 
-            // Filtro de signo
-            if (currentFilters.zodiac) {
-                filteredUsers = filteredUsers.filter(user => 
-                    user.user_details?.zodiac === currentFilters.zodiac
-                );
-            }
+                // Filtro de signo
+                if (currentFilters.zodiac && user.user_details.zodiac !== currentFilters.zodiac) {
+                    return false;
+                }
 
-            // Filtro de interesses
-            if (currentFilters.interests && currentFilters.interests.length > 0) {
-                filteredUsers = filteredUsers.filter(user => {
-                    if (!user.user_details?.interests) return false;
-                    return currentFilters.interests.some(interest => 
-                        user.user_details.interests.includes(interest)
-                    );
-                });
-            }
+                // Filtro de interesses
+                if (currentFilters.interests && currentFilters.interests.length > 0) {
+                    if (!user.user_details.interests || 
+                        !currentFilters.interests.some(interest => user.user_details.interests.includes(interest))) {
+                        return false;
+                    }
+                }
 
-            // Filtro de looking_for
-            if (currentFilters.lookingFor) {
-                filteredUsers = filteredUsers.filter(user => 
-                    user.user_details?.looking_for === currentFilters.lookingFor
-                );
-            }
+                // Filtro de looking_for
+                if (currentFilters.lookingFor && user.user_details.looking_for !== currentFilters.lookingFor) {
+                    return false;
+                }
 
-            console.log('🎉 RESULTADO FINAL:', filteredUsers.length, 'usuários');
+                return true;
+            });
+
+            console.log('🎉 RESULTADO FINAL após filtros:', filteredUsers.length, 'usuários');
 
             // Paginação
             totalUsers = filteredUsers.length;
@@ -1444,24 +1459,40 @@
         if (loadingResults) loadingResults.classList.add('hidden');
 
         if (!users || users.length === 0) {
+            console.log('ℹ️ Nenhum usuário para exibir');
             if (usersGrid) usersGrid.innerHTML = '';
             if (noResults) noResults.classList.remove('hidden');
             return;
         }
 
+        console.log('🖼️ Exibindo', users.length, 'usuários');
+
         if (noResults) noResults.classList.add('hidden');
 
         // Carregar fotos para cada usuário
-        const userCards = await Promise.all(
-            users.map(async user => await createUserCardWithPhoto(user))
-        );
+        const userCards = [];
+        for (const user of users) {
+            try {
+                const card = await createUserCardWithPhoto(user);
+                userCards.push(card);
+            } catch (error) {
+                console.error('❌ Erro ao criar card para usuário', user.id, error);
+                // Criar card fallback
+                userCards.push(createFallbackUserCard(user));
+            }
+        }
         
-        if (usersGrid) usersGrid.innerHTML = userCards.join('');
+        if (usersGrid) {
+            usersGrid.innerHTML = userCards.join('');
+            console.log('✅ Cards inseridos no grid');
+        }
     }
 
     async function createUserCardWithPhoto(user) {
         const nickname = user.nickname || user.full_name?.split(' ')[0] || 'Usuário';
         const age = user.birth_date ? calculateAge(user.birth_date) : null;
+        
+        console.log(`🔄 Criando card para: ${nickname}`);
         
         // Carregar a foto ANTES de construir o HTML
         let avatarHtml = '';
@@ -1475,7 +1506,6 @@
         if (photoUrl) {
             avatarHtml = `
                 <div class="user-card-avatar" style="background-image: url('${photoUrl}'); background-size: cover; background-position: center;">
-                    <img src="${photoUrl}" alt="${nickname}" class="user-card-avatar-img" style="display: none;">
                     <div class="user-card-avatar-fallback" style="display: none;">${nickname.charAt(0).toUpperCase()}</div>
                 </div>
             `;
@@ -1509,7 +1539,7 @@
         }
 
         return `
-            <div class="user-card">
+            <div class="user-card" onclick="viewProfile('${user.id}')">
                 ${avatarHtml}
                 <div class="user-card-name">${nickname}${age ? `, ${age}` : ''}</div>
                 
@@ -1535,18 +1565,46 @@
         `;
     }
 
+    function createFallbackUserCard(user) {
+        const nickname = user.nickname || user.full_name?.split(' ')[0] || 'Usuário';
+        const age = user.birth_date ? calculateAge(user.birth_date) : null;
+        
+        return `
+            <div class="user-card" onclick="viewProfile('${user.id}')">
+                <div class="user-card-avatar">
+                    <div class="user-card-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
+                </div>
+                <div class="user-card-name">${nickname}${age ? `, ${age}` : ''}</div>
+                <div class="user-card-bio">Clique para ver o perfil completo</div>
+                <div class="user-card-actions">
+                    <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); sendMessage('${user.id}')">
+                        💌 Mensagem
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewProfile('${user.id}')">
+                        👀 Ver Perfil
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
     // ==================== FUNÇÕES AUXILIARES ====================
     function calculateAge(birthDate) {
-        const today = new Date();
-        const birth = new Date(birthDate);
-        let age = today.getFullYear() - birth.getFullYear();
-        const monthDiff = today.getMonth() - birth.getMonth();
-        
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-            age--;
+        try {
+            const today = new Date();
+            const birth = new Date(birthDate);
+            let age = today.getFullYear() - birth.getFullYear();
+            const monthDiff = today.getMonth() - birth.getMonth();
+            
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+                age--;
+            }
+            
+            return age;
+        } catch (error) {
+            console.error('❌ Erro ao calcular idade:', error);
+            return null;
         }
-        
-        return age;
     }
 
     function formatGender(gender) {
@@ -1620,6 +1678,7 @@
     }
 
     function showError(message) {
+        console.error('❌ Erro:', message);
         alert(message);
         const loadingResults = document.getElementById('loadingResults');
         if (loadingResults) loadingResults.classList.add('hidden');
@@ -1627,6 +1686,8 @@
 
     // ==================== FUNÇÕES DE INTERAÇÃO ====================
     function sendMessage(userId) {
+        console.log('💌 Enviando mensagem para:', userId);
+        
         if (!isProfileComplete()) {
             alert('📝 Complete seu perfil primeiro para enviar mensagens!');
             window.location.href = 'painel.html';
@@ -1641,6 +1702,8 @@
 
     async function sendMessageToUser(receiverId, content) {
         try {
+            console.log('📤 Enviando mensagem para', receiverId);
+            
             const { error } = await supabase
                 .from('messages')
                 .insert([
@@ -1656,12 +1719,14 @@
             alert('Mensagem enviada com sucesso! 💌');
             
         } catch (error) {
-            console.error('Erro ao enviar mensagem:', error);
+            console.error('❌ Erro ao enviar mensagem:', error);
             alert('✅ Mensagem registrada!');
         }
     }
 
     function viewProfile(userId) {
+        console.log('👀 Visualizando perfil:', userId);
+        
         if (!isProfileComplete()) {
             alert('📝 Complete seu perfil primeiro para ver outros perfis!');
             window.location.href = 'painel.html';
@@ -1675,8 +1740,8 @@
 
     function isProfileComplete() {
         // Verificar se o perfil está completo
-        // Esta função precisa ser implementada conforme sua lógica de negócio
-        return true; // Temporariamente retorna true
+        // Por enquanto retorna true para testes
+        return true;
     }
 
     // ==================== INICIALIZAÇÃO ====================
@@ -1684,6 +1749,8 @@
     window.sendMessage = sendMessage;
     window.viewProfile = viewProfile;
     window.changePage = changePage;
+
+    console.log('✅ Busca.js carregado e pronto!');
 </script>
 </body>
 </html>
