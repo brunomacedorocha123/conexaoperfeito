@@ -2487,38 +2487,62 @@ function formatTime(dateString) {
     return date.toLocaleDateString('pt-BR');
 }
 
-// 🎯 SOLUÇÃO DEFINITIVA - RECARREGA MANTENDO A CONVERSA
+// 🎯 SOLUÇÃO DIRETA - ATUALIZA SÓ O QUADRO DE MENSAGENS
 async function refreshConversations() {
-    console.log('🔄 RECARREGANDO PÁGINA INTELIGENTE...');
-    
-    // Salvar conversa atual antes de recarregar
-    if (currentChatPartner) {
-        localStorage.setItem('lastOpenChat', currentChatPartner.id);
-        console.log('💾 Conversa salva:', currentChatPartner.id);
-    }
-    
-    // Mostrar que está atualizando
-    showNotification('🔄 Atualizando conversas...', 'info');
-    
-    // Pequeno delay para mostrar a notificação
-    setTimeout(() => {
-        // Recarrega a página completamente
-        window.location.reload();
-    }, 800);
-}
-
-// Função auxiliar para verificar se conversa existe
-async function conversationExists(partnerId) {
     try {
-        const { data, error } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('id', partnerId)
-            .single();
-            
-        return !error && data;
+        console.log('🔄 ATUALIZANDO QUADRO DE MENSAGENS...');
+        
+        // Se não tem conversa selecionada, não faz nada
+        if (!currentChatPartner) {
+            showNotification('ℹ️ Selecione uma conversa primeiro', 'info');
+            return;
+        }
+        
+        // Mostrar loading
+        const chatMessages = document.getElementById('chatMessages');
+        if (chatMessages) {
+            chatMessages.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Atualizando mensagens...</p>
+                </div>
+            `;
+        }
+        
+        // ✅ BUSCAR MENSAGENS MAIS RECENTES DIRETAMENTE
+        console.log('📊 Buscando mensagens atualizadas...');
+        const { data: freshMessages, error } = await supabase
+            .from('messages')
+            .select('*')
+            .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${currentChatPartner.id}),and(sender_id.eq.${currentChatPartner.id},receiver_id.eq.${currentUser.id})`)
+            .order('created_at', { ascending: true });
+
+        if (error) {
+            console.error('❌ Erro ao buscar mensagens:', error);
+            throw error;
+        }
+
+        console.log(`✅ ${freshMessages?.length || 0} mensagens encontradas`);
+        
+        // ✅ ATUALIZAR AS MENSAGENS NA TELA
+        if (freshMessages && freshMessages.length > 0) {
+            await loadMessagesUserAvatars(freshMessages);
+            renderMessages(freshMessages);
+            showNotification(`✅ ${freshMessages.length} mensagens carregadas`, 'success');
+        } else {
+            chatMessages.innerHTML = '<div class="no-messages">Nenhuma mensagem encontrada</div>';
+            showNotification('ℹ️ Nenhuma mensagem nova', 'info');
+        }
+        
     } catch (error) {
-        return false;
+        console.error('❌ Erro ao atualizar:', error);
+        showNotification('❌ Erro ao carregar mensagens', 'error');
+        
+        // Restaurar tela de erro
+        const chatMessages = document.getElementById('chatMessages');
+        if (chatMessages) {
+            chatMessages.innerHTML = '<div class="no-messages">Erro ao carregar</div>';
+        }
     }
 }
 
@@ -2588,10 +2612,23 @@ style.textContent = `
         animation: spin 1s linear infinite;
         margin: 0 auto 1rem;
     }
+    
+    /* Botão de atualizar */
+    #refreshBtn {
+        padding: 0.5rem;
+        font-size: 1rem;
+        width: 40px;
+        flex-shrink: 0;
+        border-radius: 10px;
+        transition: var(--transition);
+    }
+
+    #refreshBtn:hover {
+        background: var(--lilas);
+        transform: rotate(45deg);
+    }
 `;
 document.head.appendChild(style);
 </script>
-
- 
 </body>
 </html>
