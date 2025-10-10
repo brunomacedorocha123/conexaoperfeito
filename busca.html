@@ -988,7 +988,7 @@
     </footer>
 
 <script>
-  // Configuração do Supabase
+ // Configuração do Supabase
 const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 
@@ -1235,11 +1235,11 @@ async function loadAllUsers() {
         console.log('🔍 Carregando todos os usuários...');
         showLoadingState();
         
+        // Buscar todos os perfis (exceto o usuário atual)
         const { data: profiles, error: profilesError } = await supabase
             .from('profiles')
             .select('id, nickname, full_name, birth_date, avatar_url')
-            .neq('id', currentUser.id)
-            .not('birth_date', 'is', null);
+            .neq('id', currentUser.id);
 
         if (profilesError) {
             console.error('❌ Erro ao carregar perfis:', profilesError);
@@ -1256,6 +1256,7 @@ async function loadAllUsers() {
 
         console.log('🔄 Buscando detalhes dos usuários...');
         
+        // Buscar detalhes de todos os usuários
         const usersWithDetails = await Promise.all(
             profiles.map(async (profile) => {
                 try {
@@ -1281,7 +1282,10 @@ async function loadAllUsers() {
 
         console.log('✅ Usuários carregados com detalhes:', usersWithDetails.length);
         
+        // Armazenar todos os usuários para filtragem
         allUsers = usersWithDetails;
+        
+        // Aplicar filtros iniciais
         await applyFilters();
         
     } catch (error) {
@@ -1374,10 +1378,13 @@ async function filterAndDisplayUsers() {
             return;
         }
 
+        // Aplicar filtros
         let filteredUsers = allUsers.filter(user => {
-            console.log(`🔍 Analisando usuário: ${user.nickname}`);
-            let passesFilters = true;
+            console.log(`🔍 Analisando usuário: ${user.nickname || 'Sem nome'}`);
+            console.log('📊 Dados completos do usuário:', user);
             
+            let passesFilters = true;
+
             // Filtro de idade
             if (currentFilters.ageMin || currentFilters.ageMax) {
                 if (!user.birth_date) {
@@ -1397,30 +1404,41 @@ async function filterAndDisplayUsers() {
                 }
             }
 
-            // ✅ CORREÇÃO: Filtro de gênero - mais flexível
+            // ✅ CORREÇÃO COMPLETA: Filtro de gênero
             if (passesFilters && currentFilters.gender) {
-                if (!user.user_details || !user.user_details.gender) {
+                const userGender = user.user_details?.gender;
+                
+                if (!userGender) {
                     console.log(`❌ Usuário ${user.nickname} - Sem gênero definido`);
                     passesFilters = false;
                 } else {
-                    // Normalizar strings para comparação
+                    // Normalizar para comparação flexível
                     const normalizeGender = (gender) => {
                         if (!gender) return '';
-                        return gender.toString().toLowerCase().trim();
+                        return gender.toString()
+                            .toLowerCase()
+                            .trim()
+                            .normalize('NFD')
+                            .replace(/[\u0300-\u036f]/g, ''); // Remove acentos
                     };
-                    
-                    const userGender = normalizeGender(user.user_details.gender);
-                    const filterGender = normalizeGender(currentFilters.gender);
-                    
-                    console.log(`🔍 Comparando gênero - Usuário: "${user.user_details.gender}" (${userGender}) vs Filtro: "${currentFilters.gender}" (${filterGender})`);
-                    
-                    // Verificar correspondência
-                    const genderMatches = 
-                        userGender === filterGender ||
-                        (filterGender === 'feminino' && (userGender === 'mulher' || userGender === 'feminino' || userGender === 'f')) ||
-                        (filterGender === 'masculino' && (userGender === 'homem' || userGender === 'masculino' || userGender === 'm'));
-                    
-                    if (!genderMatches) {
+
+                    const userGenderNormalized = normalizeGender(userGender);
+                    const filterGenderNormalized = normalizeGender(currentFilters.gender);
+
+                    console.log(`🔍 Comparando gênero:`);
+                    console.log(`   Usuário: "${userGender}" -> "${userGenderNormalized}"`);
+                    console.log(`   Filtro: "${currentFilters.gender}" -> "${filterGenderNormalized}"`);
+
+                    // Mapeamento de correspondências
+                    const genderMap = {
+                        'feminino': ['feminino', 'mulher', 'f', 'female', 'mulher'],
+                        'masculino': ['masculino', 'homem', 'm', 'male', 'homem']
+                    };
+
+                    const validGenders = genderMap[filterGenderNormalized];
+                    const matches = validGenders && validGenders.includes(userGenderNormalized);
+
+                    if (!matches) {
                         console.log(`❌ Usuário ${user.nickname} - Gênero não corresponde`);
                         passesFilters = false;
                     } else {
@@ -1490,6 +1508,8 @@ async function filterAndDisplayUsers() {
 
             if (passesFilters) {
                 console.log(`🎉 Usuário ${user.nickname} - PASSOU em todos os filtros`);
+            } else {
+                console.log(`❌ Usuário ${user.nickname} - NÃO passou nos filtros`);
             }
             
             return passesFilters;
@@ -1671,7 +1691,9 @@ function formatGender(gender) {
         'mulher': 'Feminino',
         'homem': 'Masculino',
         'f': 'Feminino',
-        'm': 'Masculino'
+        'm': 'Masculino',
+        'female': 'Feminino',
+        'male': 'Masculino'
     };
     return genderMap[gender?.toLowerCase()] || gender;
 }
@@ -1797,6 +1819,8 @@ function viewProfile(userId) {
 }
 
 function isProfileComplete() {
+    // Por enquanto retorna true para testes
+    // Depois implemente a lógica real de verificação
     return true;
 }
 
