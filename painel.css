@@ -736,3 +736,125 @@ footer {
     font-size: 0.8rem;
     margin-left: 8px;
 }
+/* ✅ NOVO: Seção de Status do Plano */
+.plan-status-section {
+    margin-bottom: 2rem;
+}
+
+.plan-card {
+    background: var(--branco);
+    padding: 1.5rem;
+    border-radius: 15px;
+    box-shadow: var(--shadow);
+    border: 2px solid var(--lilas);
+    text-align: center;
+}
+
+.plan-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.plan-header h3 {
+    color: var(--vermelho-rosado);
+    margin: 0;
+}
+
+.plan-badge {
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+}
+
+.plan-badge.gratuito {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+.plan-badge.premium {
+    background: linear-gradient(135deg, #f093fb, #f5576c);
+    color: white;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.plan-info {
+    margin-bottom: 1.5rem;
+}
+
+.plan-info p {
+    color: var(--text-light);
+    margin-bottom: 1rem;
+}
+
+.plan-features {
+    text-align: left;
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--bege);
+}
+
+.feature-item:last-child {
+    border-bottom: none;
+}
+
+.feature-icon {
+    font-size: 1.2rem;
+    width: 24px;
+    text-align: center;
+}
+
+.feature-text {
+    font-size: 0.9rem;
+    color: var(--text);
+}
+
+.plan-actions {
+    margin-top: 1rem;
+}
+
+.plan-actions .btn {
+    width: 100%;
+    max-width: 200px;
+}
+
+/* ✅ Versão Premium */
+.plan-card.premium {
+    border-color: #ffd700;
+    background: linear-gradient(135deg, #fff9e6, #fff0cc);
+}
+
+.plan-card.premium .plan-header h3 {
+    color: #ff6b00;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .plan-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+    
+    .plan-features {
+        max-width: 100%;
+    }
+}

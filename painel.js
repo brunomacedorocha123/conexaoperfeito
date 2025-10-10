@@ -49,7 +49,8 @@ async function checkAuth() {
     await loadUserData();
     await loadProfileData();
     await updatePremiumStatus();
-    await updateProfileCompletion(); // ✅ NOVO: Atualizar progresso
+    await updateProfileCompletion();
+    await updatePlanStatus();
 }
 
 // CONFIGURA EVENTOS
@@ -81,7 +82,7 @@ function setupEventListeners() {
         console.log('✅ Input de arquivo configurado');
     }
 
-    // ✅ NOVO: Máscaras para CPF, Telefone e CEP
+    // Máscaras para CPF, Telefone e CEP
     const cpfInput = document.getElementById('cpf');
     const phoneInput = document.getElementById('phone');
     const zipCodeInput = document.getElementById('zipCode');
@@ -137,7 +138,7 @@ function setupEventListeners() {
     console.log('🎯 Todos os event listeners configurados');
 }
 
-// ✅ NOVO: MÁSCARAS DE FORMULÁRIO
+// MÁSCARAS DE FORMULÁRIO
 function maskCPF(e) {
     let value = e.target.value.replace(/\D/g, '');
     if (value.length <= 11) {
@@ -165,7 +166,67 @@ function maskCEP(e) {
     e.target.value = value;
 }
 
-// ✅ NOVO: ATUALIZAR STATUS PREMIUM
+// ATUALIZAR STATUS DO PLANO
+async function updatePlanStatus() {
+    try {
+        const isPremium = await PremiumManager.checkPremiumStatus();
+        const planCard = document.getElementById('planStatusCard');
+        const planBadge = document.getElementById('planBadge');
+        const planDescription = document.getElementById('planDescription');
+        const planActions = document.getElementById('planActions');
+
+        if (isPremium) {
+            // USUÁRIO PREMIUM
+            planCard.classList.add('premium');
+            planBadge.textContent = 'PREMIUM';
+            planBadge.className = 'plan-badge premium';
+            planDescription.textContent = 'Plano Premium com todos os benefícios ativos!';
+            planActions.innerHTML = `
+                <button class="btn btn-primary" onclick="window.location.href='mensagens.html'">
+                    🚀 Ir para Mensagens
+                </button>
+            `;
+            
+            // Atualizar features para premium
+            const planFeatures = document.querySelector('.plan-features');
+            if (planFeatures) {
+                planFeatures.innerHTML = `
+                    <div class="feature-item">
+                        <span class="feature-icon">💬</span>
+                        <span class="feature-text">Mensagens ilimitadas</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">🕒</span>
+                        <span class="feature-text">Histórico permanente</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">👁️</span>
+                        <span class="feature-text">Modo invisível</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">👀</span>
+                        <span class="feature-text">Ver visitantes</span>
+                    </div>
+                `;
+            }
+        } else {
+            // USUÁRIO GRATUITO
+            planCard.classList.remove('premium');
+            planBadge.textContent = 'GRATUITO';
+            planBadge.className = 'plan-badge gratuito';
+            planDescription.textContent = 'Plano gratuito com funcionalidades básicas';
+            planActions.innerHTML = `
+                <a href="planos.html" class="btn btn-primary">⭐ Fazer Upgrade</a>
+            `;
+        }
+
+        console.log(`✅ Status do plano atualizado: ${isPremium ? 'PREMIUM' : 'GRATUITO'}`);
+    } catch (error) {
+        console.error('❌ Erro ao atualizar status do plano:', error);
+    }
+}
+
+// ATUALIZAR STATUS PREMIUM
 async function updatePremiumStatus() {
     try {
         const isPremium = await PremiumManager.checkPremiumStatus();
@@ -213,7 +274,7 @@ async function updatePremiumStatus() {
     }
 }
 
-// ✅ NOVO: ATUALIZAR PROGRESSO DO PERFIL
+// ATUALIZAR PROGRESSO DO PERFIL
 async function updateProfileCompletion() {
     try {
         const { data: completion, error } = await supabase
@@ -386,7 +447,7 @@ function showFallbackAvatars() {
     });
 }
 
-// ✅ ATUALIZADO: CARREGA DADOS DO PERFIL COM NOVOS CAMPOS
+// CARREGA DADOS DO PERFIL COM NOVOS CAMPOS
 async function loadProfileData() {
     try {
         console.log('📋 Carregando dados do perfil...');
@@ -412,7 +473,7 @@ async function loadProfileData() {
             return;
         }
 
-        // ✅ PREENCHE FORMULÁRIO COM NOVOS CAMPOS
+        // PREENCHE FORMULÁRIO COM NOVOS CAMPOS
         if (profile) {
             // 🔒 Dados Privados
             document.getElementById('fullName').value = profile.full_name || '';
@@ -558,7 +619,7 @@ async function uploadAvatar(file) {
     }
 }
 
-// ✅ ATUALIZADO: SALVA PERFIL COM NOVOS CAMPOS
+// SALVA PERFIL COM NOVOS CAMPOS
 async function saveProfile(event) {
     event.preventDefault();
     console.log('💾 Salvando perfil...');
@@ -584,7 +645,7 @@ async function saveProfile(event) {
             }
         }
 
-        // ✅ DADOS DO PERFIL (PRIVADOS + PÚBLICOS)
+        // DADOS DO PERFIL (PRIVADOS + PÚBLICOS)
         const profileData = {
             // 🔒 Dados Privados
             full_name: document.getElementById('fullName').value.trim(),
@@ -608,7 +669,7 @@ async function saveProfile(event) {
             profileData.avatar_url = avatarPath;
         }
 
-        // ✅ DADOS DETALHADOS (APENAS PÚBLICOS)
+        // DADOS DETALHADOS (APENAS PÚBLICOS)
         const userDetailsData = {
             // 👁️ Dados Públicos
             display_city: document.getElementById('displayCity').value.trim(),
@@ -636,7 +697,7 @@ async function saveProfile(event) {
         });
         userDetailsData.interests = selectedInterests;
 
-        // ✅ VALIDAÇÕES OBRIGATÓRIAS
+        // VALIDAÇÕES OBRIGATÓRIAS
         if (!profileData.nickname) {
             showNotification('❌ Informe um nickname!', 'error');
             return;
@@ -670,13 +731,13 @@ async function saveProfile(event) {
             return;
         }
 
-        // ✅ VALIDAÇÃO DE CPF (básica)
+        // VALIDAÇÃO DE CPF (básica)
         if (profileData.cpf && profileData.cpf.length !== 11) {
             showNotification('❌ CPF inválido!', 'error');
             return;
         }
 
-        // ✅ VALIDAÇÃO DE CEP (básica)
+        // VALIDAÇÃO DE CEP (básica)
         if (profileData.zip_code && profileData.zip_code.length !== 8) {
             showNotification('❌ CEP inválido!', 'error');
             return;
@@ -717,9 +778,10 @@ async function saveProfile(event) {
         console.log('✅ Perfil salvo com sucesso!');
         showNotification('✅ Perfil salvo com sucesso!', 'success');
         
-        // ✅ ATUALIZA PROGRESSO APÓS SALVAR
+        // ATUALIZA PROGRESSO APÓS SALVAR
         await updateProfileCompletion();
         await updatePremiumStatus();
+        await updatePlanStatus();
         
         // Recarrega o avatar se foi atualizado
         if (avatarPath) {
