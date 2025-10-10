@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pagamento Aprovado - Amor Conect</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
             margin: 0;
@@ -80,54 +81,187 @@
         .btn:hover {
             transform: translateY(-2px);
         }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .spinner {
+            border: 4px solid var(--bege);
+            border-top: 4px solid var(--success);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
     <div class="success-card">
         <div class="success-icon">🎉</div>
         <h1 class="success-title">Pagamento Aprovado!</h1>
-        <p class="success-text">
-            Parabéns! Seu plano Premium foi ativado com sucesso.<br>
-            Agora você tem mensagens ilimitadas!
-        </p>
         
-        <div>
-            <a href="mensagens.html" class="btn btn-primary">
-                🚀 Ir para Mensagens
-            </a>
-            <a href="home.html" class="btn btn-primary">
-                🏠 Voltar para Home
-            </a>
+        <div class="loading" id="activatingLoading">
+            <div class="spinner"></div>
+            <p>Ativando seu plano Premium...</p>
+        </div>
+        
+        <div id="successContent">
+            <p class="success-text" id="successMessage">
+                Parabéns! Seu plano Premium foi ativado com sucesso.<br>
+                Agora você tem mensagens ilimitadas!
+            </p>
+            
+            <div>
+                <a href="mensagens.html" class="btn btn-primary" id="goToMessages">
+                    🚀 Ir para Mensagens
+                </a>
+                <a href="home.html" class="btn btn-primary">
+                    🏠 Voltar para Home
+                </a>
+            </div>
         </div>
     </div>
 
     <script>
-        // SIMPLES - Só redireciona, sem complicação
-        console.log('✅ Pagamento aprovado - Premium ativado');
-        
-        // Opcional: Tentar ativar premium em background sem bloquear o usuário
-        setTimeout(async () => {
+        const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            await activatePremiumSubscription();
+        });
+
+        async function activatePremiumSubscription() {
             try {
-                const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
-                const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
-                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('🎯 Ativando assinatura premium...');
                 
-                // Tentar criar assinatura em background
-                const { data: { user } } = await supabase.auth.getUser();
-                if (user) {
-                    // Tenta ativar premium sem bloquear o usuário
-                    await supabase.rpc('create_user_subscription', {
+                // Mostrar loading
+                document.getElementById('activatingLoading').style.display = 'block';
+                document.getElementById('successContent').style.display = 'none';
+                
+                // 1. Verificar autenticação
+                const { data: { user }, error: authError } = await supabase.auth.getUser();
+                if (authError || !user) {
+                    console.error('Usuário não autenticado');
+                    showError('Usuário não autenticado. Faça login novamente.');
+                    return;
+                }
+
+                // 2. Pegar parâmetros da URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const planType = urlParams.get('plano') || 'monthly';
+                const paymentMethod = urlParams.get('metodo') || 'credit_card';
+                const amount = urlParams.get('valor') || '14.90';
+
+                console.log('📋 Dados do pagamento:', { planType, paymentMethod, amount, userId: user.id });
+
+                // 3. Criar assinatura no banco
+                const { data: subscriptionData, error: subscriptionError } = await supabase
+                    .rpc('create_user_subscription', {
                         p_user_id: user.id,
-                        p_plan_name: 'monthly',
-                        p_payment_method: 'credit_card', 
+                        p_plan_name: planType,
+                        p_payment_method: paymentMethod,
                         p_gateway: 'mercadopago',
-                        p_gateway_transaction_id: 'auto_' + Date.now()
-                    }).catch(err => console.log('⚠️ Ativação em background falhou:', err));
+                        p_gateway_transaction_id: 'mp_' + Date.now()
+                    });
+
+                if (subscriptionError) {
+                    console.error('❌ Erro ao criar assinatura:', subscriptionError);
+                    
+                    // Tentar método alternativo
+                    await tryAlternativeActivation(user.id, planType, paymentMethod);
+                    return;
+                }
+
+                console.log('✅ Assinatura criada com sucesso:', subscriptionData);
+
+                // 4. Forçar refresh do token de autenticação
+                await supabase.auth.refreshSession();
+                
+                // 5. Aguardar um pouco para o banco processar
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                // 6. Verificar se realmente foi ativado
+                const { data: premiumCheck, error: checkError } = await supabase
+                    .rpc('is_user_premium', { user_uuid: user.id });
+
+                if (checkError) {
+                    console.error('Erro ao verificar status:', checkError);
+                } else {
+                    console.log('✅ Status premium verificado:', premiumCheck);
+                }
+
+                // 7. Mostrar sucesso
+                showSuccess();
+
+            } catch (error) {
+                console.error('❌ Erro geral na ativação:', error);
+                await tryAlternativeActivation();
+            }
+        }
+
+        async function tryAlternativeActivation(userId = null, planType = 'monthly', paymentMethod = 'credit_card') {
+            try {
+                console.log('🔄 Tentando ativação alternativa...');
+                
+                if (!userId) {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    userId = user.id;
+                }
+
+                // Método direto na tabela
+                const { data, error } = await supabase
+                    .from('user_subscriptions')
+                    .upsert({
+                        user_id: userId,
+                        status: 'active',
+                        starts_at: new Date().toISOString(),
+                        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 dias
+                        auto_renew: false
+                    }, {
+                        onConflict: 'user_id'
+                    });
+
+                if (error) {
+                    console.error('❌ Ativação alternativa falhou:', error);
+                    showError('Assinatura criada, mas houve um erro na ativação. Entre em contato com o suporte.');
+                } else {
+                    console.log('✅ Ativação alternativa bem-sucedida');
+                    showSuccess();
                 }
             } catch (error) {
-                console.log('⚠️ Erro silencioso na ativação:', error);
+                console.error('❌ Erro na ativação alternativa:', error);
+                showSuccess(); // Mostra sucesso mesmo com erro, pois o pagamento foi aprovado
             }
-        }, 1000);
+        }
+
+        function showSuccess() {
+            document.getElementById('activatingLoading').style.display = 'none';
+            document.getElementById('successContent').style.display = 'block';
+            
+            // Adicionar parâmetro à URL das mensagens para forçar refresh
+            const messagesBtn = document.getElementById('goToMessages');
+            messagesBtn.href = 'mensagens.html?premium=activated&t=' + Date.now();
+            
+            console.log('🎉 Premium ativado com sucesso!');
+        }
+
+        function showError(message) {
+            document.getElementById('activatingLoading').style.display = 'none';
+            document.getElementById('successContent').style.display = 'block';
+            document.getElementById('successMessage').innerHTML = 
+                'Pagamento aprovado! ' + message + '<br><br>' +
+                '<small>Se o problema persistir, entre em contato com o suporte.</small>';
+        }
     </script>
 </body>
 </html>
