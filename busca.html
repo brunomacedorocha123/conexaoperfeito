@@ -1229,61 +1229,57 @@ async function logout() {
     }
 }
 
-// ==================== SISTEMA DE BUSCA ====================
+// ==================== SISTEMA DE BUSCA CORRIGIDO ====================
 async function loadAllUsers() {
     try {
         console.log('🔍 Carregando todos os usuários...');
         showLoadingState();
         
-        // Buscar todos os perfis (exceto o usuário atual)
-        const { data: profiles, error: profilesError } = await supabase
-            .from('profiles')
-            .select('id, nickname, full_name, birth_date, avatar_url')
+        // ✅ CORREÇÃO: Usar a VIEW complete_user_profiles que já tem todos os dados unidos
+        const { data: users, error } = await supabase
+            .from('complete_user_profiles')
+            .select('*')
             .neq('id', currentUser.id);
 
-        if (profilesError) {
-            console.error('❌ Erro ao carregar perfis:', profilesError);
-            throw profilesError;
+        if (error) {
+            console.error('❌ Erro ao carregar usuários:', error);
+            throw error;
         }
 
-        console.log('📊 Perfis encontrados:', profiles?.length);
+        console.log('📊 Usuários encontrados na VIEW:', users?.length);
 
-        if (!profiles || profiles.length === 0) {
-            console.log('ℹ️ Nenhum perfil encontrado');
+        if (!users || users.length === 0) {
+            console.log('ℹ️ Nenhum usuário encontrado');
             displayUsersWithPhotos([]);
             return;
         }
 
-        console.log('🔄 Buscando detalhes dos usuários...');
-        
-        // Buscar detalhes de todos os usuários
-        const usersWithDetails = await Promise.all(
-            profiles.map(async (profile) => {
-                try {
-                    const { data: userDetails, error: detailsError } = await supabase
-                        .from('user_details')
-                        .select('gender, looking_for, interests, zodiac, address, description, profession, display_city')
-                        .eq('user_id', profile.id)
-                        .single();
+        // ✅ DEBUG: Mostrar todos os usuários e seus gêneros
+        console.log('🔍 LISTA COMPLETA DE USUÁRIOS:');
+        users.forEach((user, index) => {
+            console.log(`   ${index + 1}. ${user.nickname} - Gênero: "${user.gender}"`);
+        });
 
-                    return {
-                        ...profile,
-                        user_details: userDetails || {}
-                    };
-                } catch (error) {
-                    console.log(`ℹ️ Erro ao buscar detalhes do usuário ${profile.id}:`, error);
-                    return {
-                        ...profile,
-                        user_details: {}
-                    };
-                }
-            })
-        );
+        // ✅ CORREÇÃO: Mapear para o formato esperado
+        allUsers = users.map(user => ({
+            id: user.id,
+            nickname: user.nickname,
+            full_name: user.full_name,
+            birth_date: user.birth_date,
+            avatar_url: user.avatar_url,
+            user_details: {
+                gender: user.gender,
+                looking_for: user.looking_for,
+                interests: user.interests,
+                zodiac: user.zodiac,
+                address: user.display_city,
+                description: user.description,
+                profession: user.profession,
+                display_city: user.display_city
+            }
+        }));
 
-        console.log('✅ Usuários carregados com detalhes:', usersWithDetails.length);
-        
-        // Armazenar todos os usuários para filtragem
-        allUsers = usersWithDetails;
+        console.log('✅ Usuários carregados com detalhes:', allUsers.length);
         
         // Aplicar filtros iniciais
         await applyFilters();
@@ -1403,20 +1399,23 @@ async function filterAndDisplayUsers() {
                 }
             }
 
-            // ✅ CORREÇÃO CRÍTICA: FILTRO DE GÊNERO SIMPLIFICADO
+            // ✅ FILTRO DE GÊNERO - CORREÇÃO DEFINITIVA
             if (passesFilters && currentFilters.gender) {
                 if (!user.user_details || !user.user_details.gender) {
+                    console.log(`❌ ${userName} - Sem gênero definido`);
                     passesFilters = false;
                 } else {
-                    // Converte ambos para minúsculo para comparação
                     const userGenderLower = user.user_details.gender.toString().toLowerCase().trim();
                     const filterGenderLower = currentFilters.gender.toString().toLowerCase().trim();
                     
                     console.log(`🔍 ${userName}: Comparando "${userGenderLower}" com "${filterGenderLower}"`);
                     
-                    // Verifica correspondência direta
+                    // Comparação DIRETA
                     if (userGenderLower !== filterGenderLower) {
+                        console.log(`❌ ${userName} - Gênero não corresponde`);
                         passesFilters = false;
+                    } else {
+                        console.log(`✅ ${userName} - Gênero CORRESPONDE!`);
                     }
                 }
             }
@@ -1467,10 +1466,6 @@ async function filterAndDisplayUsers() {
                 }
             }
 
-            if (passesFilters) {
-                console.log(`✅ ${userName} - PASSOU nos filtros (Gênero: "${userGender}")`);
-            }
-            
             return passesFilters;
         });
 
