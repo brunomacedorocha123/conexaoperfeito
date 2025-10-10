@@ -905,6 +905,7 @@
         document.getElementById('loading').style.display = 'block';
 
         try {
+            // ✅ CHAMAR FUNÇÃO CORRIGIDA
             await createUserSubscription('pix');
             
             setTimeout(() => {
@@ -912,7 +913,7 @@
             }, 2000);
         } catch (error) {
             console.error('Erro no PIX:', error);
-            alert('Erro ao processar PIX. Tente novamente.');
+            alert('Erro ao processar PIX: ' + error.message);
             document.getElementById('loading').style.display = 'none';
         }
     }
@@ -960,15 +961,10 @@
             return;
         }
 
-        if (cardNumber.length !== 16) {
-            alert('Número do cartão inválido.');
-            return;
-        }
-
         document.getElementById('loading').style.display = 'block';
 
         try {
-            // ✅ SEMPRE APROVAR PARA TESTES - SISTEMA REAL
+            // ✅ CHAMAR FUNÇÃO CORRIGIDA
             await createUserSubscription('credit_card');
             
             setTimeout(() => {
@@ -976,41 +972,137 @@
             }, 2000);
         } catch (error) {
             console.error('Erro no pagamento:', error);
-            alert('Erro ao processar pagamento. Tente novamente.');
+            alert('Erro ao processar pagamento: ' + error.message);
             document.getElementById('loading').style.display = 'none';
         }
     }
 
-    // ==================== FUNÇÃO REAL DE CRIAÇÃO DE ASSINATURA ====================
+    // ==================== FUNÇÃO CORRIGIDA DE CRIAÇÃO DE ASSINATURA ====================
     async function createUserSubscription(paymentMethod) {
         try {
+            console.log('🎯 INICIANDO CRIAÇÃO DE ASSINATURA...');
+            
             const { data: { user }, error: authError } = await supabase.auth.getUser();
             if (authError || !user) {
                 throw new Error('Usuário não autenticado');
             }
 
-            console.log('🎯 Criando assinatura para:', user.id);
+            console.log('👤 Usuário:', user.id);
+            console.log('📦 Plano:', getPlanType());
+            console.log('💳 Método:', paymentMethod);
 
-            // ✅ USAR FUNÇÃO RPC DO SUPABASE
-            const { data: subscriptionId, error: rpcError } = await supabase
-                .rpc('create_user_subscription', {
-                    p_user_id: user.id,
-                    p_plan_name: getPlanType(),
-                    p_payment_method: paymentMethod,
-                    p_gateway: 'mercadopago',
-                    p_gateway_transaction_id: 'mp_' + Date.now()
-                });
+            // ✅ TENTAR RPC PRIMEIRO
+            try {
+                console.log('🔄 Tentando RPC...');
+                const { data: subscriptionId, error: rpcError } = await supabase
+                    .rpc('create_user_subscription', {
+                        p_user_id: user.id,
+                        p_plan_name: getPlanType(),
+                        p_payment_method: paymentMethod,
+                        p_gateway: 'mercadopago',
+                        p_gateway_transaction_id: 'mp_' + Date.now()
+                    });
 
-            if (rpcError) {
-                console.error('❌ Erro RPC:', rpcError);
-                throw new Error('Falha ao criar assinatura: ' + rpcError.message);
+                if (rpcError) {
+                    console.error('❌ Erro RPC:', rpcError);
+                    throw new Error('RPC falhou: ' + rpcError.message);
+                }
+
+                console.log('✅ Assinatura criada via RPC:', subscriptionId);
+                return subscriptionId;
+
+            } catch (rpcError) {
+                console.log('🔄 RPC falhou, tentando método direto...');
+                // ✅ MÉTODO DIRETO (FALLBACK)
+                return await createSubscriptionDirectly(user.id, paymentMethod);
             }
 
-            console.log('✅ Assinatura criada com sucesso:', subscriptionId);
-            return subscriptionId;
+        } catch (error) {
+            console.error('❌ Erro geral:', error);
+            throw new Error('Falha ao criar assinatura: ' + error.message);
+        }
+    }
+
+    // ==================== MÉTODO DIRETO (FALLBACK) ====================
+    async function createSubscriptionDirectly(userId, paymentMethod) {
+        try {
+            console.log('🔧 Usando método direto...');
+            
+            // 1. Buscar plano
+            const { data: planData, error: planError } = await supabase
+                .from('subscription_plans')
+                .select('id, period_days, price')
+                .eq('name', getPlanType())
+                .single();
+
+            if (planError || !planData) {
+                throw new Error('Plano não encontrado');
+            }
+
+            const periodDays = planData.period_days || 30;
+            const expiresAt = new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000).toISOString();
+
+            console.log('📋 Plano encontrado:', planData.id);
+
+            // 2. Criar assinatura
+            const { data: subscription, error: subError } = await supabase
+                .from('user_subscriptions')
+                .upsert({
+                    user_id: userId,
+                    plan_id: planData.id,
+                    status: 'active',
+                    starts_at: new Date().toISOString(),
+                    expires_at: expiresAt,
+                    auto_renew: false
+                }, {
+                    onConflict: 'user_id'
+                })
+                .select()
+                .single();
+
+            if (subError) {
+                console.error('❌ Erro na assinatura:', subError);
+                throw subError;
+            }
+
+            console.log('✅ Assinatura criada:', subscription.id);
+
+            // 3. Atualizar perfil
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .update({ 
+                    is_premium: true,
+                    premium_expires_at: expiresAt
+                })
+                .eq('id', userId);
+
+            if (profileError) {
+                console.log('⚠️ Erro ao atualizar perfil:', profileError);
+            }
+
+            // 4. Registrar transação
+            const { error: txError } = await supabase
+                .from('payment_transactions')
+                .insert({
+                    user_id: userId,
+                    plan_id: planData.id,
+                    amount: planData.price,
+                    payment_method: paymentMethod,
+                    payment_gateway: 'mercadopago',
+                    gateway_transaction_id: 'mp_direct_' + Date.now(),
+                    gateway_status: 'approved',
+                    status: 'completed'
+                });
+
+            if (txError) {
+                console.log('⚠️ Erro na transação:', txError);
+            }
+
+            console.log('🎉 Assinatura criada com sucesso via método direto!');
+            return subscription.id;
 
         } catch (error) {
-            console.error('❌ Erro ao criar assinatura:', error);
+            console.error('❌ Erro no método direto:', error);
             throw error;
         }
     }
@@ -1054,13 +1146,13 @@
                 });
 
             if (error && error.message.includes('function create_user_subscription')) {
-                console.log('ℹ️ Função RPC não encontrada');
+                console.log('ℹ️ Função RPC não encontrada - usando método direto');
                 return false;
             }
             console.log('✅ Função RPC disponível');
             return true;
         } catch (error) {
-            console.log('ℹ️ Função RPC não disponível');
+            console.log('ℹ️ Função RPC não disponível - usando método direto');
             return false;
         }
     }

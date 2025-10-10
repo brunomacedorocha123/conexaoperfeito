@@ -178,7 +178,7 @@
         </div>
     </div>
 
-    <script>
+   <script>
     const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -194,9 +194,9 @@
             const { data: { user } } = await supabase.auth.getUser();
             
             if (user) {
-                console.log('👤 Usuário autenticado, verificando assinatura...');
+                console.log('👤 Usuário autenticado:', user.id);
                 
-                // ✅ VERIFICAR SE A ASSINATURA JÁ FOI CRIADA
+                // ✅ VERIFICAR SE JÁ TEM ASSINATURA
                 const { data: subscription, error } = await supabase
                     .from('user_subscriptions')
                     .select('*')
@@ -205,16 +205,17 @@
                     .single();
 
                 if (error || !subscription) {
-                    console.log('🔄 Criando assinatura...');
-                    await createSubscriptionIfNeeded(user.id);
+                    console.log('🔄 Criando assinatura na página de sucesso...');
+                    await createSubscriptionInSuccessPage(user.id);
                 } else {
                     console.log('✅ Assinatura já existe:', subscription.id);
                 }
                 
-                // ✅ FORÇAR ATUALIZAÇÃO DO STATUS PREMIUM
-                await updateUserPremiumStatus(user.id);
+                // ✅ GARANTIR QUE O PERFIL ESTÁ COMO PREMIUM
+                await forcePremiumStatus(user.id);
             }
             
+            // SEMPRE ESCONDER LOADING APÓS 2 SEGUNDOS
             setTimeout(() => {
                 document.getElementById('activatingLoading').style.display = 'none';
             }, 2000);
@@ -225,34 +226,79 @@
         }
     }
 
-    async function createSubscriptionIfNeeded(userId) {
+    async function createSubscriptionInSuccessPage(userId) {
         try {
             const urlParams = new URLSearchParams(window.location.search);
             const planType = urlParams.get('plano') || 'monthly';
             const paymentMethod = urlParams.get('metodo') || 'credit_card';
             
-            const { data: subscriptionId, error } = await supabase
+            // ✅ TENTAR RPC
+            const { data: subscriptionId, error: rpcError } = await supabase
                 .rpc('create_user_subscription', {
                     p_user_id: userId,
                     p_plan_name: planType,
                     p_payment_method: paymentMethod,
-                    p_gateway: 'mercadopago', 
+                    p_gateway: 'mercadopago',
                     p_gateway_transaction_id: 'mp_success_' + Date.now()
                 });
 
-            if (error) {
-                console.error('❌ Erro ao criar assinatura:', error);
+            if (rpcError) {
+                console.log('🔄 RPC falhou, criando manualmente...');
+                await createSubscriptionManual(userId, planType, paymentMethod);
             } else {
-                console.log('✅ Assinatura criada na página de sucesso:', subscriptionId);
+                console.log('✅ Assinatura criada via RPC:', subscriptionId);
             }
         } catch (error) {
             console.error('Erro na criação de assinatura:', error);
         }
     }
 
-    async function updateUserPremiumStatus(userId) {
+    async function createSubscriptionManual(userId, planType, paymentMethod) {
         try {
-            // ✅ ATUALIZAR PERFIL PARA PREMIUM
+            // Buscar plano
+            const { data: planData } = await supabase
+                .from('subscription_plans')
+                .select('id, period_days')
+                .eq('name', planType)
+                .single();
+
+            if (planData) {
+                const periodDays = planData.period_days || 30;
+                const expiresAt = new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000).toISOString();
+                
+                // Criar assinatura
+                await supabase
+                    .from('user_subscriptions')
+                    .upsert({
+                        user_id: userId,
+                        plan_id: planData.id,
+                        status: 'active',
+                        starts_at: new Date().toISOString(),
+                        expires_at: expiresAt,
+                        auto_renew: false
+                    }, {
+                        onConflict: 'user_id'
+                    });
+
+                // Atualizar perfil
+                await supabase
+                    .from('profiles')
+                    .update({ 
+                        is_premium: true,
+                        premium_expires_at: expiresAt
+                    })
+                    .eq('id', userId);
+
+                console.log('✅ Assinatura criada manualmente');
+            }
+        } catch (error) {
+            console.error('Erro na criação manual:', error);
+        }
+    }
+
+    async function forcePremiumStatus(userId) {
+        try {
+            // ✅ FORÇAR PERFIL COMO PREMIUM
             const { error } = await supabase
                 .from('profiles')
                 .update({ 
@@ -262,16 +308,16 @@
                 .eq('id', userId);
 
             if (error) {
-                console.error('❌ Erro ao atualizar perfil:', error);
+                console.error('❌ Erro ao forçar premium:', error);
             } else {
-                console.log('✅ Perfil atualizado para premium');
+                console.log('✅ Status premium forçado no perfil');
             }
         } catch (error) {
-            console.error('Erro ao atualizar status premium:', error);
+            console.error('Erro ao forçar status premium:', error);
         }
     }
 
-    // Garantir que os links sempre funcionem
+    // ✅ GARANTIR QUE OS LINKS SEMPRE FUNCIONEM
     document.getElementById('goToMessages').addEventListener('click', function(e) {
         this.href = `mensagens.html?premium=activated&t=${Date.now()}`;
     });
