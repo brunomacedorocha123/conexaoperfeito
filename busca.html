@@ -1028,7 +1028,9 @@
             document.body.style.overflow = 'auto';
         });
 
-        mobileLogoutBtn.addEventListener('click', logout);
+        if (mobileLogoutBtn) {
+            mobileLogoutBtn.addEventListener('click', logout);
+        }
 
         // Fechar menu ao clicar em um link
         mobileMenu.querySelectorAll('a').forEach(link => {
@@ -1043,12 +1045,12 @@
             if (window.innerWidth <= 768) {
                 const userMenu = document.querySelector('.user-menu');
                 if (userMenu) userMenu.style.display = 'none';
-                hamburgerBtn.style.display = 'flex';
+                if (hamburgerBtn) hamburgerBtn.style.display = 'flex';
             } else {
                 const userMenu = document.querySelector('.user-menu');
                 if (userMenu) userMenu.style.display = 'flex';
-                hamburgerBtn.style.display = 'none';
-                mobileMenu.style.display = 'none';
+                if (hamburgerBtn) hamburgerBtn.style.display = 'none';
+                if (mobileMenu) mobileMenu.style.display = 'none';
                 document.body.style.overflow = 'auto';
             }
         }
@@ -1166,23 +1168,28 @@
         }
     }
 
+    // ✅ FUNÇÃO CORRIGIDA - getPublicUrl em vez de download
     async function loadUserPhoto(avatarUrl) {
         try {
             if (!avatarUrl) return null;
 
-            const { data, error } = await supabase.storage
+            console.log('🔄 Tentando carregar foto:', avatarUrl);
+            
+            // ✅ CORREÇÃO: Usar getPublicUrl em vez de download
+            const { data } = supabase.storage
                 .from('avatars')
-                .download(avatarUrl);
+                .getPublicUrl(avatarUrl);
 
-            if (error) {
-                console.error('Erro ao baixar imagem:', error);
+            if (data && data.publicUrl) {
+                console.log('✅ URL pública encontrada:', data.publicUrl);
+                return data.publicUrl;
+            } else {
+                console.log('❌ Não foi possível obter URL pública');
                 return null;
             }
 
-            return URL.createObjectURL(data);
-
         } catch (error) {
-            console.error('Erro ao carregar foto:', error);
+            console.error('❌ Erro ao carregar foto:', error);
             return null;
         }
     }
@@ -1260,12 +1267,19 @@
 
     function clearFilters() {
         // Limpar inputs
-        document.getElementById('ageMin').value = '';
-        document.getElementById('ageMax').value = '';
-        document.getElementById('gender').value = '';
-        document.getElementById('lookingFor').value = '';
-        document.getElementById('location').value = '';
-        document.getElementById('zodiac').value = '';
+        const ageMin = document.getElementById('ageMin');
+        const ageMax = document.getElementById('ageMax');
+        const gender = document.getElementById('gender');
+        const lookingFor = document.getElementById('lookingFor');
+        const location = document.getElementById('location');
+        const zodiac = document.getElementById('zodiac');
+        
+        if (ageMin) ageMin.value = '';
+        if (ageMax) ageMax.value = '';
+        if (gender) gender.value = '';
+        if (lookingFor) lookingFor.value = '';
+        if (location) location.value = '';
+        if (zodiac) zodiac.value = '';
         
         // Limpar seleção múltipla de interesses
         const interestsSelect = document.getElementById('interests');
@@ -1279,12 +1293,12 @@
     }
 
     function getCurrentFilters() {
-        const ageMin = document.getElementById('ageMin').value;
-        const ageMax = document.getElementById('ageMax').value;
-        const gender = document.getElementById('gender').value;
-        const lookingFor = document.getElementById('lookingFor').value;
-        const location = document.getElementById('location').value;
-        const zodiac = document.getElementById('zodiac').value;
+        const ageMin = document.getElementById('ageMin');
+        const ageMax = document.getElementById('ageMax');
+        const gender = document.getElementById('gender');
+        const lookingFor = document.getElementById('lookingFor');
+        const location = document.getElementById('location');
+        const zodiac = document.getElementById('zodiac');
         
         // Obter interesses selecionados
         const interestsSelect = document.getElementById('interests');
@@ -1295,12 +1309,12 @@
                 if (option.selected) {
                     if (option.value === 'nao_importa') {
                         return {
-                            ageMin: ageMin ? parseInt(ageMin) : null,
-                            ageMax: ageMax ? parseInt(ageMax) : null,
-                            gender: gender || null,
-                            lookingFor: lookingFor || null,
-                            location: location || null,
-                            zodiac: zodiac || null,
+                            ageMin: ageMin && ageMin.value ? parseInt(ageMin.value) : null,
+                            ageMax: ageMax && ageMax.value ? parseInt(ageMax.value) : null,
+                            gender: gender && gender.value ? gender.value : null,
+                            lookingFor: lookingFor && lookingFor.value ? lookingFor.value : null,
+                            location: location && location.value ? location.value : null,
+                            zodiac: zodiac && zodiac.value ? zodiac.value : null,
                             interests: null
                         };
                     }
@@ -1310,12 +1324,12 @@
         }
 
         return {
-            ageMin: ageMin ? parseInt(ageMin) : null,
-            ageMax: ageMax ? parseInt(ageMax) : null,
-            gender: gender || null,
-            lookingFor: lookingFor || null,
-            location: location || null,
-            zodiac: zodiac || null,
+            ageMin: ageMin && ageMin.value ? parseInt(ageMin.value) : null,
+            ageMax: ageMax && ageMax.value ? parseInt(ageMax.value) : null,
+            gender: gender && gender.value ? gender.value : null,
+            lookingFor: lookingFor && lookingFor.value ? lookingFor.value : null,
+            location: location && location.value ? location.value : null,
+            zodiac: zodiac && zodiac.value ? zodiac.value : null,
             interests: selectedInterests.length > 0 ? selectedInterests : null
         };
     }
