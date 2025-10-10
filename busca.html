@@ -986,7 +986,6 @@
             </div>
         </div>
     </footer>
-
 <script>
 // Configuração do Supabase
 const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
@@ -1229,13 +1228,12 @@ async function logout() {
     }
 }
 
-// ==================== SISTEMA DE BUSCA CORRIGIDO ====================
+// ==================== SISTEMA DE BUSCA ====================
 async function loadAllUsers() {
     try {
         console.log('🔍 Carregando todos os usuários...');
         showLoadingState();
         
-        // ✅ CORREÇÃO: Buscar dados da mesma forma que no perfil.html
         const { data: users, error } = await supabase
             .from('profiles')
             .select(`
@@ -1269,17 +1267,9 @@ async function loadAllUsers() {
             return;
         }
 
-        // ✅ DEBUG: Mostrar todos os usuários e seus gêneros
-        console.log('🔍 LISTA COMPLETA DE USUÁRIOS:');
-        users.forEach((user, index) => {
-            const userGender = user.user_details?.gender || 'NÃO DEFINIDO';
-            console.log(`   ${index + 1}. ${user.nickname} - Gênero: "${userGender}"`);
-        });
-
         allUsers = users;
         console.log('✅ Usuários carregados:', allUsers.length);
         
-        // Aplicar filtros iniciais
         await applyFilters();
         
     } catch (error) {
@@ -1397,7 +1387,7 @@ async function filterAndDisplayUsers() {
                 }
             }
 
-            // ✅ FILTRO DE GÊNERO - CORREÇÃO DEFINITIVA
+            // Filtro de gênero
             if (passesFilters && currentFilters.gender) {
                 if (!user.user_details || !user.user_details.gender) {
                     console.log(`❌ ${userName} - Sem gênero definido`);
@@ -1408,7 +1398,6 @@ async function filterAndDisplayUsers() {
                     
                     console.log(`🔍 ${userName}: Comparando "${userGenderLower}" com "${filterGenderLower}"`);
                     
-                    // Comparação DIRETA
                     if (userGenderLower !== filterGenderLower) {
                         console.log(`❌ ${userName} - Gênero não corresponde`);
                         passesFilters = false;
@@ -1615,6 +1604,38 @@ function createFallbackUserCard(user) {
     `;
 }
 
+// ==================== FUNÇÕES DE INTERAÇÃO CORRIGIDAS ====================
+function sendMessage(userId) {
+    console.log('💌 Redirecionando para mensagens com usuário:', userId);
+    
+    if (!isProfileComplete()) {
+        alert('📝 Complete seu perfil primeiro para enviar mensagens!');
+        window.location.href = 'painel.html';
+        return;
+    }
+    
+    // ✅ CORREÇÃO: REDIRECIONAR PARA PÁGINA DE MENSAGENS
+    localStorage.setItem('openChatWithUserId', userId);
+    window.location.href = 'mensagens.html';
+}
+
+function viewProfile(userId) {
+    console.log('👀 Visualizando perfil:', userId);
+    
+    if (!isProfileComplete()) {
+        alert('📝 Complete seu perfil primeiro para ver outros perfis!');
+        window.location.href = 'painel.html';
+        return;
+    }
+    
+    localStorage.setItem('viewingProfileId', userId);
+    window.location.href = 'perfil.html';
+}
+
+function isProfileComplete() {
+    return true;
+}
+
 // ==================== FUNÇÕES AUXILIARES ====================
 function calculateAge(birthDate) {
     try {
@@ -1709,63 +1730,6 @@ function showError(message) {
     alert(message);
     const loadingResults = document.getElementById('loadingResults');
     if (loadingResults) loadingResults.classList.add('hidden');
-}
-
-// ==================== FUNÇÕES DE INTERAÇÃO ====================
-function sendMessage(userId) {
-    console.log('💌 Enviando mensagem para:', userId);
-    
-    if (!isProfileComplete()) {
-        alert('📝 Complete seu perfil primeiro para enviar mensagens!');
-        window.location.href = 'painel.html';
-        return;
-    }
-    
-    const message = prompt('Digite sua mensagem:');
-    if (message && message.trim()) {
-        sendMessageToUser(userId, message.trim());
-    }
-}
-
-async function sendMessageToUser(receiverId, content) {
-    try {
-        console.log('📤 Enviando mensagem para', receiverId);
-        
-        const { error } = await supabase
-            .from('messages')
-            .insert([
-                {
-                    sender_id: currentUser.id,
-                    receiver_id: receiverId,
-                    content: content
-                }
-            ]);
-
-        if (error) throw error;
-        
-        alert('Mensagem enviada com sucesso! 💌');
-        
-    } catch (error) {
-        console.error('❌ Erro ao enviar mensagem:', error);
-        alert('✅ Mensagem registrada!');
-    }
-}
-
-function viewProfile(userId) {
-    console.log('👀 Visualizando perfil:', userId);
-    
-    if (!isProfileComplete()) {
-        alert('📝 Complete seu perfil primeiro para ver outros perfis!');
-        window.location.href = 'painel.html';
-        return;
-    }
-    
-    localStorage.setItem('viewingProfileId', userId);
-    window.location.href = 'perfil.html';
-}
-
-function isProfileComplete() {
-    return true;
 }
 
 // ==================== INICIALIZAÇÃO ====================
