@@ -1235,10 +1235,25 @@ async function loadAllUsers() {
         console.log('🔍 Carregando todos os usuários...');
         showLoadingState();
         
-        // ✅ CORREÇÃO: Usar a VIEW complete_user_profiles que já tem todos os dados unidos
+        // ✅ CORREÇÃO: Buscar dados da mesma forma que no perfil.html
         const { data: users, error } = await supabase
-            .from('complete_user_profiles')
-            .select('*')
+            .from('profiles')
+            .select(`
+                id,
+                nickname,
+                full_name,
+                birth_date,
+                avatar_url,
+                user_details (
+                    gender,
+                    looking_for,
+                    interests,
+                    zodiac,
+                    display_city,
+                    description,
+                    profession
+                )
+            `)
             .neq('id', currentUser.id);
 
         if (error) {
@@ -1246,7 +1261,7 @@ async function loadAllUsers() {
             throw error;
         }
 
-        console.log('📊 Usuários encontrados na VIEW:', users?.length);
+        console.log('📊 Usuários encontrados:', users?.length);
 
         if (!users || users.length === 0) {
             console.log('ℹ️ Nenhum usuário encontrado');
@@ -1257,29 +1272,12 @@ async function loadAllUsers() {
         // ✅ DEBUG: Mostrar todos os usuários e seus gêneros
         console.log('🔍 LISTA COMPLETA DE USUÁRIOS:');
         users.forEach((user, index) => {
-            console.log(`   ${index + 1}. ${user.nickname} - Gênero: "${user.gender}"`);
+            const userGender = user.user_details?.gender || 'NÃO DEFINIDO';
+            console.log(`   ${index + 1}. ${user.nickname} - Gênero: "${userGender}"`);
         });
 
-        // ✅ CORREÇÃO: Mapear para o formato esperado
-        allUsers = users.map(user => ({
-            id: user.id,
-            nickname: user.nickname,
-            full_name: user.full_name,
-            birth_date: user.birth_date,
-            avatar_url: user.avatar_url,
-            user_details: {
-                gender: user.gender,
-                looking_for: user.looking_for,
-                interests: user.interests,
-                zodiac: user.zodiac,
-                address: user.display_city,
-                description: user.description,
-                profession: user.profession,
-                display_city: user.display_city
-            }
-        }));
-
-        console.log('✅ Usuários carregados com detalhes:', allUsers.length);
+        allUsers = users;
+        console.log('✅ Usuários carregados:', allUsers.length);
         
         // Aplicar filtros iniciais
         await applyFilters();
@@ -1422,7 +1420,7 @@ async function filterAndDisplayUsers() {
 
             // Filtro de localização
             if (passesFilters && currentFilters.location) {
-                const userLocation = user.user_details?.display_city || user.user_details?.address || '';
+                const userLocation = user.user_details?.display_city || '';
                 const normalizedUserLocation = userLocation.toString().toLowerCase();
                 const normalizedFilterLocation = currentFilters.location.toLowerCase();
                 
@@ -1550,7 +1548,7 @@ async function createUserCardWithPhoto(user) {
 
     const userDetails = user.user_details || {};
     const gender = userDetails.gender ? formatGender(userDetails.gender) : null;
-    const location = userDetails.display_city || userDetails.address || null;
+    const location = userDetails.display_city || '';
     const bio = userDetails.description || 'Este usuário ainda não adicionou uma descrição.';
     const profession = userDetails.profession || null;
     
