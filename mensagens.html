@@ -2487,24 +2487,51 @@ function formatTime(dateString) {
     return date.toLocaleDateString('pt-BR');
 }
 
-// 🎯 ADICIONAR FUNÇÃO DE ATUALIZAR CONVERSAS
+// 🎯 ADICIONAR FUNÇÃO DE ATUALIZAR CONVERSAS - VERSÃO DEFINITIVA
 async function refreshConversations() {
     try {
-        console.log('🔄 Atualizando conversas manualmente...');
+        console.log('🔄 SIMULANDO RECARREGAMENTO DA PÁGINA...');
         
-        // Recarregar conversas
-        await loadConversations();
+        // Mostrar loading
+        const chatMessages = document.getElementById('chatMessages');
+        const noMessages = document.getElementById('noMessages');
         
-        // Se tiver uma conversa selecionada, recarregar mensagens também
-        if (currentChatPartner) {
-            await loadMessages(currentChatPartner.id);
+        if (chatMessages) {
+            chatMessages.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Atualizando conversas...</p>
+                </div>
+            `;
         }
         
-        showNotification('✅ Conversas atualizadas!', 'success');
+        // 1. Salvar conversa atual
+        const currentPartner = currentChatPartner;
+        
+        // 2. Limpar estado atual
+        currentChatPartner = null;
+        conversations = [];
+        
+        // 3. Recarregar TUDO do zero
+        await loadConversations();
+        
+        // 4. Restaurar conversa selecionada se existia
+        if (currentPartner) {
+            await selectConversation(currentPartner.id);
+        } else {
+            // Se não tinha conversa selecionada, limpar a tela
+            document.getElementById('chatHeader').classList.add('hidden');
+            document.getElementById('chatInput').classList.add('hidden');
+            if (noMessages) {
+                noMessages.classList.remove('hidden');
+            }
+        }
+        
+        showNotification('✅ Conversas atualizadas com sucesso!', 'success');
         
     } catch (error) {
         console.error('Erro ao atualizar:', error);
-        showNotification('❌ Erro ao atualizar', 'error');
+        showNotification('❌ Erro ao atualizar conversas', 'error');
     }
 }
 
@@ -2556,6 +2583,23 @@ style.textContent = `
     
     .notification-info {
         background: #4299e1;
+    }
+    
+    /* Loading no chat */
+    .chat-messages .loading {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-light);
+    }
+    
+    .chat-messages .spinner {
+        width: 30px;
+        height: 30px;
+        border: 3px solid var(--bege);
+        border-top: 3px solid var(--vermelho-rosado);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
     }
 `;
 document.head.appendChild(style);
