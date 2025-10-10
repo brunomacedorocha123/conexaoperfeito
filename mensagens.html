@@ -2487,53 +2487,18 @@ function formatTime(dateString) {
     return date.toLocaleDateString('pt-BR');
 }
 
-// 🎯 FUNÇÃO ATUALIZAR - VERSÃO SIMPLES E FUNCIONAL
+// 🎯 SOLUÇÃO RADICAL - RECARREGA A PÁGINA DE VERDADE
 async function refreshConversations() {
-    try {
-        console.log('🔄 RECARREGANDO PÁGINA VIRTUAL...');
-        
-        // Mostrar loading
-        const chatMessages = document.getElementById('chatMessages');
-        if (chatMessages) {
-            chatMessages.innerHTML = `
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p>Atualizando conversas...</p>
-                </div>
-            `;
-        }
-        
-        // ✅ MÉTODO DIRETO: Recarregar TUDO chamando as funções principais
-        console.log('1. Reinicializando sessão...');
-        await initializeUserSession();
-        
-        console.log('2. Recarregando conversas...');
-        await loadConversations();
-        
-        console.log('3. Verificando conversa atual...');
-        if (currentChatPartner) {
-            console.log('4. Restaurando conversa:', currentChatPartner.id);
-            await selectConversation(currentChatPartner.id);
-        } else {
-            console.log('4. Nenhuma conversa ativa');
-            document.getElementById('chatHeader').classList.add('hidden');
-            document.getElementById('chatInput').classList.add('hidden');
-            document.getElementById('noMessages').classList.remove('hidden');
-        }
-        
-        console.log('🎉 RECARREGAMENTO COMPLETO!');
-        showNotification('✅ Conversas atualizadas!', 'success');
-        
-    } catch (error) {
-        console.error('❌ Erro:', error);
-        showNotification('❌ Erro ao atualizar', 'error');
-        
-        // Em caso de erro, pelo menos esconder o loading
-        const chatMessages = document.getElementById('chatMessages');
-        if (chatMessages) {
-            chatMessages.innerHTML = '<div class="no-messages">Erro ao carregar</div>';
-        }
-    }
+    console.log('🔄 RECARREGANDO PÁGINA...');
+    
+    // Mostrar que está atualizando
+    showNotification('🔄 Atualizando conversas...', 'info');
+    
+    // Pequeno delay para mostrar a notificação
+    setTimeout(() => {
+        // Recarrega a página completamente
+        window.location.reload();
+    }, 500);
 }
 
 // ==================== ESTILOS DAS NOTIFICAÇÕES ====================
