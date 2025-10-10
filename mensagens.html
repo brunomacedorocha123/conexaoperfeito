@@ -1184,7 +1184,6 @@
     // Configuração do Supabase
     const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
-
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // Estado da aplicação
@@ -1195,6 +1194,7 @@
     let userAvatarsCache = new Map();
     let currentMessageCount = 0;
     let isPremiumUser = false;
+    let lastResetDate = null;
 
     document.addEventListener('DOMContentLoaded', function() {
         checkAuth();
@@ -1214,15 +1214,71 @@
             }
             
             currentUser = user;
-            await loadUserData();
-            await checkUserPremiumStatus();
-            await loadMessageCount();
-            await loadConversations();
-            setupRealtimeUpdates();
+            await initializeUserSession();
             
         } catch (error) {
             console.error('Erro na autenticação:', error);
             window.location.href = 'login.html';
+        }
+    }
+
+    // ==================== INICIALIZAÇÃO DA SESSÃO ====================
+    async function initializeUserSession() {
+        try {
+            // ✅ 1. VERIFICAR E RESETAR CONTADOR DIÁRIO
+            await checkAndResetDailyCounter();
+            
+            // ✅ 2. CARREGAR DADOS DO USUÁRIO
+            await loadUserData();
+            
+            // ✅ 3. VERIFICAR STATUS PREMIUM
+            await checkUserPremiumStatus();
+            
+            // ✅ 4. CARREGAR CONTADOR ATUAL
+            await loadMessageCount();
+            
+            // ✅ 5. CARREGAR CONVERSAS
+            await loadConversations();
+            
+            // ✅ 6. CONFIGURAR ATUALIZAÇÕES EM TEMPO REAL
+            setupRealtimeUpdates();
+            
+            console.log('✅ Sessão inicializada com sucesso');
+            
+        } catch (error) {
+            console.error('Erro na inicialização:', error);
+        }
+    }
+
+    // ==================== SISTEMA DE RESET DIÁRIO ====================
+    async function checkAndResetDailyCounter() {
+        try {
+            console.log('🔄 Verificando reset diário do contador...');
+            
+            const today = new Date().toDateString();
+            
+            // ✅ VERIFICAR SE JÁ FEZ RESET HOJE
+            if (lastResetDate === today) {
+                console.log('✅ Reset já verificado hoje');
+                return;
+            }
+            
+            // ✅ CHAMAR FUNÇÃO DE RESET NO BANCO
+            const { data: resetResult, error: resetError } = await supabase
+                .rpc('reset_daily_message_counts');
+            
+            if (resetError) {
+                console.log('ℹ️ Nenhum contador antigo para resetar ou função não disponível');
+            } else {
+                console.log(`✅ ${resetResult || 0} contadores antigos resetados`);
+            }
+            
+            // ✅ MARCAR QUE JÁ FEZ RESET HOJE
+            lastResetDate = today;
+            localStorage.setItem('lastResetDate', today);
+            
+        } catch (error) {
+            console.error('Erro no reset diário:', error);
         }
     }
 
@@ -1254,7 +1310,7 @@
     // ==================== CARREGAR CONTADOR DO BANCO ====================
     async function loadMessageCount() {
         try {
-            console.log('🔄 Carregando contador de mensagens do banco...');
+            console.log('🔄 Carregando contador de mensagens...');
             
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
@@ -1265,12 +1321,12 @@
             if (isPremiumUser) {
                 console.log('⭐ Usuário Premium - sem limites');
                 updateMessageCounter('∞');
+                checkMessageLimit();
                 return;
             }
 
-            // ✅ BUSCAR CONTADOR ATUAL DO BANCO
+            // ✅ BUSCAR CONTADOR ATUAL DO BANCO (APENAS PARA FREE)
             const today = new Date().toISOString().split('T')[0];
-            console.log('📅 Buscando contador para data:', today);
             
             const { data, error } = await supabase
                 .from('daily_message_count')
@@ -1279,15 +1335,12 @@
                 .eq('date', today)
                 .single();
 
-            console.log('📊 Resultado da busca:', { data, error });
-
             if (error) {
                 if (error.code === 'PGRST116') {
                     // ✅ NENHUM REGISTRO - INICIALIZAR COM 0
                     console.log('➕ Nenhum registro encontrado, inicializando com 0');
                     currentMessageCount = 0;
                     
-                    // Criar registro inicial
                     const { error: insertError } = await supabase
                         .from('daily_message_count')
                         .insert({
@@ -1298,8 +1351,6 @@
                     
                     if (insertError) {
                         console.error('❌ Erro ao criar registro:', insertError);
-                    } else {
-                        console.log('✅ Registro criado com sucesso');
                     }
                 } else {
                     console.error('❌ Erro ao buscar contador:', error);
@@ -1330,16 +1381,20 @@
         
         if (!messageInput || !sendMessageBtn) return;
 
-        if (!isPremiumUser && currentMessageCount >= 5) {
-            // ✅ BLOQUEAR COMPLETAMENTE - LIMITE ATINGIDO
+        if (isPremiumUser) {
+            // ✅ PREMIUM: TUDO LIBERADO SEMPRE
+            messageInput.disabled = false;
+            messageInput.placeholder = 'Digite sua mensagem... (Premium)';
+            sendMessageBtn.disabled = false;
+            sendMessageBtn.innerHTML = '📤 Enviar';
+        } else if (currentMessageCount >= 5) {
+            // ✅ FREE: BLOQUEAR NO LIMITE
             messageInput.disabled = true;
             messageInput.placeholder = 'Limite de 5 mensagens atingido! Faça upgrade para Premium.';
             sendMessageBtn.disabled = true;
             sendMessageBtn.innerHTML = '🚫 Limite';
-            
-            console.log('🚫 Interface bloqueada - limite atingido');
         } else {
-            // ✅ LIBERAR PARA USO
+            // ✅ FREE: AINDA PODE ENVIAR
             messageInput.disabled = false;
             messageInput.placeholder = 'Digite sua mensagem...';
             sendMessageBtn.disabled = false;
@@ -1352,7 +1407,6 @@
         let counterElement = document.getElementById('messageCounter');
         
         if (!counterElement) {
-            // Criar elemento do contador se não existir
             const userInfo = document.querySelector('.user-info');
             if (userInfo) {
                 counterElement = document.createElement('div');
@@ -1375,6 +1429,7 @@
             if (isPremiumUser) {
                 counterElement.textContent = '∞ Premium';
                 counterElement.style.background = '#48bb78';
+                counterElement.title = 'Mensagens ilimitadas';
             } else {
                 counterElement.textContent = `${count}/5`;
                 if (count >= 5) {
@@ -1382,6 +1437,7 @@
                     counterElement.title = 'Limite atingido! Faça upgrade.';
                 } else {
                     counterElement.style.background = '#d1656d';
+                    counterElement.title = `${count} de 5 mensagens hoje`;
                 }
             }
         }
@@ -1394,7 +1450,6 @@
             
             let displayName = 'Usuário';
             
-            // Primeiro tenta pegar do perfil
             const { data: profile } = await supabase
                 .from('profiles')
                 .select('nickname')
@@ -1452,7 +1507,6 @@
 
             if (error || !profile) return;
 
-            // CARREGA O AVATAR DO USUÁRIO ATUAL NO CACHE
             let currentUserAvatar = null;
             if (profile.avatar_url) {
                 currentUserAvatar = await loadUserPhoto(profile.avatar_url);
@@ -1687,9 +1741,7 @@
             document.getElementById('chatHeader').classList.remove('hidden');
             document.getElementById('chatInput').classList.remove('hidden');
             
-            // ✅ VERIFICAR LIMITE ANTES DE LIBERAR INPUT
             checkMessageLimit();
-
             await loadMessages(partnerId);
             await markMessagesAsRead(partnerId);
 
@@ -1724,7 +1776,6 @@
             userIds.add(message.receiver_id);
         });
 
-        // GARANTIR que o usuário atual está no cache
         if (!userAvatarsCache.has(currentUser.id)) {
             const { data: currentUserProfile } = await supabase
                 .from('profiles')
@@ -1786,23 +1837,19 @@
         chatMessages.innerHTML = messages.map(message => {
             const isSent = message.sender_id === currentUser.id;
             
-            // ✅ BUSCAR AVATAR ESPECÍFICO PARA CADA MENSAGEM
             let senderAvatar = null;
             let senderName = 'Usuário';
             
             if (isSent) {
-                // Mensagem ENVIADA - usar avatar do USUÁRIO LOGADO
                 const currentUserInfo = userAvatarsCache.get(currentUser.id);
                 senderName = currentUserInfo?.name || 'Você';
                 senderAvatar = currentUserInfo?.avatar || null;
             } else {
-                // Mensagem RECEBIDA - usar avatar do PARCEIRO
                 const partnerInfo = userAvatarsCache.get(currentChatPartner.id);
                 senderName = partnerInfo?.name || currentChatPartner?.name || 'Usuário';
                 senderAvatar = partnerInfo?.avatar || null;
             }
 
-            // Criar HTML do avatar
             const avatarHtml = senderAvatar ? 
                 `<img class="message-avatar-img" src="${senderAvatar}" alt="${senderName}" style="display: block;">` :
                 senderName.charAt(0).toUpperCase();
@@ -1811,9 +1858,7 @@
                 `style="background-image: url(${senderAvatar}); background-size: cover; background-position: center;"` : 
                 '';
 
-            // Estrutura CORRETA: 
             if (isSent) {
-                // MENSAGEM ENVIADA pelo usuário logado
                 return `
                     <div class="message-container sent">
                         <div class="message sent">
@@ -1826,7 +1871,6 @@
                     </div>
                 `;
             } else {
-                // MENSAGEM RECEBIDA do usuário externo
                 return `
                     <div class="message-container received">
                         <div class="message-avatar" ${avatarStyle}>
@@ -1844,7 +1888,7 @@
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    // ==================== FUNÇÃO ENVIAR MENSAGEM CORRIGIDA ====================
+    // ==================== FUNÇÃO ENVIAR MENSAGEM ====================
     async function sendMessage() {
         const messageInput = document.getElementById('messageInput');
         const content = messageInput.value.trim();
@@ -1854,24 +1898,20 @@
         try {
             console.log('🔍 INICIANDO ENVIO DE MENSAGEM...');
             
-            // ✅ ATUALIZAR STATUS PREMIUM
             await checkUserPremiumStatus();
             
-            // ✅ SE FOR PREMIUM, PODE ENVIAR DIRETAMENTE
             if (isPremiumUser) {
-                console.log('⭐ Usuário Premium - enviando sem verificação');
+                console.log('⭐ Usuário Premium - enviando sem verificação de limite');
                 await sendMessageDirectly(content);
                 return;
             }
 
-            // ✅ VERIFICAR LIMITE APENAS PARA GRATUITOS
             console.log('📊 Contador atual:', currentMessageCount);
             
             if (currentMessageCount >= 5) {
                 console.log('🚫 LIMITE ATINGIDO! Bloqueando envio...');
                 showNotification('❌ Limite de 5 mensagens por dia atingido! Faça upgrade para Premium.', 'error');
                 
-                // ✅ BLOQUEAR INTERFACE DEFINITIVAMENTE
                 checkMessageLimit();
                 
                 setTimeout(() => {
@@ -1883,7 +1923,6 @@
                 return;
             }
 
-            // ✅ PODE ENVIAR
             console.log('✅ Pode enviar mensagem', currentMessageCount + 1, '/5');
             await sendMessageDirectly(content);
 
@@ -1893,12 +1932,10 @@
         }
     }
 
-    // ==================== ENVIAR MENSAGEM DIRETO ====================
     async function sendMessageDirectly(content) {
         const messageInput = document.getElementById('messageInput');
         
         try {
-            // ✅ 1. ENVIAR MENSAGEM
             const { error } = await supabase
                 .from('messages')
                 .insert({
@@ -1913,39 +1950,29 @@
                 throw error;
             }
 
-            // ✅ 2. INCREMENTAR CONTADOR APENAS SE NÃO FOR PREMIUM
             if (!isPremiumUser) {
                 console.log('📈 Incrementando contador...');
                 
-                // ✅ USAR A NOVA FUNÇÃO RPC increment_daily_message_count
                 const { error: incrementError } = await supabase
                     .rpc('increment_daily_message_count', { user_uuid: currentUser.id });
                 
                 if (incrementError) {
                     console.error('❌ Erro ao incrementar contador:', incrementError);
-                    // Fallback: incrementar localmente
                     currentMessageCount++;
                 } else {
                     console.log('✅ Contador incrementado no banco');
-                    // Recarregar contador do banco para garantir sincronia
                     await loadMessageCount();
                 }
                 
-                // Atualizar display
                 updateMessageCounter(currentMessageCount);
             }
 
-            // ✅ 3. ATUALIZAÇÃO DA UI
             messageInput.value = '';
             await loadMessages(currentChatPartner.id);
             await loadConversations();
 
             showNotification('✅ Mensagem enviada!', 'success');
-
-            // ✅ VERIFICAR SE ATINGIU O LIMITE APÓS ENVIO
-            if (!isPremiumUser) {
-                checkMessageLimit();
-            }
+            checkMessageLimit();
 
         } catch (error) {
             console.error('Erro no envio direto:', error);
@@ -1955,17 +1982,14 @@
 
     // ==================== SISTEMA DE NOTIFICAÇÕES ====================
     function showNotification(message, type = 'info') {
-        // Remover notificação existente
         const existingNotification = document.querySelector('.notification');
         if (existingNotification) {
             existingNotification.remove();
         }
 
-        // Criar nova notificação
         const notification = document.createElement('div');
         notification.className = `notification notification-${type}`;
         
-        // Definir cores baseadas no tipo
         let backgroundColor, textColor;
         switch(type) {
             case 'error':
@@ -1999,7 +2023,6 @@
         notification.textContent = message;
         document.body.appendChild(notification);
 
-        // Auto-remover após 5 segundos
         setTimeout(() => {
             if (notification.parentNode) {
                 notification.parentNode.removeChild(notification);
@@ -2007,7 +2030,6 @@
         }, 5000);
     }
 
-    // Adicionar estilo de animação para notificações
     const style = document.createElement('style');
     style.textContent = `
         @keyframes slideIn {
@@ -2053,12 +2075,10 @@
 
     // ==================== ATUALIZAÇÃO EM TEMPO REAL ====================
     function setupRealtimeUpdates() {
-        // Cancelar subscription anterior se existir
         if (messagesSubscription) {
             supabase.removeSubscription(messagesSubscription);
         }
 
-        // Nova subscription para mensagens em tempo real
         messagesSubscription = supabase
             .channel('public:messages')
             .on(
@@ -2071,19 +2091,15 @@
                 async (payload) => {
                     const newMessage = payload.new;
                     
-                    // Verificar se a mensagem é para o usuário atual
                     if (newMessage.receiver_id === currentUser.id || newMessage.sender_id === currentUser.id) {
                         console.log('Nova mensagem recebida em tempo real');
                         
-                        // Atualizar a lista de conversas
                         await loadConversations();
                         
-                        // Se estiver na conversa atual, atualizar as mensagens também
                         if (currentChatPartner && 
                             (newMessage.sender_id === currentChatPartner.id || newMessage.receiver_id === currentChatPartner.id)) {
                             await loadMessages(currentChatPartner.id);
                             
-                            // Marcar como lida se for do parceiro
                             if (newMessage.sender_id === currentChatPartner.id) {
                                 await markMessagesAsRead(currentChatPartner.id);
                             }
@@ -2097,7 +2113,6 @@
     function updateChatHeader() {
         if (!currentChatPartner) return;
 
-        // Mostra o nome do USUÁRIO EXTERNO (parceiro da conversa)
         document.getElementById('chatPartnerName').textContent = currentChatPartner.name;
         document.getElementById('chatPartnerStatus').textContent = 'Online';
         
@@ -2105,7 +2120,6 @@
         const chatHeaderAvatarImg = chatHeaderAvatar.querySelector('.chat-header-avatar-img');
         const chatHeaderAvatarFallback = chatHeaderAvatar.querySelector('.user-avatar-fallback');
         
-        // Usa o avatar do USUÁRIO EXTERNO (parceiro da conversa)
         if (currentChatPartner.avatar) {
             chatHeaderAvatar.style.backgroundImage = `url(${currentChatPartner.avatar})`;
             chatHeaderAvatarImg.src = currentChatPartner.avatar;
@@ -2298,26 +2312,24 @@
             });
         }
 
-        // Adicionar ícones aos botões
         addIconsToButtons();
+        
+        // ✅ VERIFICAR RESET QUANDO A PÁGINA GANHA FOCO
+        window.addEventListener('focus', checkAndResetDailyCounter);
     }
 
-    // ==================== BOTÃO SAIR FUNCIONAL ====================
     async function logout() {
         try {
-            // Cancelar subscription se existir
             if (messagesSubscription) {
                 supabase.removeSubscription(messagesSubscription);
             }
 
-            // Fazer logout
             const { error } = await supabase.auth.signOut();
             
             if (error) {
                 console.error('Erro ao fazer logout:', error);
             }
             
-            // Redirecionar para login
             window.location.href = 'login.html';
             
         } catch (error) {
@@ -2326,15 +2338,12 @@
         }
     }
 
-    // ==================== ADICIONAR ÍCONES AOS BOTÕES ====================
     function addIconsToButtons() {
-        // Botão enviar mensagem
         const sendMessageBtn = document.getElementById('sendMessageBtn');
         if (sendMessageBtn) {
             sendMessageBtn.innerHTML = '📤 Enviar';
         }
 
-        // Botões do modal
         const sendMessageFromModal = document.getElementById('sendMessageFromModal');
         const viewFullProfile = document.getElementById('viewFullProfile');
         
@@ -2345,7 +2354,6 @@
             viewFullProfile.innerHTML = '👀 Ver Perfil Completo';
         }
 
-        // Botões do header
         const headerButtons = document.querySelectorAll('.user-menu .btn-outline');
         headerButtons.forEach(btn => {
             if (btn.textContent.includes('Home')) btn.innerHTML = '🏠 Home';
@@ -2353,7 +2361,6 @@
             if (btn.textContent.includes('Sair')) btn.innerHTML = '🚪 Sair';
         });
 
-        // Botões do menu mobile
         const mobileButtons = document.querySelectorAll('.mobile-nav .btn-outline');
         mobileButtons.forEach(btn => {
             if (btn.textContent.includes('Home')) btn.innerHTML = '🏠 Home';
