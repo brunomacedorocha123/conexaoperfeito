@@ -1203,6 +1203,23 @@
         setupProfileModal();
     });
 
+    // ==================== VERIFICAR PARÂMETRO PREMIUM ====================
+    function checkPremiumActivation() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('premium') === 'activated') {
+            console.log('🎯 Premium ativado via URL - forçando atualização');
+            
+            setTimeout(async () => {
+                await checkUserPremiumStatus();
+                await loadMessageCount();
+                showNotification('🎉 Premium ativado! Agora você tem mensagens ilimitadas!', 'success');
+                
+                // Limpar parâmetro da URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }, 1000);
+        }
+    }
+
     // ==================== AUTENTICAÇÃO ====================
     async function checkAuth() {
         try {
@@ -1225,22 +1242,25 @@
     // ==================== INICIALIZAÇÃO DA SESSÃO ====================
     async function initializeUserSession() {
         try {
-            // ✅ 1. VERIFICAR E RESETAR CONTADOR DIÁRIO
+            // ✅ 1. VERIFICAR ATIVAÇÃO PREMIUM VIA URL
+            checkPremiumActivation();
+            
+            // ✅ 2. VERIFICAR E RESETAR CONTADOR DIÁRIO
             await checkAndResetDailyCounter();
             
-            // ✅ 2. CARREGAR DADOS DO USUÁRIO
+            // ✅ 3. CARREGAR DADOS DO USUÁRIO
             await loadUserData();
             
-            // ✅ 3. VERIFICAR STATUS PREMIUM
+            // ✅ 4. VERIFICAR STATUS PREMIUM
             await checkUserPremiumStatus();
             
-            // ✅ 4. CARREGAR CONTADOR ATUAL
+            // ✅ 5. CARREGAR CONTADOR ATUAL
             await loadMessageCount();
             
-            // ✅ 5. CARREGAR CONVERSAS
+            // ✅ 6. CARREGAR CONVERSAS
             await loadConversations();
             
-            // ✅ 6. CONFIGURAR ATUALIZAÇÕES EM TEMPO REAL
+            // ✅ 7. CONFIGURAR ATUALIZAÇÕES EM TEMPO REAL
             setupRealtimeUpdates();
             
             console.log('✅ Sessão inicializada com sucesso');
@@ -1268,7 +1288,7 @@
                 .rpc('reset_daily_message_counts');
             
             if (resetError) {
-                console.log('ℹ️ Nenhum contador antigo para resetar ou função não disponível');
+                console.log('ℹ️ Nenhum contador antigo para resetar');
             } else {
                 console.log(`✅ ${resetResult || 0} contadores antigos resetados`);
             }
@@ -1387,18 +1407,21 @@
             messageInput.placeholder = 'Digite sua mensagem... (Premium)';
             sendMessageBtn.disabled = false;
             sendMessageBtn.innerHTML = '📤 Enviar';
+            console.log('⭐ Interface liberada - Usuário Premium');
         } else if (currentMessageCount >= 5) {
             // ✅ FREE: BLOQUEAR NO LIMITE
             messageInput.disabled = true;
             messageInput.placeholder = 'Limite de 5 mensagens atingido! Faça upgrade para Premium.';
             sendMessageBtn.disabled = true;
             sendMessageBtn.innerHTML = '🚫 Limite';
+            console.log('🚫 Interface bloqueada - limite free atingido');
         } else {
             // ✅ FREE: AINDA PODE ENVIAR
             messageInput.disabled = false;
             messageInput.placeholder = 'Digite sua mensagem...';
             sendMessageBtn.disabled = false;
             sendMessageBtn.innerHTML = '📤 Enviar';
+            console.log('✅ Interface liberada - pode enviar');
         }
     }
 
@@ -1916,7 +1939,7 @@
                 
                 setTimeout(() => {
                     if (confirm('Deseja fazer upgrade para Premium e ter mensagens ilimitadas?')) {
-                        window.location.href = 'princing.html';
+                        window.location.href = 'pricing.html';
                     }
                 }, 1000);
                 
@@ -2030,49 +2053,6 @@
         }, 5000);
     }
 
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-        
-        .message-counter {
-            background: #d1656d;
-            color: white;
-            border-radius: 12px;
-            padding: 2px 8px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            margin-left: 8px;
-        }
-    `;
-    document.head.appendChild(style);
-
-    async function markMessagesAsRead(partnerId) {
-        try {
-            const { error } = await supabase
-                .from('messages')
-                .update({ is_read: true })
-                .eq('sender_id', partnerId)
-                .eq('receiver_id', currentUser.id)
-                .eq('is_read', false);
-
-            if (error) return;
-
-            await loadConversations();
-
-        } catch (error) {
-            console.error('Erro ao marcar mensagens como lidas:', error);
-        }
-    }
-
     // ==================== ATUALIZAÇÃO EM TEMPO REAL ====================
     function setupRealtimeUpdates() {
         if (messagesSubscription) {
@@ -2108,6 +2088,24 @@
                 }
             )
             .subscribe();
+    }
+
+    async function markMessagesAsRead(partnerId) {
+        try {
+            const { error } = await supabase
+                .from('messages')
+                .update({ is_read: true })
+                .eq('sender_id', partnerId)
+                .eq('receiver_id', currentUser.id)
+                .eq('is_read', false);
+
+            if (error) return;
+
+            await loadConversations();
+
+        } catch (error) {
+            console.error('Erro ao marcar mensagens como lidas:', error);
+        }
     }
 
     function updateChatHeader() {
@@ -2388,6 +2386,58 @@
         
         return date.toLocaleDateString('pt-BR');
     }
+
+    // ==================== ESTILOS DAS NOTIFICAÇÕES ====================
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .message-counter {
+            background: #d1656d;
+            color: white;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 10000;
+            max-width: 300px;
+            animation: slideIn 0.3s ease;
+            font-weight: 500;
+            color: white;
+        }
+        
+        .notification-success {
+            background: #48bb78;
+        }
+        
+        .notification-error {
+            background: #f56565;
+        }
+        
+        .notification-info {
+            background: #4299e1;
+        }
+    `;
+    document.head.appendChild(style);
 </script>
 
  
