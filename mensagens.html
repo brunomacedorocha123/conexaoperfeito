@@ -2487,15 +2487,13 @@ function formatTime(dateString) {
     return date.toLocaleDateString('pt-BR');
 }
 
-// 🎯 ADICIONAR FUNÇÃO DE ATUALIZAR CONVERSAS - VERSÃO DEFINITIVA
+// 🎯 FUNÇÃO ATUALIZAR - VERSÃO SIMPLES E FUNCIONAL
 async function refreshConversations() {
     try {
-        console.log('🔄 ATUALIZAÇÃO MANUAL INICIADA...');
+        console.log('🔄 RECARREGANDO PÁGINA VIRTUAL...');
         
         // Mostrar loading
         const chatMessages = document.getElementById('chatMessages');
-        const noMessages = document.getElementById('noMessages');
-        
         if (chatMessages) {
             chatMessages.innerHTML = `
                 <div class="loading">
@@ -2505,100 +2503,35 @@ async function refreshConversations() {
             `;
         }
         
-        // ✅ MÉTODO 1: Buscar dados DIRETAMENTE do banco primeiro
-        console.log('📊 Buscando dados atualizados do banco...');
-        const { data: freshMessages, error } = await supabase
-            .from('messages')
-            .select(`
-                id,
-                sender_id,
-                receiver_id,
-                content,
-                is_read,
-                created_at,
-                sender:profiles!messages_sender_id_fkey(nickname, avatar_url),
-                receiver:profiles!messages_receiver_id_fkey(nickname, avatar_url)
-            `)
-            .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
-            .order('created_at', { ascending: false });
-
-        if (error) {
-            console.error('❌ Erro ao buscar mensagens:', error);
-            throw error;
-        }
-
-        console.log(`✅ ${freshMessages?.length || 0} mensagens encontradas no banco`);
+        // ✅ MÉTODO DIRETO: Recarregar TUDO chamando as funções principais
+        console.log('1. Reinicializando sessão...');
+        await initializeUserSession();
         
-        // ✅ MÉTODO 2: Recriar manualmente as conversas
-        const conversationMap = new Map();
-
-        for (const message of freshMessages) {
-            const partnerId = message.sender_id === currentUser.id ? message.receiver_id : message.sender_id;
-            const partnerProfile = message.sender_id === currentUser.id ? message.receiver : message.sender;
-            
-            if (!conversationMap.has(partnerId)) {
-                conversationMap.set(partnerId, {
-                    partnerId: partnerId,
-                    partnerName: partnerProfile?.nickname || 'Usuário',
-                    partnerAvatar: partnerProfile?.avatar_url || null,
-                    lastMessage: message.content,
-                    lastMessageTime: message.created_at,
-                    unreadCount: 0,
-                    messages: []
-                });
-            }
-
-            const conversation = conversationMap.get(partnerId);
-            conversation.messages.push(message);
-
-            if (new Date(message.created_at) > new Date(conversation.lastMessageTime)) {
-                conversation.lastMessage = message.content;
-                conversation.lastMessageTime = message.created_at;
-            }
-
-            if (!message.is_read && message.receiver_id === currentUser.id) {
-                conversation.unreadCount++;
-            }
-        }
-
-        // ✅ ATUALIZAR ESTADO GLOBAL
-        conversations = Array.from(conversationMap.values());
-        console.log(`✅ ${conversations.length} conversas processadas`);
+        console.log('2. Recarregando conversas...');
+        await loadConversations();
         
-        // ✅ ATUALIZAR A LISTA DE CONVERSAS NA TELA
-        await loadConversationAvatars();
-        renderConversations();
-        
-        // ✅ RESTAURAR CONVERSA ATUAL SE EXISTIR
-        const currentPartner = currentChatPartner;
-        if (currentPartner && conversationMap.has(currentPartner.id)) {
-            console.log('🔄 Restaurando conversa atual:', currentPartner.id);
-            await selectConversation(currentPartner.id);
+        console.log('3. Verificando conversa atual...');
+        if (currentChatPartner) {
+            console.log('4. Restaurando conversa:', currentChatPartner.id);
+            await selectConversation(currentChatPartner.id);
         } else {
-            console.log('ℹ️ Nenhuma conversa para restaurar');
-            // Limpar a tela
+            console.log('4. Nenhuma conversa ativa');
             document.getElementById('chatHeader').classList.add('hidden');
             document.getElementById('chatInput').classList.add('hidden');
-            if (noMessages) {
-                noMessages.classList.remove('hidden');
-            }
-            if (chatMessages) {
-                chatMessages.innerHTML = '<div class="no-messages">Selecione uma conversa para ver as mensagens</div>';
-            }
+            document.getElementById('noMessages').classList.remove('hidden');
         }
         
-        console.log('🎉 ATUALIZAÇÃO CONCLUÍDA COM SUCESSO!');
+        console.log('🎉 RECARREGAMENTO COMPLETO!');
         showNotification('✅ Conversas atualizadas!', 'success');
         
     } catch (error) {
-        console.error('❌ Erro na atualização:', error);
-        showNotification('❌ Erro ao atualizar conversas', 'error');
+        console.error('❌ Erro:', error);
+        showNotification('❌ Erro ao atualizar', 'error');
         
-        // Restaurar tela em caso de erro
-        const noMessages = document.getElementById('noMessages');
+        // Em caso de erro, pelo menos esconder o loading
         const chatMessages = document.getElementById('chatMessages');
-        if (noMessages && chatMessages) {
-            chatMessages.innerHTML = '<div class="no-messages">Erro ao carregar mensagens</div>';
+        if (chatMessages) {
+            chatMessages.innerHTML = '<div class="no-messages">Erro ao carregar</div>';
         }
     }
 }
