@@ -1199,1647 +1199,1698 @@
     </div>
   </footer>
 <script>
-    // Configuração do Supabase
-    const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Configuração do Supabase
+const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Estado da aplicação
-    let currentUser = null;
-    let currentChatPartner = null;
-    let conversations = [];
-    let messagesSubscription = null;
-    let userAvatarsCache = new Map();
-    let currentMessageCount = 0;
-    let isPremiumUser = false;
-    let lastResetDate = null;
+// Estado da aplicação
+let currentUser = null;
+let currentChatPartner = null;
+let conversations = [];
+let messagesSubscription = null;
+let userAvatarsCache = new Map();
+let currentMessageCount = 0;
+let isPremiumUser = false;
+let lastResetDate = null;
 
-    document.addEventListener('DOMContentLoaded', function() {
-        checkAuth();
-        setupMobileMenu();
-        setupEventListeners();
-        setupProfileModal();
-    });
+document.addEventListener('DOMContentLoaded', function() {
+    checkAuth();
+    setupMobileMenu();
+    setupEventListeners();
+    setupProfileModal();
+});
 
-    // ==================== VERIFICAÇÃO FORÇADA DE PREMIUM ====================
-    async function forcePremiumCheck() {
-        try {
-            console.log('🔍 VERIFICAÇÃO FORÇADA DE PREMIUM...');
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return false;
+// ==================== VERIFICAÇÃO FORÇADA DE PREMIUM ====================
+async function forcePremiumCheck() {
+    try {
+        console.log('🔍 VERIFICAÇÃO FORÇADA DE PREMIUM...');
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return false;
 
-            // ✅ MÉTODO 1: Verificar via função RPC
-            const { data: premiumStatus, error: rpcError } = await supabase
-                .rpc('is_user_premium', { user_uuid: user.id });
-            
-            console.log('⭐ Status Premium (RPC):', premiumStatus, 'Erro:', rpcError);
-            
-            if (premiumStatus) {
-                console.log('🎉 USUÁRIO É PREMIUM - Liberando tudo!');
-                isPremiumUser = true;
-                updateMessageCounter('∞');
-                checkMessageLimit();
-                return true;
-            }
-
-            // ✅ MÉTODO 2: Verificar diretamente na tabela de assinaturas
-            const { data: subscription, error: subError } = await supabase
-                .from('user_subscriptions')
-                .select('status, expires_at')
-                .eq('user_id', user.id)
-                .eq('status', 'active')
-                .single();
-
-            if (subscription && new Date(subscription.expires_at) > new Date()) {
-                console.log('🎉 USUÁRIO É PREMIUM (via tabela)');
-                isPremiumUser = true;
-                updateMessageCounter('∞');
-                checkMessageLimit();
-                return true;
-            }
-
-            // ✅ MÉTODO 3: Verificar no perfil
-            const { data: profile, error: profileError } = await supabase
-                .from('profiles')
-                .select('is_premium, premium_expires_at')
-                .eq('id', user.id)
-                .single();
-
-            if (profile && profile.is_premium) {
-                console.log('🎉 USUÁRIO É PREMIUM (via perfil)');
-                isPremiumUser = true;
-                updateMessageCounter('∞');
-                checkMessageLimit();
-                return true;
-            }
-
-            console.log('ℹ️ Usuário NÃO é premium');
-            isPremiumUser = false;
-            return false;
-
-        } catch (error) {
-            console.error('❌ Erro na verificação premium:', error);
-            isPremiumUser = false;
-            return false;
+        // ✅ MÉTODO 1: Verificar via função RPC
+        const { data: premiumStatus, error: rpcError } = await supabase
+            .rpc('is_user_premium', { user_uuid: user.id });
+        
+        console.log('⭐ Status Premium (RPC):', premiumStatus, 'Erro:', rpcError);
+        
+        if (premiumStatus) {
+            console.log('🎉 USUÁRIO É PREMIUM - Liberando tudo!');
+            isPremiumUser = true;
+            updateMessageCounter('∞');
+            checkMessageLimit();
+            return true;
         }
-    }
 
-    // ==================== VERIFICAR PARÂMETRO PREMIUM ====================
-    function checkPremiumActivation() {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('premium') === 'activated') {
-            console.log('🎯 Premium ativado via URL - forçando atualização');
-            
-            setTimeout(async () => {
-                await forcePremiumCheck();
-                await loadMessageCount();
-                showNotification('🎉 Premium ativado! Agora você tem mensagens ilimitadas!', 'success');
-                
-                // Limpar parâmetro da URL
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }, 1000);
+        // ✅ MÉTODO 2: Verificar diretamente na tabela de assinaturas
+        const { data: subscription, error: subError } = await supabase
+            .from('user_subscriptions')
+            .select('status, expires_at')
+            .eq('user_id', user.id)
+            .eq('status', 'active')
+            .single();
+
+        if (subscription && new Date(subscription.expires_at) > new Date()) {
+            console.log('🎉 USUÁRIO É PREMIUM (via tabela)');
+            isPremiumUser = true;
+            updateMessageCounter('∞');
+            checkMessageLimit();
+            return true;
         }
-    }
 
-    // ==================== AUTENTICAÇÃO ====================
-    async function checkAuth() {
-        try {
-            const { data: { user }, error } = await supabase.auth.getUser();
-            
-            if (error || !user) {
-                window.location.href = 'login.html';
-                return;
-            }
-            
-            currentUser = user;
-            await initializeUserSession();
-            
-        } catch (error) {
-            console.error('Erro na autenticação:', error);
-            window.location.href = 'login.html';
+        // ✅ MÉTODO 3: Verificar no perfil
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('is_premium, premium_expires_at')
+            .eq('id', user.id)
+            .single();
+
+        if (profile && profile.is_premium) {
+            console.log('🎉 USUÁRIO É PREMIUM (via perfil)');
+            isPremiumUser = true;
+            updateMessageCounter('∞');
+            checkMessageLimit();
+            return true;
         }
-    }
 
-    // ==================== INICIALIZAÇÃO DA SESSÃO ====================
-    async function initializeUserSession() {
-        try {
-            // ✅ 1. VERIFICAR ATIVAÇÃO PREMIUM VIA URL
-            checkPremiumActivation();
-            
-            // ✅ 2. VERIFICAÇÃO FORÇADA DE PREMIUM
+        console.log('ℹ️ Usuário NÃO é premium');
+        isPremiumUser = false;
+        return false;
+
+    } catch (error) {
+        console.error('❌ Erro na verificação premium:', error);
+        isPremiumUser = false;
+        return false;
+    }
+}
+
+// ==================== VERIFICAR PARÂMETRO PREMIUM ====================
+function checkPremiumActivation() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('premium') === 'activated') {
+        console.log('🎯 Premium ativado via URL - forçando atualização');
+        
+        setTimeout(async () => {
             await forcePremiumCheck();
-            
-            // ✅ 3. VERIFICAR E RESETAR CONTADOR DIÁRIO
-            await checkAndResetDailyCounter();
-            
-            // ✅ 4. CARREGAR DADOS DO USUÁRIO
-            await loadUserData();
-            
-            // ✅ 5. VERIFICAR STATUS PREMIUM (redundante para garantir)
-            await checkUserPremiumStatus();
-            
-            // ✅ 6. CARREGAR CONTADOR ATUAL
             await loadMessageCount();
+            showNotification('🎉 Premium ativado! Agora você tem mensagens ilimitadas!', 'success');
             
-            // ✅ 7. CARREGAR CONVERSAS
-            await loadConversations();
-            
-            // ✅ 8. VERIFICAR E ABRIR CONVERSA ARMAZENADA
-            await checkAndOpenStoredConversation();
-            
-            // ✅ 9. CONFIGURAR ATUALIZAÇÕES EM TEMPO REAL
-            setupRealtimeUpdates();
-            
-            console.log('✅ Sessão inicializada com sucesso - Premium:', isPremiumUser);
-            
-        } catch (error) {
-            console.error('Erro na inicialização:', error);
-        }
+            // Limpar parâmetro da URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }, 1000);
     }
+}
 
-    // ==================== VERIFICAR E ABRIR CONVERSA AO CARREGAR ====================
-    async function checkAndOpenStoredConversation() {
-        try {
-            const storedUserId = localStorage.getItem('openChatWithUserId');
+// ==================== AUTENTICAÇÃO ====================
+async function checkAuth() {
+    try {
+        console.log('🔐 Verificando autenticação...');
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error) {
+            console.error('❌ Erro na autenticação:', error);
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        if (!user) {
+            console.log('❌ Usuário não autenticado');
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        console.log('✅ Usuário autenticado:', user.id);
+        currentUser = user;
+        await initializeUserSession();
+        
+    } catch (error) {
+        console.error('❌ Erro na autenticação:', error);
+        window.location.href = 'login.html';
+    }
+}
+
+// ==================== INICIALIZAÇÃO DA SESSÃO ====================
+async function initializeUserSession() {
+    try {
+        console.log('🚀 Inicializando sessão do usuário...');
+        
+        // ✅ 1. VERIFICAR ATIVAÇÃO PREMIUM VIA URL
+        checkPremiumActivation();
+        
+        // ✅ 2. VERIFICAÇÃO FORÇADA DE PREMIUM
+        await forcePremiumCheck();
+        
+        // ✅ 3. VERIFICAR E RESETAR CONTADOR DIÁRIO
+        await checkAndResetDailyCounter();
+        
+        // ✅ 4. CARREGAR DADOS DO USUÁRIO
+        await loadUserData();
+        
+        // ✅ 5. VERIFICAR STATUS PREMIUM (redundante para garantir)
+        await checkUserPremiumStatus();
+        
+        // ✅ 6. CARREGAR CONTADOR ATUAL
+        await loadMessageCount();
+        
+        // ✅ 7. CARREGAR CONVERSAS
+        await loadConversations();
+        
+        // ✅ 8. VERIFICAR E ABRIR CONVERSA ARMAZENADA
+        await checkAndOpenStoredConversation();
+        
+        // ✅ 9. CONFIGURAR ATUALIZAÇÕES EM TEMPO REAL
+        setupRealtimeUpdates();
+        
+        console.log('✅ Sessão inicializada com sucesso - Premium:', isPremiumUser);
+        
+    } catch (error) {
+        console.error('❌ Erro na inicialização:', error);
+    }
+}
+
+// ==================== VERIFICAR E ABRIR CONVERSA AO CARREGAR ====================
+async function checkAndOpenStoredConversation() {
+    try {
+        const storedUserId = localStorage.getItem('openChatWithUserId');
+        
+        if (storedUserId && currentUser) {
+            console.log('🎯 Abrindo conversa armazenada:', storedUserId);
             
-            if (storedUserId && currentUser) {
-                console.log('🎯 Abrindo conversa armazenada:', storedUserId);
-                
-                // Verificar se o usuário existe
-                const { data: userProfile, error } = await supabase
-                    .from('profiles')
-                    .select('nickname, avatar_url')
-                    .eq('id', storedUserId)
-                    .single();
+            // Verificar se o usuário existe
+            const { data: userProfile, error } = await supabase
+                .from('profiles')
+                .select('nickname, avatar_url')
+                .eq('id', storedUserId)
+                .single();
 
-                if (error || !userProfile) {
-                    console.log('❌ Usuário não encontrado:', storedUserId);
-                    localStorage.removeItem('openChatWithUserId');
-                    return;
-                }
-
-                // ✅ ADICIONAR À LISTA DE CONVERSAS SE NÃO EXISTIR
-                const existingConversation = conversations.find(conv => conv.partnerId === storedUserId);
-                
-                if (!existingConversation) {
-                    console.log('➕ Adicionando nova conversa à lista');
-                    
-                    const newConversation = {
-                        partnerId: storedUserId,
-                        partnerName: userProfile.nickname || 'Usuário',
-                        partnerAvatar: userProfile.avatar_url || null,
-                        lastMessage: '👋 Iniciar conversa',
-                        lastMessageTime: new Date().toISOString(),
-                        unreadCount: 0,
-                        messages: []
-                    };
-                    
-                    conversations.unshift(newConversation);
-                    
-                    // Carregar avatar se existir
-                    if (userProfile.avatar_url && !userAvatarsCache.has(storedUserId)) {
-                        const photoUrl = await loadUserPhoto(userProfile.avatar_url);
-                        if (photoUrl) {
-                            userAvatarsCache.set(storedUserId, {
-                                name: userProfile.nickname,
-                                avatar: photoUrl
-                            });
-                        }
-                    }
-                    
-                    renderConversations();
-                }
-
-                // ✅ SELECIONAR A CONVERSA
-                await selectConversation(storedUserId);
-                
-                // Limpar o storage
+            if (error || !userProfile) {
+                console.log('❌ Usuário não encontrado:', storedUserId);
                 localStorage.removeItem('openChatWithUserId');
-                
-                console.log('✅ Conversa aberta com sucesso');
+                return;
             }
-        } catch (error) {
-            console.error('❌ Erro ao abrir conversa armazenada:', error);
+
+            // ✅ ADICIONAR À LISTA DE CONVERSAS SE NÃO EXISTIR
+            const existingConversation = conversations.find(conv => conv.partnerId === storedUserId);
+            
+            if (!existingConversation) {
+                console.log('➕ Adicionando nova conversa à lista');
+                
+                const newConversation = {
+                    partnerId: storedUserId,
+                    partnerName: userProfile.nickname || 'Usuário',
+                    partnerAvatar: userProfile.avatar_url || null,
+                    lastMessage: '👋 Iniciar conversa',
+                    lastMessageTime: new Date().toISOString(),
+                    unreadCount: 0,
+                    messages: []
+                };
+                
+                conversations.unshift(newConversation);
+                
+                // Carregar avatar se existir
+                if (userProfile.avatar_url && !userAvatarsCache.has(storedUserId)) {
+                    const photoUrl = await loadUserPhoto(userProfile.avatar_url);
+                    if (photoUrl) {
+                        userAvatarsCache.set(storedUserId, {
+                            name: userProfile.nickname,
+                            avatar: photoUrl
+                        });
+                    }
+                }
+                
+                renderConversations();
+            }
+
+            // ✅ SELECIONAR A CONVERSA
+            await selectConversation(storedUserId);
+            
+            // Limpar o storage
             localStorage.removeItem('openChatWithUserId');
+            
+            console.log('✅ Conversa aberta com sucesso');
         }
+    } catch (error) {
+        console.error('❌ Erro ao abrir conversa armazenada:', error);
+        localStorage.removeItem('openChatWithUserId');
     }
+}
 
-    // ==================== CARREGAR CONVERSAS - CORRIGIDA ====================
-    async function loadConversations() {
-        try {
-            console.log('🔄 Carregando conversas...');
-            
-            const { data: messages, error } = await supabase
-                .from('messages')
-                .select(`
-                    id,
-                    sender_id,
-                    receiver_id,
-                    content,
-                    is_read,
-                    created_at,
-                    sender:profiles!messages_sender_id_fkey(nickname, avatar_url),
-                    receiver:profiles!messages_receiver_id_fkey(nickname, avatar_url)
-                `)
-                .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
-                .order('created_at', { ascending: false });
+// ==================== CARREGAR CONVERSAS - CORRIGIDA ====================
+async function loadConversations() {
+    try {
+        console.log('🔄 Carregando conversas...');
+        
+        const { data: messages, error } = await supabase
+            .from('messages')
+            .select(`
+                id,
+                sender_id,
+                receiver_id,
+                content,
+                is_read,
+                created_at,
+                sender:profiles!messages_sender_id_fkey(nickname, avatar_url),
+                receiver:profiles!messages_receiver_id_fkey(nickname, avatar_url)
+            `)
+            .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
+            .order('created_at', { ascending: false });
 
-            if (error) {
-                console.error('❌ Erro ao carregar mensagens:', error);
-                conversations = [];
-                renderConversations();
-                return;
-            }
-
-            // ✅ CORREÇÃO CRÍTICA: Verificar se messages existe e tem dados
-            if (!messages || messages.length === 0) {
-                console.log('ℹ️ Nenhuma mensagem encontrada - conversas vazias');
-                conversations = [];
-                renderConversations();
-                return;
-            }
-
-            const conversationMap = new Map();
-
-            for (const message of messages) {
-                const partnerId = message.sender_id === currentUser.id ? message.receiver_id : message.sender_id;
-                const partnerProfile = message.sender_id === currentUser.id ? message.receiver : message.sender;
-                
-                // ✅ CORREÇÃO: Verificar se partnerProfile existe
-                if (!partnerProfile) {
-                    console.log('⚠️ Perfil do parceiro não encontrado para:', partnerId);
-                    continue;
-                }
-                
-                if (!conversationMap.has(partnerId)) {
-                    conversationMap.set(partnerId, {
-                        partnerId: partnerId,
-                        partnerName: partnerProfile.nickname || 'Usuário',
-                        partnerAvatar: partnerProfile.avatar_url || null,
-                        lastMessage: message.content,
-                        lastMessageTime: message.created_at,
-                        unreadCount: 0,
-                        messages: []
-                    });
-                }
-
-                const conversation = conversationMap.get(partnerId);
-                conversation.messages.push(message);
-
-                if (new Date(message.created_at) > new Date(conversation.lastMessageTime)) {
-                    conversation.lastMessage = message.content;
-                    conversation.lastMessageTime = message.created_at;
-                }
-
-                if (!message.is_read && message.receiver_id === currentUser.id) {
-                    conversation.unreadCount++;
-                }
-            }
-
-            conversations = Array.from(conversationMap.values());
-            console.log(`✅ ${conversations.length} conversas carregadas`);
-            
-            await loadConversationAvatars();
-            renderConversations();
-
-        } catch (error) {
-            console.error('Erro ao carregar conversas:', error);
+        if (error) {
+            console.error('❌ Erro ao carregar mensagens:', error);
             conversations = [];
             renderConversations();
+            return;
         }
-    }
 
-    // ==================== SISTEMA DE RESET DIÁRIO ====================
-    async function checkAndResetDailyCounter() {
-        try {
-            console.log('🔄 Verificando reset diário do contador...');
+        // ✅ CORREÇÃO CRÍTICA: Verificar se messages existe e tem dados
+        if (!messages || messages.length === 0) {
+            console.log('ℹ️ Nenhuma mensagem encontrada - conversas vazias');
+            conversations = [];
+            renderConversations();
+            return;
+        }
+
+        const conversationMap = new Map();
+
+        for (const message of messages) {
+            const partnerId = message.sender_id === currentUser.id ? message.receiver_id : message.sender_id;
+            const partnerProfile = message.sender_id === currentUser.id ? message.receiver : message.sender;
             
-            const today = new Date().toDateString();
-            
-            // ✅ VERIFICAR SE JÁ FEZ RESET HOJE
-            if (lastResetDate === today) {
-                console.log('✅ Reset já verificado hoje');
-                return;
+            // ✅ CORREÇÃO: Verificar se partnerProfile existe
+            if (!partnerProfile) {
+                console.log('⚠️ Perfil do parceiro não encontrado para:', partnerId);
+                continue;
             }
             
-            // ✅ CHAMAR FUNÇÃO DE RESET NO BANCO
-            const { data: resetResult, error: resetError } = await supabase
-                .rpc('reset_daily_message_counts');
-            
-            if (resetError) {
-                console.log('ℹ️ Nenhum contador antigo para resetar');
-            } else {
-                console.log(`✅ ${resetResult || 0} contadores antigos resetados`);
+            if (!conversationMap.has(partnerId)) {
+                conversationMap.set(partnerId, {
+                    partnerId: partnerId,
+                    partnerName: partnerProfile.nickname || 'Usuário',
+                    partnerAvatar: partnerProfile.avatar_url || null,
+                    lastMessage: message.content,
+                    lastMessageTime: message.created_at,
+                    unreadCount: 0,
+                    messages: []
+                });
             }
-            
-            // ✅ MARCAR QUE JÁ FEZ RESET HOJE
-            lastResetDate = today;
-            localStorage.setItem('lastResetDate', today);
-            
-        } catch (error) {
-            console.error('Erro no reset diário:', error);
-        }
-    }
 
-    // ==================== VERIFICAR STATUS PREMIUM ====================
-    async function checkUserPremiumStatus() {
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return false;
+            const conversation = conversationMap.get(partnerId);
+            conversation.messages.push(message);
+
+            if (new Date(message.created_at) > new Date(conversation.lastMessageTime)) {
+                conversation.lastMessage = message.content;
+                conversation.lastMessageTime = message.created_at;
+            }
+
+            if (!message.is_read && message.receiver_id === currentUser.id) {
+                conversation.unreadCount++;
+            }
+        }
+
+        conversations = Array.from(conversationMap.values());
+        console.log(`✅ ${conversations.length} conversas carregadas`);
+        
+        await loadConversationAvatars();
+        renderConversations();
+
+    } catch (error) {
+        console.error('Erro ao carregar conversas:', error);
+        conversations = [];
+        renderConversations();
+    }
+}
+
+// ==================== SISTEMA DE RESET DIÁRIO ====================
+async function checkAndResetDailyCounter() {
+    try {
+        console.log('🔄 Verificando reset diário do contador...');
+        
+        const today = new Date().toDateString();
+        
+        // ✅ VERIFICAR SE JÁ FEZ RESET HOJE
+        if (lastResetDate === today) {
+            console.log('✅ Reset já verificado hoje');
+            return;
+        }
+        
+        // ✅ CHAMAR FUNÇÃO DE RESET NO BANCO
+        const { data: resetResult, error: resetError } = await supabase
+            .rpc('reset_daily_message_counts');
+        
+        if (resetError) {
+            console.log('ℹ️ Nenhum contador antigo para resetar');
+        } else {
+            console.log(`✅ ${resetResult || 0} contadores antigos resetados`);
+        }
+        
+        // ✅ MARCAR QUE JÁ FEZ RESET HOJE
+        lastResetDate = today;
+        localStorage.setItem('lastResetDate', today);
+        
+    } catch (error) {
+        console.error('Erro no reset diário:', error);
+    }
+}
+
+// ==================== VERIFICAR STATUS PREMIUM ====================
+async function checkUserPremiumStatus() {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return false;
+        
+        const { data, error } = await supabase
+            .rpc('is_user_premium', { user_uuid: user.id });
+        
+        if (error) {
+            console.error('Erro ao verificar premium:', error);
+            isPremiumUser = false;
+        } else {
+            isPremiumUser = data;
+            console.log('⭐ Status Premium:', isPremiumUser);
             
-            const { data, error } = await supabase
-                .rpc('is_user_premium', { user_uuid: user.id });
-            
-            if (error) {
-                console.error('Erro ao verificar premium:', error);
-                isPremiumUser = false;
-            } else {
-                isPremiumUser = data;
-                console.log('⭐ Status Premium:', isPremiumUser);
+            // ✅ ATUALIZAR INTERFACE IMEDIATAMENTE
+            if (isPremiumUser) {
+                updateMessageCounter('∞');
+            }
+        }
+        
+        checkMessageLimit();
+        return isPremiumUser;
+    } catch (error) {
+        console.error('Erro:', error);
+        isPremiumUser = false;
+        return false;
+    }
+}
+
+// ==================== CARREGAR CONTADOR DO BANCO - CORRIGIDO ====================
+async function loadMessageCount() {
+    try {
+        console.log('🔄 Carregando contador de mensagens...');
+        
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // ✅ SE FOR PREMIUM, IGNORAR CONTADOR
+        if (isPremiumUser) {
+            console.log('⭐ Usuário Premium - ignorando contador');
+            updateMessageCounter('∞');
+            checkMessageLimit();
+            return;
+        }
+
+        // ✅ BUSCAR CONTADOR APENAS SE NÃO FOR PREMIUM
+        const today = new Date().toISOString().split('T')[0];
+        
+        const { data, error } = await supabase
+            .from('daily_message_count')
+            .select('message_count')
+            .eq('user_id', user.id)
+            .eq('date', today)
+            .single();
+
+        if (error) {
+            if (error.code === 'PGRST116') {
+                // ✅ CRIAR REGISTRO SE NÃO EXISTIR
+                currentMessageCount = 0;
                 
-                // ✅ ATUALIZAR INTERFACE IMEDIATAMENTE
-                if (isPremiumUser) {
-                    updateMessageCounter('∞');
+                const { error: insertError } = await supabase
+                    .from('daily_message_count')
+                    .insert({
+                        user_id: user.id,
+                        date: today,
+                        message_count: 0
+                    });
+                
+                if (insertError) {
+                    console.error('❌ Erro ao criar registro:', insertError);
+                } else {
+                    console.log('✅ Novo registro de contador criado');
                 }
+            } else {
+                console.error('❌ Erro ao buscar contador:', error);
+                currentMessageCount = 0;
             }
+        } else {
+            currentMessageCount = data.message_count || 0;
+            console.log('✅ Contador carregado do banco:', currentMessageCount);
+        }
+        
+        updateMessageCounter(currentMessageCount);
+        checkMessageLimit();
+
+    } catch (error) {
+        console.error('Erro ao carregar contador:', error);
+        currentMessageCount = 0;
+        updateMessageCounter(0);
+        checkMessageLimit();
+    }
+}
+
+// ==================== VERIFICAR LIMITE E BLOQUEAR ENVIO ====================
+function checkMessageLimit() {
+    const messageInput = document.getElementById('messageInput');
+    const sendMessageBtn = document.getElementById('sendMessageBtn');
+    
+    if (!messageInput || !sendMessageBtn) return;
+
+    if (isPremiumUser) {
+        // ✅ PREMIUM: TUDO LIBERADO SEMPRE
+        messageInput.disabled = false;
+        messageInput.placeholder = 'Digite sua mensagem... 💎 Premium';
+        sendMessageBtn.disabled = false;
+        sendMessageBtn.innerHTML = '📤 Enviar';
+        console.log('⭐ Interface liberada - Usuário Premium');
+    } else if (currentMessageCount >= 5) {
+        // ✅ FREE: BLOQUEAR NO LIMITE
+        messageInput.disabled = true;
+        messageInput.placeholder = '💡 Limite atingido! Faça upgrade para Premium.';
+        sendMessageBtn.disabled = true;
+        sendMessageBtn.innerHTML = '🚫 Limite';
+        console.log('🚫 Interface bloqueada - limite free atingido');
+    } else {
+        // ✅ FREE: AINDA PODE ENVIAR
+        messageInput.disabled = false;
+        messageInput.placeholder = 'Digite sua mensagem...';
+        sendMessageBtn.disabled = false;
+        sendMessageBtn.innerHTML = '📤 Enviar';
+        console.log('✅ Interface liberada - pode enviar');
+    }
+}
+
+// ==================== ATUALIZAR DISPLAY DO CONTADOR ====================
+function updateMessageCounter(count) {
+    let counterElement = document.getElementById('messageCounter');
+    
+    if (!counterElement) {
+        const userInfo = document.querySelector('.user-info');
+        if (userInfo) {
+            counterElement = document.createElement('div');
+            counterElement.id = 'messageCounter';
+            counterElement.className = 'message-counter';
+            counterElement.style.cssText = `
+                background: #d1656d;
+                color: white;
+                border-radius: 12px;
+                padding: 2px 8px;
+                font-size: 0.75rem;
+                font-weight: bold;
+                margin-left: 8px;
+            `;
+            userInfo.appendChild(counterElement);
+        }
+    }
+
+    if (counterElement) {
+        if (isPremiumUser) {
+            counterElement.textContent = '∞ ILIMITADO';
+            counterElement.style.background = '#48bb78';
+            counterElement.title = 'Mensagens ilimitadas - Premium';
+            counterElement.style.fontSize = '0.7rem';
+        } else {
+            counterElement.textContent = `${count}/5`;
+            if (count >= 5) {
+                counterElement.style.background = '#f56565';
+                counterElement.title = 'Limite atingido! Faça upgrade.';
+            } else {
+                counterElement.style.background = '#d1656d';
+                counterElement.title = `${count} de 5 mensagens hoje`;
+            }
+        }
+    }
+}
+
+// ==================== DADOS DO USUÁRIO ====================
+async function loadUserData() {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        let displayName = 'Usuário';
+        
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('nickname')
+            .eq('id', user.id)
+            .single();
+
+        if (profile && profile.nickname) {
+            displayName = profile.nickname;
+        } else if (user.user_metadata && user.user_metadata.nickname) {
+            displayName = user.user_metadata.nickname;
+        } else if (user.user_metadata && user.user_metadata.full_name) {
+            displayName = user.user_metadata.full_name;
+        } else if (user.email) {
+            displayName = user.email.split('@')[0];
+        }
+
+        const userNickname = document.getElementById('userNickname');
+        const mobileUserNickname = document.getElementById('mobileUserNickname');
+        
+        if (userNickname) userNickname.textContent = displayName;
+        if (mobileUserNickname) mobileUserNickname.textContent = displayName;
+        
+        await loadCurrentUserAvatar();
+
+    } catch (error) {
+        console.error('Erro ao carregar dados do usuário:', error);
+    }
+}
+
+async function loadUserPhoto(avatarUrl) {
+    try {
+        if (!avatarUrl) return null;
+
+        const { data, error } = await supabase.storage
+            .from('avatars')
+            .download(avatarUrl);
+
+        if (error) return null;
+
+        return URL.createObjectURL(data);
+
+    } catch (error) {
+        console.error('Erro ao carregar foto:', error);
+        return null;
+    }
+}
+
+async function loadCurrentUserAvatar() {
+    try {
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('avatar_url, nickname')
+            .eq('id', currentUser.id)
+            .single();
+
+        if (error || !profile) return;
+
+        let currentUserAvatar = null;
+        if (profile.avatar_url) {
+            currentUserAvatar = await loadUserPhoto(profile.avatar_url);
+        }
+
+        userAvatarsCache.set(currentUser.id, {
+            name: profile.nickname || 'Você',
+            avatar: currentUserAvatar
+        });
+
+        const avatarElements = [
+            document.getElementById('userAvatar'),
+            document.getElementById('mobileUserAvatar')
+        ];
+
+        for (const avatarElement of avatarElements) {
+            if (!avatarElement) continue;
+            
+            const userAvatarFallback = avatarElement.querySelector('.user-avatar-fallback');
+            const userAvatarImg = avatarElement.querySelector('.user-avatar-img');
+            
+            if (!userAvatarFallback || !userAvatarImg) continue;
+
+            userAvatarImg.style.display = 'none';
+            userAvatarFallback.style.display = 'flex';
+            
+            if (currentUserAvatar) {
+                userAvatarImg.src = currentUserAvatar;
+                userAvatarImg.style.display = 'block';
+                userAvatarFallback.style.display = 'none';
+                avatarElement.style.backgroundImage = `url(${currentUserAvatar})`;
+                avatarElement.style.backgroundSize = 'cover';
+                avatarElement.style.backgroundPosition = 'center';
+            } else {
+                const displayName = profile.nickname || 'Usuário';
+                userAvatarFallback.textContent = displayName.charAt(0).toUpperCase();
+            }
+        }
+
+    } catch (error) {
+        console.error('Erro ao carregar avatar do usuário:', error);
+    }
+}
+
+// ==================== CONVERSAS E MENSAGENS ====================
+async function loadConversationAvatars() {
+    for (const conversation of conversations) {
+        if (conversation.partnerAvatar && !userAvatarsCache.has(conversation.partnerId)) {
+            const photoUrl = await loadUserPhoto(conversation.partnerAvatar);
+            if (photoUrl) {
+                userAvatarsCache.set(conversation.partnerId, {
+                    name: conversation.partnerName,
+                    avatar: photoUrl
+                });
+            }
+        }
+    }
+}
+
+function renderConversations() {
+    const conversationsList = document.getElementById('conversationsList');
+    const conversationsLoading = document.getElementById('conversationsLoading');
+    const noConversations = document.getElementById('noConversations');
+
+    if (!conversationsList) return;
+
+    conversationsLoading.classList.add('hidden');
+
+    if (conversations.length === 0) {
+        noConversations.classList.remove('hidden');
+        conversationsList.innerHTML = '';
+        return;
+    }
+
+    noConversations.classList.add('hidden');
+
+    conversationsList.innerHTML = conversations.map(conversation => {
+        const cachedAvatar = userAvatarsCache.get(conversation.partnerId);
+        const avatarUrl = cachedAvatar ? cachedAvatar.avatar : null;
+        
+        const avatarHtml = avatarUrl ? 
+            `<img class="conversation-avatar-img" src="${avatarUrl}" alt="${conversation.partnerName}" style="display: block;">` :
+            conversation.partnerName.charAt(0).toUpperCase();
+
+        const avatarStyle = avatarUrl ? 
+            `style="background-image: url(${avatarUrl}); background-size: cover; background-position: center;"` : 
+            '';
+
+        return `
+            <div class="conversation-item" data-partner-id="${conversation.partnerId}">
+                <div class="conversation-avatar" ${avatarStyle}>
+                    ${avatarHtml}
+                </div>
+                <div class="conversation-info">
+                    <div class="conversation-name">${conversation.partnerName}</div>
+                    <div class="conversation-preview">${conversation.lastMessage}</div>
+                </div>
+                <div class="conversation-time">${formatTime(conversation.lastMessageTime)}</div>
+                ${conversation.unreadCount > 0 ? `<div class="unread-badge">${conversation.unreadCount}</div>` : ''}
+            </div>
+        `;
+    }).join('');
+
+    setupConversationAvatars();
+}
+
+function setupConversationAvatars() {
+    document.querySelectorAll('.conversation-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            if (!e.target.closest('.conversation-avatar')) {
+                const partnerId = item.getAttribute('data-partner-id');
+                selectConversation(partnerId);
+            }
+        });
+    });
+
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.conversation-avatar')) {
+            const conversationItem = e.target.closest('.conversation-item');
+            const partnerId = conversationItem.getAttribute('data-partner-id');
+            openProfileModal(partnerId);
+        }
+    });
+
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.chat-header-avatar') && currentChatPartner) {
+            openProfileModal(currentChatPartner.id);
+        }
+    });
+}
+
+async function selectConversation(partnerId) {
+    try {
+        document.querySelectorAll('.conversation-item').forEach(item => {
+            item.classList.remove('active');
+        });
+
+        const currentConversation = document.querySelector(`[data-partner-id="${partnerId}"]`);
+        if (currentConversation) {
+            currentConversation.classList.add('active');
+        }
+
+        const { data: partnerProfile, error } = await supabase
+            .from('profiles')
+            .select('nickname, avatar_url')
+            .eq('id', partnerId)
+            .single();
+
+        if (error) return;
+
+        currentChatPartner = {
+            id: partnerId,
+            name: partnerProfile.nickname,
+            avatar: partnerProfile.avatar_url
+        };
+
+        if (partnerProfile.avatar_url && !userAvatarsCache.has(partnerId)) {
+            const photoUrl = await loadUserPhoto(partnerProfile.avatar_url);
+            if (photoUrl) {
+                userAvatarsCache.set(partnerId, {
+                    name: partnerProfile.nickname,
+                    avatar: photoUrl
+                });
+                currentChatPartner.avatar = photoUrl;
+            }
+        } else if (userAvatarsCache.has(partnerId)) {
+            const cached = userAvatarsCache.get(partnerId);
+            currentChatPartner.avatar = cached.avatar;
+        }
+
+        updateChatHeader();
+        
+        document.getElementById('chatHeader').classList.remove('hidden');
+        document.getElementById('chatInput').classList.remove('hidden');
+        
+        checkMessageLimit();
+        await loadMessages(partnerId);
+        await markMessagesAsRead(partnerId);
+
+    } catch (error) {
+        console.error('Erro ao selecionar conversa:', error);
+    }
+}
+
+async function loadMessages(partnerId) {
+    try {
+        const { data: messages, error } = await supabase
+            .from('messages')
+            .select('*')
+            .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${currentUser.id})`)
+            .order('created_at', { ascending: true });
+
+        if (error) return;
+
+        await loadMessagesUserAvatars(messages);
+        renderMessages(messages);
+
+    } catch (error) {
+        console.error('Erro ao carregar mensagens:', error);
+    }
+}
+
+async function loadMessagesUserAvatars(messages) {
+    const userIds = new Set();
+    
+    messages.forEach(message => {
+        userIds.add(message.sender_id);
+        userIds.add(message.receiver_id);
+    });
+
+    if (!userAvatarsCache.has(currentUser.id)) {
+        const { data: currentUserProfile } = await supabase
+            .from('profiles')
+            .select('nickname, avatar_url')
+            .eq('id', currentUser.id)
+            .single();
+            
+        if (currentUserProfile) {
+            let currentUserAvatar = null;
+            if (currentUserProfile.avatar_url) {
+                currentUserAvatar = await loadUserPhoto(currentUserProfile.avatar_url);
+            }
+            
+            userAvatarsCache.set(currentUser.id, {
+                name: currentUserProfile.nickname || 'Você',
+                avatar: currentUserAvatar
+            });
+        }
+    }
+
+    const missingUserIds = Array.from(userIds).filter(id => !userAvatarsCache.has(id) && id !== currentUser.id);
+    
+    if (missingUserIds.length > 0) {
+        const { data: profiles, error } = await supabase
+            .from('profiles')
+            .select('id, nickname, avatar_url')
+            .in('id', missingUserIds);
+
+        if (!error && profiles) {
+            for (const profile of profiles) {
+                let avatarUrl = null;
+                if (profile.avatar_url) {
+                    avatarUrl = await loadUserPhoto(profile.avatar_url);
+                }
+                
+                userAvatarsCache.set(profile.id, {
+                    name: profile.nickname,
+                    avatar: avatarUrl
+                });
+            }
+        }
+    }
+}
+
+function renderMessages(messages) {
+    const chatMessages = document.getElementById('chatMessages');
+    const noMessages = document.getElementById('noMessages');
+
+    if (!chatMessages) return;
+
+    if (messages.length === 0) {
+        noMessages.classList.remove('hidden');
+        chatMessages.innerHTML = '';
+        return;
+    }
+
+    noMessages.classList.add('hidden');
+
+    chatMessages.innerHTML = messages.map(message => {
+        const isSent = message.sender_id === currentUser.id;
+        
+        let senderAvatar = null;
+        let senderName = 'Usuário';
+        
+        if (isSent) {
+            const currentUserInfo = userAvatarsCache.get(currentUser.id);
+            senderName = currentUserInfo?.name || 'Você';
+            senderAvatar = currentUserInfo?.avatar || null;
+        } else {
+            const partnerInfo = userAvatarsCache.get(currentChatPartner.id);
+            senderName = partnerInfo?.name || currentChatPartner?.name || 'Usuário';
+            senderAvatar = partnerInfo?.avatar || null;
+        }
+
+        const avatarHtml = senderAvatar ? 
+            `<img class="message-avatar-img" src="${senderAvatar}" alt="${senderName}" style="display: block;">` :
+            senderName.charAt(0).toUpperCase();
+
+        const avatarStyle = senderAvatar ? 
+            `style="background-image: url(${senderAvatar}); background-size: cover; background-position: center;"` : 
+            '';
+
+        if (isSent) {
+            return `
+                <div class="message-container sent">
+                    <div class="message sent">
+                        <div class="message-text">${message.content}</div>
+                        <div class="message-time">${formatTime(message.created_at)}</div>
+                    </div>
+                    <div class="message-avatar" ${avatarStyle}>
+                        ${avatarHtml}
+                    </div>
+                </div>
+            `;
+        } else {
+            return `
+                <div class="message-container received">
+                    <div class="message-avatar" ${avatarStyle}>
+                        ${avatarHtml}
+                    </div>
+                    <div class="message received">
+                        <div class="message-text">${message.content}</div>
+                        <div class="message-time">${formatTime(message.created_at)}</div>
+                    </div>
+                </div>
+            `;
+        }
+    }).join('');
+
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// ==================== FUNÇÃO ENVIAR MENSAGEM - CORRIGIDA ====================
+async function sendMessage() {
+    const messageInput = document.getElementById('messageInput');
+    const content = messageInput.value.trim();
+
+    if (!content || !currentChatPartner) return;
+
+    try {
+        console.log('🔍 INICIANDO ENVIO DE MENSAGEM...');
+        
+        // ✅ VERIFICAR PREMIUM NOVAMENTE (para garantir)
+        await forcePremiumCheck();
+        
+        if (isPremiumUser) {
+            console.log('⭐ Usuário Premium - enviando sem verificação de limite');
+            await sendMessageDirectly(content);
+            return;
+        }
+
+        console.log('📊 Contador atual:', currentMessageCount);
+        
+        if (currentMessageCount >= 5) {
+            console.log('🚫 LIMITE ATINGIDO! Bloqueando envio...');
+            showNotification('❌ Limite de 5 mensagens por dia atingido! Faça upgrade para Premium.', 'error');
             
             checkMessageLimit();
-            return isPremiumUser;
-        } catch (error) {
-            console.error('Erro:', error);
-            isPremiumUser = false;
-            return false;
+            
+            setTimeout(() => {
+                if (confirm('Deseja fazer upgrade para Premium e ter mensagens ilimitadas?')) {
+                    window.location.href = 'pricing.html';
+                }
+            }, 1000);
+            
+            return;
         }
+
+        console.log('✅ Pode enviar mensagem', currentMessageCount + 1, '/5');
+        await sendMessageDirectly(content);
+
+    } catch (error) {
+        console.error('Erro ao enviar mensagem:', error);
+        showNotification('❌ Erro ao enviar mensagem', 'error');
     }
+}
 
-    // ==================== CARREGAR CONTADOR DO BANCO ====================
-    async function loadMessageCount() {
-        try {
-            console.log('🔄 Carregando contador de mensagens...');
+async function sendMessageDirectly(content) {
+    const messageInput = document.getElementById('messageInput');
+    
+    try {
+        // ✅ PRIMEIRO: Enviar a mensagem
+        const { error: messageError } = await supabase
+            .from('messages')
+            .insert({
+                sender_id: currentUser.id,
+                receiver_id: currentChatPartner.id,
+                content: content,
+                is_read: false
+            });
+
+        if (messageError) {
+            console.error('❌ Erro ao enviar mensagem:', messageError);
+            throw messageError;
+        }
+
+        console.log('✅ Mensagem enviada com sucesso');
+
+        // ✅ SEGUNDO: Atualizar contador apenas se NÃO for premium
+        if (!isPremiumUser) {
+            console.log('📈 Atualizando contador...');
             
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-
-            // ✅ SE FOR PREMIUM, IGNORAR CONTADOR
-            if (isPremiumUser) {
-                console.log('⭐ Usuário Premium - ignorando contador');
-                updateMessageCounter('∞');
-                checkMessageLimit();
-                return;
-            }
-
-            // ✅ BUSCAR CONTADOR APENAS SE NÃO FOR PREMIUM
-            const today = new Date().toISOString().split('T')[0];
+            // Método 1: Usar RPC
+            const { error: incrementError } = await supabase
+                .rpc('increment_daily_message_count', { user_uuid: currentUser.id });
             
-            const { data, error } = await supabase
-                .from('daily_message_count')
-                .select('message_count')
-                .eq('user_id', user.id)
-                .eq('date', today)
-                .single();
-
-            if (error) {
-                if (error.code === 'PGRST116') {
-                    currentMessageCount = 0;
+            if (incrementError) {
+                console.log('⚠️ RPC falhou, tentando método alternativo...');
+                
+                // Método 2: Atualização direta
+                const today = new Date().toISOString().split('T')[0];
+                const { error: updateError } = await supabase
+                    .from('daily_message_count')
+                    .update({ message_count: currentMessageCount + 1 })
+                    .eq('user_id', currentUser.id)
+                    .eq('date', today);
+                
+                if (updateError) {
+                    console.log('⚠️ Update falhou, tentando insert...');
                     
+                    // Método 3: Insert se não existir
                     const { error: insertError } = await supabase
                         .from('daily_message_count')
                         .insert({
-                            user_id: user.id,
+                            user_id: currentUser.id,
                             date: today,
-                            message_count: 0
+                            message_count: 1
                         });
                     
                     if (insertError) {
-                        console.error('❌ Erro ao criar registro:', insertError);
+                        console.error('❌ Todos os métodos falharam:', insertError);
+                    } else {
+                        console.log('✅ Contador criado via insert');
+                        currentMessageCount = 1;
                     }
                 } else {
-                    console.error('❌ Erro ao buscar contador:', error);
-                    currentMessageCount = 0;
+                    console.log('✅ Contador atualizado via update');
+                    currentMessageCount += 1;
                 }
             } else {
-                currentMessageCount = data.message_count || 0;
-                console.log('✅ Contador carregado do banco:', currentMessageCount);
+                console.log('✅ Contador incrementado via RPC');
+                // Recarregar o contador atualizado do banco
+                await loadMessageCount();
             }
             
             updateMessageCounter(currentMessageCount);
-            checkMessageLimit();
-
-        } catch (error) {
-            console.error('Erro ao carregar contador:', error);
-            currentMessageCount = 0;
-            updateMessageCounter(0);
-            checkMessageLimit();
-        }
-    }
-
-    // ==================== VERIFICAR LIMITE E BLOQUEAR ENVIO ====================
-    function checkMessageLimit() {
-        const messageInput = document.getElementById('messageInput');
-        const sendMessageBtn = document.getElementById('sendMessageBtn');
-        
-        if (!messageInput || !sendMessageBtn) return;
-
-        if (isPremiumUser) {
-            // ✅ PREMIUM: TUDO LIBERADO SEMPRE
-            messageInput.disabled = false;
-            messageInput.placeholder = 'Digite sua mensagem... 💎 Premium';
-            sendMessageBtn.disabled = false;
-            sendMessageBtn.innerHTML = '📤 Enviar';
-            console.log('⭐ Interface liberada - Usuário Premium');
-        } else if (currentMessageCount >= 5) {
-            // ✅ FREE: BLOQUEAR NO LIMITE
-            messageInput.disabled = true;
-            messageInput.placeholder = '💡 Limite atingido! Faça upgrade para Premium.';
-            sendMessageBtn.disabled = true;
-            sendMessageBtn.innerHTML = '🚫 Limite';
-            console.log('🚫 Interface bloqueada - limite free atingido');
         } else {
-            // ✅ FREE: AINDA PODE ENVIAR
-            messageInput.disabled = false;
-            messageInput.placeholder = 'Digite sua mensagem...';
-            sendMessageBtn.disabled = false;
-            sendMessageBtn.innerHTML = '📤 Enviar';
-            console.log('✅ Interface liberada - pode enviar');
+            console.log('⭐ Premium - não incrementa contador');
         }
+
+        // ✅ TERCEIRO: Limpar e atualizar interface
+        messageInput.value = '';
+        await loadMessages(currentChatPartner.id);
+        await loadConversations();
+
+        showNotification('✅ Mensagem enviada!', 'success');
+        checkMessageLimit();
+
+    } catch (error) {
+        console.error('Erro no envio direto:', error);
+        showNotification('❌ Erro ao enviar mensagem', 'error');
+        throw error;
+    }
+}
+
+// ==================== SISTEMA DE NOTIFICAÇÕES ====================
+function showNotification(message, type = 'info') {
+    const existingNotification = document.querySelector('.notification');
+    if (existingNotification) {
+        existingNotification.remove();
     }
 
-    // ==================== ATUALIZAR DISPLAY DO CONTADOR ====================
-    function updateMessageCounter(count) {
-        let counterElement = document.getElementById('messageCounter');
-        
-        if (!counterElement) {
-            const userInfo = document.querySelector('.user-info');
-            if (userInfo) {
-                counterElement = document.createElement('div');
-                counterElement.id = 'messageCounter';
-                counterElement.className = 'message-counter';
-                counterElement.style.cssText = `
-                    background: #d1656d;
-                    color: white;
-                    border-radius: 12px;
-                    padding: 2px 8px;
-                    font-size: 0.75rem;
-                    font-weight: bold;
-                    margin-left: 8px;
-                `;
-                userInfo.appendChild(counterElement);
-            }
-        }
-
-        if (counterElement) {
-            if (isPremiumUser) {
-                counterElement.textContent = '∞ ILIMITADO';
-                counterElement.style.background = '#48bb78';
-                counterElement.title = 'Mensagens ilimitadas - Premium';
-                counterElement.style.fontSize = '0.7rem';
-            } else {
-                counterElement.textContent = `${count}/5`;
-                if (count >= 5) {
-                    counterElement.style.background = '#f56565';
-                    counterElement.title = 'Limite atingido! Faça upgrade.';
-                } else {
-                    counterElement.style.background = '#d1656d';
-                    counterElement.title = `${count} de 5 mensagens hoje`;
-                }
-            }
-        }
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    
+    let backgroundColor, textColor;
+    switch(type) {
+        case 'error':
+            backgroundColor = '#f56565';
+            textColor = 'white';
+            break;
+        case 'success':
+            backgroundColor = '#48bb78';
+            textColor = 'white';
+            break;
+        default:
+            backgroundColor = '#4299e1';
+            textColor = 'white';
     }
 
-    // ==================== DADOS DO USUÁRIO ====================
-    async function loadUserData() {
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            
-            let displayName = 'Usuário';
-            
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('nickname')
-                .eq('id', user.id)
-                .single();
+    notification.style.cssText = `
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        background: ${backgroundColor};
+        color: ${textColor};
+        padding: 12px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10000;
+        max-width: 300px;
+        animation: slideIn 0.3s ease;
+        font-weight: 500;
+    `;
 
-            if (profile && profile.nickname) {
-                displayName = profile.nickname;
-            } else if (user.user_metadata && user.user_metadata.nickname) {
-                displayName = user.user_metadata.nickname;
-            } else if (user.user_metadata && user.user_metadata.full_name) {
-                displayName = user.user_metadata.full_name;
-            } else if (user.email) {
-                displayName = user.email.split('@')[0];
-            }
+    notification.textContent = message;
+    document.body.appendChild(notification);
 
-            const userNickname = document.getElementById('userNickname');
-            const mobileUserNickname = document.getElementById('mobileUserNickname');
-            
-            if (userNickname) userNickname.textContent = displayName;
-            if (mobileUserNickname) mobileUserNickname.textContent = displayName;
-            
-            await loadCurrentUserAvatar();
-
-        } catch (error) {
-            console.error('Erro ao carregar dados do usuário:', error);
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
         }
+    }, 5000);
+}
+
+// ==================== ATUALIZAÇÃO EM TEMPO REAL ====================
+function setupRealtimeUpdates() {
+    if (messagesSubscription) {
+        supabase.removeSubscription(messagesSubscription);
     }
 
-    async function loadUserPhoto(avatarUrl) {
-        try {
-            if (!avatarUrl) return null;
-
-            const { data, error } = await supabase.storage
-                .from('avatars')
-                .download(avatarUrl);
-
-            if (error) return null;
-
-            return URL.createObjectURL(data);
-
-        } catch (error) {
-            console.error('Erro ao carregar foto:', error);
-            return null;
-        }
-    }
-
-    async function loadCurrentUserAvatar() {
-        try {
-            const { data: profile, error } = await supabase
-                .from('profiles')
-                .select('avatar_url, nickname')
-                .eq('id', currentUser.id)
-                .single();
-
-            if (error || !profile) return;
-
-            let currentUserAvatar = null;
-            if (profile.avatar_url) {
-                currentUserAvatar = await loadUserPhoto(profile.avatar_url);
-            }
-
-            userAvatarsCache.set(currentUser.id, {
-                name: profile.nickname || 'Você',
-                avatar: currentUserAvatar
-            });
-
-            const avatarElements = [
-                document.getElementById('userAvatar'),
-                document.getElementById('mobileUserAvatar')
-            ];
-
-            for (const avatarElement of avatarElements) {
-                if (!avatarElement) continue;
+    messagesSubscription = supabase
+        .channel('public:messages')
+        .on(
+            'postgres_changes',
+            {
+                event: 'INSERT',
+                schema: 'public', 
+                table: 'messages'
+            },
+            async (payload) => {
+                const newMessage = payload.new;
                 
-                const userAvatarFallback = avatarElement.querySelector('.user-avatar-fallback');
-                const userAvatarImg = avatarElement.querySelector('.user-avatar-img');
-                
-                if (!userAvatarFallback || !userAvatarImg) continue;
-
-                userAvatarImg.style.display = 'none';
-                userAvatarFallback.style.display = 'flex';
-                
-                if (currentUserAvatar) {
-                    userAvatarImg.src = currentUserAvatar;
-                    userAvatarImg.style.display = 'block';
-                    userAvatarFallback.style.display = 'none';
-                    avatarElement.style.backgroundImage = `url(${currentUserAvatar})`;
-                    avatarElement.style.backgroundSize = 'cover';
-                    avatarElement.style.backgroundPosition = 'center';
-                } else {
-                    const displayName = profile.nickname || 'Usuário';
-                    userAvatarFallback.textContent = displayName.charAt(0).toUpperCase();
-                }
-            }
-
-        } catch (error) {
-            console.error('Erro ao carregar avatar do usuário:', error);
-        }
-    }
-
-    // ==================== CONVERSAS E MENSAGENS ====================
-    async function loadConversationAvatars() {
-        for (const conversation of conversations) {
-            if (conversation.partnerAvatar && !userAvatarsCache.has(conversation.partnerId)) {
-                const photoUrl = await loadUserPhoto(conversation.partnerAvatar);
-                if (photoUrl) {
-                    userAvatarsCache.set(conversation.partnerId, {
-                        name: conversation.partnerName,
-                        avatar: photoUrl
-                    });
-                }
-            }
-        }
-    }
-
-    function renderConversations() {
-        const conversationsList = document.getElementById('conversationsList');
-        const conversationsLoading = document.getElementById('conversationsLoading');
-        const noConversations = document.getElementById('noConversations');
-
-        if (!conversationsList) return;
-
-        conversationsLoading.classList.add('hidden');
-
-        if (conversations.length === 0) {
-            noConversations.classList.remove('hidden');
-            conversationsList.innerHTML = '';
-            return;
-        }
-
-        noConversations.classList.add('hidden');
-
-        conversationsList.innerHTML = conversations.map(conversation => {
-            const cachedAvatar = userAvatarsCache.get(conversation.partnerId);
-            const avatarUrl = cachedAvatar ? cachedAvatar.avatar : null;
-            
-            const avatarHtml = avatarUrl ? 
-                `<img class="conversation-avatar-img" src="${avatarUrl}" alt="${conversation.partnerName}" style="display: block;">` :
-                conversation.partnerName.charAt(0).toUpperCase();
-
-            const avatarStyle = avatarUrl ? 
-                `style="background-image: url(${avatarUrl}); background-size: cover; background-position: center;"` : 
-                '';
-
-            return `
-                <div class="conversation-item" data-partner-id="${conversation.partnerId}">
-                    <div class="conversation-avatar" ${avatarStyle}>
-                        ${avatarHtml}
-                    </div>
-                    <div class="conversation-info">
-                        <div class="conversation-name">${conversation.partnerName}</div>
-                        <div class="conversation-preview">${conversation.lastMessage}</div>
-                    </div>
-                    <div class="conversation-time">${formatTime(conversation.lastMessageTime)}</div>
-                    ${conversation.unreadCount > 0 ? `<div class="unread-badge">${conversation.unreadCount}</div>` : ''}
-                </div>
-            `;
-        }).join('');
-
-        setupConversationAvatars();
-    }
-
-    function setupConversationAvatars() {
-        document.querySelectorAll('.conversation-item').forEach(item => {
-            item.addEventListener('click', (e) => {
-                if (!e.target.closest('.conversation-avatar')) {
-                    const partnerId = item.getAttribute('data-partner-id');
-                    selectConversation(partnerId);
-                }
-            });
-        });
-
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('.conversation-avatar')) {
-                const conversationItem = e.target.closest('.conversation-item');
-                const partnerId = conversationItem.getAttribute('data-partner-id');
-                openProfileModal(partnerId);
-            }
-        });
-
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('.chat-header-avatar') && currentChatPartner) {
-                openProfileModal(currentChatPartner.id);
-            }
-        });
-    }
-
-    async function selectConversation(partnerId) {
-        try {
-            document.querySelectorAll('.conversation-item').forEach(item => {
-                item.classList.remove('active');
-            });
-
-            const currentConversation = document.querySelector(`[data-partner-id="${partnerId}"]`);
-            if (currentConversation) {
-                currentConversation.classList.add('active');
-            }
-
-            const { data: partnerProfile, error } = await supabase
-                .from('profiles')
-                .select('nickname, avatar_url')
-                .eq('id', partnerId)
-                .single();
-
-            if (error) return;
-
-            currentChatPartner = {
-                id: partnerId,
-                name: partnerProfile.nickname,
-                avatar: partnerProfile.avatar_url
-            };
-
-            if (partnerProfile.avatar_url && !userAvatarsCache.has(partnerId)) {
-                const photoUrl = await loadUserPhoto(partnerProfile.avatar_url);
-                if (photoUrl) {
-                    userAvatarsCache.set(partnerId, {
-                        name: partnerProfile.nickname,
-                        avatar: photoUrl
-                    });
-                    currentChatPartner.avatar = photoUrl;
-                }
-            } else if (userAvatarsCache.has(partnerId)) {
-                const cached = userAvatarsCache.get(partnerId);
-                currentChatPartner.avatar = cached.avatar;
-            }
-
-            updateChatHeader();
-            
-            document.getElementById('chatHeader').classList.remove('hidden');
-            document.getElementById('chatInput').classList.remove('hidden');
-            
-            checkMessageLimit();
-            await loadMessages(partnerId);
-            await markMessagesAsRead(partnerId);
-
-        } catch (error) {
-            console.error('Erro ao selecionar conversa:', error);
-        }
-    }
-
-    async function loadMessages(partnerId) {
-        try {
-            const { data: messages, error } = await supabase
-                .from('messages')
-                .select('*')
-                .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${currentUser.id})`)
-                .order('created_at', { ascending: true });
-
-            if (error) return;
-
-            await loadMessagesUserAvatars(messages);
-            renderMessages(messages);
-
-        } catch (error) {
-            console.error('Erro ao carregar mensagens:', error);
-        }
-    }
-
-    async function loadMessagesUserAvatars(messages) {
-        const userIds = new Set();
-        
-        messages.forEach(message => {
-            userIds.add(message.sender_id);
-            userIds.add(message.receiver_id);
-        });
-
-        if (!userAvatarsCache.has(currentUser.id)) {
-            const { data: currentUserProfile } = await supabase
-                .from('profiles')
-                .select('nickname, avatar_url')
-                .eq('id', currentUser.id)
-                .single();
-                
-            if (currentUserProfile) {
-                let currentUserAvatar = null;
-                if (currentUserProfile.avatar_url) {
-                    currentUserAvatar = await loadUserPhoto(currentUserProfile.avatar_url);
-                }
-                
-                userAvatarsCache.set(currentUser.id, {
-                    name: currentUserProfile.nickname || 'Você',
-                    avatar: currentUserAvatar
-                });
-            }
-        }
-
-        const missingUserIds = Array.from(userIds).filter(id => !userAvatarsCache.has(id) && id !== currentUser.id);
-        
-        if (missingUserIds.length > 0) {
-            const { data: profiles, error } = await supabase
-                .from('profiles')
-                .select('id, nickname, avatar_url')
-                .in('id', missingUserIds);
-
-            if (!error && profiles) {
-                for (const profile of profiles) {
-                    let avatarUrl = null;
-                    if (profile.avatar_url) {
-                        avatarUrl = await loadUserPhoto(profile.avatar_url);
-                    }
+                if (newMessage.receiver_id === currentUser.id || newMessage.sender_id === currentUser.id) {
+                    console.log('Nova mensagem recebida em tempo real');
                     
-                    userAvatarsCache.set(profile.id, {
-                        name: profile.nickname,
-                        avatar: avatarUrl
-                    });
-                }
-            }
-        }
-    }
-
-    function renderMessages(messages) {
-        const chatMessages = document.getElementById('chatMessages');
-        const noMessages = document.getElementById('noMessages');
-
-        if (!chatMessages) return;
-
-        if (messages.length === 0) {
-            noMessages.classList.remove('hidden');
-            chatMessages.innerHTML = '';
-            return;
-        }
-
-        noMessages.classList.add('hidden');
-
-        chatMessages.innerHTML = messages.map(message => {
-            const isSent = message.sender_id === currentUser.id;
-            
-            let senderAvatar = null;
-            let senderName = 'Usuário';
-            
-            if (isSent) {
-                const currentUserInfo = userAvatarsCache.get(currentUser.id);
-                senderName = currentUserInfo?.name || 'Você';
-                senderAvatar = currentUserInfo?.avatar || null;
-            } else {
-                const partnerInfo = userAvatarsCache.get(currentChatPartner.id);
-                senderName = partnerInfo?.name || currentChatPartner?.name || 'Usuário';
-                senderAvatar = partnerInfo?.avatar || null;
-            }
-
-            const avatarHtml = senderAvatar ? 
-                `<img class="message-avatar-img" src="${senderAvatar}" alt="${senderName}" style="display: block;">` :
-                senderName.charAt(0).toUpperCase();
-
-            const avatarStyle = senderAvatar ? 
-                `style="background-image: url(${senderAvatar}); background-size: cover; background-position: center;"` : 
-                '';
-
-            if (isSent) {
-                return `
-                    <div class="message-container sent">
-                        <div class="message sent">
-                            <div class="message-text">${message.content}</div>
-                            <div class="message-time">${formatTime(message.created_at)}</div>
-                        </div>
-                        <div class="message-avatar" ${avatarStyle}>
-                            ${avatarHtml}
-                        </div>
-                    </div>
-                `;
-            } else {
-                return `
-                    <div class="message-container received">
-                        <div class="message-avatar" ${avatarStyle}>
-                            ${avatarHtml}
-                        </div>
-                        <div class="message received">
-                            <div class="message-text">${message.content}</div>
-                            <div class="message-time">${formatTime(message.created_at)}</div>
-                        </div>
-                    </div>
-                `;
-            }
-        }).join('');
-
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-
-    // ==================== FUNÇÃO ENVIAR MENSAGEM ====================
-    async function sendMessage() {
-        const messageInput = document.getElementById('messageInput');
-        const content = messageInput.value.trim();
-
-        if (!content || !currentChatPartner) return;
-
-        try {
-            console.log('🔍 INICIANDO ENVIO DE MENSAGEM...');
-            
-            // ✅ VERIFICAR PREMIUM NOVAMENTE (para garantir)
-            await forcePremiumCheck();
-            
-            if (isPremiumUser) {
-                console.log('⭐ Usuário Premium - enviando sem verificação de limite');
-                await sendMessageDirectly(content);
-                return;
-            }
-
-            console.log('📊 Contador atual:', currentMessageCount);
-            
-            if (currentMessageCount >= 5) {
-                console.log('🚫 LIMITE ATINGIDO! Bloqueando envio...');
-                showNotification('❌ Limite de 5 mensagens por dia atingido! Faça upgrade para Premium.', 'error');
-                
-                checkMessageLimit();
-                
-                setTimeout(() => {
-                    if (confirm('Deseja fazer upgrade para Premium e ter mensagens ilimitadas?')) {
-                        window.location.href = 'pricing.html';
-                    }
-                }, 1000);
-                
-                return;
-            }
-
-            console.log('✅ Pode enviar mensagem', currentMessageCount + 1, '/5');
-            await sendMessageDirectly(content);
-
-        } catch (error) {
-            console.error('Erro ao enviar mensagem:', error);
-            showNotification('❌ Erro ao enviar mensagem', 'error');
-        }
-    }
-
-    async function sendMessageDirectly(content) {
-        const messageInput = document.getElementById('messageInput');
-        
-        try {
-            const { error } = await supabase
-                .from('messages')
-                .insert({
-                    sender_id: currentUser.id,
-                    receiver_id: currentChatPartner.id,
-                    content: content,
-                    is_read: false
-                });
-
-            if (error) {
-                console.error('❌ Erro ao enviar mensagem:', error);
-                throw error;
-            }
-
-            // ✅ INCREMENTAR CONTADOR APENAS SE NÃO FOR PREMIUM
-            if (!isPremiumUser) {
-                console.log('📈 Incrementando contador...');
-                
-                const { error: incrementError } = await supabase
-                    .rpc('increment_daily_message_count', { user_uuid: currentUser.id });
-                
-                if (incrementError) {
-                    console.error('❌ Erro ao incrementar contador:', incrementError);
-                    currentMessageCount++;
-                } else {
-                    console.log('✅ Contador incrementado no banco');
-                    await loadMessageCount();
-                }
-                
-                updateMessageCounter(currentMessageCount);
-            } else {
-                console.log('⭐ Premium - não incrementa contador');
-            }
-
-            messageInput.value = '';
-            await loadMessages(currentChatPartner.id);
-            await loadConversations();
-
-            showNotification('✅ Mensagem enviada!', 'success');
-            checkMessageLimit();
-
-        } catch (error) {
-            console.error('Erro no envio direto:', error);
-            throw error;
-        }
-    }
-
-    // ==================== SISTEMA DE NOTIFICAÇÕES ====================
-    function showNotification(message, type = 'info') {
-        const existingNotification = document.querySelector('.notification');
-        if (existingNotification) {
-            existingNotification.remove();
-        }
-
-        const notification = document.createElement('div');
-        notification.className = `notification notification-${type}`;
-        
-        let backgroundColor, textColor;
-        switch(type) {
-            case 'error':
-                backgroundColor = '#f56565';
-                textColor = 'white';
-                break;
-            case 'success':
-                backgroundColor = '#48bb78';
-                textColor = 'white';
-                break;
-            default:
-                backgroundColor = '#4299e1';
-                textColor = 'white';
-        }
-
-        notification.style.cssText = `
-            position: fixed;
-            top: 100px;
-            right: 20px;
-            background: ${backgroundColor};
-            color: ${textColor};
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 10000;
-            max-width: 300px;
-            animation: slideIn 0.3s ease;
-            font-weight: 500;
-        `;
-
-        notification.textContent = message;
-        document.body.appendChild(notification);
-
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
-            }
-        }, 5000);
-    }
-
-    // ==================== ATUALIZAÇÃO EM TEMPO REAL ====================
-    function setupRealtimeUpdates() {
-        if (messagesSubscription) {
-            supabase.removeSubscription(messagesSubscription);
-        }
-
-        messagesSubscription = supabase
-            .channel('public:messages')
-            .on(
-                'postgres_changes',
-                {
-                    event: 'INSERT',
-                    schema: 'public', 
-                    table: 'messages'
-                },
-                async (payload) => {
-                    const newMessage = payload.new;
+                    await loadConversations();
                     
-                    if (newMessage.receiver_id === currentUser.id || newMessage.sender_id === currentUser.id) {
-                        console.log('Nova mensagem recebida em tempo real');
+                    if (currentChatPartner && 
+                        (newMessage.sender_id === currentChatPartner.id || newMessage.receiver_id === currentChatPartner.id)) {
+                        await loadMessages(currentChatPartner.id);
                         
-                        await loadConversations();
-                        
-                        if (currentChatPartner && 
-                            (newMessage.sender_id === currentChatPartner.id || newMessage.receiver_id === currentChatPartner.id)) {
-                            await loadMessages(currentChatPartner.id);
-                            
-                            if (newMessage.sender_id === currentChatPartner.id) {
-                                await markMessagesAsRead(currentChatPartner.id);
-                            }
+                        if (newMessage.sender_id === currentChatPartner.id) {
+                            await markMessagesAsRead(currentChatPartner.id);
                         }
                     }
                 }
-            )
-            .subscribe();
+            }
+        )
+        .subscribe();
+}
+
+async function markMessagesAsRead(partnerId) {
+    try {
+        const { error } = await supabase
+            .from('messages')
+            .update({ is_read: true })
+            .eq('sender_id', partnerId)
+            .eq('receiver_id', currentUser.id)
+            .eq('is_read', false);
+
+        if (error) return;
+
+        await loadConversations();
+
+    } catch (error) {
+        console.error('Erro ao marcar mensagens como lidas:', error);
+    }
+}
+
+function updateChatHeader() {
+    if (!currentChatPartner) return;
+
+    document.getElementById('chatPartnerName').textContent = currentChatPartner.name;
+    document.getElementById('chatPartnerStatus').textContent = 'Online';
+    
+    const chatHeaderAvatar = document.getElementById('chatHeaderAvatar');
+    const chatHeaderAvatarImg = chatHeaderAvatar.querySelector('.chat-header-avatar-img');
+    const chatHeaderAvatarFallback = chatHeaderAvatar.querySelector('.user-avatar-fallback');
+    
+    if (currentChatPartner.avatar) {
+        chatHeaderAvatar.style.backgroundImage = `url(${currentChatPartner.avatar})`;
+        chatHeaderAvatarImg.src = currentChatPartner.avatar;
+        chatHeaderAvatarImg.style.display = 'block';
+        chatHeaderAvatarFallback.style.display = 'none';
+    } else {
+        chatHeaderAvatar.style.backgroundImage = '';
+        chatHeaderAvatarImg.style.display = 'none';
+        chatHeaderAvatarFallback.textContent = currentChatPartner.name.charAt(0).toUpperCase();
+        chatHeaderAvatarFallback.style.display = 'flex';
+    }
+}
+
+// ==================== MENU MOBILE ====================
+function setupMobileMenu() {
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    const closeMobileMenu = document.getElementById('closeMobileMenu');
+    const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+
+    if (hamburgerBtn) {
+        hamburgerBtn.addEventListener('click', () => {
+            mobileMenu.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        });
     }
 
-    async function markMessagesAsRead(partnerId) {
-        try {
-            const { error } = await supabase
-                .from('messages')
-                .update({ is_read: true })
-                .eq('sender_id', partnerId)
-                .eq('receiver_id', currentUser.id)
-                .eq('is_read', false);
-
-            if (error) return;
-
-            await loadConversations();
-
-        } catch (error) {
-            console.error('Erro ao marcar mensagens como lidas:', error);
-        }
+    if (closeMobileMenu) {
+        closeMobileMenu.addEventListener('click', () => {
+            mobileMenu.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        });
     }
 
-    function updateChatHeader() {
-        if (!currentChatPartner) return;
-
-        document.getElementById('chatPartnerName').textContent = currentChatPartner.name;
-        document.getElementById('chatPartnerStatus').textContent = 'Online';
-        
-        const chatHeaderAvatar = document.getElementById('chatHeaderAvatar');
-        const chatHeaderAvatarImg = chatHeaderAvatar.querySelector('.chat-header-avatar-img');
-        const chatHeaderAvatarFallback = chatHeaderAvatar.querySelector('.user-avatar-fallback');
-        
-        if (currentChatPartner.avatar) {
-            chatHeaderAvatar.style.backgroundImage = `url(${currentChatPartner.avatar})`;
-            chatHeaderAvatarImg.src = currentChatPartner.avatar;
-            chatHeaderAvatarImg.style.display = 'block';
-            chatHeaderAvatarFallback.style.display = 'none';
-        } else {
-            chatHeaderAvatar.style.backgroundImage = '';
-            chatHeaderAvatarImg.style.display = 'none';
-            chatHeaderAvatarFallback.textContent = currentChatPartner.name.charAt(0).toUpperCase();
-            chatHeaderAvatarFallback.style.display = 'flex';
-        }
+    if (mobileLogoutBtn) {
+        mobileLogoutBtn.addEventListener('click', logout);
     }
 
-    // ==================== MENU MOBILE ====================
-    function setupMobileMenu() {
-        const hamburgerBtn = document.getElementById('hamburgerBtn');
-        const mobileMenu = document.getElementById('mobileMenu');
-        const closeMobileMenu = document.getElementById('closeMobileMenu');
-        const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
-
-        if (hamburgerBtn) {
-            hamburgerBtn.addEventListener('click', () => {
-                mobileMenu.style.display = 'flex';
-                document.body.style.overflow = 'hidden';
-            });
-        }
-
-        if (closeMobileMenu) {
-            closeMobileMenu.addEventListener('click', () => {
+    if (mobileMenu) {
+        mobileMenu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
                 mobileMenu.style.display = 'none';
                 document.body.style.overflow = 'auto';
             });
-        }
-
-        if (mobileLogoutBtn) {
-            mobileLogoutBtn.addEventListener('click', logout);
-        }
-
-        if (mobileMenu) {
-            mobileMenu.querySelectorAll('a').forEach(link => {
-                link.addEventListener('click', () => {
-                    mobileMenu.style.display = 'none';
-                    document.body.style.overflow = 'auto';
-                });
-            });
-        }
-
-        function checkScreenSize() {
-            if (window.innerWidth <= 768) {
-                const userMenu = document.querySelector('.user-menu');
-                if (userMenu) userMenu.style.display = 'none';
-                if (hamburgerBtn) hamburgerBtn.style.display = 'flex';
-            } else {
-                const userMenu = document.querySelector('.user-menu');
-                if (userMenu) userMenu.style.display = 'flex';
-                if (hamburgerBtn) hamburgerBtn.style.display = 'none';
-                if (mobileMenu) mobileMenu.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            }
-        }
-
-        window.addEventListener('resize', checkScreenSize);
-        checkScreenSize();
+        });
     }
 
-    // ==================== MODAL DO PERFIL ====================
-    function setupProfileModal() {
-        const profileModal = document.getElementById('profileModal');
-        const closeProfileModal = document.getElementById('closeProfileModal');
-        const sendMessageFromModal = document.getElementById('sendMessageFromModal');
-        const viewFullProfile = document.getElementById('viewFullProfile');
+    function checkScreenSize() {
+        if (window.innerWidth <= 768) {
+            const userMenu = document.querySelector('.user-menu');
+            if (userMenu) userMenu.style.display = 'none';
+            if (hamburgerBtn) hamburgerBtn.style.display = 'flex';
+        } else {
+            const userMenu = document.querySelector('.user-menu');
+            if (userMenu) userMenu.style.display = 'flex';
+            if (hamburgerBtn) hamburgerBtn.style.display = 'none';
+            if (mobileMenu) mobileMenu.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    }
 
-        if (closeProfileModal) {
-            closeProfileModal.addEventListener('click', () => {
+    window.addEventListener('resize', checkScreenSize);
+    checkScreenSize();
+}
+
+// ==================== MODAL DO PERFIL ====================
+function setupProfileModal() {
+    const profileModal = document.getElementById('profileModal');
+    const closeProfileModal = document.getElementById('closeProfileModal');
+    const sendMessageFromModal = document.getElementById('sendMessageFromModal');
+    const viewFullProfile = document.getElementById('viewFullProfile');
+
+    if (closeProfileModal) {
+        closeProfileModal.addEventListener('click', () => {
+            profileModal.classList.remove('active');
+        });
+    }
+
+    if (profileModal) {
+        profileModal.addEventListener('click', (e) => {
+            if (e.target === profileModal) {
                 profileModal.classList.remove('active');
-            });
-        }
-
-        if (profileModal) {
-            profileModal.addEventListener('click', (e) => {
-                if (e.target === profileModal) {
-                    profileModal.classList.remove('active');
-                }
-            });
-        }
-
-        if (sendMessageFromModal) {
-            sendMessageFromModal.addEventListener('click', () => {
-                if (currentChatPartner) {
-                    profileModal.classList.remove('active');
-                    const messageInput = document.getElementById('messageInput');
-                    if (messageInput) {
-                        messageInput.focus();
-                    }
-                }
-            });
-        }
-
-        if (viewFullProfile) {
-            viewFullProfile.addEventListener('click', () => {
-                if (currentChatPartner) {
-                    localStorage.setItem('viewingProfileId', currentChatPartner.id);
-                    window.location.href = 'perfil.html';
-                }
-            });
-        }
+            }
+        });
     }
 
-    async function openProfileModal(partnerId) {
-        const profileModal = document.getElementById('profileModal');
-        const profileModalLoading = document.getElementById('profileModalLoading');
-        const profileModalContent = document.getElementById('profileModalContent');
-        const profileModalName = document.getElementById('profileModalName');
-        const profileModalAvatar = document.getElementById('profileModalAvatar');
-        const profileModalStatus = document.getElementById('profileModalStatus');
-
-        if (!profileModal) return;
-
-        profileModal.classList.add('active');
-        profileModalLoading.classList.remove('hidden');
-        profileModalContent.classList.add('hidden');
-
-        try {
-            const { data: profile, error } = await supabase
-                .from('profiles')
-                .select('nickname, avatar_url, user_details(description)')
-                .eq('id', partnerId)
-                .single();
-
-            if (error) return;
-
-            profileModalName.textContent = profile.nickname || 'Usuário';
-            
-            if (profile.user_details && profile.user_details.description) {
-                profileModalStatus.textContent = profile.user_details.description;
-            } else {
-                profileModalStatus.textContent = 'Conectado agora';
-            }
-
-            const profileModalAvatarImg = profileModalAvatar.querySelector('.profile-modal-avatar-img');
-            const profileModalAvatarFallback = profileModalAvatar.querySelector('.user-avatar-fallback');
-
-            if (profile.avatar_url) {
-                const photoUrl = await loadUserPhoto(profile.avatar_url);
-                if (photoUrl) {
-                    profileModalAvatarImg.src = photoUrl;
-                    profileModalAvatarImg.style.display = 'block';
-                    profileModalAvatarFallback.style.display = 'none';
-                    profileModalAvatar.style.backgroundImage = `url(${photoUrl})`;
-                    profileModalAvatar.style.backgroundSize = 'cover';
-                    profileModalAvatar.style.backgroundPosition = 'center';
-                } else {
-                    profileModalAvatarImg.style.display = 'none';
-                    profileModalAvatarFallback.style.display = 'flex';
-                    profileModalAvatarFallback.textContent = (profile.nickname || 'U').charAt(0).toUpperCase();
-                    profileModalAvatar.style.backgroundImage = '';
+    if (sendMessageFromModal) {
+        sendMessageFromModal.addEventListener('click', () => {
+            if (currentChatPartner) {
+                profileModal.classList.remove('active');
+                const messageInput = document.getElementById('messageInput');
+                if (messageInput) {
+                    messageInput.focus();
                 }
+            }
+        });
+    }
+
+    if (viewFullProfile) {
+        viewFullProfile.addEventListener('click', () => {
+            if (currentChatPartner) {
+                localStorage.setItem('viewingProfileId', currentChatPartner.id);
+                window.location.href = 'perfil.html';
+            }
+        });
+    }
+}
+
+async function openProfileModal(partnerId) {
+    const profileModal = document.getElementById('profileModal');
+    const profileModalLoading = document.getElementById('profileModalLoading');
+    const profileModalContent = document.getElementById('profileModalContent');
+    const profileModalName = document.getElementById('profileModalName');
+    const profileModalAvatar = document.getElementById('profileModalAvatar');
+    const profileModalStatus = document.getElementById('profileModalStatus');
+
+    if (!profileModal) return;
+
+    profileModal.classList.add('active');
+    profileModalLoading.classList.remove('hidden');
+    profileModalContent.classList.add('hidden');
+
+    try {
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('nickname, avatar_url, user_details(description)')
+            .eq('id', partnerId)
+            .single();
+
+        if (error) return;
+
+        profileModalName.textContent = profile.nickname || 'Usuário';
+        
+        if (profile.user_details && profile.user_details.description) {
+            profileModalStatus.textContent = profile.user_details.description;
+        } else {
+            profileModalStatus.textContent = 'Conectado agora';
+        }
+
+        const profileModalAvatarImg = profileModalAvatar.querySelector('.profile-modal-avatar-img');
+        const profileModalAvatarFallback = profileModalAvatar.querySelector('.user-avatar-fallback');
+
+        if (profile.avatar_url) {
+            const photoUrl = await loadUserPhoto(profile.avatar_url);
+            if (photoUrl) {
+                profileModalAvatarImg.src = photoUrl;
+                profileModalAvatarImg.style.display = 'block';
+                profileModalAvatarFallback.style.display = 'none';
+                profileModalAvatar.style.backgroundImage = `url(${photoUrl})`;
+                profileModalAvatar.style.backgroundSize = 'cover';
+                profileModalAvatar.style.backgroundPosition = 'center';
             } else {
                 profileModalAvatarImg.style.display = 'none';
                 profileModalAvatarFallback.style.display = 'flex';
                 profileModalAvatarFallback.textContent = (profile.nickname || 'U').charAt(0).toUpperCase();
                 profileModalAvatar.style.backgroundImage = '';
             }
-
-            profileModalLoading.classList.add('hidden');
-            profileModalContent.classList.remove('hidden');
-
-        } catch (error) {
-            console.error('Erro ao abrir modal do perfil:', error);
+        } else {
+            profileModalAvatarImg.style.display = 'none';
+            profileModalAvatarFallback.style.display = 'flex';
+            profileModalAvatarFallback.textContent = (profile.nickname || 'U').charAt(0).toUpperCase();
+            profileModalAvatar.style.backgroundImage = '';
         }
+
+        profileModalLoading.classList.add('hidden');
+        profileModalContent.classList.remove('hidden');
+
+    } catch (error) {
+        console.error('Erro ao abrir modal do perfil:', error);
+    }
+}
+
+// ==================== EVENT LISTENERS ====================
+function setupEventListeners() {
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', logout);
     }
 
-    // ==================== EVENT LISTENERS ====================
-    function setupEventListeners() {
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', logout);
-        }
-
-        const messageInput = document.getElementById('messageInput');
-        const sendMessageBtn = document.getElementById('sendMessageBtn');
+    const messageInput = document.getElementById('messageInput');
+    const sendMessageBtn = document.getElementById('sendMessageBtn');
+    
+    if (messageInput && sendMessageBtn) {
+        sendMessageBtn.addEventListener('click', sendMessage);
         
-        if (messageInput && sendMessageBtn) {
-            sendMessageBtn.addEventListener('click', sendMessage);
-            
-            messageInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    sendMessage();
-                }
-            });
-        }
-
-        addIconsToButtons();
-        
-        // ✅ VERIFICAR RESET QUANDO A PÁGINA GANHA FOCO
-        window.addEventListener('focus', checkAndResetDailyCounter);
-        
-        // ✅ VERIFICAR PREMIUM PERIODICAMENTE
-        setInterval(async () => {
-            await forcePremiumCheck();
-        }, 30000); // A cada 30 segundos
-
-        // 🎯 ADICIONAR BOTÃO DE ATUALIZAR
-        const refreshBtn = document.getElementById('refreshBtn');
-        if (refreshBtn) {
-            refreshBtn.addEventListener('click', refreshConversations);
-        }
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
     }
 
-    async function logout() {
-        try {
-            if (messagesSubscription) {
-                supabase.removeSubscription(messagesSubscription);
-            }
+    addIconsToButtons();
+    
+    // ✅ VERIFICAR RESET QUANDO A PÁGINA GANHA FOCO
+    window.addEventListener('focus', checkAndResetDailyCounter);
+    
+    // ✅ VERIFICAR PREMIUM PERIODICAMENTE
+    setInterval(async () => {
+        await forcePremiumCheck();
+    }, 30000); // A cada 30 segundos
 
-            const { error } = await supabase.auth.signOut();
-            
-            if (error) {
-                console.error('Erro ao fazer logout:', error);
-            }
-            
-            window.location.href = 'login.html';
-            
-        } catch (error) {
+    // 🎯 ADICIONAR BOTÃO DE ATUALIZAR
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', refreshConversations);
+    }
+}
+
+async function logout() {
+    try {
+        if (messagesSubscription) {
+            supabase.removeSubscription(messagesSubscription);
+        }
+
+        const { error } = await supabase.auth.signOut();
+        
+        if (error) {
             console.error('Erro ao fazer logout:', error);
-            window.location.href = 'login.html';
         }
+        
+        window.location.href = 'login.html';
+        
+    } catch (error) {
+        console.error('Erro ao fazer logout:', error);
+        window.location.href = 'login.html';
+    }
+}
+
+function addIconsToButtons() {
+    const sendMessageBtn = document.getElementById('sendMessageBtn');
+    if (sendMessageBtn) {
+        sendMessageBtn.innerHTML = '📤 Enviar';
     }
 
-    function addIconsToButtons() {
-        const sendMessageBtn = document.getElementById('sendMessageBtn');
-        if (sendMessageBtn) {
-            sendMessageBtn.innerHTML = '📤 Enviar';
-        }
-
-        const sendMessageFromModal = document.getElementById('sendMessageFromModal');
-        const viewFullProfile = document.getElementById('viewFullProfile');
-        
-        if (sendMessageFromModal) {
-            sendMessageFromModal.innerHTML = '💌 Enviar Mensagem';
-        }
-        if (viewFullProfile) {
-            viewFullProfile.innerHTML = '👀 Ver Perfil Completo';
-        }
-
-        const headerButtons = document.querySelectorAll('.user-menu .btn-outline');
-        headerButtons.forEach(btn => {
-            if (btn.textContent.includes('Home')) btn.innerHTML = '🏠 Home';
-            if (btn.textContent.includes('Buscar')) btn.innerHTML = '🔍 Buscar';
-            if (btn.textContent.includes('Sair')) btn.innerHTML = '🚪 Sair';
-        });
-
-        const mobileButtons = document.querySelectorAll('.mobile-nav .btn-outline');
-        mobileButtons.forEach(btn => {
-            if (btn.textContent.includes('Home')) btn.innerHTML = '🏠 Home';
-            if (btn.textContent.includes('Buscar')) btn.innerHTML = '🔍 Buscar';
-            if (btn.textContent.includes('Mensagens')) btn.innerHTML = '💌 Mensagens';
-            if (btn.textContent.includes('Configurações')) btn.innerHTML = '⚙️ Configurações';
-            if (btn.textContent.includes('Sair')) btn.innerHTML = '🚪 Sair';
-        });
+    const sendMessageFromModal = document.getElementById('sendMessageFromModal');
+    const viewFullProfile = document.getElementById('viewFullProfile');
+    
+    if (sendMessageFromModal) {
+        sendMessageFromModal.innerHTML = '💌 Enviar Mensagem';
+    }
+    if (viewFullProfile) {
+        viewFullProfile.innerHTML = '👀 Ver Perfil Completo';
     }
 
-    // ==================== FUNÇÕES AUXILIARES ====================
-    function formatTime(dateString) {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffMs = now - date;
-        const diffMins = Math.floor(diffMs / (1000 * 60));
-        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const headerButtons = document.querySelectorAll('.user-menu .btn-outline');
+    headerButtons.forEach(btn => {
+        if (btn.textContent.includes('Home')) btn.innerHTML = '🏠 Home';
+        if (btn.textContent.includes('Buscar')) btn.innerHTML = '🔍 Buscar';
+        if (btn.textContent.includes('Sair')) btn.innerHTML = '🚪 Sair';
+    });
 
-        if (diffMins < 1) return 'Agora';
-        if (diffMins < 60) return `${diffMins}m`;
-        if (diffHours < 24) return `${diffHours}h`;
-        if (diffDays === 1) return 'Ontem';
-        if (diffDays < 7) return `${diffDays}d`;
+    const mobileButtons = document.querySelectorAll('.mobile-nav .btn-outline');
+    mobileButtons.forEach(btn => {
+        if (btn.textContent.includes('Home')) btn.innerHTML = '🏠 Home';
+        if (btn.textContent.includes('Buscar')) btn.innerHTML = '🔍 Buscar';
+        if (btn.textContent.includes('Mensagens')) btn.innerHTML = '💌 Mensagens';
+        if (btn.textContent.includes('Configurações')) btn.innerHTML = '⚙️ Configurações';
+        if (btn.textContent.includes('Sair')) btn.innerHTML = '🚪 Sair';
+    });
+}
+
+// ==================== FUNÇÕES AUXILIARES ====================
+function formatTime(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 1) return 'Agora';
+    if (diffMins < 60) return `${diffMins}m`;
+    if (diffHours < 24) return `${diffHours}h`;
+    if (diffDays === 1) return 'Ontem';
+    if (diffDays < 7) return `${diffDays}d`;
+    
+    return date.toLocaleDateString('pt-BR');
+}
+
+// 🎯 SOLUÇÃO COMPLETA - ATUALIZA MENSAGENS SEM DEPENDÊNCIAS
+async function refreshConversations() {
+    try {
+        console.log('🔄 ATUALIZANDO MENSAGENS...');
         
-        return date.toLocaleDateString('pt-BR');
-    }
-
-    // 🎯 SOLUÇÃO COMPLETA - ATUALIZA MENSAGENS SEM DEPENDÊNCIAS
-    async function refreshConversations() {
-        try {
-            console.log('🔄 ATUALIZANDO MENSAGENS...');
-            
-            if (!currentChatPartner) {
-                showNotification('ℹ️ Selecione uma conversa primeiro', 'info');
-                return;
-            }
-            
-            // Mostrar loading
-            const chatMessages = document.getElementById('chatMessages');
-            if (chatMessages) {
-                chatMessages.innerHTML = `
-                    <div class="loading">
-                        <div class="spinner"></div>
-                        <p>Atualizando mensagens...</p>
-                    </div>
-                `;
-            }
-            
-            // ✅ BUSCAR MENSAGENS DIRETAMENTE
-            console.log('📊 Buscando mensagens para:', currentChatPartner.id);
-            const { data: freshMessages, error } = await supabase
-                .from('messages')
-                .select('*')
-                .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${currentChatPartner.id}),and(sender_id.eq.${currentChatPartner.id},receiver_id.eq.${currentUser.id})`)
-                .order('created_at', { ascending: true });
-
-            if (error) {
-                console.error('❌ Erro ao buscar mensagens:', error);
-                throw error;
-            }
-
-            console.log(`✅ ${freshMessages?.length || 0} mensagens encontradas`);
-            
-            // ✅ RENDERIZAR MENSAGENS DIRETAMENTE
-            if (freshMessages && freshMessages.length > 0) {
-                await renderMessagesDirectly(freshMessages);
-                showNotification(`✅ ${freshMessages.length} mensagens carregadas`, 'success');
-            } else {
-                if (chatMessages) {
-                    chatMessages.innerHTML = '<div class="no-messages">Nenhuma mensagem encontrada</div>';
-                }
-                showNotification('ℹ️ Nenhuma mensagem nova', 'info');
-            }
-            
-        } catch (error) {
-            console.error('❌ Erro ao atualizar:', error);
-            showNotification('❌ Erro ao carregar mensagens', 'error');
-            
-            const chatMessages = document.getElementById('chatMessages');
-            if (chatMessages) {
-                chatMessages.innerHTML = '<div class="no-messages">Erro ao carregar mensagens</div>';
-            }
-        }
-    }
-
-    // ✅ FUNÇÃO PARA RENDERIZAR MENSAGENS DIRETAMENTE
-    async function renderMessagesDirectly(messages) {
-        const chatMessages = document.getElementById('chatMessages');
-        const noMessages = document.getElementById('noMessages');
-        
-        if (!chatMessages) return;
-        
-        if (messages.length === 0) {
-            if (noMessages) noMessages.classList.remove('hidden');
-            chatMessages.innerHTML = '';
+        if (!currentChatPartner) {
+            showNotification('ℹ️ Selecione uma conversa primeiro', 'info');
             return;
         }
         
-        if (noMessages) noMessages.classList.add('hidden');
+        // Mostrar loading
+        const chatMessages = document.getElementById('chatMessages');
+        if (chatMessages) {
+            chatMessages.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Atualizando mensagens...</p>
+                </div>
+            `;
+        }
         
-        // Carregar avatares primeiro
-        await loadAvatarsForMessages(messages);
-        
-        // Renderizar mensagens
-        chatMessages.innerHTML = messages.map(message => {
-            const isSent = message.sender_id === currentUser.id;
-            
-            let senderAvatar = null;
-            let senderName = 'Usuário';
-            
-            if (isSent) {
-                const currentUserInfo = userAvatarsCache.get(currentUser.id);
-                senderName = currentUserInfo?.name || 'Você';
-                senderAvatar = currentUserInfo?.avatar || null;
-            } else {
-                const partnerInfo = userAvatarsCache.get(currentChatPartner.id);
-                senderName = partnerInfo?.name || currentChatPartner?.name || 'Usuário';
-                senderAvatar = partnerInfo?.avatar || null;
-            }
+        // ✅ BUSCAR MENSAGENS DIRETAMENTE
+        console.log('📊 Buscando mensagens para:', currentChatPartner.id);
+        const { data: freshMessages, error } = await supabase
+            .from('messages')
+            .select('*')
+            .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${currentChatPartner.id}),and(sender_id.eq.${currentChatPartner.id},receiver_id.eq.${currentUser.id})`)
+            .order('created_at', { ascending: true });
 
-            const avatarHtml = senderAvatar ? 
-                `<img class="message-avatar-img" src="${senderAvatar}" alt="${senderName}" style="display: block;">` :
-                senderName.charAt(0).toUpperCase();
-
-            const avatarStyle = senderAvatar ? 
-                `style="background-image: url(${senderAvatar}); background-size: cover; background-position: center;"` : 
-                '';
-
-            if (isSent) {
-                return `
-                    <div class="message-container sent">
-                        <div class="message sent">
-                            <div class="message-text">${message.content}</div>
-                            <div class="message-time">${formatTime(message.created_at)}</div>
-                        </div>
-                        <div class="message-avatar" ${avatarStyle}>
-                            ${avatarHtml}
-                        </div>
-                    </div>
-                `;
-            } else {
-                return `
-                    <div class="message-container received">
-                        <div class="message-avatar" ${avatarStyle}>
-                            ${avatarHtml}
-                        </div>
-                        <div class="message received">
-                            <div class="message-text">${message.content}</div>
-                            <div class="message-time">${formatTime(message.created_at)}</div>
-                        </div>
-                    </div>
-                `;
-            }
-        }).join('');
-
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-
-    // ✅ FUNÇÃO PARA CARREGAR AVATARES
-    async function loadAvatarsForMessages(messages) {
-        const userIds = new Set();
-        
-        messages.forEach(message => {
-            userIds.add(message.sender_id);
-            userIds.add(message.receiver_id);
-        });
-
-        // Carregar avatar do usuário atual se não estiver em cache
-        if (!userAvatarsCache.has(currentUser.id)) {
-            const { data: currentUserProfile } = await supabase
-                .from('profiles')
-                .select('nickname, avatar_url')
-                .eq('id', currentUser.id)
-                .single();
-            
-            if (currentUserProfile) {
-                let currentUserAvatar = null;
-                if (currentUserProfile.avatar_url) {
-                    currentUserAvatar = await loadUserPhoto(currentUserProfile.avatar_url);
-                }
-                
-                userAvatarsCache.set(currentUser.id, {
-                    name: currentUserProfile.nickname || 'Você',
-                    avatar: currentUserAvatar
-                });
-            }
+        if (error) {
+            console.error('❌ Erro ao buscar mensagens:', error);
+            throw error;
         }
 
-        // Carregar avatar do parceiro se não estiver em cache
-        if (currentChatPartner && !userAvatarsCache.has(currentChatPartner.id)) {
-            const { data: partnerProfile } = await supabase
-                .from('profiles')
-                .select('nickname, avatar_url')
-                .eq('id', currentChatPartner.id)
-                .single();
-            
-            if (partnerProfile) {
-                let partnerAvatar = null;
-                if (partnerProfile.avatar_url) {
-                    partnerAvatar = await loadUserPhoto(partnerProfile.avatar_url);
-                }
-                
-                userAvatarsCache.set(currentChatPartner.id, {
-                    name: partnerProfile.nickname || 'Usuário',
-                    avatar: partnerAvatar
-                });
+        console.log(`✅ ${freshMessages?.length || 0} mensagens encontradas`);
+        
+        // ✅ RENDERIZAR MENSAGENS DIRETAMENTE
+        if (freshMessages && freshMessages.length > 0) {
+            await renderMessagesDirectly(freshMessages);
+            showNotification(`✅ ${freshMessages.length} mensagens carregadas`, 'success');
+        } else {
+            if (chatMessages) {
+                chatMessages.innerHTML = '<div class="no-messages">Nenhuma mensagem encontrada</div>';
             }
+            showNotification('ℹ️ Nenhuma mensagem nova', 'info');
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro ao atualizar:', error);
+        showNotification('❌ Erro ao carregar mensagens', 'error');
+        
+        const chatMessages = document.getElementById('chatMessages');
+        if (chatMessages) {
+            chatMessages.innerHTML = '<div class="no-messages">Erro ao carregar mensagens</div>';
         }
     }
+}
 
-    // ==================== ESTILOS ====================
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
+// ✅ FUNÇÃO PARA RENDERIZAR MENSAGENS DIRETAMENTE
+async function renderMessagesDirectly(messages) {
+    const chatMessages = document.getElementById('chatMessages');
+    const noMessages = document.getElementById('noMessages');
+    
+    if (!chatMessages) return;
+    
+    if (messages.length === 0) {
+        if (noMessages) noMessages.classList.remove('hidden');
+        chatMessages.innerHTML = '';
+        return;
+    }
+    
+    if (noMessages) noMessages.classList.add('hidden');
+    
+    // Carregar avatares primeiro
+    await loadAvatarsForMessages(messages);
+    
+    // Renderizar mensagens
+    chatMessages.innerHTML = messages.map(message => {
+        const isSent = message.sender_id === currentUser.id;
         
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        let senderAvatar = null;
+        let senderName = 'Usuário';
         
-        .message-counter {
-            background: #d1656d;
-            color: white;
-            border-radius: 12px;
-            padding: 2px 8px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            margin-left: 8px;
-        }
-        
-        .notification {
-            position: fixed;
-            top: 100px;
-            right: 20px;
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 10000;
-            max-width: 300px;
-            animation: slideIn 0.3s ease;
-            font-weight: 500;
-            color: white;
-        }
-        
-        .notification-success { background: #48bb78; }
-        .notification-error { background: #f56565; }
-        .notification-info { background: #4299e1; }
-        
-        /* Loading no chat */
-        .chat-messages .loading {
-            text-align: center;
-            padding: 2rem;
-            color: var(--text-light);
-        }
-        
-        .chat-messages .spinner {
-            width: 30px;
-            height: 30px;
-            border: 3px solid var(--bege);
-            border-top: 3px solid var(--vermelho-rosado);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 1rem;
-        }
-        
-        /* Botão de atualizar */
-        #refreshBtn {
-            padding: 0.5rem;
-            font-size: 1rem;
-            width: 40px;
-            flex-shrink: 0;
-            border-radius: 10px;
-            transition: var(--transition);
+        if (isSent) {
+            const currentUserInfo = userAvatarsCache.get(currentUser.id);
+            senderName = currentUserInfo?.name || 'Você';
+            senderAvatar = currentUserInfo?.avatar || null;
+        } else {
+            const partnerInfo = userAvatarsCache.get(currentChatPartner.id);
+            senderName = partnerInfo?.name || currentChatPartner?.name || 'Usuário';
+            senderAvatar = partnerInfo?.avatar || null;
         }
 
-        #refreshBtn:hover {
-            background: var(--lilas);
-            transform: rotate(45deg);
+        const avatarHtml = senderAvatar ? 
+            `<img class="message-avatar-img" src="${senderAvatar}" alt="${senderName}" style="display: block;">` :
+            senderName.charAt(0).toUpperCase();
+
+        const avatarStyle = senderAvatar ? 
+            `style="background-image: url(${senderAvatar}); background-size: cover; background-position: center;"` : 
+            '';
+
+        if (isSent) {
+            return `
+                <div class="message-container sent">
+                    <div class="message sent">
+                        <div class="message-text">${message.content}</div>
+                        <div class="message-time">${formatTime(message.created_at)}</div>
+                    </div>
+                    <div class="message-avatar" ${avatarStyle}>
+                        ${avatarHtml}
+                    </div>
+                </div>
+            `;
+        } else {
+            return `
+                <div class="message-container received">
+                    <div class="message-avatar" ${avatarStyle}>
+                        ${avatarHtml}
+                    </div>
+                    <div class="message received">
+                        <div class="message-text">${message.content}</div>
+                        <div class="message-time">${formatTime(message.created_at)}</div>
+                    </div>
+                </div>
+            `;
         }
-    `;
-    document.head.appendChild(style);
+    }).join('');
+
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// ✅ FUNÇÃO PARA CARREGAR AVATARES
+async function loadAvatarsForMessages(messages) {
+    const userIds = new Set();
+    
+    messages.forEach(message => {
+        userIds.add(message.sender_id);
+        userIds.add(message.receiver_id);
+    });
+
+    // Carregar avatar do usuário atual se não estiver em cache
+    if (!userAvatarsCache.has(currentUser.id)) {
+        const { data: currentUserProfile } = await supabase
+            .from('profiles')
+            .select('nickname, avatar_url')
+            .eq('id', currentUser.id)
+            .single();
+        
+        if (currentUserProfile) {
+            let currentUserAvatar = null;
+            if (currentUserProfile.avatar_url) {
+                currentUserAvatar = await loadUserPhoto(currentUserProfile.avatar_url);
+            }
+            
+            userAvatarsCache.set(currentUser.id, {
+                name: currentUserProfile.nickname || 'Você',
+                avatar: currentUserAvatar
+            });
+        }
+    }
+
+    // Carregar avatar do parceiro se não estiver em cache
+    if (currentChatPartner && !userAvatarsCache.has(currentChatPartner.id)) {
+        const { data: partnerProfile } = await supabase
+            .from('profiles')
+            .select('nickname, avatar_url')
+            .eq('id', currentChatPartner.id)
+            .single();
+        
+        if (partnerProfile) {
+            let partnerAvatar = null;
+            if (partnerProfile.avatar_url) {
+                partnerAvatar = await loadUserPhoto(partnerProfile.avatar_url);
+            }
+            
+            userAvatarsCache.set(currentChatPartner.id, {
+                name: partnerProfile.nickname || 'Usuário',
+                avatar: partnerAvatar
+            });
+        }
+    }
+}
+
+// ==================== ESTILOS ====================
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .message-counter {
+        background: #d1656d;
+        color: white;
+        border-radius: 12px;
+        padding: 2px 8px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        margin-left: 8px;
+    }
+    
+    .notification {
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10000;
+        max-width: 300px;
+        animation: slideIn 0.3s ease;
+        font-weight: 500;
+        color: white;
+    }
+    
+    .notification-success { background: #48bb78; }
+    .notification-error { background: #f56565; }
+    .notification-info { background: #4299e1; }
+    
+    /* Loading no chat */
+    .chat-messages .loading {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-light);
+    }
+    
+    .chat-messages .spinner {
+        width: 30px;
+        height: 30px;
+        border: 3px solid var(--bege);
+        border-top: 3px solid var(--vermelho-rosado);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+    }
+    
+    /* Botão de atualizar */
+    #refreshBtn {
+        padding: 0.5rem;
+        font-size: 1rem;
+        width: 40px;
+        flex-shrink: 0;
+        border-radius: 10px;
+        transition: var(--transition);
+    }
+
+    #refreshBtn:hover {
+        background: var(--lilas);
+        transform: rotate(45deg);
+    }
+`;
+document.head.appendChild(style);
 </script>
 </body>
 </html>
