@@ -2106,7 +2106,7 @@ function renderMessages(messages) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-// ==================== FUNÇÃO ENVIAR MENSAGEM - CORRIGIDA DE VEZ ====================
+// ==================== FUNÇÃO ENVIAR MENSAGEM - CORREÇÃO FINAL ====================
 async function sendMessage() {
     const messageInput = document.getElementById('messageInput');
     const content = messageInput.value.trim();
@@ -2147,7 +2147,33 @@ async function sendMessageDirectly(content) {
     const messageInput = document.getElementById('messageInput');
     
     try {
-        // ✅ 1. ENVIAR MENSAGEM
+        // ✅ 1. PRIMEIRO ATUALIZAR O CONTADOR NO SUPABASE
+        if (!isPremiumUser) {
+            console.log('📈 ATUALIZANDO CONTADOR NO SUPABASE...');
+            
+            const today = new Date().toISOString().split('T')[0];
+            const newCount = currentMessageCount + 1;
+            
+            // ✅ MÉTODO MAIS SIMPLES AINDA: Usar upsert direto
+            const { error: countError } = await supabase
+                .from('daily_message_count')
+                .upsert({
+                    user_id: currentUser.id,
+                    date: today,
+                    message_count: newCount
+                });
+
+            if (countError) {
+                console.error('❌ Erro ao atualizar contador:', countError);
+                // Continua mesmo com erro no contador
+            } else {
+                console.log('✅ Contador atualizado no Supabase:', newCount);
+                currentMessageCount = newCount;
+                updateMessageCounter(currentMessageCount);
+            }
+        }
+
+        // ✅ 2. DEPOIS ENVIAR A MENSAGEM
         const { error: messageError } = await supabase
             .from('messages')
             .insert({
@@ -2157,53 +2183,12 @@ async function sendMessageDirectly(content) {
                 is_read: false
             });
 
-        if (messageError) throw messageError;
-
-        console.log('✅ Mensagem enviada');
-
-        // ✅ 2. ATUALIZAR CONTADOR NO SUPABASE (APENAS FREE)
-        if (!isPremiumUser) {
-            console.log('📈 ATUALIZANDO CONTADOR NO SUPABASE...');
-            
-            const today = new Date().toISOString().split('T')[0];
-            
-            // ✅ MÉTODO SIMPLES E DIRETO: Buscar contador atual e incrementar
-            const { data: currentData, error: fetchError } = await supabase
-                .from('daily_message_count')
-                .select('message_count')
-                .eq('user_id', currentUser.id)
-                .eq('date', today)
-                .single();
-
-            let newCount = 1;
-            
-            if (fetchError || !currentData) {
-                // ✅ Se não existe, criar com 1
-                const { error: insertError } = await supabase
-                    .from('daily_message_count')
-                    .insert({
-                        user_id: currentUser.id,
-                        date: today,
-                        message_count: 1
-                    });
-                if (insertError) throw insertError;
-                newCount = 1;
-            } else {
-                // ✅ Se existe, incrementar
-                newCount = (currentData.message_count || 0) + 1;
-                const { error: updateError } = await supabase
-                    .from('daily_message_count')
-                    .update({ message_count: newCount })
-                    .eq('user_id', currentUser.id)
-                    .eq('date', today);
-                if (updateError) throw updateError;
-            }
-            
-            // ✅ ATUALIZAR CONTADOR LOCAL
-            currentMessageCount = newCount;
-            console.log('🎯 Contador atualizado:', currentMessageCount);
-            updateMessageCounter(currentMessageCount);
+        if (messageError) {
+            console.error('❌ Erro ao enviar mensagem:', messageError);
+            throw messageError;
         }
+
+        console.log('✅ Mensagem enviada com sucesso');
 
         // ✅ 3. ATUALIZAR INTERFACE
         messageInput.value = '';
@@ -2214,7 +2199,7 @@ async function sendMessageDirectly(content) {
         checkMessageLimit();
 
     } catch (error) {
-        console.error('Erro:', error);
+        console.error('Erro no envio:', error);
         showNotification('❌ Erro ao enviar mensagem', 'error');
     }
 }
@@ -2257,7 +2242,6 @@ function showNotification(message, type = 'info') {
         notification.remove();
     }, 5000);
 }
-
 // ==================== ATUALIZAÇÃO EM TEMPO REAL ====================
 function setupRealtimeUpdates() {
     if (messagesSubscription) {
