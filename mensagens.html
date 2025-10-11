@@ -2106,7 +2106,7 @@ function renderMessages(messages) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-// ==================== FUNÇÃO ENVIAR MENSAGEM - CORREÇÃO FINAL ====================
+// ==================== FUNÇÃO ENVIAR MENSAGEM - SOLUÇÃO DEFINITIVA ====================
 async function sendMessage() {
     const messageInput = document.getElementById('messageInput');
     const content = messageInput.value.trim();
@@ -2114,27 +2114,19 @@ async function sendMessage() {
     if (!content || !currentChatPartner) return;
 
     try {
-        console.log('🔍 VERIFICANDO LIMITE...');
-        
         await forcePremiumCheck();
         
         if (isPremiumUser) {
-            console.log('⭐ Premium - enviando sem limites');
             await sendMessageDirectly(content);
             return;
         }
 
-        console.log('📊 Contador atual:', currentMessageCount);
-        
-        // ✅ BLOQUEAR SE JÁ ATINGIU O LIMITE
         if (currentMessageCount >= 5) {
-            console.log('🚫 LIMITE ATINGIDO!');
             showNotification('❌ Limite de 5 mensagens por dia atingido!', 'error');
             checkMessageLimit();
             return;
         }
 
-        console.log('✅ Pode enviar mensagem', currentMessageCount + 1, '/5');
         await sendMessageDirectly(content);
 
     } catch (error) {
@@ -2147,33 +2139,7 @@ async function sendMessageDirectly(content) {
     const messageInput = document.getElementById('messageInput');
     
     try {
-        // ✅ 1. PRIMEIRO ATUALIZAR O CONTADOR NO SUPABASE
-        if (!isPremiumUser) {
-            console.log('📈 ATUALIZANDO CONTADOR NO SUPABASE...');
-            
-            const today = new Date().toISOString().split('T')[0];
-            const newCount = currentMessageCount + 1;
-            
-            // ✅ MÉTODO MAIS SIMPLES AINDA: Usar upsert direto
-            const { error: countError } = await supabase
-                .from('daily_message_count')
-                .upsert({
-                    user_id: currentUser.id,
-                    date: today,
-                    message_count: newCount
-                });
-
-            if (countError) {
-                console.error('❌ Erro ao atualizar contador:', countError);
-                // Continua mesmo com erro no contador
-            } else {
-                console.log('✅ Contador atualizado no Supabase:', newCount);
-                currentMessageCount = newCount;
-                updateMessageCounter(currentMessageCount);
-            }
-        }
-
-        // ✅ 2. DEPOIS ENVIAR A MENSAGEM
+        // 1. ENVIAR MENSAGEM
         const { error: messageError } = await supabase
             .from('messages')
             .insert({
@@ -2183,64 +2149,40 @@ async function sendMessageDirectly(content) {
                 is_read: false
             });
 
-        if (messageError) {
-            console.error('❌ Erro ao enviar mensagem:', messageError);
-            throw messageError;
+        if (messageError) throw messageError;
+
+        // 2. ATUALIZAR CONTADOR (APENAS FREE)
+        if (!isPremiumUser) {
+            const today = new Date().toISOString().split('T')[0];
+            const newCount = currentMessageCount + 1;
+            
+            // MÉTODO SIMPLES: UPSERT
+            const { error: countError } = await supabase
+                .from('daily_message_count')
+                .upsert({
+                    user_id: currentUser.id,
+                    date: today,
+                    message_count: newCount
+                });
+
+            if (!countError) {
+                currentMessageCount = newCount;
+                updateMessageCounter(currentMessageCount);
+            }
         }
 
-        console.log('✅ Mensagem enviada com sucesso');
-
-        // ✅ 3. ATUALIZAR INTERFACE
+        // 3. ATUALIZAR INTERFACE
         messageInput.value = '';
         await loadMessages(currentChatPartner.id);
         await loadConversations();
-
         showNotification('✅ Mensagem enviada!', 'success');
         checkMessageLimit();
 
     } catch (error) {
-        console.error('Erro no envio:', error);
+        console.error('Erro:', error);
         showNotification('❌ Erro ao enviar mensagem', 'error');
+        throw error;
     }
-}
-
-// ==================== SISTEMA DE NOTIFICAÇÕES ====================
-function showNotification(message, type = 'info') {
-    const existingNotification = document.querySelector('.notification');
-    if (existingNotification) {
-        existingNotification.remove();
-    }
-
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    
-    const colors = {
-        error: '#f56565',
-        success: '#48bb78', 
-        info: '#4299e1'
-    };
-
-    notification.style.cssText = `
-        position: fixed;
-        top: 100px;
-        right: 20px;
-        background: ${colors[type] || colors.info};
-        color: white;
-        padding: 12px 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 10000;
-        max-width: 300px;
-        animation: slideIn 0.3s ease;
-        font-weight: 500;
-    `;
-
-    notification.textContent = message;
-    document.body.appendChild(notification);
-
-    setTimeout(() => {
-        notification.remove();
-    }, 5000);
 }
 // ==================== ATUALIZAÇÃO EM TEMPO REAL ====================
 function setupRealtimeUpdates() {
