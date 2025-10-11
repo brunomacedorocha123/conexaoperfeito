@@ -516,6 +516,7 @@
     .input-group {
       display: flex;
       gap: 1rem;
+      align-items: center;
     }
 
     .input-group input {
@@ -525,6 +526,7 @@
       border-radius: 25px;
       font-size: 1rem;
       background: var(--bege);
+      min-width: 0;
     }
 
     .input-group input:focus {
@@ -535,6 +537,7 @@
     .input-group input:disabled {
       background: var(--lilas);
       cursor: not-allowed;
+      opacity: 0.6;
     }
 
     /* Modal do Perfil */
@@ -718,84 +721,9 @@
       color: var(--text-light);
     }
 
-    /* CORREÇÕES MOBILE - BALÕES DE MENSAGEM */
-    @media (max-width: 768px) {
-      .message {
-        max-width: 85% !important;
-        min-width: auto !important;
-      }
-      
-      .message-container {
-        padding: 0 5px !important;
-        margin: 0 5px !important;
-      }
-      
-      .message-container.sent {
-        justify-content: flex-end !important;
-        padding-left: 15% !important;
-      }
-      
-      .message-container.received {
-        justify-content: flex-start !important;
-        padding-right: 15% !important;
-      }
-      
-      .message-avatar {
-        width: 30px !important;
-        height: 30px !important;
-        flex-shrink: 0 !important;
-      }
-    }
+    /* ========== CORREÇÕES MOBILE ========== */
 
-    /* CORREÇÕES MOBILE - INPUT DE MENSAGEM */
-    @media (max-width: 768px) {
-      .chat-input {
-        padding: 1rem !important;
-        position: relative !important;
-        bottom: auto !important;
-        left: auto !important;
-        right: auto !important;
-        background: var(--branco) !important;
-        border-top: 2px solid var(--lilas) !important;
-        z-index: 100 !important;
-      }
-      
-      .input-group {
-        flex-wrap: nowrap !important;
-        gap: 0.5rem !important;
-        width: 100% !important;
-        padding: 0 5px !important;
-      }
-      
-      .input-group input {
-        flex: 1 !important;
-        min-width: 0 !important;
-        margin: 0 !important;
-        padding: 0.8rem 1rem !important;
-        font-size: 0.9rem !important;
-      }
-      
-      #refreshBtn {
-        width: 45px !important;
-        flex-shrink: 0 !important;
-        padding: 0.5rem !important;
-        font-size: 0.9rem !important;
-      }
-      
-      #sendMessageBtn {
-        width: 70px !important;
-        flex-shrink: 0 !important;
-        font-size: 0.8rem !important;
-        padding: 0.5rem 0.8rem !important;
-      }
-      
-      /* Ajustar espaço para o input */
-      .chat-messages {
-        padding-bottom: 20px !important;
-      }
-    }
-
-    /* Responsividade Geral */
+    /* Menu Mobile e Header */
     @media (max-width: 768px) {
       #hamburgerBtn {
         display: flex;
@@ -826,18 +754,6 @@
         display: none;
       }
 
-      .messages-container {
-        grid-template-columns: 1fr;
-        gap: 0;
-      }
-
-      .conversations-list {
-        border-right: none;
-        border-bottom: 2px solid var(--bege);
-        max-height: 300px;
-        padding: 1rem;
-      }
-
       .user-avatar {
         width: 40px;
         height: 40px;
@@ -854,12 +770,6 @@
       .mobile-user-info #mobileUserNickname {
         font-size: 1.4rem;
         font-weight: bold;
-      }
-
-      .message-avatar {
-        width: 30px;
-        height: 30px;
-        font-size: 0.8rem;
       }
 
       .btn {
@@ -888,6 +798,138 @@
       }
     }
 
+    /* Layout Principal Mobile */
+    @media (max-width: 768px) {
+      .messages-container {
+        grid-template-columns: 1fr;
+        gap: 0;
+        min-height: 500px;
+      }
+
+      .conversations-list {
+        border-right: none;
+        border-bottom: 2px solid var(--bege);
+        max-height: 250px;
+        padding: 1rem;
+      }
+
+      .chat-area {
+        height: 400px;
+        display: flex;
+        flex-direction: column;
+      }
+    }
+
+    /* CORREÇÃO DOS BALÕES DE MENSAGEM NO MOBILE */
+    @media (max-width: 768px) {
+      .message {
+        max-width: 85% !important;
+        min-width: auto !important;
+      }
+      
+      .message-container {
+        padding: 0 5px !important;
+        margin: 0 2px !important;
+      }
+      
+      .message-container.sent {
+        justify-content: flex-end !important;
+        padding-left: 15% !important;
+      }
+      
+      .message-container.received {
+        justify-content: flex-start !important;
+        padding-right: 15% !important;
+      }
+      
+      .message-avatar {
+        width: 30px !important;
+        height: 30px !important;
+        flex-shrink: 0 !important;
+        font-size: 0.8rem !important;
+      }
+
+      .chat-messages {
+        padding: 1rem !important;
+        gap: 0.8rem !important;
+      }
+    }
+
+    /* CORREÇÃO COMPLETA DO INPUT NO MOBILE */
+    @media (max-width: 768px) {
+      .chat-input {
+        padding: 1rem 10px !important;
+        border-top: 2px solid var(--lilas);
+        background: var(--branco);
+        position: relative;
+        width: 100%;
+        margin: 0;
+        left: 0;
+        right: 0;
+        box-sizing: border-box;
+      }
+      
+      .input-group {
+        display: flex;
+        gap: 8px;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+        align-items: center;
+        box-sizing: border-box;
+      }
+      
+      #refreshBtn {
+        width: 45px !important;
+        height: 45px;
+        flex-shrink: 0;
+        padding: 0.5rem !important;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        border-radius: 10px;
+        min-width: 45px;
+      }
+      
+      #messageInput {
+        flex: 1;
+        min-width: 0;
+        margin: 0;
+        padding: 12px 15px !important;
+        border: 2px solid var(--lilas);
+        border-radius: 25px;
+        background: var(--bege);
+        font-size: 0.9rem;
+        width: auto;
+        max-width: none;
+        box-sizing: border-box;
+        height: 45px;
+      }
+      
+      #sendMessageBtn {
+        width: 70px !important;
+        height: 45px;
+        flex-shrink: 0;
+        padding: 0.5rem 0.8rem !important;
+        margin: 0;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        border-radius: 25px;
+        min-width: 70px;
+      }
+      
+      /* Garantir que o container do chat tenha espaço para o input */
+      .chat-messages {
+        padding-bottom: 80px !important;
+        height: calc(100% - 80px);
+        box-sizing: border-box;
+      }
+    }
+
+    /* CORREÇÃO PARA TELAS MUITO PEQUENAS */
     @media (max-width: 480px) {
       .logo img {
         height: 130px !important;
@@ -924,13 +966,46 @@
         font-size: 0.7rem;
       }
 
+      /* Input em telas muito pequenas */
       .chat-input {
-        padding: 0.8rem !important;
+        padding: 0.8rem 8px !important;
+      }
+      
+      .input-group {
+        gap: 6px;
+      }
+      
+      #refreshBtn {
+        width: 40px !important;
+        height: 40px;
+        font-size: 0.9rem;
+        padding: 0.4rem !important;
+      }
+      
+      #messageInput {
+        padding: 10px 12px !important;
+        font-size: 0.85rem;
+        height: 40px;
+      }
+      
+      #sendMessageBtn {
+        width: 65px !important;
+        height: 40px;
+        font-size: 0.75rem;
+        padding: 0.4rem 0.6rem !important;
+      }
+      
+      .chat-messages {
+        padding-bottom: 70px !important;
       }
 
-      .input-group input {
-        padding: 0.7rem 0.9rem !important;
-        font-size: 0.85rem !important;
+      .conversations-list {
+        max-height: 200px;
+        padding: 0.8rem;
+      }
+
+      .chat-area {
+        height: 350px;
       }
     }
 
@@ -981,6 +1056,22 @@
         background-color: #ccc !important;
         cursor: not-allowed !important;
         opacity: 0.6 !important;
+    }
+
+    /* Animações extras */
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+    
+    .pulse {
+        animation: pulse 2s infinite;
     }
 </style>
 </head>
