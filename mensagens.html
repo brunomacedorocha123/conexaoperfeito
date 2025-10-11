@@ -2093,69 +2093,46 @@
                 throw error;
             }
 
-            // ✅ INCREMENTAR CONTADOR APENAS SE NÃO FOR PREMIUM
+           // ✅ INCREMENTAR CONTADOR APENAS SE NÃO FOR PREMIUM
 if (!isPremiumUser) {
     console.log('📈 Incrementando contador FREE...');
     
     const today = new Date().toISOString().split('T')[0];
     
-    // ✅ MÉTODO GARANTIDO - BUSCAR E ATUALIZAR
-    const { data: existingRecord, error: fetchError } = await supabase
+    // ✅ MÉTODO SIMPLES E DIRETO QUE FUNCIONA
+    const { error: updateError } = await supabase
         .from('daily_message_count')
-        .select('message_count')
-        .eq('user_id', currentUser.id)
-        .eq('date', today)
-        .single();
+        .upsert({
+            user_id: currentUser.id,
+            date: today,
+            message_count: currentMessageCount + 1
+        }, {
+            onConflict: 'user_id,date'
+        });
 
-    let newCount = 1;
-    
-    if (fetchError && fetchError.code === 'PGRST116') {
-        // ✅ SE NÃO EXISTIR, CRIAR COM 1
-        const { error: insertError } = await supabase
-            .from('daily_message_count')
-            .insert({
-                user_id: currentUser.id,
-                date: today,
-                message_count: 1
-            });
-        
-        if (!insertError) {
-            currentMessageCount = 1;
-            console.log('✅ Novo registro criado com count = 1');
-        }
-    } else if (existingRecord) {
-        // ✅ SE EXISTIR, INCREMENTAR
-        newCount = (existingRecord.message_count || 0) + 1;
-        const { error: updateError } = await supabase
-            .from('daily_message_count')
-            .update({ message_count: newCount })
-            .eq('user_id', currentUser.id)
-            .eq('date', today);
-
-        if (!updateError) {
-            currentMessageCount = newCount;
-            console.log('✅ Contador atualizado no banco:', currentMessageCount);
-        }
-    }
-
-    if (fetchError && fetchError.code !== 'PGRST116') {
-        console.error('❌ Erro ao buscar contador:', fetchError);
+    if (updateError) {
+        console.error('❌ Erro ao atualizar contador no banco:', updateError);
+        // Fallback: incrementar localmente mesmo com erro
+        currentMessageCount++;
+    } else {
+        console.log('✅ Contador atualizado no banco:', currentMessageCount + 1);
+        currentMessageCount++;
     }
 }
 
-            messageInput.value = '';
-            updateMessageCounter(currentMessageCount);
-            await loadMessages(currentChatPartner.id);
-            await loadConversations();
+messageInput.value = '';
+updateMessageCounter(currentMessageCount);
+await loadMessages(currentChatPartner.id);
+await loadConversations();
 
-            showNotification('✅ Mensagem enviada!', 'success');
-            checkMessageLimit();
+showNotification('✅ Mensagem enviada!', 'success');
+checkMessageLimit();
 
-        } catch (error) {
-            console.error('Erro ao enviar mensagem:', error);
-            showNotification('❌ Erro ao enviar mensagem', 'error');
-        }
-    }
+} catch (error) {
+    console.error('Erro ao enviar mensagem:', error);
+    showNotification('❌ Erro ao enviar mensagem', 'error');
+}
+}
 
     // ==================== SISTEMA DE NOTIFICAÇÕES ====================
     function showNotification(message, type = 'info') {
