@@ -1321,184 +1321,193 @@
     }
 
     // ==================== INICIALIZAÇÃO DA SESSÃO ====================
-   // ==================== INICIALIZAÇÃO DA SESSÃO ====================
-async function initializeUserSession() {
-    try {
-        // ✅ 1. VERIFICAR ATIVAÇÃO PREMIUM VIA URL
-        checkPremiumActivation();
-        
-        // ✅ 2. VERIFICAÇÃO FORÇADA DE PREMIUM
-        await forcePremiumCheck();
-        
-        // ✅ 3. VERIFICAR E RESETAR CONTADOR DIÁRIO
-        await checkAndResetDailyCounter();
-        
-        // ✅ 4. CARREGAR DADOS DO USUÁRIO
-        await loadUserData();
-        
-        // ✅ 5. VERIFICAR STATUS PREMIUM (redundante para garantir)
-        await checkUserPremiumStatus();
-        
-        // ✅ 6. CARREGAR CONTADOR ATUAL
-        await loadMessageCount();
-        
-        // ✅ 7. CARREGAR CONVERSAS
-        await loadConversations();
-        
-        // ✅ 8. VERIFICAR E ABRIR CONVERSA ARMAZENADA (NOVA)
-        await checkAndOpenStoredConversation();
-        
-        // ✅ 9. CONFIGURAR ATUALIZAÇÕES EM TEMPO REAL
-        setupRealtimeUpdates();
-        
-        console.log('✅ Sessão inicializada com sucesso - Premium:', isPremiumUser);
-        
-    } catch (error) {
-        console.error('Erro na inicialização:', error);
-    }
-}
-
-// ==================== VERIFICAR E ABRIR CONVERSA AO CARREGAR ====================
-async function checkAndOpenStoredConversation() {
-    try {
-        const storedUserId = localStorage.getItem('openChatWithUserId');
-        
-        if (storedUserId && currentUser) {
-            console.log('🎯 Abrindo conversa armazenada:', storedUserId);
+    async function initializeUserSession() {
+        try {
+            // ✅ 1. VERIFICAR ATIVAÇÃO PREMIUM VIA URL
+            checkPremiumActivation();
             
-            // Verificar se o usuário existe
-            const { data: userProfile, error } = await supabase
-                .from('profiles')
-                .select('nickname, avatar_url')
-                .eq('id', storedUserId)
-                .single();
+            // ✅ 2. VERIFICAÇÃO FORÇADA DE PREMIUM
+            await forcePremiumCheck();
+            
+            // ✅ 3. VERIFICAR E RESETAR CONTADOR DIÁRIO
+            await checkAndResetDailyCounter();
+            
+            // ✅ 4. CARREGAR DADOS DO USUÁRIO
+            await loadUserData();
+            
+            // ✅ 5. VERIFICAR STATUS PREMIUM (redundante para garantir)
+            await checkUserPremiumStatus();
+            
+            // ✅ 6. CARREGAR CONTADOR ATUAL
+            await loadMessageCount();
+            
+            // ✅ 7. CARREGAR CONVERSAS
+            await loadConversations();
+            
+            // ✅ 8. VERIFICAR E ABRIR CONVERSA ARMAZENADA
+            await checkAndOpenStoredConversation();
+            
+            // ✅ 9. CONFIGURAR ATUALIZAÇÕES EM TEMPO REAL
+            setupRealtimeUpdates();
+            
+            console.log('✅ Sessão inicializada com sucesso - Premium:', isPremiumUser);
+            
+        } catch (error) {
+            console.error('Erro na inicialização:', error);
+        }
+    }
 
-            if (error || !userProfile) {
-                console.log('❌ Usuário não encontrado:', storedUserId);
+    // ==================== VERIFICAR E ABRIR CONVERSA AO CARREGAR ====================
+    async function checkAndOpenStoredConversation() {
+        try {
+            const storedUserId = localStorage.getItem('openChatWithUserId');
+            
+            if (storedUserId && currentUser) {
+                console.log('🎯 Abrindo conversa armazenada:', storedUserId);
+                
+                // Verificar se o usuário existe
+                const { data: userProfile, error } = await supabase
+                    .from('profiles')
+                    .select('nickname, avatar_url')
+                    .eq('id', storedUserId)
+                    .single();
+
+                if (error || !userProfile) {
+                    console.log('❌ Usuário não encontrado:', storedUserId);
+                    localStorage.removeItem('openChatWithUserId');
+                    return;
+                }
+
+                // ✅ ADICIONAR À LISTA DE CONVERSAS SE NÃO EXISTIR
+                const existingConversation = conversations.find(conv => conv.partnerId === storedUserId);
+                
+                if (!existingConversation) {
+                    console.log('➕ Adicionando nova conversa à lista');
+                    
+                    const newConversation = {
+                        partnerId: storedUserId,
+                        partnerName: userProfile.nickname || 'Usuário',
+                        partnerAvatar: userProfile.avatar_url || null,
+                        lastMessage: '👋 Iniciar conversa',
+                        lastMessageTime: new Date().toISOString(),
+                        unreadCount: 0,
+                        messages: []
+                    };
+                    
+                    conversations.unshift(newConversation);
+                    
+                    // Carregar avatar se existir
+                    if (userProfile.avatar_url && !userAvatarsCache.has(storedUserId)) {
+                        const photoUrl = await loadUserPhoto(userProfile.avatar_url);
+                        if (photoUrl) {
+                            userAvatarsCache.set(storedUserId, {
+                                name: userProfile.nickname,
+                                avatar: photoUrl
+                            });
+                        }
+                    }
+                    
+                    renderConversations();
+                }
+
+                // ✅ SELECIONAR A CONVERSA
+                await selectConversation(storedUserId);
+                
+                // Limpar o storage
                 localStorage.removeItem('openChatWithUserId');
+                
+                console.log('✅ Conversa aberta com sucesso');
+            }
+        } catch (error) {
+            console.error('❌ Erro ao abrir conversa armazenada:', error);
+            localStorage.removeItem('openChatWithUserId');
+        }
+    }
+
+    // ==================== CARREGAR CONVERSAS - CORRIGIDA ====================
+    async function loadConversations() {
+        try {
+            console.log('🔄 Carregando conversas...');
+            
+            const { data: messages, error } = await supabase
+                .from('messages')
+                .select(`
+                    id,
+                    sender_id,
+                    receiver_id,
+                    content,
+                    is_read,
+                    created_at,
+                    sender:profiles!messages_sender_id_fkey(nickname, avatar_url),
+                    receiver:profiles!messages_receiver_id_fkey(nickname, avatar_url)
+                `)
+                .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('❌ Erro ao carregar mensagens:', error);
+                conversations = [];
+                renderConversations();
                 return;
             }
 
-            // ✅ ADICIONAR À LISTA DE CONVERSAS SE NÃO EXISTIR
-            const existingConversation = conversations.find(conv => conv.partnerId === storedUserId);
-            
-            if (!existingConversation) {
-                console.log('➕ Adicionando nova conversa à lista');
+            // ✅ CORREÇÃO CRÍTICA: Verificar se messages existe e tem dados
+            if (!messages || messages.length === 0) {
+                console.log('ℹ️ Nenhuma mensagem encontrada - conversas vazias');
+                conversations = [];
+                renderConversations();
+                return;
+            }
+
+            const conversationMap = new Map();
+
+            for (const message of messages) {
+                const partnerId = message.sender_id === currentUser.id ? message.receiver_id : message.sender_id;
+                const partnerProfile = message.sender_id === currentUser.id ? message.receiver : message.sender;
                 
-                const newConversation = {
-                    partnerId: storedUserId,
-                    partnerName: userProfile.nickname || 'Usuário',
-                    partnerAvatar: userProfile.avatar_url || null,
-                    lastMessage: '👋 Iniciar conversa',
-                    lastMessageTime: new Date().toISOString(),
-                    unreadCount: 0,
-                    messages: []
-                };
-                
-                conversations.unshift(newConversation);
-                
-                // Carregar avatar se existir
-                if (userProfile.avatar_url && !userAvatarsCache.has(storedUserId)) {
-                    const photoUrl = await loadUserPhoto(userProfile.avatar_url);
-                    if (photoUrl) {
-                        userAvatarsCache.set(storedUserId, {
-                            name: userProfile.nickname,
-                            avatar: photoUrl
-                        });
-                    }
+                // ✅ CORREÇÃO: Verificar se partnerProfile existe
+                if (!partnerProfile) {
+                    console.log('⚠️ Perfil do parceiro não encontrado para:', partnerId);
+                    continue;
                 }
                 
-                renderConversations();
+                if (!conversationMap.has(partnerId)) {
+                    conversationMap.set(partnerId, {
+                        partnerId: partnerId,
+                        partnerName: partnerProfile.nickname || 'Usuário',
+                        partnerAvatar: partnerProfile.avatar_url || null,
+                        lastMessage: message.content,
+                        lastMessageTime: message.created_at,
+                        unreadCount: 0,
+                        messages: []
+                    });
+                }
+
+                const conversation = conversationMap.get(partnerId);
+                conversation.messages.push(message);
+
+                if (new Date(message.created_at) > new Date(conversation.lastMessageTime)) {
+                    conversation.lastMessage = message.content;
+                    conversation.lastMessageTime = message.created_at;
+                }
+
+                if (!message.is_read && message.receiver_id === currentUser.id) {
+                    conversation.unreadCount++;
+                }
             }
 
-            // ✅ SELECIONAR A CONVERSA
-            await selectConversation(storedUserId);
+            conversations = Array.from(conversationMap.values());
+            console.log(`✅ ${conversations.length} conversas carregadas`);
             
-            // Limpar o storage
-            localStorage.removeItem('openChatWithUserId');
-            
-            console.log('✅ Conversa aberta com sucesso');
-        }
-    } catch (error) {
-        console.error('❌ Erro ao abrir conversa armazenada:', error);
-        localStorage.removeItem('openChatWithUserId');
-    }
-}
+            await loadConversationAvatars();
+            renderConversations();
 
-// ==================== CARREGAR CONVERSAS ====================
-async function loadConversations() {
-    try {
-        const { data: messages, error } = await supabase
-            .from('messages')
-            .select(`
-                id,
-                sender_id,
-                receiver_id,
-                content,
-                is_read,
-                created_at,
-                sender:profiles!messages_sender_id_fkey(nickname, avatar_url),
-                receiver:profiles!messages_receiver_id_fkey(nickname, avatar_url)
-            `)
-            .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
-            .order('created_at', { ascending: false });
-
-        if (error) {
-            console.error('❌ Erro ao carregar mensagens:', error);
+        } catch (error) {
+            console.error('Erro ao carregar conversas:', error);
             conversations = [];
             renderConversations();
-            return;
         }
-
-        // ✅ CORREÇÃO: SE NÃO HOUVER MENSAGENS, MANTER CONVERSAS VAZIAS
-        if (!messages || messages.length === 0) {
-            console.log('ℹ️ Nenhuma mensagem encontrada');
-            conversations = [];
-            renderConversations();
-            return;
-        }
-
-        const conversationMap = new Map();
-
-        for (const message of messages) {
-            const partnerId = message.sender_id === currentUser.id ? message.receiver_id : message.sender_id;
-            const partnerProfile = message.sender_id === currentUser.id ? message.receiver : message.sender;
-            
-            if (!conversationMap.has(partnerId)) {
-                conversationMap.set(partnerId, {
-                    partnerId: partnerId,
-                    partnerName: partnerProfile?.nickname || 'Usuário',
-                    partnerAvatar: partnerProfile?.avatar_url || null,
-                    lastMessage: message.content,
-                    lastMessageTime: message.created_at,
-                    unreadCount: 0,
-                    messages: []
-                });
-            }
-
-            const conversation = conversationMap.get(partnerId);
-            conversation.messages.push(message);
-
-            if (new Date(message.created_at) > new Date(conversation.lastMessageTime)) {
-                conversation.lastMessage = message.content;
-                conversation.lastMessageTime = message.created_at;
-            }
-
-            if (!message.is_read && message.receiver_id === currentUser.id) {
-                conversation.unreadCount++;
-            }
-        }
-
-        conversations = Array.from(conversationMap.values());
-        await loadConversationAvatars();
-        renderConversations();
-
-    } catch (error) {
-        console.error('Erro ao carregar conversas:', error);
-        conversations = [];
-        renderConversations();
     }
-}
 
     // ==================== SISTEMA DE RESET DIÁRIO ====================
     async function checkAndResetDailyCounter() {
@@ -1806,65 +1815,6 @@ async function loadConversations() {
     }
 
     // ==================== CONVERSAS E MENSAGENS ====================
-    async function loadConversations() {
-        try {
-            const { data: messages, error } = await supabase
-                .from('messages')
-                .select(`
-                    id,
-                    sender_id,
-                    receiver_id,
-                    content,
-                    is_read,
-                    created_at,
-                    sender:profiles!messages_sender_id_fkey(nickname, avatar_url),
-                    receiver:profiles!messages_receiver_id_fkey(nickname, avatar_url)
-                `)
-                .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
-                .order('created_at', { ascending: false });
-
-            if (error) return;
-
-            const conversationMap = new Map();
-
-            for (const message of messages) {
-                const partnerId = message.sender_id === currentUser.id ? message.receiver_id : message.sender_id;
-                const partnerProfile = message.sender_id === currentUser.id ? message.receiver : message.sender;
-                
-                if (!conversationMap.has(partnerId)) {
-                    conversationMap.set(partnerId, {
-                        partnerId: partnerId,
-                        partnerName: partnerProfile?.nickname || 'Usuário',
-                        partnerAvatar: partnerProfile?.avatar_url || null,
-                        lastMessage: message.content,
-                        lastMessageTime: message.created_at,
-                        unreadCount: 0,
-                        messages: []
-                    });
-                }
-
-                const conversation = conversationMap.get(partnerId);
-                conversation.messages.push(message);
-
-                if (new Date(message.created_at) > new Date(conversation.lastMessageTime)) {
-                    conversation.lastMessage = message.content;
-                    conversation.lastMessageTime = message.created_at;
-                }
-
-                if (!message.is_read && message.receiver_id === currentUser.id) {
-                    conversation.unreadCount++;
-                }
-            }
-
-            conversations = Array.from(conversationMap.values());
-            await loadConversationAvatars();
-            renderConversations();
-
-        } catch (error) {
-            console.error('Erro ao carregar conversas:', error);
-        }
-    }
-
     async function loadConversationAvatars() {
         for (const conversation of conversations) {
             if (conversation.partnerAvatar && !userAvatarsCache.has(conversation.partnerId)) {
@@ -2527,375 +2477,369 @@ async function loadConversations() {
 
     // ==================== EVENT LISTENERS ====================
     function setupEventListeners() {
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', logout);
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', logout);
+        }
+
+        const messageInput = document.getElementById('messageInput');
+        const sendMessageBtn = document.getElementById('sendMessageBtn');
+        
+        if (messageInput && sendMessageBtn) {
+            sendMessageBtn.addEventListener('click', sendMessage);
+            
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        }
+
+        addIconsToButtons();
+        
+        // ✅ VERIFICAR RESET QUANDO A PÁGINA GANHA FOCO
+        window.addEventListener('focus', checkAndResetDailyCounter);
+        
+        // ✅ VERIFICAR PREMIUM PERIODICAMENTE
+        setInterval(async () => {
+            await forcePremiumCheck();
+        }, 30000); // A cada 30 segundos
+
+        // 🎯 ADICIONAR BOTÃO DE ATUALIZAR
+        const refreshBtn = document.getElementById('refreshBtn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', refreshConversations);
+        }
     }
 
-    const messageInput = document.getElementById('messageInput');
-    const sendMessageBtn = document.getElementById('sendMessageBtn');
-    
-    if (messageInput && sendMessageBtn) {
-        sendMessageBtn.addEventListener('click', sendMessage);
-        
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage();
+    async function logout() {
+        try {
+            if (messagesSubscription) {
+                supabase.removeSubscription(messagesSubscription);
             }
+
+            const { error } = await supabase.auth.signOut();
+            
+            if (error) {
+                console.error('Erro ao fazer logout:', error);
+            }
+            
+            window.location.href = 'login.html';
+            
+        } catch (error) {
+            console.error('Erro ao fazer logout:', error);
+            window.location.href = 'login.html';
+        }
+    }
+
+    function addIconsToButtons() {
+        const sendMessageBtn = document.getElementById('sendMessageBtn');
+        if (sendMessageBtn) {
+            sendMessageBtn.innerHTML = '📤 Enviar';
+        }
+
+        const sendMessageFromModal = document.getElementById('sendMessageFromModal');
+        const viewFullProfile = document.getElementById('viewFullProfile');
+        
+        if (sendMessageFromModal) {
+            sendMessageFromModal.innerHTML = '💌 Enviar Mensagem';
+        }
+        if (viewFullProfile) {
+            viewFullProfile.innerHTML = '👀 Ver Perfil Completo';
+        }
+
+        const headerButtons = document.querySelectorAll('.user-menu .btn-outline');
+        headerButtons.forEach(btn => {
+            if (btn.textContent.includes('Home')) btn.innerHTML = '🏠 Home';
+            if (btn.textContent.includes('Buscar')) btn.innerHTML = '🔍 Buscar';
+            if (btn.textContent.includes('Sair')) btn.innerHTML = '🚪 Sair';
+        });
+
+        const mobileButtons = document.querySelectorAll('.mobile-nav .btn-outline');
+        mobileButtons.forEach(btn => {
+            if (btn.textContent.includes('Home')) btn.innerHTML = '🏠 Home';
+            if (btn.textContent.includes('Buscar')) btn.innerHTML = '🔍 Buscar';
+            if (btn.textContent.includes('Mensagens')) btn.innerHTML = '💌 Mensagens';
+            if (btn.textContent.includes('Configurações')) btn.innerHTML = '⚙️ Configurações';
+            if (btn.textContent.includes('Sair')) btn.innerHTML = '🚪 Sair';
         });
     }
 
-    addIconsToButtons();
-    
-// ✅ VERIFICAR RESET QUANDO A PÁGINA GANHA FOCO
-window.addEventListener('focus', checkAndResetDailyCounter);
-    
-// ✅ VERIFICAR PREMIUM PERIODICAMENTE
-setInterval(async () => {
-    await forcePremiumCheck();
-}, 30000); // A cada 30 segundos
+    // ==================== FUNÇÕES AUXILIARES ====================
+    function formatTime(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / (1000 * 60));
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-// 🎯 ADICIONAR BOTÃO DE ATUALIZAR
-const refreshBtn = document.getElementById('refreshBtn');
-if (refreshBtn) {
-    refreshBtn.addEventListener('click', refreshConversations);
-}
-}
+        if (diffMins < 1) return 'Agora';
+        if (diffMins < 60) return `${diffMins}m`;
+        if (diffHours < 24) return `${diffHours}h`;
+        if (diffDays === 1) return 'Ontem';
+        if (diffDays < 7) return `${diffDays}d`;
+        
+        return date.toLocaleDateString('pt-BR');
+    }
 
-async function logout() {
-    try {
-        if (messagesSubscription) {
-            supabase.removeSubscription(messagesSubscription);
+    // 🎯 SOLUÇÃO COMPLETA - ATUALIZA MENSAGENS SEM DEPENDÊNCIAS
+    async function refreshConversations() {
+        try {
+            console.log('🔄 ATUALIZANDO MENSAGENS...');
+            
+            if (!currentChatPartner) {
+                showNotification('ℹ️ Selecione uma conversa primeiro', 'info');
+                return;
+            }
+            
+            // Mostrar loading
+            const chatMessages = document.getElementById('chatMessages');
+            if (chatMessages) {
+                chatMessages.innerHTML = `
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Atualizando mensagens...</p>
+                    </div>
+                `;
+            }
+            
+            // ✅ BUSCAR MENSAGENS DIRETAMENTE
+            console.log('📊 Buscando mensagens para:', currentChatPartner.id);
+            const { data: freshMessages, error } = await supabase
+                .from('messages')
+                .select('*')
+                .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${currentChatPartner.id}),and(sender_id.eq.${currentChatPartner.id},receiver_id.eq.${currentUser.id})`)
+                .order('created_at', { ascending: true });
+
+            if (error) {
+                console.error('❌ Erro ao buscar mensagens:', error);
+                throw error;
+            }
+
+            console.log(`✅ ${freshMessages?.length || 0} mensagens encontradas`);
+            
+            // ✅ RENDERIZAR MENSAGENS DIRETAMENTE
+            if (freshMessages && freshMessages.length > 0) {
+                await renderMessagesDirectly(freshMessages);
+                showNotification(`✅ ${freshMessages.length} mensagens carregadas`, 'success');
+            } else {
+                if (chatMessages) {
+                    chatMessages.innerHTML = '<div class="no-messages">Nenhuma mensagem encontrada</div>';
+                }
+                showNotification('ℹ️ Nenhuma mensagem nova', 'info');
+            }
+            
+        } catch (error) {
+            console.error('❌ Erro ao atualizar:', error);
+            showNotification('❌ Erro ao carregar mensagens', 'error');
+            
+            const chatMessages = document.getElementById('chatMessages');
+            if (chatMessages) {
+                chatMessages.innerHTML = '<div class="no-messages">Erro ao carregar mensagens</div>';
+            }
         }
-
-        const { error } = await supabase.auth.signOut();
-        
-        if (error) {
-            console.error('Erro ao fazer logout:', error);
-        }
-        
-        window.location.href = 'login.html';
-        
-    } catch (error) {
-        console.error('Erro ao fazer logout:', error);
-        window.location.href = 'login.html';
-    }
-}
-
-function addIconsToButtons() {
-    const sendMessageBtn = document.getElementById('sendMessageBtn');
-    if (sendMessageBtn) {
-        sendMessageBtn.innerHTML = '📤 Enviar';
     }
 
-    const sendMessageFromModal = document.getElementById('sendMessageFromModal');
-    const viewFullProfile = document.getElementById('viewFullProfile');
-    
-    if (sendMessageFromModal) {
-        sendMessageFromModal.innerHTML = '💌 Enviar Mensagem';
-    }
-    if (viewFullProfile) {
-        viewFullProfile.innerHTML = '👀 Ver Perfil Completo';
-    }
-
-    const headerButtons = document.querySelectorAll('.user-menu .btn-outline');
-    headerButtons.forEach(btn => {
-        if (btn.textContent.includes('Home')) btn.innerHTML = '🏠 Home';
-        if (btn.textContent.includes('Buscar')) btn.innerHTML = '🔍 Buscar';
-        if (btn.textContent.includes('Sair')) btn.innerHTML = '🚪 Sair';
-    });
-
-    const mobileButtons = document.querySelectorAll('.mobile-nav .btn-outline');
-    mobileButtons.forEach(btn => {
-        if (btn.textContent.includes('Home')) btn.innerHTML = '🏠 Home';
-        if (btn.textContent.includes('Buscar')) btn.innerHTML = '🔍 Buscar';
-        if (btn.textContent.includes('Mensagens')) btn.innerHTML = '💌 Mensagens';
-        if (btn.textContent.includes('Configurações')) btn.innerHTML = '⚙️ Configurações';
-        if (btn.textContent.includes('Sair')) btn.innerHTML = '🚪 Sair';
-    });
-}
-
-// ==================== FUNÇÕES AUXILIARES ====================
-function formatTime(dateString) {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    if (diffMins < 1) return 'Agora';
-    if (diffMins < 60) return `${diffMins}m`;
-    if (diffHours < 24) return `${diffHours}h`;
-    if (diffDays === 1) return 'Ontem';
-    if (diffDays < 7) return `${diffDays}d`;
-    
-    return date.toLocaleDateString('pt-BR');
-}
-
-// 🎯 SOLUÇÃO COMPLETA - ATUALIZA MENSAGENS SEM DEPENDÊNCIAS
-async function refreshConversations() {
-    try {
-        console.log('🔄 ATUALIZANDO MENSAGENS...');
+    // ✅ FUNÇÃO PARA RENDERIZAR MENSAGENS DIRETAMENTE
+    async function renderMessagesDirectly(messages) {
+        const chatMessages = document.getElementById('chatMessages');
+        const noMessages = document.getElementById('noMessages');
         
-        if (!currentChatPartner) {
-            showNotification('ℹ️ Selecione uma conversa primeiro', 'info');
+        if (!chatMessages) return;
+        
+        if (messages.length === 0) {
+            if (noMessages) noMessages.classList.remove('hidden');
+            chatMessages.innerHTML = '';
             return;
         }
         
-        // Mostrar loading
-        const chatMessages = document.getElementById('chatMessages');
-        if (chatMessages) {
-            chatMessages.innerHTML = `
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p>Atualizando mensagens...</p>
-                </div>
-            `;
-        }
+        if (noMessages) noMessages.classList.add('hidden');
         
-        // ✅ BUSCAR MENSAGENS DIRETAMENTE
-        console.log('📊 Buscando mensagens para:', currentChatPartner.id);
-        const { data: freshMessages, error } = await supabase
-            .from('messages')
-            .select('*')
-            .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${currentChatPartner.id}),and(sender_id.eq.${currentChatPartner.id},receiver_id.eq.${currentUser.id})`)
-            .order('created_at', { ascending: true });
-
-        if (error) {
-            console.error('❌ Erro ao buscar mensagens:', error);
-            throw error;
-        }
-
-        console.log(`✅ ${freshMessages?.length || 0} mensagens encontradas`);
+        // Carregar avatares primeiro
+        await loadAvatarsForMessages(messages);
         
-        // ✅ RENDERIZAR MENSAGENS DIRETAMENTE
-        if (freshMessages && freshMessages.length > 0) {
-            await renderMessagesDirectly(freshMessages);
-            showNotification(`✅ ${freshMessages.length} mensagens carregadas`, 'success');
-        } else {
-            if (chatMessages) {
-                chatMessages.innerHTML = '<div class="no-messages">Nenhuma mensagem encontrada</div>';
+        // Renderizar mensagens
+        chatMessages.innerHTML = messages.map(message => {
+            const isSent = message.sender_id === currentUser.id;
+            
+            let senderAvatar = null;
+            let senderName = 'Usuário';
+            
+            if (isSent) {
+                const currentUserInfo = userAvatarsCache.get(currentUser.id);
+                senderName = currentUserInfo?.name || 'Você';
+                senderAvatar = currentUserInfo?.avatar || null;
+            } else {
+                const partnerInfo = userAvatarsCache.get(currentChatPartner.id);
+                senderName = partnerInfo?.name || currentChatPartner?.name || 'Usuário';
+                senderAvatar = partnerInfo?.avatar || null;
             }
-            showNotification('ℹ️ Nenhuma mensagem nova', 'info');
-        }
-        
-    } catch (error) {
-        console.error('❌ Erro ao atualizar:', error);
-        showNotification('❌ Erro ao carregar mensagens', 'error');
-        
-        const chatMessages = document.getElementById('chatMessages');
-        if (chatMessages) {
-            chatMessages.innerHTML = '<div class="no-messages">Erro ao carregar mensagens</div>';
-        }
-    }
-}
 
-// ✅ FUNÇÃO PARA RENDERIZAR MENSAGENS DIRETAMENTE
-async function renderMessagesDirectly(messages) {
-    const chatMessages = document.getElementById('chatMessages');
-    const noMessages = document.getElementById('noMessages');
-    
-    if (!chatMessages) return;
-    
-    if (messages.length === 0) {
-        if (noMessages) noMessages.classList.remove('hidden');
-        chatMessages.innerHTML = '';
-        return;
-    }
-    
-    if (noMessages) noMessages.classList.add('hidden');
-    
-    // Carregar avatares primeiro
-    await loadAvatarsForMessages(messages);
-    
-    // Renderizar mensagens
-    chatMessages.innerHTML = messages.map(message => {
-        const isSent = message.sender_id === currentUser.id;
-        
-        let senderAvatar = null;
-        let senderName = 'Usuário';
-        
-        if (isSent) {
-            const currentUserInfo = userAvatarsCache.get(currentUser.id);
-            senderName = currentUserInfo?.name || 'Você';
-            senderAvatar = currentUserInfo?.avatar || null;
-        } else {
-            const partnerInfo = userAvatarsCache.get(currentChatPartner.id);
-            senderName = partnerInfo?.name || currentChatPartner?.name || 'Usuário';
-            senderAvatar = partnerInfo?.avatar || null;
-        }
+            const avatarHtml = senderAvatar ? 
+                `<img class="message-avatar-img" src="${senderAvatar}" alt="${senderName}" style="display: block;">` :
+                senderName.charAt(0).toUpperCase();
 
-        const avatarHtml = senderAvatar ? 
-            `<img class="message-avatar-img" src="${senderAvatar}" alt="${senderName}" style="display: block;">` :
-            senderName.charAt(0).toUpperCase();
+            const avatarStyle = senderAvatar ? 
+                `style="background-image: url(${senderAvatar}); background-size: cover; background-position: center;"` : 
+                '';
 
-        const avatarStyle = senderAvatar ? 
-            `style="background-image: url(${senderAvatar}); background-size: cover; background-position: center;"` : 
-            '';
-
-        if (isSent) {
-            return `
-                <div class="message-container sent">
-                    <div class="message sent">
-                        <div class="message-text">${message.content}</div>
-                        <div class="message-time">${formatTime(message.created_at)}</div>
+            if (isSent) {
+                return `
+                    <div class="message-container sent">
+                        <div class="message sent">
+                            <div class="message-text">${message.content}</div>
+                            <div class="message-time">${formatTime(message.created_at)}</div>
+                        </div>
+                        <div class="message-avatar" ${avatarStyle}>
+                            ${avatarHtml}
+                        </div>
                     </div>
-                    <div class="message-avatar" ${avatarStyle}>
-                        ${avatarHtml}
+                `;
+            } else {
+                return `
+                    <div class="message-container received">
+                        <div class="message-avatar" ${avatarStyle}>
+                            ${avatarHtml}
+                        </div>
+                        <div class="message received">
+                            <div class="message-text">${message.content}</div>
+                            <div class="message-time">${formatTime(message.created_at)}</div>
+                        </div>
                     </div>
-                </div>
-            `;
-        } else {
-            return `
-                <div class="message-container received">
-                    <div class="message-avatar" ${avatarStyle}>
-                        ${avatarHtml}
-                    </div>
-                    <div class="message received">
-                        <div class="message-text">${message.content}</div>
-                        <div class="message-time">${formatTime(message.created_at)}</div>
-                    </div>
-                </div>
-            `;
-        }
-    }).join('');
-
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-// ✅ FUNÇÃO PARA CARREGAR AVATARES
-async function loadAvatarsForMessages(messages) {
-    const userIds = new Set();
-    
-    messages.forEach(message => {
-        userIds.add(message.sender_id);
-        userIds.add(message.receiver_id);
-    });
-
-    // Carregar avatar do usuário atual se não estiver em cache
-    if (!userAvatarsCache.has(currentUser.id)) {
-        const { data: currentUserProfile } = await supabase
-            .from('profiles')
-            .select('nickname, avatar_url')
-            .eq('id', currentUser.id)
-            .single();
-            
-        if (currentUserProfile) {
-            let currentUserAvatar = null;
-            if (currentUserProfile.avatar_url) {
-                const { data } = supabase.storage
-                    .from('avatars')
-                    .getPublicUrl(currentUserProfile.avatar_url);
-                currentUserAvatar = data?.publicUrl || null;
+                `;
             }
-            
-            userAvatarsCache.set(currentUser.id, {
-                name: currentUserProfile.nickname || 'Você',
-                avatar: currentUserAvatar
-            });
-        }
+        }).join('');
+
+        chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    // Carregar avatar do parceiro se não estiver em cache
-    if (currentChatPartner && !userAvatarsCache.has(currentChatPartner.id)) {
-        const { data: partnerProfile } = await supabase
-            .from('profiles')
-            .select('nickname, avatar_url')
-            .eq('id', currentChatPartner.id)
-            .single();
+    // ✅ FUNÇÃO PARA CARREGAR AVATARES
+    async function loadAvatarsForMessages(messages) {
+        const userIds = new Set();
+        
+        messages.forEach(message => {
+            userIds.add(message.sender_id);
+            userIds.add(message.receiver_id);
+        });
+
+        // Carregar avatar do usuário atual se não estiver em cache
+        if (!userAvatarsCache.has(currentUser.id)) {
+            const { data: currentUserProfile } = await supabase
+                .from('profiles')
+                .select('nickname, avatar_url')
+                .eq('id', currentUser.id)
+                .single();
             
-        if (partnerProfile) {
-            let partnerAvatar = null;
-            if (partnerProfile.avatar_url) {
-                const { data } = supabase.storage
-                    .from('avatars')
-                    .getPublicUrl(partnerProfile.avatar_url);
-                partnerAvatar = data?.publicUrl || null;
+            if (currentUserProfile) {
+                let currentUserAvatar = null;
+                if (currentUserProfile.avatar_url) {
+                    currentUserAvatar = await loadUserPhoto(currentUserProfile.avatar_url);
+                }
+                
+                userAvatarsCache.set(currentUser.id, {
+                    name: currentUserProfile.nickname || 'Você',
+                    avatar: currentUserAvatar
+                });
             }
+        }
+
+        // Carregar avatar do parceiro se não estiver em cache
+        if (currentChatPartner && !userAvatarsCache.has(currentChatPartner.id)) {
+            const { data: partnerProfile } = await supabase
+                .from('profiles')
+                .select('nickname, avatar_url')
+                .eq('id', currentChatPartner.id)
+                .single();
             
-            userAvatarsCache.set(currentChatPartner.id, {
-                name: partnerProfile.nickname || 'Usuário',
-                avatar: partnerAvatar
-            });
+            if (partnerProfile) {
+                let partnerAvatar = null;
+                if (partnerProfile.avatar_url) {
+                    partnerAvatar = await loadUserPhoto(partnerProfile.avatar_url);
+                }
+                
+                userAvatarsCache.set(currentChatPartner.id, {
+                    name: partnerProfile.nickname || 'Usuário',
+                    avatar: partnerAvatar
+                });
+            }
         }
     }
-}
 
-// ==================== ESTILOS ====================
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideIn {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-    }
-    
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-    
-    .message-counter {
-        background: #d1656d;
-        color: white;
-        border-radius: 12px;
-        padding: 2px 8px;
-        font-size: 0.75rem;
-        font-weight: bold;
-        margin-left: 8px;
-    }
-    
-    .notification {
-        position: fixed;
-        top: 100px;
-        right: 20px;
-        padding: 12px 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 10000;
-        max-width: 300px;
-        animation: slideIn 0.3s ease;
-        font-weight: 500;
-        color: white;
-    }
-    
-    .notification-success { background: #48bb78; }
-    .notification-error { background: #f56565; }
-    .notification-info { background: #4299e1; }
-    
-    /* Loading no chat */
-    .chat-messages .loading {
-        text-align: center;
-        padding: 2rem;
-        color: var(--text-light);
-    }
-    
-    .chat-messages .spinner {
-        width: 30px;
-        height: 30px;
-        border: 3px solid var(--bege);
-        border-top: 3px solid var(--vermelho-rosado);
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin: 0 auto 1rem;
-    }
-    
-    /* Botão de atualizar */
-    #refreshBtn {
-        padding: 0.5rem;
-        font-size: 1rem;
-        width: 40px;
-        flex-shrink: 0;
-        border-radius: 10px;
-        transition: var(--transition);
-    }
+    // ==================== ESTILOS ====================
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .message-counter {
+            background: #d1656d;
+            color: white;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 10000;
+            max-width: 300px;
+            animation: slideIn 0.3s ease;
+            font-weight: 500;
+            color: white;
+        }
+        
+        .notification-success { background: #48bb78; }
+        .notification-error { background: #f56565; }
+        .notification-info { background: #4299e1; }
+        
+        /* Loading no chat */
+        .chat-messages .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-light);
+        }
+        
+        .chat-messages .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid var(--bege);
+            border-top: 3px solid var(--vermelho-rosado);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        /* Botão de atualizar */
+        #refreshBtn {
+            padding: 0.5rem;
+            font-size: 1rem;
+            width: 40px;
+            flex-shrink: 0;
+            border-radius: 10px;
+            transition: var(--transition);
+        }
 
-    #refreshBtn:hover {
-        background: var(--lilas);
-        transform: rotate(45deg);
-    }
-`;
-document.head.appendChild(style);
+        #refreshBtn:hover {
+            background: var(--lilas);
+            transform: rotate(45deg);
+        }
+    `;
+    document.head.appendChild(style);
 </script>
 </body>
 </html>
