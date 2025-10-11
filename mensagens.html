@@ -13,6 +13,7 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
+
     :root {
       --bege: #f6ecc5;
       --vermelho-rosado: #d1656d;
@@ -24,6 +25,7 @@
       --transition: all 0.3s ease;
     }
 
+
     body {
       background-color: var(--bege);
       color: var(--text);
@@ -31,12 +33,14 @@
       overflow-x: hidden;
     }
 
+
     .container {
       width: 100%;
       max-width: 1200px;
       margin: 0 auto;
       padding: 0 20px;
     }
+
 
     /* Header */
     header {
@@ -49,12 +53,14 @@
       z-index: 100;
     }
 
+
     .header-content {
       display: flex;
       justify-content: space-between;
       align-items: center;
       height: 80px;
     }
+
 
     /* Menu Hamburguer */
     #hamburgerBtn {
@@ -72,6 +78,7 @@
       justify-content: center;
     }
 
+
     .logo {
       display: flex;
       align-items: center;
@@ -81,11 +88,13 @@
       flex: 1;
     }
 
+
     .logo img {
       height: 180px;
       width: auto;
       object-fit: contain;
     }
+
 
     .logo h1 {
       font-size: 1.4rem;
@@ -94,17 +103,20 @@
       white-space: nowrap;
     }
 
+
     .user-menu {
       display: flex;
       align-items: center;
       gap: 1rem;
     }
 
+
     .user-info {
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
+
 
     /* Avatar no Header */
     .user-avatar {
@@ -126,6 +138,7 @@
       flex-shrink: 0;
     }
 
+
     .user-avatar-img {
       width: 100%;
       height: 100%;
@@ -134,10 +147,12 @@
       display: none;
     }
 
+
     .user-avatar-fallback {
       font-size: 1.2rem;
       font-weight: bold;
     }
+
 
     .btn {
       padding: 0.4rem 1.2rem;
@@ -152,11 +167,13 @@
       font-size: 0.85rem;
     }
 
+
     .btn-outline {
       background: transparent;
       border: 2px solid var(--branco);
       color: var(--branco);
     }
+
 
     .btn-primary {
       background: var(--branco);
@@ -164,16 +181,19 @@
       border: none;
     }
 
+
     .btn-secondary {
       background: transparent;
       border: 2px solid var(--vermelho-rosado);
       color: var(--vermelho-rosado);
     }
 
+
     .btn:hover {
       transform: translateY(-2px);
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     }
+
 
     /* Menu Mobile */
     #mobileMenu {
@@ -192,6 +212,7 @@
       gap: 2rem;
     }
 
+
     #closeMobileMenu {
       position: absolute;
       top: 1.5rem;
@@ -208,11 +229,13 @@
       justify-content: center;
     }
 
+
     .mobile-user-info {
       text-align: center;
       color: var(--branco);
       margin-bottom: 2rem;
     }
+
 
     .mobile-nav {
       display: flex;
@@ -221,6 +244,7 @@
       width: 100%;
       max-width: 300px;
     }
+
 
     .mobile-nav .btn {
       width: 100%;
@@ -234,11 +258,13 @@
       border-radius: 12px;
     }
 
+
     /* Main Content */
     .main-content {
       padding: 2rem 0;
       min-height: 70vh;
     }
+
 
     /* Page Header */
     .page-header {
@@ -251,16 +277,19 @@
       border: 1px solid var(--lilas);
     }
 
+
     .page-header h1 {
       font-size: 2rem;
       color: var(--vermelho-rosado);
       margin-bottom: 0.5rem;
     }
 
+
     .page-header p {
       color: var(--text-light);
       font-size: 1rem;
     }
+
 
     /* Mensagens Layout */
     .messages-container {
@@ -275,12 +304,14 @@
       min-height: 600px;
     }
 
+
     .conversations-list {
       border-right: 2px solid var(--bege);
       padding: 1.5rem;
       max-height: 600px;
       overflow-y: auto;
     }
+
 
     .conversation-item {
       display: flex;
@@ -294,14 +325,17 @@
       border: 1px solid transparent;
     }
 
+
     .conversation-item:hover {
       background: var(--bege);
     }
+
 
     .conversation-item.active {
       background: var(--lilas);
       border-color: var(--vermelho-rosado);
     }
+
 
     .conversation-avatar {
       width: 50px;
@@ -321,6 +355,7 @@
       cursor: pointer;
     }
 
+
     .conversation-avatar-img {
       width: 100%;
       height: 100%;
@@ -329,16 +364,19 @@
       display: none;
     }
 
+
     .conversation-info {
       flex: 1;
       min-width: 0;
     }
+
 
     .conversation-name {
       font-weight: 600;
       color: var(--text);
       margin-bottom: 0.2rem;
     }
+
 
     .conversation-preview {
       font-size: 0.85rem;
@@ -348,10 +386,12 @@
       text-overflow: ellipsis;
     }
 
+
     .conversation-time {
       font-size: 0.75rem;
       color: var(--text-light);
     }
+
 
     .unread-badge {
       background: var(--vermelho-rosado);
@@ -366,11 +406,13 @@
       font-weight: bold;
     }
 
+
     .chat-area {
       display: flex;
       flex-direction: column;
       height: 600px;
     }
+
 
     .chat-header {
       padding: 1.5rem;
@@ -380,6 +422,7 @@
       align-items: center;
       gap: 1rem;
     }
+
 
     .chat-header-avatar {
       width: 50px;
@@ -398,6 +441,7 @@
       cursor: pointer;
     }
 
+
     .chat-header-avatar-img {
       width: 100%;
       height: 100%;
@@ -406,19 +450,23 @@
       display: none;
     }
 
+
     .chat-header-info {
       flex: 1;
     }
+
 
     .chat-header-info h3 {
       margin-bottom: 0.2rem;
       color: var(--text);
     }
 
+
     .chat-header-info p {
       font-size: 0.9rem;
       color: var(--text-light);
     }
+
 
     .chat-messages {
       flex: 1;
@@ -430,6 +478,7 @@
       gap: 1rem;
     }
 
+
     /* Estilo para Mensagens com Avatar */
     .message-container {
       display: flex;
@@ -438,9 +487,11 @@
       max-width: 100%;
     }
 
+
     .message-container.sent {
       flex-direction: row-reverse;
     }
+
 
     .message-avatar {
       width: 35px;
@@ -459,6 +510,7 @@
       overflow: hidden;
     }
 
+
     .message-avatar-img {
       width: 100%;
       height: 100%;
@@ -466,6 +518,7 @@
       border-radius: 50%;
       display: none;
     }
+
 
     .message {
       max-width: 70%;
@@ -475,15 +528,18 @@
       word-wrap: break-word;
     }
 
+
     .message.received {
       background: var(--branco);
       border: 1px solid var(--lilas);
     }
 
+
     .message.sent {
       background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
       color: var(--branco);
     }
+
 
     .message-time {
       font-size: 0.7rem;
@@ -492,12 +548,14 @@
       text-align: right;
     }
 
+
     .no-messages {
       text-align: center;
       color: var(--text-light);
       padding: 2rem;
       font-style: italic;
     }
+
 
     .no-conversations {
       text-align: center;
@@ -506,16 +564,19 @@
       font-style: italic;
     }
 
+
     .chat-input {
       padding: 1.5rem;
       border-top: 2px solid var(--bege);
       background: var(--branco);
     }
 
+
     .input-group {
       display: flex;
       gap: 1rem;
     }
+
 
     .input-group input {
       flex: 1;
@@ -526,15 +587,18 @@
       background: var(--bege);
     }
 
+
     .input-group input:focus {
       outline: none;
       border-color: var(--vermelho-rosado);
     }
 
+
     .input-group input:disabled {
       background: var(--lilas);
       cursor: not-allowed;
     }
+
 
     /* Modal do Perfil */
     .profile-modal {
@@ -551,9 +615,11 @@
       padding: 1rem;
     }
 
+
     .profile-modal.active {
       display: flex;
     }
+
 
     .profile-modal-content {
       background: var(--branco);
@@ -568,10 +634,12 @@
       animation: modalFadeIn 0.3s ease;
     }
 
+
     @keyframes modalFadeIn {
       from { opacity: 0; transform: scale(0.9); }
       to { opacity: 1; transform: scale(1); }
     }
+
 
     .profile-modal-close {
       position: absolute;
@@ -591,10 +659,12 @@
       transition: var(--transition);
     }
 
+
     .profile-modal-close:hover {
       background: var(--bege);
       color: var(--vermelho-rosado);
     }
+
 
     .profile-modal-avatar {
       width: 120px;
@@ -614,6 +684,7 @@
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
 
+
     .profile-modal-avatar-img {
       width: 100%;
       height: 100%;
@@ -622,6 +693,7 @@
       display: none;
     }
 
+
     .profile-modal-name {
       font-size: 1.5rem;
       color: var(--vermelho-rosado);
@@ -629,11 +701,13 @@
       font-weight: 600;
     }
 
+
     .profile-modal-status {
       color: var(--text-light);
       font-size: 0.9rem;
       margin-bottom: 1.5rem;
     }
+
 
     .profile-modal-actions {
       display: flex;
@@ -642,16 +716,19 @@
       margin-top: 1.5rem;
     }
 
+
     .profile-modal-actions .btn {
       padding: 0.6rem 1.2rem;
       font-size: 0.85rem;
     }
+
 
     /* Loading na modal */
     .profile-modal-loading {
       text-align: center;
       padding: 2rem;
     }
+
 
     .profile-modal-spinner {
       width: 30px;
@@ -663,10 +740,12 @@
       margin: 0 auto 1rem;
     }
 
+
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+
 
     /* Footer */
     footer {
@@ -677,6 +756,7 @@
       border-top: 1px solid var(--lilas);
     }
 
+
     .footer-content {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -684,19 +764,23 @@
       margin-bottom: 1.5rem;
     }
 
+
     .footer-column h3 {
       margin-bottom: 1rem;
       font-size: 1.1rem;
       color: var(--vermelho-rosado);
     }
 
+
     .footer-column ul {
       list-style: none;
     }
 
+
     .footer-column ul li {
       margin-bottom: 0.5rem;
     }
+
 
     .footer-column a {
       color: var(--text);
@@ -705,9 +789,11 @@
       font-size: 0.9rem;
     }
 
+
     .footer-column a:hover {
       color: var(--vermelho-rosado);
     }
+
 
     .copyright {
       text-align: center;
@@ -717,278 +803,227 @@
       color: var(--text-light);
     }
 
-    /* Botão de atualizar */
-    #refreshBtn {
-        padding: 0.5rem;
-        font-size: 1rem;
-        width: 40px;
-        flex-shrink: 0;
-        border-radius: 10px;
-        transition: var(--transition);
-    }
 
-    #refreshBtn:hover {
-        background: var(--lilas);
-        transform: rotate(45deg);
-    }
-
-    .hidden {
-        display: none;
-    }
-
-    .loading {
-        text-align: center;
-        padding: 2rem;
-        color: var(--text-light);
-    }
-
-    /* ========== RESPONSIVIDADE CORRIGIDA ========== */
+    /* Responsividade */
     @media (max-width: 768px) {
-        #hamburgerBtn {
-            display: flex;
-        }
+      #hamburgerBtn {
+        display: flex;
+      }
 
-        .user-menu {
-            display: none;
-        }
 
-        .header-content {
-            flex-direction: row;
-            justify-content: space-between;
-            height: 80px;
-            padding: 0;
-        }
+      .user-menu {
+        display: none;
+      }
 
-        .logo {
-            justify-content: center;
-            flex: 1;
-            margin: 0 auto;
-        }
 
-        .logo img {
-            height: 150px !important;
-        }
+      .header-content {
+        flex-direction: row;
+        justify-content: space-between;
+        height: 80px;
+        padding: 0;
+      }
 
-        .logo h1 {
-            display: none;
-        }
 
-        .messages-container {
-            grid-template-columns: 1fr;
-        }
+      .logo {
+        justify-content: center;
+        flex: 1;
+        margin: 0 auto;
+      }
 
-        .conversations-list {
-            border-right: none;
-            border-bottom: 2px solid var(--bege);
-            max-height: 300px;
-        }
 
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            font-size: 1rem;
-        }
+      .logo img {
+        height: 150px !important;
+      }
 
-        .mobile-user-info .user-avatar {
-            width: 100px;
-            height: 100px;
-            font-size: 2rem;
-            margin: 0 auto 1rem;
-        }
 
-        .mobile-user-info #mobileUserNickname {
-            font-size: 1.4rem;
-            font-weight: bold;
-        }
+      .logo h1 {
+        display: none;
+      }
 
-        /* ✅ CORREÇÃO: BALÕES DE MENSAGEM MOBILE */
-        .message {
-            max-width: 85% !important;
-            min-width: auto !important;
-        }
 
-        .message-container.sent .message {
-            margin-left: auto;
-            margin-right: 0;
-        }
+      .messages-container {
+        grid-template-columns: 1fr;
+      }
 
-        .message-container.received .message {
-            margin-left: 0;
-            margin-right: auto;
-        }
 
-        .message-avatar {
-            width: 30px;
-            height: 30px;
-            font-size: 0.8rem;
-        }
+      .conversations-list {
+        border-right: none;
+        border-bottom: 2px solid var(--bege);
+        max-height: 300px;
+      }
 
-        /* ✅ CORREÇÃO: INPUT GROUP MOBILE */
-        .input-group {
-            gap: 0.5rem;
-            flex-wrap: nowrap;
-            padding: 0.5rem;
-        }
 
-        .input-group input {
-            padding: 0.8rem;
-            font-size: 0.9rem;
-            min-width: 0;
-            flex: 1;
-        }
+      .user-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+      }
 
-        /* ✅ CORREÇÃO: BOTÕES MOBILE */
-        .btn {
-            padding: 0.6rem 1rem;
-            font-size: 0.8rem;
-            white-space: nowrap;
-            min-width: auto;
-        }
 
-        #sendMessageBtn {
-            padding: 0.6rem 1rem;
-            width: auto;
-            min-width: 70px;
-        }
+      .mobile-user-info .user-avatar {
+        width: 100px;
+        height: 100px;
+        font-size: 2rem;
+        margin: 0 auto 1rem;
+      }
 
-        #refreshBtn {
-            padding: 0.6rem;
-            width: 45px;
-            min-width: 45px;
-        }
 
-        .chat-input {
-            padding: 1rem 0.8rem;
-        }
+      .mobile-user-info #mobileUserNickname {
+        font-size: 1.4rem;
+        font-weight: bold;
+      }
 
-        .profile-modal-content {
-            margin: 1rem;
-            padding: 1.5rem;
-        }
 
-        .profile-modal-avatar {
-            width: 100px;
-            height: 100px;
-            font-size: 2rem;
-        }
+      .message {
+        max-width: 85%;
+      }
 
-        .profile-modal-actions {
-            flex-direction: column;
-        }
 
-        .profile-modal-actions .btn {
-            width: 100%;
-        }
+      .message-container.sent .message {
+        margin-left: auto;
+        margin-right: 0;
+      }
 
-        /* ✅ ESTILOS ADICIONAIS PARA MOBILE */
-        .chat-area {
-            height: 500px;
-        }
-        
-        .conversations-list {
-            max-height: 250px;
-        }
-        
-        /* ✅ GARANTIR QUE O INPUT GROUP CABE NA TELA */
-        .input-group {
-            width: 100%;
-            margin: 0;
-        }
-        
-        /* ✅ AJUSTE ESPECÍFICO PARA OS BALÕES RECEBIDOS */
-        .message-container.received {
-            padding-left: 0.2rem;
-        }
-        
-        .message-container.sent {
-            padding-right: 0.2rem;
-        }
+
+      .message-container.received .message {
+        margin-left: 0;
+        margin-right: auto;
+      }
+
+
+      .message-avatar {
+        width: 30px;
+        height: 30px;
+        font-size: 0.8rem;
+      }
+
+
+      .input-group {
+        gap: 0.5rem;
+      }
+
+
+      .input-group input {
+        padding: 0.8rem;
+        font-size: 0.9rem;
+      }
+
+
+      .btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+        white-space: nowrap;
+      }
+
+
+      .profile-modal-content {
+        margin: 1rem;
+        padding: 1.5rem;
+      }
+
+
+      .profile-modal-avatar {
+        width: 100px;
+        height: 100px;
+        font-size: 2rem;
+      }
+
+
+      .profile-modal-actions {
+        flex-direction: column;
+      }
+
+
+      .profile-modal-actions .btn {
+        width: 100%;
+      }
     }
+
 
     @media (max-width: 480px) {
-        .logo img {
-            height: 130px !important;
-        }
+      .logo img {
+        height: 130px !important;
+      }
 
-        .user-avatar {
-            width: 35px;
-            height: 35px;
-            font-size: 0.9rem;
-        }
 
-        .header-content {
-            height: 70px;
-        }
+      .user-avatar {
+        width: 35px;
+        height: 35px;
+        font-size: 0.9rem;
+      }
 
-        .page-header h1 {
-            font-size: 1.5rem;
-        }
 
-        .conversation-item {
-            padding: 0.8rem;
-        }
+      .header-content {
+        height: 70px;
+      }
 
-        .conversation-avatar {
-            width: 40px;
-            height: 40px;
-            font-size: 1rem;
-        }
 
-        /* ✅ CORREÇÃO EXTRA PARA CELULARES PEQUENOS */
-        .message {
-            max-width: 80% !important;
-            padding: 0.8rem;
-        }
+      .page-header h1 {
+        font-size: 1.5rem;
+      }
 
-        .message-avatar {
-            width: 25px;
-            height: 25px;
-            font-size: 0.7rem;
-        }
 
-        .input-group {
-            gap: 0.3rem;
-            padding: 0.3rem;
-        }
+      .conversation-item {
+        padding: 0.8rem;
+      }
 
-        .input-group input {
-            padding: 0.7rem;
-            font-size: 0.85rem;
-        }
 
-        #sendMessageBtn {
-            padding: 0.7rem 0.8rem;
-            font-size: 0.75rem;
-            min-width: 65px;
-        }
+      .conversation-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+      }
 
-        #refreshBtn {
-            padding: 0.7rem;
-            width: 40px;
-            min-width: 40px;
-            font-size: 0.9rem;
-        }
 
-        .chat-input {
-            padding: 0.8rem 0.5rem;
-        }
+      .message-avatar {
+        width: 25px;
+        height: 25px;
+        font-size: 0.7rem;
+      }
 
-        .chat-messages {
-            padding: 1rem;
-        }
 
-        /* ✅ GARANTIR QUE OS BALÕES NÃO SAEM DA TELA */
-        .message-container {
-            max-width: 100%;
-            padding: 0 0.2rem;
-        }
+      .input-group {
+        flex-wrap: nowrap;
+      }
 
-        .message-text {
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-        }
+
+      .input-group input {
+        min-width: 0;
+        flex: 1;
+      }
+
+
+      .chat-input {
+        padding: 1rem;
+      }
     }
-</style>
+
+
+    .hidden {
+      display: none;
+    }
+
+
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-light);
+    }
+    /* Botão de atualizar */
+#refreshBtn {
+    padding: 0.5rem;
+    font-size: 1rem;
+    width: 40px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    transition: var(--transition);
+}
+
+#refreshBtn:hover {
+    background: var(--lilas);
+    transform: rotate(45deg);
+}
+  </style>
 </head>
 <body>
   <!-- Header -->
@@ -1286,183 +1321,184 @@
     }
 
     // ==================== INICIALIZAÇÃO DA SESSÃO ====================
-    async function initializeUserSession() {
-        try {
-            // ✅ 1. VERIFICAR ATIVAÇÃO PREMIUM VIA URL
-            checkPremiumActivation();
-            
-            // ✅ 2. VERIFICAÇÃO FORÇADA DE PREMIUM
-            await forcePremiumCheck();
-            
-            // ✅ 3. VERIFICAR E RESETAR CONTADOR DIÁRIO
-            await checkAndResetDailyCounter();
-            
-            // ✅ 4. CARREGAR DADOS DO USUÁRIO
-            await loadUserData();
-            
-            // ✅ 5. VERIFICAR STATUS PREMIUM (redundante para garantir)
-            await checkUserPremiumStatus();
-            
-            // ✅ 6. CARREGAR CONTADOR ATUAL
-            await loadMessageCount();
-            
-            // ✅ 7. CARREGAR CONVERSAS
-            await loadConversations();
-            
-            // ✅ 8. VERIFICAR E ABRIR CONVERSA ARMAZENADA
-            await checkAndOpenStoredConversation();
-            
-            // ✅ 9. CONFIGURAR ATUALIZAÇÕES EM TEMPO REAL
-            setupRealtimeUpdates();
-            
-            console.log('✅ Sessão inicializada com sucesso - Premium:', isPremiumUser);
-            
-        } catch (error) {
-            console.error('Erro na inicialização:', error);
-        }
+   // ==================== INICIALIZAÇÃO DA SESSÃO ====================
+async function initializeUserSession() {
+    try {
+        // ✅ 1. VERIFICAR ATIVAÇÃO PREMIUM VIA URL
+        checkPremiumActivation();
+        
+        // ✅ 2. VERIFICAÇÃO FORÇADA DE PREMIUM
+        await forcePremiumCheck();
+        
+        // ✅ 3. VERIFICAR E RESETAR CONTADOR DIÁRIO
+        await checkAndResetDailyCounter();
+        
+        // ✅ 4. CARREGAR DADOS DO USUÁRIO
+        await loadUserData();
+        
+        // ✅ 5. VERIFICAR STATUS PREMIUM (redundante para garantir)
+        await checkUserPremiumStatus();
+        
+        // ✅ 6. CARREGAR CONTADOR ATUAL
+        await loadMessageCount();
+        
+        // ✅ 7. CARREGAR CONVERSAS
+        await loadConversations();
+        
+        // ✅ 8. VERIFICAR E ABRIR CONVERSA ARMAZENADA (NOVA)
+        await checkAndOpenStoredConversation();
+        
+        // ✅ 9. CONFIGURAR ATUALIZAÇÕES EM TEMPO REAL
+        setupRealtimeUpdates();
+        
+        console.log('✅ Sessão inicializada com sucesso - Premium:', isPremiumUser);
+        
+    } catch (error) {
+        console.error('Erro na inicialização:', error);
     }
+}
 
-    // ==================== VERIFICAR E ABRIR CONVERSA AO CARREGAR ====================
-    async function checkAndOpenStoredConversation() {
-        try {
-            const storedUserId = localStorage.getItem('openChatWithUserId');
+// ==================== VERIFICAR E ABRIR CONVERSA AO CARREGAR ====================
+async function checkAndOpenStoredConversation() {
+    try {
+        const storedUserId = localStorage.getItem('openChatWithUserId');
+        
+        if (storedUserId && currentUser) {
+            console.log('🎯 Abrindo conversa armazenada:', storedUserId);
             
-            if (storedUserId && currentUser) {
-                console.log('🎯 Abrindo conversa armazenada:', storedUserId);
-                
-                // Verificar se o usuário existe
-                const { data: userProfile, error } = await supabase
-                    .from('profiles')
-                    .select('nickname, avatar_url')
-                    .eq('id', storedUserId)
-                    .single();
+            // Verificar se o usuário existe
+            const { data: userProfile, error } = await supabase
+                .from('profiles')
+                .select('nickname, avatar_url')
+                .eq('id', storedUserId)
+                .single();
 
-                if (error || !userProfile) {
-                    console.log('❌ Usuário não encontrado:', storedUserId);
-                    localStorage.removeItem('openChatWithUserId');
-                    return;
-                }
-
-                // ✅ ADICIONAR À LISTA DE CONVERSAS SE NÃO EXISTIR
-                const existingConversation = conversations.find(conv => conv.partnerId === storedUserId);
-                
-                if (!existingConversation) {
-                    console.log('➕ Adicionando nova conversa à lista');
-                    
-                    const newConversation = {
-                        partnerId: storedUserId,
-                        partnerName: userProfile.nickname || 'Usuário',
-                        partnerAvatar: userProfile.avatar_url || null,
-                        lastMessage: '👋 Iniciar conversa',
-                        lastMessageTime: new Date().toISOString(),
-                        unreadCount: 0,
-                        messages: []
-                    };
-                    
-                    conversations.unshift(newConversation);
-                    
-                    // Carregar avatar se existir
-                    if (userProfile.avatar_url && !userAvatarsCache.has(storedUserId)) {
-                        const photoUrl = await loadUserPhoto(userProfile.avatar_url);
-                        if (photoUrl) {
-                            userAvatarsCache.set(storedUserId, {
-                                name: userProfile.nickname,
-                                avatar: photoUrl
-                            });
-                        }
-                    }
-                    
-                    renderConversations();
-                }
-
-                // ✅ SELECIONAR A CONVERSA
-                await selectConversation(storedUserId);
-                
-                // Limpar o storage
+            if (error || !userProfile) {
+                console.log('❌ Usuário não encontrado:', storedUserId);
                 localStorage.removeItem('openChatWithUserId');
-                
-                console.log('✅ Conversa aberta com sucesso');
+                return;
             }
-        } catch (error) {
-            console.error('❌ Erro ao abrir conversa armazenada:', error);
+
+            // ✅ ADICIONAR À LISTA DE CONVERSAS SE NÃO EXISTIR
+            const existingConversation = conversations.find(conv => conv.partnerId === storedUserId);
+            
+            if (!existingConversation) {
+                console.log('➕ Adicionando nova conversa à lista');
+                
+                const newConversation = {
+                    partnerId: storedUserId,
+                    partnerName: userProfile.nickname || 'Usuário',
+                    partnerAvatar: userProfile.avatar_url || null,
+                    lastMessage: '👋 Iniciar conversa',
+                    lastMessageTime: new Date().toISOString(),
+                    unreadCount: 0,
+                    messages: []
+                };
+                
+                conversations.unshift(newConversation);
+                
+                // Carregar avatar se existir
+                if (userProfile.avatar_url && !userAvatarsCache.has(storedUserId)) {
+                    const photoUrl = await loadUserPhoto(userProfile.avatar_url);
+                    if (photoUrl) {
+                        userAvatarsCache.set(storedUserId, {
+                            name: userProfile.nickname,
+                            avatar: photoUrl
+                        });
+                    }
+                }
+                
+                renderConversations();
+            }
+
+            // ✅ SELECIONAR A CONVERSA
+            await selectConversation(storedUserId);
+            
+            // Limpar o storage
             localStorage.removeItem('openChatWithUserId');
+            
+            console.log('✅ Conversa aberta com sucesso');
         }
+    } catch (error) {
+        console.error('❌ Erro ao abrir conversa armazenada:', error);
+        localStorage.removeItem('openChatWithUserId');
     }
+}
 
-    // ==================== CARREGAR CONVERSAS ====================
-    async function loadConversations() {
-        try {
-            const { data: messages, error } = await supabase
-                .from('messages')
-                .select(`
-                    id,
-                    sender_id,
-                    receiver_id,
-                    content,
-                    is_read,
-                    created_at,
-                    sender:profiles!messages_sender_id_fkey(nickname, avatar_url),
-                    receiver:profiles!messages_receiver_id_fkey(nickname, avatar_url)
-                `)
-                .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
-                .order('created_at', { ascending: false });
+// ==================== CARREGAR CONVERSAS ====================
+async function loadConversations() {
+    try {
+        const { data: messages, error } = await supabase
+            .from('messages')
+            .select(`
+                id,
+                sender_id,
+                receiver_id,
+                content,
+                is_read,
+                created_at,
+                sender:profiles!messages_sender_id_fkey(nickname, avatar_url),
+                receiver:profiles!messages_receiver_id_fkey(nickname, avatar_url)
+            `)
+            .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
+            .order('created_at', { ascending: false });
 
-            if (error) {
-                console.error('❌ Erro ao carregar mensagens:', error);
-                conversations = [];
-                renderConversations();
-                return;
-            }
-
-            // ✅ CORREÇÃO: SE NÃO HOUVER MENSAGENS, MANTER CONVERSAS VAZIAS
-            if (!messages || messages.length === 0) {
-                console.log('ℹ️ Nenhuma mensagem encontrada');
-                conversations = [];
-                renderConversations();
-                return;
-            }
-
-            const conversationMap = new Map();
-
-            for (const message of messages) {
-                const partnerId = message.sender_id === currentUser.id ? message.receiver_id : message.sender_id;
-                const partnerProfile = message.sender_id === currentUser.id ? message.receiver : message.sender;
-                
-                if (!conversationMap.has(partnerId)) {
-                    conversationMap.set(partnerId, {
-                        partnerId: partnerId,
-                        partnerName: partnerProfile?.nickname || 'Usuário',
-                        partnerAvatar: partnerProfile?.avatar_url || null,
-                        lastMessage: message.content,
-                        lastMessageTime: message.created_at,
-                        unreadCount: 0,
-                        messages: []
-                    });
-                }
-
-                const conversation = conversationMap.get(partnerId);
-                conversation.messages.push(message);
-
-                if (new Date(message.created_at) > new Date(conversation.lastMessageTime)) {
-                    conversation.lastMessage = message.content;
-                    conversation.lastMessageTime = message.created_at;
-                }
-
-                if (!message.is_read && message.receiver_id === currentUser.id) {
-                    conversation.unreadCount++;
-                }
-            }
-
-            conversations = Array.from(conversationMap.values());
-            await loadConversationAvatars();
-            renderConversations();
-
-        } catch (error) {
-            console.error('Erro ao carregar conversas:', error);
+        if (error) {
+            console.error('❌ Erro ao carregar mensagens:', error);
             conversations = [];
             renderConversations();
+            return;
         }
+
+        // ✅ CORREÇÃO: SE NÃO HOUVER MENSAGENS, MANTER CONVERSAS VAZIAS
+        if (!messages || messages.length === 0) {
+            console.log('ℹ️ Nenhuma mensagem encontrada');
+            conversations = [];
+            renderConversations();
+            return;
+        }
+
+        const conversationMap = new Map();
+
+        for (const message of messages) {
+            const partnerId = message.sender_id === currentUser.id ? message.receiver_id : message.sender_id;
+            const partnerProfile = message.sender_id === currentUser.id ? message.receiver : message.sender;
+            
+            if (!conversationMap.has(partnerId)) {
+                conversationMap.set(partnerId, {
+                    partnerId: partnerId,
+                    partnerName: partnerProfile?.nickname || 'Usuário',
+                    partnerAvatar: partnerProfile?.avatar_url || null,
+                    lastMessage: message.content,
+                    lastMessageTime: message.created_at,
+                    unreadCount: 0,
+                    messages: []
+                });
+            }
+
+            const conversation = conversationMap.get(partnerId);
+            conversation.messages.push(message);
+
+            if (new Date(message.created_at) > new Date(conversation.lastMessageTime)) {
+                conversation.lastMessage = message.content;
+                conversation.lastMessageTime = message.created_at;
+            }
+
+            if (!message.is_read && message.receiver_id === currentUser.id) {
+                conversation.unreadCount++;
+            }
+        }
+
+        conversations = Array.from(conversationMap.values());
+        await loadConversationAvatars();
+        renderConversations();
+
+    } catch (error) {
+        console.error('Erro ao carregar conversas:', error);
+        conversations = [];
+        renderConversations();
     }
+}
 
     // ==================== SISTEMA DE RESET DIÁRIO ====================
     async function checkAndResetDailyCounter() {
@@ -1770,6 +1806,65 @@
     }
 
     // ==================== CONVERSAS E MENSAGENS ====================
+    async function loadConversations() {
+        try {
+            const { data: messages, error } = await supabase
+                .from('messages')
+                .select(`
+                    id,
+                    sender_id,
+                    receiver_id,
+                    content,
+                    is_read,
+                    created_at,
+                    sender:profiles!messages_sender_id_fkey(nickname, avatar_url),
+                    receiver:profiles!messages_receiver_id_fkey(nickname, avatar_url)
+                `)
+                .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
+                .order('created_at', { ascending: false });
+
+            if (error) return;
+
+            const conversationMap = new Map();
+
+            for (const message of messages) {
+                const partnerId = message.sender_id === currentUser.id ? message.receiver_id : message.sender_id;
+                const partnerProfile = message.sender_id === currentUser.id ? message.receiver : message.sender;
+                
+                if (!conversationMap.has(partnerId)) {
+                    conversationMap.set(partnerId, {
+                        partnerId: partnerId,
+                        partnerName: partnerProfile?.nickname || 'Usuário',
+                        partnerAvatar: partnerProfile?.avatar_url || null,
+                        lastMessage: message.content,
+                        lastMessageTime: message.created_at,
+                        unreadCount: 0,
+                        messages: []
+                    });
+                }
+
+                const conversation = conversationMap.get(partnerId);
+                conversation.messages.push(message);
+
+                if (new Date(message.created_at) > new Date(conversation.lastMessageTime)) {
+                    conversation.lastMessage = message.content;
+                    conversation.lastMessageTime = message.created_at;
+                }
+
+                if (!message.is_read && message.receiver_id === currentUser.id) {
+                    conversation.unreadCount++;
+                }
+            }
+
+            conversations = Array.from(conversationMap.values());
+            await loadConversationAvatars();
+            renderConversations();
+
+        } catch (error) {
+            console.error('Erro ao carregar conversas:', error);
+        }
+    }
+
     async function loadConversationAvatars() {
         for (const conversation of conversations) {
             if (conversation.partnerAvatar && !userAvatarsCache.has(conversation.partnerId)) {
@@ -2047,7 +2142,7 @@
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    // ==================== FUNÇÃO ENVIAR MENSAGEM - CORRIGIDA ====================
+    // ==================== FUNÇÃO ENVIAR MENSAGEM ====================
     async function sendMessage() {
         const messageInput = document.getElementById('messageInput');
         const content = messageInput.value.trim();
@@ -2060,8 +2155,15 @@
             // ✅ VERIFICAR PREMIUM NOVAMENTE (para garantir)
             await forcePremiumCheck();
             
-            // ✅ VERIFICAR LIMITE ANTES DE ENVIAR
-            if (!isPremiumUser && currentMessageCount >= 5) {
+            if (isPremiumUser) {
+                console.log('⭐ Usuário Premium - enviando sem verificação de limite');
+                await sendMessageDirectly(content);
+                return;
+            }
+
+            console.log('📊 Contador atual:', currentMessageCount);
+            
+            if (currentMessageCount >= 5) {
                 console.log('🚫 LIMITE ATINGIDO! Bloqueando envio...');
                 showNotification('❌ Limite de 5 mensagens por dia atingido! Faça upgrade para Premium.', 'error');
                 
@@ -2077,8 +2179,18 @@
             }
 
             console.log('✅ Pode enviar mensagem', currentMessageCount + 1, '/5');
-            
-            // ✅ ENVIAR MENSAGEM
+            await sendMessageDirectly(content);
+
+        } catch (error) {
+            console.error('Erro ao enviar mensagem:', error);
+            showNotification('❌ Erro ao enviar mensagem', 'error');
+        }
+    }
+
+    async function sendMessageDirectly(content) {
+        const messageInput = document.getElementById('messageInput');
+        
+        try {
             const { error } = await supabase
                 .from('messages')
                 .insert({
@@ -2093,47 +2205,38 @@
                 throw error;
             }
 
-          // ✅ INCREMENTAR CONTADOR APENAS SE NÃO FOR PREMIUM
-if (!isPremiumUser) {
-    console.log('📈 Incrementando contador FREE...');
-    
-    const today = new Date().toISOString().split('T')[0];
-    
-    // ✅ 1. BUSCAR VALOR ATUAL DO BANCO
-    const { data: currentData, error: fetchError } = await supabase
-        .from('daily_message_count')
-        .select('message_count')
-        .eq('user_id', currentUser.id)
-        .eq('date', today)
-        .single();
+            // ✅ INCREMENTAR CONTADOR APENAS SE NÃO FOR PREMIUM
+            if (!isPremiumUser) {
+                console.log('📈 Incrementando contador...');
+                
+                const { error: incrementError } = await supabase
+                    .rpc('increment_daily_message_count', { user_uuid: currentUser.id });
+                
+                if (incrementError) {
+                    console.error('❌ Erro ao incrementar contador:', incrementError);
+                    currentMessageCount++;
+                } else {
+                    console.log('✅ Contador incrementado no banco');
+                    await loadMessageCount();
+                }
+                
+                updateMessageCounter(currentMessageCount);
+            } else {
+                console.log('⭐ Premium - não incrementa contador');
+            }
 
-    let currentCount = 0;
-    
-    if (!fetchError && currentData) {
-        currentCount = currentData.message_count || 0;
-    }
-    
-    // ✅ 2. INCREMENTAR E ATUALIZAR
-    const newCount = currentCount + 1;
-    
-    const { error: updateError } = await supabase
-        .from('daily_message_count')
-        .upsert({
-            user_id: currentUser.id,
-            date: today,
-            message_count: newCount
-        }, {
-            onConflict: 'user_id,date'
-        });
+            messageInput.value = '';
+            await loadMessages(currentChatPartner.id);
+            await loadConversations();
 
-    if (updateError) {
-        console.error('❌ Erro ao atualizar contador no banco:', updateError);
-        currentMessageCount++;
-    } else {
-        console.log('✅ Contador atualizado no SUPABASE:', newCount);
-        currentMessageCount = newCount;
+            showNotification('✅ Mensagem enviada!', 'success');
+            checkMessageLimit();
+
+        } catch (error) {
+            console.error('Erro no envio direto:', error);
+            throw error;
+        }
     }
-}
 
     // ==================== SISTEMA DE NOTIFICAÇÕES ====================
     function showNotification(message, type = 'info') {
@@ -2424,375 +2527,376 @@ if (!isPremiumUser) {
 
     // ==================== EVENT LISTENERS ====================
     function setupEventListeners() {
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', logout);
-        }
-
-        const messageInput = document.getElementById('messageInput');
-        const sendMessageBtn = document.getElementById('sendMessageBtn');
-        
-        if (messageInput && sendMessageBtn) {
-            sendMessageBtn.addEventListener('click', sendMessage);
-            
-            messageInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    sendMessage();
-                }
-            });
-        }
-
-        addIconsToButtons();
-        
-        // ✅ VERIFICAR RESET QUANDO A PÁGINA GANHA FOCO
-        window.addEventListener('focus', checkAndResetDailyCounter);
-        
-        // ✅ VERIFICAR PREMIUM PERIODICAMENTE
-        setInterval(async () => {
-            await forcePremiumCheck();
-        }, 30000); // A cada 30 segundos
-
-        // 🎯 ADICIONAR BOTÃO DE ATUALIZAR
-        const refreshBtn = document.getElementById('refreshBtn');
-        if (refreshBtn) {
-            refreshBtn.addEventListener('click', refreshConversations);
-        }
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', logout);
     }
 
-    async function logout() {
-        try {
-            if (messagesSubscription) {
-                supabase.removeSubscription(messagesSubscription);
+    const messageInput = document.getElementById('messageInput');
+    const sendMessageBtn = document.getElementById('sendMessageBtn');
+    
+    if (messageInput && sendMessageBtn) {
+        sendMessageBtn.addEventListener('click', sendMessage);
+        
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
             }
+        });
+    }
 
-            const { error } = await supabase.auth.signOut();
-            
-            if (error) {
-                console.error('Erro ao fazer logout:', error);
-            }
-            
-            window.location.href = 'login.html';
-            
-        } catch (error) {
+    addIconsToButtons();
+    
+// ✅ VERIFICAR RESET QUANDO A PÁGINA GANHA FOCO
+window.addEventListener('focus', checkAndResetDailyCounter);
+    
+// ✅ VERIFICAR PREMIUM PERIODICAMENTE
+setInterval(async () => {
+    await forcePremiumCheck();
+}, 30000); // A cada 30 segundos
+
+// 🎯 ADICIONAR BOTÃO DE ATUALIZAR
+const refreshBtn = document.getElementById('refreshBtn');
+if (refreshBtn) {
+    refreshBtn.addEventListener('click', refreshConversations);
+}
+}
+
+async function logout() {
+    try {
+        if (messagesSubscription) {
+            supabase.removeSubscription(messagesSubscription);
+        }
+
+        const { error } = await supabase.auth.signOut();
+        
+        if (error) {
             console.error('Erro ao fazer logout:', error);
-            window.location.href = 'login.html';
         }
+        
+        window.location.href = 'login.html';
+        
+    } catch (error) {
+        console.error('Erro ao fazer logout:', error);
+        window.location.href = 'login.html';
+    }
+}
+
+function addIconsToButtons() {
+    const sendMessageBtn = document.getElementById('sendMessageBtn');
+    if (sendMessageBtn) {
+        sendMessageBtn.innerHTML = '📤 Enviar';
     }
 
-    function addIconsToButtons() {
-        const sendMessageBtn = document.getElementById('sendMessageBtn');
-        if (sendMessageBtn) {
-            sendMessageBtn.innerHTML = '📤 Enviar';
-        }
-
-        const sendMessageFromModal = document.getElementById('sendMessageFromModal');
-        const viewFullProfile = document.getElementById('viewFullProfile');
-        
-        if (sendMessageFromModal) {
-            sendMessageFromModal.innerHTML = '💌 Enviar Mensagem';
-        }
-        if (viewFullProfile) {
-            viewFullProfile.innerHTML = '👀 Ver Perfil Completo';
-        }
-
-        const headerButtons = document.querySelectorAll('.user-menu .btn-outline');
-        headerButtons.forEach(btn => {
-            if (btn.textContent.includes('Home')) btn.innerHTML = '🏠 Home';
-            if (btn.textContent.includes('Buscar')) btn.innerHTML = '🔍 Buscar';
-            if (btn.textContent.includes('Sair')) btn.innerHTML = '🚪 Sair';
-        });
-
-        const mobileButtons = document.querySelectorAll('.mobile-nav .btn-outline');
-        mobileButtons.forEach(btn => {
-            if (btn.textContent.includes('Home')) btn.innerHTML = '🏠 Home';
-            if (btn.textContent.includes('Buscar')) btn.innerHTML = '🔍 Buscar';
-            if (btn.textContent.includes('Mensagens')) btn.innerHTML = '💌 Mensagens';
-            if (btn.textContent.includes('Configurações')) btn.innerHTML = '⚙️ Configurações';
-            if (btn.textContent.includes('Sair')) btn.innerHTML = '🚪 Sair';
-        });
+    const sendMessageFromModal = document.getElementById('sendMessageFromModal');
+    const viewFullProfile = document.getElementById('viewFullProfile');
+    
+    if (sendMessageFromModal) {
+        sendMessageFromModal.innerHTML = '💌 Enviar Mensagem';
+    }
+    if (viewFullProfile) {
+        viewFullProfile.innerHTML = '👀 Ver Perfil Completo';
     }
 
-    // ==================== FUNÇÕES AUXILIARES ====================
-    function formatTime(dateString) {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffMs = now - date;
-        const diffMins = Math.floor(diffMs / (1000 * 60));
-        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const headerButtons = document.querySelectorAll('.user-menu .btn-outline');
+    headerButtons.forEach(btn => {
+        if (btn.textContent.includes('Home')) btn.innerHTML = '🏠 Home';
+        if (btn.textContent.includes('Buscar')) btn.innerHTML = '🔍 Buscar';
+        if (btn.textContent.includes('Sair')) btn.innerHTML = '🚪 Sair';
+    });
 
-        if (diffMins < 1) return 'Agora';
-        if (diffMins < 60) return `${diffMins}m`;
-        if (diffHours < 24) return `${diffHours}h`;
-        if (diffDays === 1) return 'Ontem';
-        if (diffDays < 7) return `${diffDays}d`;
+    const mobileButtons = document.querySelectorAll('.mobile-nav .btn-outline');
+    mobileButtons.forEach(btn => {
+        if (btn.textContent.includes('Home')) btn.innerHTML = '🏠 Home';
+        if (btn.textContent.includes('Buscar')) btn.innerHTML = '🔍 Buscar';
+        if (btn.textContent.includes('Mensagens')) btn.innerHTML = '💌 Mensagens';
+        if (btn.textContent.includes('Configurações')) btn.innerHTML = '⚙️ Configurações';
+        if (btn.textContent.includes('Sair')) btn.innerHTML = '🚪 Sair';
+    });
+}
+
+// ==================== FUNÇÕES AUXILIARES ====================
+function formatTime(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 1) return 'Agora';
+    if (diffMins < 60) return `${diffMins}m`;
+    if (diffHours < 24) return `${diffHours}h`;
+    if (diffDays === 1) return 'Ontem';
+    if (diffDays < 7) return `${diffDays}d`;
+    
+    return date.toLocaleDateString('pt-BR');
+}
+
+// 🎯 SOLUÇÃO COMPLETA - ATUALIZA MENSAGENS SEM DEPENDÊNCIAS
+async function refreshConversations() {
+    try {
+        console.log('🔄 ATUALIZANDO MENSAGENS...');
         
-        return date.toLocaleDateString('pt-BR');
-    }
-
-    // 🎯 SOLUÇÃO COMPLETA - ATUALIZA MENSAGENS SEM DEPENDÊNCIAS
-    async function refreshConversations() {
-        try {
-            console.log('🔄 ATUALIZANDO MENSAGENS...');
-            
-            if (!currentChatPartner) {
-                showNotification('ℹ️ Selecione uma conversa primeiro', 'info');
-                return;
-            }
-            
-            // Mostrar loading
-            const chatMessages = document.getElementById('chatMessages');
-            if (chatMessages) {
-                chatMessages.innerHTML = `
-                    <div class="loading">
-                        <div class="spinner"></div>
-                        <p>Atualizando mensagens...</p>
-                    </div>
-                `;
-            }
-            
-            // ✅ BUSCAR MENSAGENS DIRETAMENTE
-            console.log('📊 Buscando mensagens para:', currentChatPartner.id);
-            const { data: freshMessages, error } = await supabase
-                .from('messages')
-                .select('*')
-                .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${currentChatPartner.id}),and(sender_id.eq.${currentChatPartner.id},receiver_id.eq.${currentUser.id})`)
-                .order('created_at', { ascending: true });
-
-            if (error) {
-                console.error('❌ Erro ao buscar mensagens:', error);
-                throw error;
-            }
-
-            console.log(`✅ ${freshMessages?.length || 0} mensagens encontradas`);
-            
-            // ✅ RENDERIZAR MENSAGENS DIRETAMENTE
-            if (freshMessages && freshMessages.length > 0) {
-                await renderMessagesDirectly(freshMessages);
-                showNotification(`✅ ${freshMessages.length} mensagens carregadas`, 'success');
-            } else {
-                if (chatMessages) {
-                    chatMessages.innerHTML = '<div class="no-messages">Nenhuma mensagem encontrada</div>';
-                }
-                showNotification('ℹ️ Nenhuma mensagem nova', 'info');
-            }
-            
-        } catch (error) {
-            console.error('❌ Erro ao atualizar:', error);
-            showNotification('❌ Erro ao carregar mensagens', 'error');
-            
-            const chatMessages = document.getElementById('chatMessages');
-            if (chatMessages) {
-                chatMessages.innerHTML = '<div class="no-messages">Erro ao carregar mensagens</div>';
-            }
-        }
-    }
-
-    // ✅ FUNÇÃO PARA RENDERIZAR MENSAGENS DIRETAMENTE
-    async function renderMessagesDirectly(messages) {
-        const chatMessages = document.getElementById('chatMessages');
-        const noMessages = document.getElementById('noMessages');
-        
-        if (!chatMessages) return;
-        
-        if (messages.length === 0) {
-            if (noMessages) noMessages.classList.remove('hidden');
-            chatMessages.innerHTML = '';
+        if (!currentChatPartner) {
+            showNotification('ℹ️ Selecione uma conversa primeiro', 'info');
             return;
         }
         
-        if (noMessages) noMessages.classList.add('hidden');
+        // Mostrar loading
+        const chatMessages = document.getElementById('chatMessages');
+        if (chatMessages) {
+            chatMessages.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Atualizando mensagens...</p>
+                </div>
+            `;
+        }
         
-        // Carregar avatares primeiro
-        await loadAvatarsForMessages(messages);
-        
-        // Renderizar mensagens
-        chatMessages.innerHTML = messages.map(message => {
-            const isSent = message.sender_id === currentUser.id;
-            
-            let senderAvatar = null;
-            let senderName = 'Usuário';
-            
-            if (isSent) {
-                const currentUserInfo = userAvatarsCache.get(currentUser.id);
-                senderName = currentUserInfo?.name || 'Você';
-                senderAvatar = currentUserInfo?.avatar || null;
-            } else {
-                const partnerInfo = userAvatarsCache.get(currentChatPartner.id);
-                senderName = partnerInfo?.name || currentChatPartner?.name || 'Usuário';
-                senderAvatar = partnerInfo?.avatar || null;
-            }
+        // ✅ BUSCAR MENSAGENS DIRETAMENTE
+        console.log('📊 Buscando mensagens para:', currentChatPartner.id);
+        const { data: freshMessages, error } = await supabase
+            .from('messages')
+            .select('*')
+            .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${currentChatPartner.id}),and(sender_id.eq.${currentChatPartner.id},receiver_id.eq.${currentUser.id})`)
+            .order('created_at', { ascending: true });
 
-            const avatarHtml = senderAvatar ? 
-                `<img class="message-avatar-img" src="${senderAvatar}" alt="${senderName}" style="display: block;">` :
-                senderName.charAt(0).toUpperCase();
-
-            const avatarStyle = senderAvatar ? 
-                `style="background-image: url(${senderAvatar}); background-size: cover; background-position: center;"` : 
-                '';
-
-            if (isSent) {
-                return `
-                    <div class="message-container sent">
-                        <div class="message sent">
-                            <div class="message-text">${message.content}</div>
-                            <div class="message-time">${formatTime(message.created_at)}</div>
-                        </div>
-                        <div class="message-avatar" ${avatarStyle}>
-                            ${avatarHtml}
-                        </div>
-                    </div>
-                `;
-            } else {
-                return `
-                    <div class="message-container received">
-                        <div class="message-avatar" ${avatarStyle}>
-                            ${avatarHtml}
-                        </div>
-                        <div class="message received">
-                            <div class="message-text">${message.content}</div>
-                            <div class="message-time">${formatTime(message.created_at)}</div>
-                        </div>
-                    </div>
-                `;
-            }
-        }).join('');
-
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-
-    // ✅ FUNÇÃO PARA CARREGAR AVATARES
-    async function loadAvatarsForMessages(messages) {
-        const userIds = new Set();
-        
-        messages.forEach(message => {
-            userIds.add(message.sender_id);
-            userIds.add(message.receiver_id);
-        });
-
-        // Carregar avatar do usuário atual se não estiver em cache
-        if (!userAvatarsCache.has(currentUser.id)) {
-            const { data: currentUserProfile } = await supabase
-                .from('profiles')
-                .select('nickname, avatar_url')
-                .eq('id', currentUser.id)
-                .single();
-                
-            if (currentUserProfile) {
-                let currentUserAvatar = null;
-                if (currentUserProfile.avatar_url) {
-                    const { data } = supabase.storage
-                        .from('avatars')
-                        .getPublicUrl(currentUserProfile.avatar_url);
-                    currentUserAvatar = data?.publicUrl || null;
-                }
-                
-                userAvatarsCache.set(currentUser.id, {
-                    name: currentUserProfile.nickname || 'Você',
-                    avatar: currentUserAvatar
-                });
-            }
+        if (error) {
+            console.error('❌ Erro ao buscar mensagens:', error);
+            throw error;
         }
 
-        // Carregar avatar do parceiro se não estiver em cache
-        if (currentChatPartner && !userAvatarsCache.has(currentChatPartner.id)) {
-            const { data: partnerProfile } = await supabase
-                .from('profiles')
-                .select('nickname, avatar_url')
-                .eq('id', currentChatPartner.id)
-                .single();
-                
-            if (partnerProfile) {
-                let partnerAvatar = null;
-                if (partnerProfile.avatar_url) {
-                    const { data } = supabase.storage
-                        .from('avatars')
-                        .getPublicUrl(partnerProfile.avatar_url);
-                    partnerAvatar = data?.publicUrl || null;
-                }
-                
-                userAvatarsCache.set(currentChatPartner.id, {
-                    name: partnerProfile.nickname || 'Usuário',
-                    avatar: partnerAvatar
-                });
+        console.log(`✅ ${freshMessages?.length || 0} mensagens encontradas`);
+        
+        // ✅ RENDERIZAR MENSAGENS DIRETAMENTE
+        if (freshMessages && freshMessages.length > 0) {
+            await renderMessagesDirectly(freshMessages);
+            showNotification(`✅ ${freshMessages.length} mensagens carregadas`, 'success');
+        } else {
+            if (chatMessages) {
+                chatMessages.innerHTML = '<div class="no-messages">Nenhuma mensagem encontrada</div>';
             }
+            showNotification('ℹ️ Nenhuma mensagem nova', 'info');
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro ao atualizar:', error);
+        showNotification('❌ Erro ao carregar mensagens', 'error');
+        
+        const chatMessages = document.getElementById('chatMessages');
+        if (chatMessages) {
+            chatMessages.innerHTML = '<div class="no-messages">Erro ao carregar mensagens</div>';
         }
     }
+}
 
-    // ==================== ESTILOS ====================
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
+// ✅ FUNÇÃO PARA RENDERIZAR MENSAGENS DIRETAMENTE
+async function renderMessagesDirectly(messages) {
+    const chatMessages = document.getElementById('chatMessages');
+    const noMessages = document.getElementById('noMessages');
+    
+    if (!chatMessages) return;
+    
+    if (messages.length === 0) {
+        if (noMessages) noMessages.classList.remove('hidden');
+        chatMessages.innerHTML = '';
+        return;
+    }
+    
+    if (noMessages) noMessages.classList.add('hidden');
+    
+    // Carregar avatares primeiro
+    await loadAvatarsForMessages(messages);
+    
+    // Renderizar mensagens
+    chatMessages.innerHTML = messages.map(message => {
+        const isSent = message.sender_id === currentUser.id;
         
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        let senderAvatar = null;
+        let senderName = 'Usuário';
         
-        .message-counter {
-            background: #d1656d;
-            color: white;
-            border-radius: 12px;
-            padding: 2px 8px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            margin-left: 8px;
-        }
-        
-        .notification {
-            position: fixed;
-            top: 100px;
-            right: 20px;
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 10000;
-            max-width: 300px;
-            animation: slideIn 0.3s ease;
-            font-weight: 500;
-            color: white;
-        }
-        
-        .notification-success { background: #48bb78; }
-        .notification-error { background: #f56565; }
-        .notification-info { background: #4299e1; }
-        
-        /* Loading no chat */
-        .chat-messages .loading {
-            text-align: center;
-            padding: 2rem;
-            color: var(--text-light);
-        }
-        
-        .chat-messages .spinner {
-            width: 30px;
-            height: 30px;
-            border: 3px solid var(--bege);
-            border-top: 3px solid var(--vermelho-rosado);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 1rem;
-        }
-        
-        /* Botão de atualizar */
-        #refreshBtn {
-            padding: 0.5rem;
-            font-size: 1rem;
-            width: 40px;
-            flex-shrink: 0;
-            border-radius: 10px;
-            transition: var(--transition);
+        if (isSent) {
+            const currentUserInfo = userAvatarsCache.get(currentUser.id);
+            senderName = currentUserInfo?.name || 'Você';
+            senderAvatar = currentUserInfo?.avatar || null;
+        } else {
+            const partnerInfo = userAvatarsCache.get(currentChatPartner.id);
+            senderName = partnerInfo?.name || currentChatPartner?.name || 'Usuário';
+            senderAvatar = partnerInfo?.avatar || null;
         }
 
-        #refreshBtn:hover {
-            background: var(--lilas);
-            transform: rotate(45deg);
+        const avatarHtml = senderAvatar ? 
+            `<img class="message-avatar-img" src="${senderAvatar}" alt="${senderName}" style="display: block;">` :
+            senderName.charAt(0).toUpperCase();
+
+        const avatarStyle = senderAvatar ? 
+            `style="background-image: url(${senderAvatar}); background-size: cover; background-position: center;"` : 
+            '';
+
+        if (isSent) {
+            return `
+                <div class="message-container sent">
+                    <div class="message sent">
+                        <div class="message-text">${message.content}</div>
+                        <div class="message-time">${formatTime(message.created_at)}</div>
+                    </div>
+                    <div class="message-avatar" ${avatarStyle}>
+                        ${avatarHtml}
+                    </div>
+                </div>
+            `;
+        } else {
+            return `
+                <div class="message-container received">
+                    <div class="message-avatar" ${avatarStyle}>
+                        ${avatarHtml}
+                    </div>
+                    <div class="message received">
+                        <div class="message-text">${message.content}</div>
+                        <div class="message-time">${formatTime(message.created_at)}</div>
+                    </div>
+                </div>
+            `;
         }
-    `;
-    document.head.appendChild(style);
+    }).join('');
+
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// ✅ FUNÇÃO PARA CARREGAR AVATARES
+async function loadAvatarsForMessages(messages) {
+    const userIds = new Set();
+    
+    messages.forEach(message => {
+        userIds.add(message.sender_id);
+        userIds.add(message.receiver_id);
+    });
+
+    // Carregar avatar do usuário atual se não estiver em cache
+    if (!userAvatarsCache.has(currentUser.id)) {
+        const { data: currentUserProfile } = await supabase
+            .from('profiles')
+            .select('nickname, avatar_url')
+            .eq('id', currentUser.id)
+            .single();
+            
+        if (currentUserProfile) {
+            let currentUserAvatar = null;
+            if (currentUserProfile.avatar_url) {
+                const { data } = supabase.storage
+                    .from('avatars')
+                    .getPublicUrl(currentUserProfile.avatar_url);
+                currentUserAvatar = data?.publicUrl || null;
+            }
+            
+            userAvatarsCache.set(currentUser.id, {
+                name: currentUserProfile.nickname || 'Você',
+                avatar: currentUserAvatar
+            });
+        }
+    }
+
+    // Carregar avatar do parceiro se não estiver em cache
+    if (currentChatPartner && !userAvatarsCache.has(currentChatPartner.id)) {
+        const { data: partnerProfile } = await supabase
+            .from('profiles')
+            .select('nickname, avatar_url')
+            .eq('id', currentChatPartner.id)
+            .single();
+            
+        if (partnerProfile) {
+            let partnerAvatar = null;
+            if (partnerProfile.avatar_url) {
+                const { data } = supabase.storage
+                    .from('avatars')
+                    .getPublicUrl(partnerProfile.avatar_url);
+                partnerAvatar = data?.publicUrl || null;
+            }
+            
+            userAvatarsCache.set(currentChatPartner.id, {
+                name: partnerProfile.nickname || 'Usuário',
+                avatar: partnerAvatar
+            });
+        }
+    }
+}
+
+// ==================== ESTILOS ====================
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .message-counter {
+        background: #d1656d;
+        color: white;
+        border-radius: 12px;
+        padding: 2px 8px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        margin-left: 8px;
+    }
+    
+    .notification {
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10000;
+        max-width: 300px;
+        animation: slideIn 0.3s ease;
+        font-weight: 500;
+        color: white;
+    }
+    
+    .notification-success { background: #48bb78; }
+    .notification-error { background: #f56565; }
+    .notification-info { background: #4299e1; }
+    
+    /* Loading no chat */
+    .chat-messages .loading {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-light);
+    }
+    
+    .chat-messages .spinner {
+        width: 30px;
+        height: 30px;
+        border: 3px solid var(--bege);
+        border-top: 3px solid var(--vermelho-rosado);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+    }
+    
+    /* Botão de atualizar */
+    #refreshBtn {
+        padding: 0.5rem;
+        font-size: 1rem;
+        width: 40px;
+        flex-shrink: 0;
+        border-radius: 10px;
+        transition: var(--transition);
+    }
+
+    #refreshBtn:hover {
+        background: var(--lilas);
+        transform: rotate(45deg);
+    }
+`;
+document.head.appendChild(style);
 </script>
 </body>
 </html>
+
