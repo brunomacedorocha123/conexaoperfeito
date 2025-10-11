@@ -1085,18 +1085,20 @@
           <img src="logoamorconect.png" alt="Amor Conect">
           <h1>Amor Conect</h1>
         </div>
-        <div class="user-menu">
-          <div class="user-info">
-            <div class="user-avatar" id="userAvatar">
-              <img class="user-avatar-img" src="" alt="Avatar">
-              <div class="user-avatar-fallback">U</div>
-            </div>
-            <span id="userNickname">Usuário</span>
-          </div>
-          <a href="home.html" class="btn btn-outline"> Home</a>
-          <a href="busca.html" class="btn btn-outline"> Buscar</a>
-           <button class="btn btn-outline" id="logoutBtn">Perfil</button>
-        </div>
+        <!-- Header Desktop -->
+<div class="user-menu">
+  <div class="user-info">
+    <div class="user-avatar" id="userAvatar">
+      <img class="user-avatar-img" src="" alt="Avatar">
+      <div class="user-avatar-fallback">U</div>
+    </div>
+    <span id="userNickname">Usuário</span>
+  </div>
+  <a href="home.html" class="btn btn-outline"> Home</a>
+  <a href="busca.html" class="btn btn-outline">Buscar</a>
+  <!-- PERFIL COMO LINK -->
+  <a href="painel.html" class="btn btn-outline">Perfil</a>
+</div>
       </div>
     </div>
   </header>
@@ -2148,12 +2150,12 @@ async function openProfileModal(partnerId) {
     }
 }
 
-// ==================== EVENT LISTENERS ====================
 function setupEventListeners() {
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', logout);
-    }
+    // BOTÃO PERFIL NO DESKTOP AGORA É LINK - REMOVER EVENT LISTENER
+    // const logoutBtn = document.getElementById('logoutBtn');
+    // if (logoutBtn) {
+    //     logoutBtn.addEventListener('click', logout);
+    // }
 
     const messageInput = document.getElementById('messageInput');
     const sendMessageBtn = document.getElementById('sendMessageBtn');
@@ -2170,21 +2172,20 @@ function setupEventListeners() {
 
     addIconsToButtons();
     
-    // ✅ VERIFICAR RESET QUANDO A PÁGINA GANHA FOCO
+    // VERIFICAR RESET QUANDO A PÁGINA GANHA FOCO
     window.addEventListener('focus', checkAndResetDailyCounter);
     
-    // ✅ VERIFICAR PREMIUM PERIODICAMENTE
+    // VERIFICAR PREMIUM PERIODICAMENTE
     setInterval(async () => {
         await forcePremiumCheck();
-    }, 30000); // A cada 30 segundos
+    }, 30000);
 
-    // 🎯 ADICIONAR BOTÃO DE ATUALIZAR
+    // BOTÃO DE ATUALIZAR
     const refreshBtn = document.getElementById('refreshBtn');
     if (refreshBtn) {
         refreshBtn.addEventListener('click', refreshConversations);
     }
 }
-
 async function logout() {
     try {
         if (messagesSubscription) {
