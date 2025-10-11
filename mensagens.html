@@ -2174,27 +2174,35 @@ async function sendMessageDirectly(content) {
 
         // ✅ SEGUNDO: Atualizar contador apenas se NÃO for premium
         if (!isPremiumUser) {
-            console.log('📈 Atualizando contador...');
+            console.log('📈 Atualizando contador NO SUPABASE...');
             
-            // Método 1: Usar RPC
-            const { error: incrementError } = await supabase
-                .rpc('increment_daily_message_count', { user_uuid: currentUser.id });
+            const today = new Date().toISOString().split('T')[0];
             
-            if (incrementError) {
-                console.log('⚠️ RPC falhou, tentando método alternativo...');
+            // ✅ MÉTODO PRINCIPAL: UPSERT na tabela daily_message_count
+            const { data: upsertData, error: upsertError } = await supabase
+                .from('daily_message_count')
+                .upsert({
+                    user_id: currentUser.id,
+                    date: today,
+                    message_count: currentMessageCount + 1
+                }, {
+                    onConflict: 'user_id,date',
+                    ignoreDuplicates: false
+                });
+
+            if (upsertError) {
+                console.error('❌ Erro no UPSERT:', upsertError);
                 
-                // Método 2: Atualização direta
-                const today = new Date().toISOString().split('T')[0];
-                const { error: updateError } = await supabase
+                // ✅ MÉTODO ALTERNATIVO: Tentar insert/update separadamente
+                const { data: existingCount, error: checkError } = await supabase
                     .from('daily_message_count')
-                    .update({ message_count: currentMessageCount + 1 })
+                    .select('message_count')
                     .eq('user_id', currentUser.id)
-                    .eq('date', today);
-                
-                if (updateError) {
-                    console.log('⚠️ Update falhou, tentando insert...');
-                    
-                    // Método 3: Insert se não existir
+                    .eq('date', today)
+                    .single();
+
+                if (checkError || !existingCount) {
+                    // ✅ INSERT se não existe
                     const { error: insertError } = await supabase
                         .from('daily_message_count')
                         .insert({
@@ -2204,22 +2212,34 @@ async function sendMessageDirectly(content) {
                         });
                     
                     if (insertError) {
-                        console.error('❌ Todos os métodos falharam:', insertError);
+                        console.error('❌ Erro no INSERT:', insertError);
                     } else {
-                        console.log('✅ Contador criado via insert');
+                        console.log('✅ Contador criado via INSERT');
                         currentMessageCount = 1;
                     }
                 } else {
-                    console.log('✅ Contador atualizado via update');
-                    currentMessageCount += 1;
+                    // ✅ UPDATE se já existe
+                    const { error: updateError } = await supabase
+                        .from('daily_message_count')
+                        .update({ message_count: currentMessageCount + 1 })
+                        .eq('user_id', currentUser.id)
+                        .eq('date', today);
+                    
+                    if (updateError) {
+                        console.error('❌ Erro no UPDATE:', updateError);
+                    } else {
+                        console.log('✅ Contador atualizado via UPDATE');
+                        currentMessageCount += 1;
+                    }
                 }
             } else {
-                console.log('✅ Contador incrementado via RPC');
-                // Recarregar o contador atualizado do banco
-                await loadMessageCount();
+                console.log('✅ Contador atualizado via UPSERT');
+                currentMessageCount += 1;
             }
             
+            // ✅ ATUALIZAR CONTADOR VISUAL
             updateMessageCounter(currentMessageCount);
+            console.log('🎯 Contador final:', currentMessageCount);
         } else {
             console.log('⭐ Premium - não incrementa contador');
         }
