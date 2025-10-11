@@ -1369,8 +1369,12 @@ async function loadMessageCount() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
+        // VERIFICAR PREMIUM PRIMEIRO
+        await forcePremiumCheck();
+        
         if (isPremiumUser) {
-            console.log('⭐ Usuário Premium - ignorando contador');
+            console.log('⭐ Usuário Premium - contador infinito');
+            currentMessageCount = 999;
             updateMessageCounter('∞');
             checkMessageLimit();
             return;
@@ -1378,6 +1382,7 @@ async function loadMessageCount() {
 
         const today = new Date().toISOString().split('T')[0];
         
+        // BUSCAR CONTADOR ATUAL
         const { data, error } = await supabase
             .from('daily_message_count')
             .select('message_count')
@@ -1387,14 +1392,17 @@ async function loadMessageCount() {
 
         if (error) {
             if (error.code === 'PGRST116') {
+                // REGISTRO NÃO EXISTE - CRIAR NOVO
                 currentMessageCount = 0;
+                console.log('📝 Criando novo registro de contador...');
                 
                 const { error: insertError } = await supabase
                     .from('daily_message_count')
                     .insert({
                         user_id: user.id,
                         date: today,
-                        message_count: 0
+                        message_count: 0,
+                        created_at: new Date().toISOString()
                     });
                 
                 if (insertError) {
@@ -1505,10 +1513,12 @@ async function sendMessage() {
     try {
         console.log('🚀 INICIANDO ENVIO DE MENSAGEM...');
 
+        // BLOQUEAR INTERFACE
         messageInput.disabled = true;
         sendMessageBtn.disabled = true;
         sendMessageBtn.innerHTML = '⏳ Enviando...';
 
+        // VERIFICAR LIMITE ANTES DE QUALQUER COISA
         await forcePremiumCheck();
 
         if (!isPremiumUser && currentMessageCount >= 5) {
@@ -1517,7 +1527,10 @@ async function sendMessage() {
             return;
         }
 
+        // ENVIAR MENSAGEM
         await sendMessageToDatabase(content);
+        
+        // LIMPAR CAMPO
         messageInput.value = '';
         showNotification('✅ Mensagem enviada com sucesso!', 'success');
 
@@ -1525,6 +1538,7 @@ async function sendMessage() {
         console.error('❌ Erro crítico ao enviar mensagem:', error);
         showNotification('❌ Erro ao enviar mensagem. Tente novamente.', 'error');
     } finally {
+        // RESTAURAR INTERFACE
         checkMessageLimit();
     }
 }
@@ -1533,12 +1547,7 @@ async function sendMessageToDatabase(content) {
     try {
         console.log('📨 ENVIANDO MENSAGEM PARA O BANCO...');
 
-        // 1. ATUALIZAR CONTADOR (APENAS FREE)
-        if (!isPremiumUser) {
-            await updateMessageCountInDatabase();
-        }
-
-        // 2. ENVIAR MENSAGEM
+        // 1. ENVIAR MENSAGEM PRIMEIRO
         const { error: messageError } = await supabase
             .from('messages')
             .insert({
@@ -1551,17 +1560,15 @@ async function sendMessageToDatabase(content) {
 
         if (messageError) {
             console.error('❌ Erro ao enviar mensagem:', messageError);
-            
-            // Reverter contador se houver erro
-            if (!isPremiumUser && currentMessageCount > 0) {
-                currentMessageCount--;
-                await updateMessageCountInDatabase(true); // Forçar atualização
-            }
-            
             throw messageError;
         }
 
         console.log('✅ Mensagem enviada com sucesso');
+
+        // 2. ATUALIZAR CONTADOR APÓS ENVIO BEM-SUCEDIDO (APENAS FREE)
+        if (!isPremiumUser) {
+            await updateMessageCountInDatabase();
+        }
 
         // 3. ATUALIZAR INTERFACE
         await Promise.all([
@@ -1575,13 +1582,20 @@ async function sendMessageToDatabase(content) {
     }
 }
 
-async function updateMessageCountInDatabase(forceUpdate = false) {
+async function updateMessageCountInDatabase() {
     try {
         const today = new Date().toISOString().split('T')[0];
-        const newCount = forceUpdate ? currentMessageCount : currentMessageCount + 1;
+        
+        // INCREMENTAR CONTADOR LOCAL
+        const newCount = currentMessageCount + 1;
 
-        console.log('📈 Atualizando contador:', { user: currentUser.id, date: today, newCount });
+        console.log('📈 Atualizando contador:', { 
+            user: currentUser.id, 
+            date: today, 
+            newCount: newCount 
+        });
 
+        // ATUALIZAR NO BANCO
         const { error } = await supabase
             .from('daily_message_count')
             .upsert({
@@ -1598,10 +1612,8 @@ async function updateMessageCountInDatabase(forceUpdate = false) {
             throw error;
         }
 
-        if (!forceUpdate) {
-            currentMessageCount = newCount;
-        }
-        
+        // ATUALIZAR CONTADOR LOCAL
+        currentMessageCount = newCount;
         updateMessageCounter(currentMessageCount);
         console.log('✅ Contador atualizado:', currentMessageCount);
 
