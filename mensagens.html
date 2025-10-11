@@ -2108,390 +2108,428 @@ async function loadConversations() {
     }
 
     // ==================== FUNÇÃO ENVIAR MENSAGEM ====================
-    async function sendMessage() {
-        const messageInput = document.getElementById('messageInput');
-        const content = messageInput.value.trim();
+   async function sendMessage() {
+    const messageInput = document.getElementById('messageInput');
+    const content = messageInput.value.trim();
 
-        if (!content || !currentChatPartner) return;
+    if (!content || !currentChatPartner) return;
 
-        try {
-            console.log('🔍 INICIANDO ENVIO DE MENSAGEM...');
-            
-            // ✅ VERIFICAR PREMIUM NOVAMENTE (para garantir)
-            await forcePremiumCheck();
-            
-            if (isPremiumUser) {
-                console.log('⭐ Usuário Premium - enviando sem verificação de limite');
-                await sendMessageDirectly(content);
-                return;
-            }
-
-            console.log('📊 Contador atual:', currentMessageCount);
-            
-            if (currentMessageCount >= 5) {
-                console.log('🚫 LIMITE ATINGIDO! Bloqueando envio...');
-                showNotification('❌ Limite de 5 mensagens por dia atingido! Faça upgrade para Premium.', 'error');
-                
-                checkMessageLimit();
-                
-                setTimeout(() => {
-                    if (confirm('Deseja fazer upgrade para Premium e ter mensagens ilimitadas?')) {
-                        window.location.href = 'pricing.html';
-                    }
-                }, 1000);
-                
-                return;
-            }
-
-            console.log('✅ Pode enviar mensagem', currentMessageCount + 1, '/5');
-            await sendMessageDirectly(content);
-
-        } catch (error) {
-            console.error('Erro ao enviar mensagem:', error);
-            showNotification('❌ Erro ao enviar mensagem', 'error');
-        }
-    }
-
-    async function sendMessageDirectly(content) {
-        const messageInput = document.getElementById('messageInput');
+    try {
+        console.log('🔍 INICIANDO ENVIO DE MENSAGEM...');
         
-        try {
-            const { error } = await supabase
-                .from('messages')
-                .insert({
-                    sender_id: currentUser.id,
-                    receiver_id: currentChatPartner.id,
-                    content: content,
-                    is_read: false
-                });
+        // ✅ VERIFICAR PREMIUM NOVAMENTE (para garantir)
+        await forcePremiumCheck();
+        
+        if (isPremiumUser) {
+            console.log('⭐ Usuário Premium - enviando sem verificação de limite');
+            await sendMessageDirectly(content);
+            return;
+        }
 
-            if (error) {
-                console.error('❌ Erro ao enviar mensagem:', error);
-                throw error;
-            }
-
-            // ✅ INCREMENTAR CONTADOR APENAS SE NÃO FOR PREMIUM
-            if (!isPremiumUser) {
-                console.log('📈 Incrementando contador...');
-                
-                const { error: incrementError } = await supabase
-                    .rpc('increment_daily_message_count', { user_uuid: currentUser.id });
-                
-                if (incrementError) {
-                    console.error('❌ Erro ao incrementar contador:', incrementError);
-                    currentMessageCount++;
-                } else {
-                    console.log('✅ Contador incrementado no banco');
-                    await loadMessageCount();
-                }
-                
-                updateMessageCounter(currentMessageCount);
-            } else {
-                console.log('⭐ Premium - não incrementa contador');
-            }
-
-            messageInput.value = '';
-            await loadMessages(currentChatPartner.id);
-            await loadConversations();
-
-            showNotification('✅ Mensagem enviada!', 'success');
+        console.log('📊 Contador atual:', currentMessageCount);
+        
+        if (currentMessageCount >= 5) {
+            console.log('🚫 LIMITE ATINGIDO! Bloqueando envio...');
+            showNotification('❌ Limite de 5 mensagens por dia atingido! Faça upgrade para Premium.', 'error');
+            
             checkMessageLimit();
+            
+            setTimeout(() => {
+                if (confirm('Deseja fazer upgrade para Premium e ter mensagens ilimitadas?')) {
+                    window.location.href = 'pricing.html';
+                }
+            }, 1000);
+            
+            return;
+        }
 
-        } catch (error) {
-            console.error('Erro no envio direto:', error);
+        console.log('✅ Pode enviar mensagem', currentMessageCount + 1, '/5');
+        await sendMessageDirectly(content);
+
+    } catch (error) {
+        console.error('Erro ao enviar mensagem:', error);
+        showNotification('❌ Erro ao enviar mensagem', 'error');
+    }
+}
+
+async function sendMessageDirectly(content) {
+    const messageInput = document.getElementById('messageInput');
+    
+    try {
+        // ✅ 1. ENVIAR MENSAGEM PRIMEIRO
+        const { error } = await supabase
+            .from('messages')
+            .insert({
+                sender_id: currentUser.id,
+                receiver_id: currentChatPartner.id,
+                content: content,
+                is_read: false
+            });
+
+        if (error) {
+            console.error('❌ Erro ao enviar mensagem:', error);
             throw error;
         }
-    }
 
-    // ==================== SISTEMA DE NOTIFICAÇÕES ====================
-    function showNotification(message, type = 'info') {
-        const existingNotification = document.querySelector('.notification');
-        if (existingNotification) {
-            existingNotification.remove();
-        }
+        // ✅ 2. INCREMENTAR CONTADOR APENAS SE NÃO FOR PREMIUM
+        if (!isPremiumUser) {
+            console.log('📈 Incrementando contador FREE...');
+            
+            const today = new Date().toISOString().split('T')[0];
+            
+            // ✅ MÉTODO DIRETO - SEM RPC
+            const { data: existingRecord, error: fetchError } = await supabase
+                .from('daily_message_count')
+                .select('message_count')
+                .eq('user_id', currentUser.id)
+                .eq('date', today)
+                .single();
 
-        const notification = document.createElement('div');
-        notification.className = `notification notification-${type}`;
-        
-        let backgroundColor, textColor;
-        switch(type) {
-            case 'error':
-                backgroundColor = '#f56565';
-                textColor = 'white';
-                break;
-            case 'success':
-                backgroundColor = '#48bb78';
-                textColor = 'white';
-                break;
-            default:
-                backgroundColor = '#4299e1';
-                textColor = 'white';
-        }
+            if (fetchError && fetchError.code === 'PGRST116') {
+                // ✅ SE NÃO EXISTIR, CRIAR NOVO REGISTRO
+                const { error: insertError } = await supabase
+                    .from('daily_message_count')
+                    .insert({
+                        user_id: currentUser.id,
+                        date: today,
+                        message_count: 1
+                    });
 
-        notification.style.cssText = `
-            position: fixed;
-            top: 100px;
-            right: 20px;
-            background: ${backgroundColor};
-            color: ${textColor};
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 10000;
-            max-width: 300px;
-            animation: slideIn 0.3s ease;
-            font-weight: 500;
-        `;
+                if (insertError) {
+                    console.error('❌ Erro ao criar registro:', insertError);
+                    currentMessageCount = 1;
+                } else {
+                    console.log('✅ Novo registro criado com count = 1');
+                    currentMessageCount = 1;
+                }
+            } else if (existingRecord) {
+                // ✅ SE EXISTIR, ATUALIZAR INCREMENTANDO
+                const newCount = (existingRecord.message_count || 0) + 1;
+                const { error: updateError } = await supabase
+                    .from('daily_message_count')
+                    .update({ message_count: newCount })
+                    .eq('user_id', currentUser.id)
+                    .eq('date', today);
 
-        notification.textContent = message;
-        document.body.appendChild(notification);
-
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
+                if (updateError) {
+                    console.error('❌ Erro ao atualizar contador:', updateError);
+                    currentMessageCount = newCount;
+                } else {
+                    console.log('✅ Contador atualizado para:', newCount);
+                    currentMessageCount = newCount;
+                }
+            } else {
+                console.error('❌ Erro inesperado ao buscar contador');
+                currentMessageCount++;
             }
-        }, 5000);
-    }
-
-    // ==================== ATUALIZAÇÃO EM TEMPO REAL ====================
-    function setupRealtimeUpdates() {
-        if (messagesSubscription) {
-            supabase.removeSubscription(messagesSubscription);
+            
+            updateMessageCounter(currentMessageCount);
+        } else {
+            console.log('⭐ Premium - não incrementa contador');
         }
 
-        messagesSubscription = supabase
-            .channel('public:messages')
-            .on(
-                'postgres_changes',
-                {
-                    event: 'INSERT',
-                    schema: 'public', 
-                    table: 'messages'
-                },
-                async (payload) => {
-                    const newMessage = payload.new;
+        messageInput.value = '';
+        await loadMessages(currentChatPartner.id);
+        await loadConversations();
+
+        showNotification('✅ Mensagem enviada!', 'success');
+        checkMessageLimit();
+
+    } catch (error) {
+        console.error('Erro no envio direto:', error);
+        throw error;
+    }
+}
+
+// ==================== SISTEMA DE NOTIFICAÇÕES ====================
+function showNotification(message, type = 'info') {
+    const existingNotification = document.querySelector('.notification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    
+    let backgroundColor, textColor;
+    switch(type) {
+        case 'error':
+            backgroundColor = '#f56565';
+            textColor = 'white';
+            break;
+        case 'success':
+            backgroundColor = '#48bb78';
+            textColor = 'white';
+            break;
+        default:
+            backgroundColor = '#4299e1';
+            textColor = 'white';
+    }
+
+    notification.style.cssText = `
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        background: ${backgroundColor};
+        color: ${textColor};
+        padding: 12px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10000;
+        max-width: 300px;
+        animation: slideIn 0.3s ease;
+        font-weight: 500;
+    `;
+
+    notification.textContent = message;
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 5000);
+}
+
+// ==================== ATUALIZAÇÃO EM TEMPO REAL ====================
+function setupRealtimeUpdates() {
+    if (messagesSubscription) {
+        supabase.removeSubscription(messagesSubscription);
+    }
+
+    messagesSubscription = supabase
+        .channel('public:messages')
+        .on(
+            'postgres_changes',
+            {
+                event: 'INSERT',
+                schema: 'public', 
+                table: 'messages'
+            },
+            async (payload) => {
+                const newMessage = payload.new;
+                
+                if (newMessage.receiver_id === currentUser.id || newMessage.sender_id === currentUser.id) {
+                    console.log('Nova mensagem recebida em tempo real');
                     
-                    if (newMessage.receiver_id === currentUser.id || newMessage.sender_id === currentUser.id) {
-                        console.log('Nova mensagem recebida em tempo real');
+                    await loadConversations();
+                    
+                    if (currentChatPartner && 
+                        (newMessage.sender_id === currentChatPartner.id || newMessage.receiver_id === currentChatPartner.id)) {
+                        await loadMessages(currentChatPartner.id);
                         
-                        await loadConversations();
-                        
-                        if (currentChatPartner && 
-                            (newMessage.sender_id === currentChatPartner.id || newMessage.receiver_id === currentChatPartner.id)) {
-                            await loadMessages(currentChatPartner.id);
-                            
-                            if (newMessage.sender_id === currentChatPartner.id) {
-                                await markMessagesAsRead(currentChatPartner.id);
-                            }
+                        if (newMessage.sender_id === currentChatPartner.id) {
+                            await markMessagesAsRead(currentChatPartner.id);
                         }
                     }
                 }
-            )
-            .subscribe();
+            }
+        )
+        .subscribe();
+}
+
+async function markMessagesAsRead(partnerId) {
+    try {
+        const { error } = await supabase
+            .from('messages')
+            .update({ is_read: true })
+            .eq('sender_id', partnerId)
+            .eq('receiver_id', currentUser.id)
+            .eq('is_read', false);
+
+        if (error) return;
+
+        await loadConversations();
+
+    } catch (error) {
+        console.error('Erro ao marcar mensagens como lidas:', error);
+    }
+}
+
+function updateChatHeader() {
+    if (!currentChatPartner) return;
+
+    document.getElementById('chatPartnerName').textContent = currentChatPartner.name;
+    document.getElementById('chatPartnerStatus').textContent = 'Online';
+    
+    const chatHeaderAvatar = document.getElementById('chatHeaderAvatar');
+    const chatHeaderAvatarImg = chatHeaderAvatar.querySelector('.chat-header-avatar-img');
+    const chatHeaderAvatarFallback = chatHeaderAvatar.querySelector('.user-avatar-fallback');
+    
+    if (currentChatPartner.avatar) {
+        chatHeaderAvatar.style.backgroundImage = `url(${currentChatPartner.avatar})`;
+        chatHeaderAvatarImg.src = currentChatPartner.avatar;
+        chatHeaderAvatarImg.style.display = 'block';
+        chatHeaderAvatarFallback.style.display = 'none';
+    } else {
+        chatHeaderAvatar.style.backgroundImage = '';
+        chatHeaderAvatarImg.style.display = 'none';
+        chatHeaderAvatarFallback.textContent = currentChatPartner.name.charAt(0).toUpperCase();
+        chatHeaderAvatarFallback.style.display = 'flex';
+    }
+}
+
+// ==================== MENU MOBILE ====================
+function setupMobileMenu() {
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    const closeMobileMenu = document.getElementById('closeMobileMenu');
+    const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+
+    if (hamburgerBtn) {
+        hamburgerBtn.addEventListener('click', () => {
+            mobileMenu.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        });
     }
 
-    async function markMessagesAsRead(partnerId) {
-        try {
-            const { error } = await supabase
-                .from('messages')
-                .update({ is_read: true })
-                .eq('sender_id', partnerId)
-                .eq('receiver_id', currentUser.id)
-                .eq('is_read', false);
-
-            if (error) return;
-
-            await loadConversations();
-
-        } catch (error) {
-            console.error('Erro ao marcar mensagens como lidas:', error);
-        }
+    if (closeMobileMenu) {
+        closeMobileMenu.addEventListener('click', () => {
+            mobileMenu.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        });
     }
 
-    function updateChatHeader() {
-        if (!currentChatPartner) return;
-
-        document.getElementById('chatPartnerName').textContent = currentChatPartner.name;
-        document.getElementById('chatPartnerStatus').textContent = 'Online';
-        
-        const chatHeaderAvatar = document.getElementById('chatHeaderAvatar');
-        const chatHeaderAvatarImg = chatHeaderAvatar.querySelector('.chat-header-avatar-img');
-        const chatHeaderAvatarFallback = chatHeaderAvatar.querySelector('.user-avatar-fallback');
-        
-        if (currentChatPartner.avatar) {
-            chatHeaderAvatar.style.backgroundImage = `url(${currentChatPartner.avatar})`;
-            chatHeaderAvatarImg.src = currentChatPartner.avatar;
-            chatHeaderAvatarImg.style.display = 'block';
-            chatHeaderAvatarFallback.style.display = 'none';
-        } else {
-            chatHeaderAvatar.style.backgroundImage = '';
-            chatHeaderAvatarImg.style.display = 'none';
-            chatHeaderAvatarFallback.textContent = currentChatPartner.name.charAt(0).toUpperCase();
-            chatHeaderAvatarFallback.style.display = 'flex';
-        }
+    if (mobileLogoutBtn) {
+        mobileLogoutBtn.addEventListener('click', logout);
     }
 
-    // ==================== MENU MOBILE ====================
-    function setupMobileMenu() {
-        const hamburgerBtn = document.getElementById('hamburgerBtn');
-        const mobileMenu = document.getElementById('mobileMenu');
-        const closeMobileMenu = document.getElementById('closeMobileMenu');
-        const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
-
-        if (hamburgerBtn) {
-            hamburgerBtn.addEventListener('click', () => {
-                mobileMenu.style.display = 'flex';
-                document.body.style.overflow = 'hidden';
-            });
-        }
-
-        if (closeMobileMenu) {
-            closeMobileMenu.addEventListener('click', () => {
+    if (mobileMenu) {
+        mobileMenu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
                 mobileMenu.style.display = 'none';
                 document.body.style.overflow = 'auto';
             });
-        }
-
-        if (mobileLogoutBtn) {
-            mobileLogoutBtn.addEventListener('click', logout);
-        }
-
-        if (mobileMenu) {
-            mobileMenu.querySelectorAll('a').forEach(link => {
-                link.addEventListener('click', () => {
-                    mobileMenu.style.display = 'none';
-                    document.body.style.overflow = 'auto';
-                });
-            });
-        }
-
-        function checkScreenSize() {
-            if (window.innerWidth <= 768) {
-                const userMenu = document.querySelector('.user-menu');
-                if (userMenu) userMenu.style.display = 'none';
-                if (hamburgerBtn) hamburgerBtn.style.display = 'flex';
-            } else {
-                const userMenu = document.querySelector('.user-menu');
-                if (userMenu) userMenu.style.display = 'flex';
-                if (hamburgerBtn) hamburgerBtn.style.display = 'none';
-                if (mobileMenu) mobileMenu.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            }
-        }
-
-        window.addEventListener('resize', checkScreenSize);
-        checkScreenSize();
+        });
     }
 
-    // ==================== MODAL DO PERFIL ====================
-    function setupProfileModal() {
-        const profileModal = document.getElementById('profileModal');
-        const closeProfileModal = document.getElementById('closeProfileModal');
-        const sendMessageFromModal = document.getElementById('sendMessageFromModal');
-        const viewFullProfile = document.getElementById('viewFullProfile');
+    function checkScreenSize() {
+        if (window.innerWidth <= 768) {
+            const userMenu = document.querySelector('.user-menu');
+            if (userMenu) userMenu.style.display = 'none';
+            if (hamburgerBtn) hamburgerBtn.style.display = 'flex';
+        } else {
+            const userMenu = document.querySelector('.user-menu');
+            if (userMenu) userMenu.style.display = 'flex';
+            if (hamburgerBtn) hamburgerBtn.style.display = 'none';
+            if (mobileMenu) mobileMenu.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    }
 
-        if (closeProfileModal) {
-            closeProfileModal.addEventListener('click', () => {
+    window.addEventListener('resize', checkScreenSize);
+    checkScreenSize();
+}
+
+// ==================== MODAL DO PERFIL ====================
+function setupProfileModal() {
+    const profileModal = document.getElementById('profileModal');
+    const closeProfileModal = document.getElementById('closeProfileModal');
+    const sendMessageFromModal = document.getElementById('sendMessageFromModal');
+    const viewFullProfile = document.getElementById('viewFullProfile');
+
+    if (closeProfileModal) {
+        closeProfileModal.addEventListener('click', () => {
+            profileModal.classList.remove('active');
+        });
+    }
+
+    if (profileModal) {
+        profileModal.addEventListener('click', (e) => {
+            if (e.target === profileModal) {
                 profileModal.classList.remove('active');
-            });
-        }
-
-        if (profileModal) {
-            profileModal.addEventListener('click', (e) => {
-                if (e.target === profileModal) {
-                    profileModal.classList.remove('active');
-                }
-            });
-        }
-
-        if (sendMessageFromModal) {
-            sendMessageFromModal.addEventListener('click', () => {
-                if (currentChatPartner) {
-                    profileModal.classList.remove('active');
-                    const messageInput = document.getElementById('messageInput');
-                    if (messageInput) {
-                        messageInput.focus();
-                    }
-                }
-            });
-        }
-
-        if (viewFullProfile) {
-            viewFullProfile.addEventListener('click', () => {
-                if (currentChatPartner) {
-                    localStorage.setItem('viewingProfileId', currentChatPartner.id);
-                    window.location.href = 'perfil.html';
-                }
-            });
-        }
+            }
+        });
     }
 
-    async function openProfileModal(partnerId) {
-        const profileModal = document.getElementById('profileModal');
-        const profileModalLoading = document.getElementById('profileModalLoading');
-        const profileModalContent = document.getElementById('profileModalContent');
-        const profileModalName = document.getElementById('profileModalName');
-        const profileModalAvatar = document.getElementById('profileModalAvatar');
-        const profileModalStatus = document.getElementById('profileModalStatus');
-
-        if (!profileModal) return;
-
-        profileModal.classList.add('active');
-        profileModalLoading.classList.remove('hidden');
-        profileModalContent.classList.add('hidden');
-
-        try {
-            const { data: profile, error } = await supabase
-                .from('profiles')
-                .select('nickname, avatar_url, user_details(description)')
-                .eq('id', partnerId)
-                .single();
-
-            if (error) return;
-
-            profileModalName.textContent = profile.nickname || 'Usuário';
-            
-            if (profile.user_details && profile.user_details.description) {
-                profileModalStatus.textContent = profile.user_details.description;
-            } else {
-                profileModalStatus.textContent = 'Conectado agora';
-            }
-
-            const profileModalAvatarImg = profileModalAvatar.querySelector('.profile-modal-avatar-img');
-            const profileModalAvatarFallback = profileModalAvatar.querySelector('.user-avatar-fallback');
-
-            if (profile.avatar_url) {
-                const photoUrl = await loadUserPhoto(profile.avatar_url);
-                if (photoUrl) {
-                    profileModalAvatarImg.src = photoUrl;
-                    profileModalAvatarImg.style.display = 'block';
-                    profileModalAvatarFallback.style.display = 'none';
-                    profileModalAvatar.style.backgroundImage = `url(${photoUrl})`;
-                    profileModalAvatar.style.backgroundSize = 'cover';
-                    profileModalAvatar.style.backgroundPosition = 'center';
-                } else {
-                    profileModalAvatarImg.style.display = 'none';
-                    profileModalAvatarFallback.style.display = 'flex';
-                    profileModalAvatarFallback.textContent = (profile.nickname || 'U').charAt(0).toUpperCase();
-                    profileModalAvatar.style.backgroundImage = '';
+    if (sendMessageFromModal) {
+        sendMessageFromModal.addEventListener('click', () => {
+            if (currentChatPartner) {
+                profileModal.classList.remove('active');
+                const messageInput = document.getElementById('messageInput');
+                if (messageInput) {
+                    messageInput.focus();
                 }
+            }
+        });
+    }
+
+    if (viewFullProfile) {
+        viewFullProfile.addEventListener('click', () => {
+            if (currentChatPartner) {
+                localStorage.setItem('viewingProfileId', currentChatPartner.id);
+                window.location.href = 'perfil.html';
+            }
+        });
+    }
+}
+
+async function openProfileModal(partnerId) {
+    const profileModal = document.getElementById('profileModal');
+    const profileModalLoading = document.getElementById('profileModalLoading');
+    const profileModalContent = document.getElementById('profileModalContent');
+    const profileModalName = document.getElementById('profileModalName');
+    const profileModalAvatar = document.getElementById('profileModalAvatar');
+    const profileModalStatus = document.getElementById('profileModalStatus');
+
+    if (!profileModal) return;
+
+    profileModal.classList.add('active');
+    profileModalLoading.classList.remove('hidden');
+    profileModalContent.classList.add('hidden');
+
+    try {
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('nickname, avatar_url, user_details(description)')
+            .eq('id', partnerId)
+            .single();
+
+        if (error) return;
+
+        profileModalName.textContent = profile.nickname || 'Usuário';
+        
+        if (profile.user_details && profile.user_details.description) {
+            profileModalStatus.textContent = profile.user_details.description;
+        } else {
+            profileModalStatus.textContent = 'Conectado agora';
+        }
+
+        const profileModalAvatarImg = profileModalAvatar.querySelector('.profile-modal-avatar-img');
+        const profileModalAvatarFallback = profileModalAvatar.querySelector('.user-avatar-fallback');
+
+        if (profile.avatar_url) {
+            const photoUrl = await loadUserPhoto(profile.avatar_url);
+            if (photoUrl) {
+                profileModalAvatarImg.src = photoUrl;
+                profileModalAvatarImg.style.display = 'block';
+                profileModalAvatarFallback.style.display = 'none';
+                profileModalAvatar.style.backgroundImage = `url(${photoUrl})`;
+                profileModalAvatar.style.backgroundSize = 'cover';
+                profileModalAvatar.style.backgroundPosition = 'center';
             } else {
                 profileModalAvatarImg.style.display = 'none';
                 profileModalAvatarFallback.style.display = 'flex';
                 profileModalAvatarFallback.textContent = (profile.nickname || 'U').charAt(0).toUpperCase();
                 profileModalAvatar.style.backgroundImage = '';
             }
-
-            profileModalLoading.classList.add('hidden');
-            profileModalContent.classList.remove('hidden');
-
-        } catch (error) {
-            console.error('Erro ao abrir modal do perfil:', error);
+        } else {
+            profileModalAvatarImg.style.display = 'none';
+            profileModalAvatarFallback.style.display = 'flex';
+            profileModalAvatarFallback.textContent = (profile.nickname || 'U').charAt(0).toUpperCase();
+            profileModalAvatar.style.backgroundImage = '';
         }
-    }
 
-    // ==================== EVENT LISTENERS ====================
-    function setupEventListeners() {
+        profileModalLoading.classList.add('hidden');
+        profileModalContent.classList.remove('hidden');
+
+    } catch (error) {
+        console.error('Erro ao abrir modal do perfil:', error);
+    }
+}
+
+// ==================== EVENT LISTENERS ====================
+function setupEventListeners() {
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', logout);
@@ -2512,19 +2550,19 @@ async function loadConversations() {
 
     addIconsToButtons();
     
-// ✅ VERIFICAR RESET QUANDO A PÁGINA GANHA FOCO
-window.addEventListener('focus', checkAndResetDailyCounter);
+    // ✅ VERIFICAR RESET QUANDO A PÁGINA GANHA FOCO
+    window.addEventListener('focus', checkAndResetDailyCounter);
     
-// ✅ VERIFICAR PREMIUM PERIODICAMENTE
-setInterval(async () => {
-    await forcePremiumCheck();
-}, 30000); // A cada 30 segundos
+    // ✅ VERIFICAR PREMIUM PERIODICAMENTE
+    setInterval(async () => {
+        await forcePremiumCheck();
+    }, 30000); // A cada 30 segundos
 
-// 🎯 ADICIONAR BOTÃO DE ATUALIZAR
-const refreshBtn = document.getElementById('refreshBtn');
-if (refreshBtn) {
-    refreshBtn.addEventListener('click', refreshConversations);
-}
+    // 🎯 ADICIONAR BOTÃO DE ATUALIZAR
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', refreshConversations);
+    }
 }
 
 async function logout() {
