@@ -1321,38 +1321,184 @@
     }
 
     // ==================== INICIALIZAÇÃO DA SESSÃO ====================
-    async function initializeUserSession() {
-        try {
-            // ✅ 1. VERIFICAR ATIVAÇÃO PREMIUM VIA URL
-            checkPremiumActivation();
-            
-            // ✅ 2. VERIFICAÇÃO FORÇADA DE PREMIUM
-            await forcePremiumCheck();
-            
-            // ✅ 3. VERIFICAR E RESETAR CONTADOR DIÁRIO
-            await checkAndResetDailyCounter();
-            
-            // ✅ 4. CARREGAR DADOS DO USUÁRIO
-            await loadUserData();
-            
-            // ✅ 5. VERIFICAR STATUS PREMIUM (redundante para garantir)
-            await checkUserPremiumStatus();
-            
-            // ✅ 6. CARREGAR CONTADOR ATUAL
-            await loadMessageCount();
-            
-            // ✅ 7. CARREGAR CONVERSAS
-            await loadConversations();
-            
-            // ✅ 8. CONFIGURAR ATUALIZAÇÕES EM TEMPO REAL
-            setupRealtimeUpdates();
-            
-            console.log('✅ Sessão inicializada com sucesso - Premium:', isPremiumUser);
-            
-        } catch (error) {
-            console.error('Erro na inicialização:', error);
-        }
+   // ==================== INICIALIZAÇÃO DA SESSÃO ====================
+async function initializeUserSession() {
+    try {
+        // ✅ 1. VERIFICAR ATIVAÇÃO PREMIUM VIA URL
+        checkPremiumActivation();
+        
+        // ✅ 2. VERIFICAÇÃO FORÇADA DE PREMIUM
+        await forcePremiumCheck();
+        
+        // ✅ 3. VERIFICAR E RESETAR CONTADOR DIÁRIO
+        await checkAndResetDailyCounter();
+        
+        // ✅ 4. CARREGAR DADOS DO USUÁRIO
+        await loadUserData();
+        
+        // ✅ 5. VERIFICAR STATUS PREMIUM (redundante para garantir)
+        await checkUserPremiumStatus();
+        
+        // ✅ 6. CARREGAR CONTADOR ATUAL
+        await loadMessageCount();
+        
+        // ✅ 7. CARREGAR CONVERSAS
+        await loadConversations();
+        
+        // ✅ 8. VERIFICAR E ABRIR CONVERSA ARMAZENADA (NOVA)
+        await checkAndOpenStoredConversation();
+        
+        // ✅ 9. CONFIGURAR ATUALIZAÇÕES EM TEMPO REAL
+        setupRealtimeUpdates();
+        
+        console.log('✅ Sessão inicializada com sucesso - Premium:', isPremiumUser);
+        
+    } catch (error) {
+        console.error('Erro na inicialização:', error);
     }
+}
+
+// ==================== VERIFICAR E ABRIR CONVERSA AO CARREGAR ====================
+async function checkAndOpenStoredConversation() {
+    try {
+        const storedUserId = localStorage.getItem('openChatWithUserId');
+        
+        if (storedUserId && currentUser) {
+            console.log('🎯 Abrindo conversa armazenada:', storedUserId);
+            
+            // Verificar se o usuário existe
+            const { data: userProfile, error } = await supabase
+                .from('profiles')
+                .select('nickname, avatar_url')
+                .eq('id', storedUserId)
+                .single();
+
+            if (error || !userProfile) {
+                console.log('❌ Usuário não encontrado:', storedUserId);
+                localStorage.removeItem('openChatWithUserId');
+                return;
+            }
+
+            // ✅ ADICIONAR À LISTA DE CONVERSAS SE NÃO EXISTIR
+            const existingConversation = conversations.find(conv => conv.partnerId === storedUserId);
+            
+            if (!existingConversation) {
+                console.log('➕ Adicionando nova conversa à lista');
+                
+                const newConversation = {
+                    partnerId: storedUserId,
+                    partnerName: userProfile.nickname || 'Usuário',
+                    partnerAvatar: userProfile.avatar_url || null,
+                    lastMessage: '👋 Iniciar conversa',
+                    lastMessageTime: new Date().toISOString(),
+                    unreadCount: 0,
+                    messages: []
+                };
+                
+                conversations.unshift(newConversation);
+                
+                // Carregar avatar se existir
+                if (userProfile.avatar_url && !userAvatarsCache.has(storedUserId)) {
+                    const photoUrl = await loadUserPhoto(userProfile.avatar_url);
+                    if (photoUrl) {
+                        userAvatarsCache.set(storedUserId, {
+                            name: userProfile.nickname,
+                            avatar: photoUrl
+                        });
+                    }
+                }
+                
+                renderConversations();
+            }
+
+            // ✅ SELECIONAR A CONVERSA
+            await selectConversation(storedUserId);
+            
+            // Limpar o storage
+            localStorage.removeItem('openChatWithUserId');
+            
+            console.log('✅ Conversa aberta com sucesso');
+        }
+    } catch (error) {
+        console.error('❌ Erro ao abrir conversa armazenada:', error);
+        localStorage.removeItem('openChatWithUserId');
+    }
+}
+
+// ==================== CARREGAR CONVERSAS ====================
+async function loadConversations() {
+    try {
+        const { data: messages, error } = await supabase
+            .from('messages')
+            .select(`
+                id,
+                sender_id,
+                receiver_id,
+                content,
+                is_read,
+                created_at,
+                sender:profiles!messages_sender_id_fkey(nickname, avatar_url),
+                receiver:profiles!messages_receiver_id_fkey(nickname, avatar_url)
+            `)
+            .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('❌ Erro ao carregar mensagens:', error);
+            conversations = [];
+            renderConversations();
+            return;
+        }
+
+        // ✅ CORREÇÃO: SE NÃO HOUVER MENSAGENS, MANTER CONVERSAS VAZIAS
+        if (!messages || messages.length === 0) {
+            console.log('ℹ️ Nenhuma mensagem encontrada');
+            conversations = [];
+            renderConversations();
+            return;
+        }
+
+        const conversationMap = new Map();
+
+        for (const message of messages) {
+            const partnerId = message.sender_id === currentUser.id ? message.receiver_id : message.sender_id;
+            const partnerProfile = message.sender_id === currentUser.id ? message.receiver : message.sender;
+            
+            if (!conversationMap.has(partnerId)) {
+                conversationMap.set(partnerId, {
+                    partnerId: partnerId,
+                    partnerName: partnerProfile?.nickname || 'Usuário',
+                    partnerAvatar: partnerProfile?.avatar_url || null,
+                    lastMessage: message.content,
+                    lastMessageTime: message.created_at,
+                    unreadCount: 0,
+                    messages: []
+                });
+            }
+
+            const conversation = conversationMap.get(partnerId);
+            conversation.messages.push(message);
+
+            if (new Date(message.created_at) > new Date(conversation.lastMessageTime)) {
+                conversation.lastMessage = message.content;
+                conversation.lastMessageTime = message.created_at;
+            }
+
+            if (!message.is_read && message.receiver_id === currentUser.id) {
+                conversation.unreadCount++;
+            }
+        }
+
+        conversations = Array.from(conversationMap.values());
+        await loadConversationAvatars();
+        renderConversations();
+
+    } catch (error) {
+        console.error('Erro ao carregar conversas:', error);
+        conversations = [];
+        renderConversations();
+    }
+}
 
     // ==================== SISTEMA DE RESET DIÁRIO ====================
     async function checkAndResetDailyCounter() {

@@ -1605,8 +1605,9 @@ function createFallbackUserCard(user) {
 }
 
 // ==================== FUNÇÕES DE INTERAÇÃO CORRIGIDAS ====================
-function sendMessage(userId) {
-    console.log('💌 Redirecionando para mensagens com usuário:', userId);
+// ==================== FUNÇÕES DE INTERAÇÃO CORRIGIDAS ====================
+async function sendMessage(userId) {
+    console.log('💌 Iniciando conversa com usuário:', userId);
     
     if (!isProfileComplete()) {
         alert('📝 Complete seu perfil primeiro para enviar mensagens!');
@@ -1614,9 +1615,36 @@ function sendMessage(userId) {
         return;
     }
     
-    // ✅ CORREÇÃO: REDIRECIONAR PARA PÁGINA DE MENSAGENS
-    localStorage.setItem('openChatWithUserId', userId);
-    window.location.href = 'mensagens.html';
+    try {
+        // ✅ CORREÇÃO: CRIAR CONVERSA ANTES DE REDIRECIONAR
+        console.log('🔄 Criando conversa com usuário:', userId);
+        
+        const { error } = await supabase
+            .from('messages')
+            .insert({
+                sender_id: currentUser.id,
+                receiver_id: userId,
+                content: '👋 Iniciou uma conversa',
+                is_read: false
+            });
+
+        if (error) {
+            console.error('❌ Erro ao criar conversa:', error);
+            // Mesmo com erro, redireciona para mensagens
+        } else {
+            console.log('✅ Conversa criada com sucesso');
+        }
+        
+        // ✅ REDIRECIONAR PARA MENSAGENS COM O USUÁRIO SELECIONADO
+        localStorage.setItem('openChatWithUserId', userId);
+        window.location.href = 'mensagens.html';
+        
+    } catch (error) {
+        console.error('❌ Erro ao enviar mensagem:', error);
+        // Em caso de erro, ainda redireciona para mensagens
+        localStorage.setItem('openChatWithUserId', userId);
+        window.location.href = 'mensagens.html';
+    }
 }
 
 function viewProfile(userId) {
