@@ -2047,7 +2047,7 @@
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    // ==================== FUNÇÃO ENVIAR MENSAGEM ====================
+    // ==================== FUNÇÃO ENVIAR MENSAGEM - CORRIGIDA ====================
     async function sendMessage() {
         const messageInput = document.getElementById('messageInput');
         const content = messageInput.value.trim();
@@ -2060,15 +2060,8 @@
             // ✅ VERIFICAR PREMIUM NOVAMENTE (para garantir)
             await forcePremiumCheck();
             
-            if (isPremiumUser) {
-                console.log('⭐ Usuário Premium - enviando sem verificação de limite');
-                await sendMessageDirectly(content);
-                return;
-            }
-
-            console.log('📊 Contador atual:', currentMessageCount);
-            
-            if (currentMessageCount >= 5) {
+            // ✅ VERIFICAR LIMITE ANTES DE ENVIAR
+            if (!isPremiumUser && currentMessageCount >= 5) {
                 console.log('🚫 LIMITE ATINGIDO! Bloqueando envio...');
                 showNotification('❌ Limite de 5 mensagens por dia atingido! Faça upgrade para Premium.', 'error');
                 
@@ -2084,19 +2077,8 @@
             }
 
             console.log('✅ Pode enviar mensagem', currentMessageCount + 1, '/5');
-            await sendMessageDirectly(content);
-
-        } catch (error) {
-            console.error('Erro ao enviar mensagem:', error);
-            showNotification('❌ Erro ao enviar mensagem', 'error');
-        }
-    }
-
-    async function sendMessageDirectly(content) {
-        const messageInput = document.getElementById('messageInput');
-        
-        try {
-            // ✅ 1. ENVIAR MENSAGEM PRIMEIRO
+            
+            // ✅ ENVIAR MENSAGEM
             const { error } = await supabase
                 .from('messages')
                 .insert({
@@ -2111,36 +2093,33 @@
                 throw error;
             }
 
-            // ✅ 2. INCREMENTAR CONTADOR APENAS SE NÃO FOR PREMIUM
+            // ✅ INCREMENTAR CONTADOR APENAS SE NÃO FOR PREMIUM
             if (!isPremiumUser) {
                 console.log('📈 Incrementando contador FREE...');
+                currentMessageCount++;
                 
                 const today = new Date().toISOString().split('T')[0];
                 
-                // ✅ MÉTODO GARANTIDO - USANDO A FUNÇÃO RPC DO SUPABASE
-                const { data: result, error: rpcError } = await supabase
-                    .rpc('increment_daily_message_count', { 
-                        user_uuid: currentUser.id,
-                        target_date: today
+                // ✅ ATUALIZAR NO BANCO DE DADOS
+                const { error: updateError } = await supabase
+                    .from('daily_message_count')
+                    .upsert({
+                        user_id: currentUser.id,
+                        date: today,
+                        message_count: currentMessageCount
+                    }, {
+                        onConflict: 'user_id,date'
                     });
 
-                if (rpcError) {
-                    console.error('❌ Erro no RPC, tentando método alternativo:', rpcError);
-                    
-                    // ✅ MÉTODO ALTERNATIVO SE O RPC FALHAR
-                    await incrementMessageCountManual(today);
+                if (updateError) {
+                    console.error('❌ Erro ao atualizar contador no banco:', updateError);
                 } else {
-                    console.log('✅ Contador incrementado via RPC');
-                    // ✅ FORÇAR RECARREGAMENTO DO CONTADOR DO BANCO
-                    await loadMessageCount();
+                    console.log('✅ Contador atualizado no banco:', currentMessageCount);
                 }
-                
-                updateMessageCounter(currentMessageCount);
-            } else {
-                console.log('⭐ Premium - não incrementa contador');
             }
 
             messageInput.value = '';
+            updateMessageCounter(currentMessageCount);
             await loadMessages(currentChatPartner.id);
             await loadConversations();
 
@@ -2148,60 +2127,8 @@
             checkMessageLimit();
 
         } catch (error) {
-            console.error('Erro no envio direto:', error);
-            throw error;
-        }
-    }
-
-    // ✅ FUNÇÃO AUXILIAR PARA INCREMENTAR MANUALMENTE
-    async function incrementMessageCountManual(today) {
-        try {
-            // ✅ 1. TENTAR BUSCAR REGISTRO EXISTENTE
-            const { data: existingRecord, error: fetchError } = await supabase
-                .from('daily_message_count')
-                .select('message_count')
-                .eq('user_id', currentUser.id)
-                .eq('date', today)
-                .single();
-
-            if (fetchError && fetchError.code === 'PGRST116') {
-                // ✅ 2. SE NÃO EXISTIR, CRIAR NOVO REGISTRO
-                const { error: insertError } = await supabase
-                    .from('daily_message_count')
-                    .insert({
-                        user_id: currentUser.id,
-                        date: today,
-                        message_count: 1
-                    })
-                    .select();
-
-                if (insertError) {
-                    console.error('❌ Erro ao criar registro:', insertError);
-                    currentMessageCount = 1;
-                } else {
-                    console.log('✅ Novo registro criado com count = 1');
-                    currentMessageCount = 1;
-                }
-            } else if (existingRecord) {
-                // ✅ 3. SE EXISTIR, ATUALIZAR INCREMENTANDO
-                const newCount = (existingRecord.message_count || 0) + 1;
-                const { error: updateError } = await supabase
-                    .from('daily_message_count')
-                    .update({ message_count: newCount })
-                    .eq('user_id', currentUser.id)
-                    .eq('date', today);
-
-                if (updateError) {
-                    console.error('❌ Erro ao atualizar contador:', updateError);
-                    currentMessageCount = newCount;
-                } else {
-                    console.log('✅ Contador atualizado para:', newCount);
-                    currentMessageCount = newCount;
-                }
-            }
-        } catch (error) {
-            console.error('❌ Erro no método manual:', error);
-            currentMessageCount++;
+            console.error('Erro ao enviar mensagem:', error);
+            showNotification('❌ Erro ao enviar mensagem', 'error');
         }
     }
 
