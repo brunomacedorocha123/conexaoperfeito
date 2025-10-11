@@ -2106,7 +2106,7 @@ function renderMessages(messages) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-// ==================== FUNÇÃO ENVIAR MENSAGEM - CORRIGIDA ====================
+// ==================== FUNÇÃO ENVIAR MENSAGEM - CORRIGIDA DE VEZ ====================
 async function sendMessage() {
     const messageInput = document.getElementById('messageInput');
     const content = messageInput.value.trim();
@@ -2114,31 +2114,23 @@ async function sendMessage() {
     if (!content || !currentChatPartner) return;
 
     try {
-        console.log('🔍 INICIANDO ENVIO DE MENSAGEM...');
+        console.log('🔍 VERIFICANDO LIMITE...');
         
-        // ✅ VERIFICAR PREMIUM NOVAMENTE (para garantir)
         await forcePremiumCheck();
         
         if (isPremiumUser) {
-            console.log('⭐ Usuário Premium - enviando sem verificação de limite');
+            console.log('⭐ Premium - enviando sem limites');
             await sendMessageDirectly(content);
             return;
         }
 
         console.log('📊 Contador atual:', currentMessageCount);
         
+        // ✅ BLOQUEAR SE JÁ ATINGIU O LIMITE
         if (currentMessageCount >= 5) {
-            console.log('🚫 LIMITE ATINGIDO! Bloqueando envio...');
-            showNotification('❌ Limite de 5 mensagens por dia atingido! Faça upgrade para Premium.', 'error');
-            
+            console.log('🚫 LIMITE ATINGIDO!');
+            showNotification('❌ Limite de 5 mensagens por dia atingido!', 'error');
             checkMessageLimit();
-            
-            setTimeout(() => {
-                if (confirm('Deseja fazer upgrade para Premium e ter mensagens ilimitadas?')) {
-                    window.location.href = 'pricing.html';
-                }
-            }, 1000);
-            
             return;
         }
 
@@ -2155,7 +2147,7 @@ async function sendMessageDirectly(content) {
     const messageInput = document.getElementById('messageInput');
     
     try {
-        // ✅ PRIMEIRO: Enviar a mensagem
+        // ✅ 1. ENVIAR MENSAGEM
         const { error: messageError } = await supabase
             .from('messages')
             .insert({
@@ -2165,86 +2157,55 @@ async function sendMessageDirectly(content) {
                 is_read: false
             });
 
-        if (messageError) {
-            console.error('❌ Erro ao enviar mensagem:', messageError);
-            throw messageError;
-        }
+        if (messageError) throw messageError;
 
-        console.log('✅ Mensagem enviada com sucesso');
+        console.log('✅ Mensagem enviada');
 
-        // ✅ SEGUNDO: Atualizar contador apenas se NÃO for premium
+        // ✅ 2. ATUALIZAR CONTADOR NO SUPABASE (APENAS FREE)
         if (!isPremiumUser) {
-            console.log('📈 Atualizando contador NO SUPABASE...');
+            console.log('📈 ATUALIZANDO CONTADOR NO SUPABASE...');
             
             const today = new Date().toISOString().split('T')[0];
             
-            // ✅ MÉTODO PRINCIPAL: UPSERT na tabela daily_message_count
-            const { data: upsertData, error: upsertError } = await supabase
+            // ✅ MÉTODO SIMPLES E DIRETO: Buscar contador atual e incrementar
+            const { data: currentData, error: fetchError } = await supabase
                 .from('daily_message_count')
-                .upsert({
-                    user_id: currentUser.id,
-                    date: today,
-                    message_count: currentMessageCount + 1
-                }, {
-                    onConflict: 'user_id,date',
-                    ignoreDuplicates: false
-                });
+                .select('message_count')
+                .eq('user_id', currentUser.id)
+                .eq('date', today)
+                .single();
 
-            if (upsertError) {
-                console.error('❌ Erro no UPSERT:', upsertError);
-                
-                // ✅ MÉTODO ALTERNATIVO: Tentar insert/update separadamente
-                const { data: existingCount, error: checkError } = await supabase
+            let newCount = 1;
+            
+            if (fetchError || !currentData) {
+                // ✅ Se não existe, criar com 1
+                const { error: insertError } = await supabase
                     .from('daily_message_count')
-                    .select('message_count')
-                    .eq('user_id', currentUser.id)
-                    .eq('date', today)
-                    .single();
-
-                if (checkError || !existingCount) {
-                    // ✅ INSERT se não existe
-                    const { error: insertError } = await supabase
-                        .from('daily_message_count')
-                        .insert({
-                            user_id: currentUser.id,
-                            date: today,
-                            message_count: 1
-                        });
-                    
-                    if (insertError) {
-                        console.error('❌ Erro no INSERT:', insertError);
-                    } else {
-                        console.log('✅ Contador criado via INSERT');
-                        currentMessageCount = 1;
-                    }
-                } else {
-                    // ✅ UPDATE se já existe
-                    const { error: updateError } = await supabase
-                        .from('daily_message_count')
-                        .update({ message_count: currentMessageCount + 1 })
-                        .eq('user_id', currentUser.id)
-                        .eq('date', today);
-                    
-                    if (updateError) {
-                        console.error('❌ Erro no UPDATE:', updateError);
-                    } else {
-                        console.log('✅ Contador atualizado via UPDATE');
-                        currentMessageCount += 1;
-                    }
-                }
+                    .insert({
+                        user_id: currentUser.id,
+                        date: today,
+                        message_count: 1
+                    });
+                if (insertError) throw insertError;
+                newCount = 1;
             } else {
-                console.log('✅ Contador atualizado via UPSERT');
-                currentMessageCount += 1;
+                // ✅ Se existe, incrementar
+                newCount = (currentData.message_count || 0) + 1;
+                const { error: updateError } = await supabase
+                    .from('daily_message_count')
+                    .update({ message_count: newCount })
+                    .eq('user_id', currentUser.id)
+                    .eq('date', today);
+                if (updateError) throw updateError;
             }
             
-            // ✅ ATUALIZAR CONTADOR VISUAL
+            // ✅ ATUALIZAR CONTADOR LOCAL
+            currentMessageCount = newCount;
+            console.log('🎯 Contador atualizado:', currentMessageCount);
             updateMessageCounter(currentMessageCount);
-            console.log('🎯 Contador final:', currentMessageCount);
-        } else {
-            console.log('⭐ Premium - não incrementa contador');
         }
 
-        // ✅ TERCEIRO: Limpar e atualizar interface
+        // ✅ 3. ATUALIZAR INTERFACE
         messageInput.value = '';
         await loadMessages(currentChatPartner.id);
         await loadConversations();
@@ -2253,9 +2214,8 @@ async function sendMessageDirectly(content) {
         checkMessageLimit();
 
     } catch (error) {
-        console.error('Erro no envio direto:', error);
+        console.error('Erro:', error);
         showNotification('❌ Erro ao enviar mensagem', 'error');
-        throw error;
     }
 }
 
@@ -2269,27 +2229,18 @@ function showNotification(message, type = 'info') {
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
     
-    let backgroundColor, textColor;
-    switch(type) {
-        case 'error':
-            backgroundColor = '#f56565';
-            textColor = 'white';
-            break;
-        case 'success':
-            backgroundColor = '#48bb78';
-            textColor = 'white';
-            break;
-        default:
-            backgroundColor = '#4299e1';
-            textColor = 'white';
-    }
+    const colors = {
+        error: '#f56565',
+        success: '#48bb78', 
+        info: '#4299e1'
+    };
 
     notification.style.cssText = `
         position: fixed;
         top: 100px;
         right: 20px;
-        background: ${backgroundColor};
-        color: ${textColor};
+        background: ${colors[type] || colors.info};
+        color: white;
         padding: 12px 20px;
         border-radius: 8px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -2303,9 +2254,7 @@ function showNotification(message, type = 'info') {
     document.body.appendChild(notification);
 
     setTimeout(() => {
-        if (notification.parentNode) {
-            notification.parentNode.removeChild(notification);
-        }
+        notification.remove();
     }, 5000);
 }
 
