@@ -1199,7 +1199,7 @@
     </div>
   </footer>
   <script>
-// Configuração do Supabase
+  // Configuração do Supabase
 const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -1223,7 +1223,7 @@ document.addEventListener('DOMContentLoaded', function() {
     addNotificationStyles();
 });
 
-// ==================== PARTE 1: AUTENTICAÇÃO E SESSÃO ====================
+// ==================== AUTENTICAÇÃO ====================
 async function checkAuth() {
     try {
         console.log('🔐 Verificando autenticação...');
@@ -1253,7 +1253,6 @@ async function initializeUserSession() {
         await forcePremiumCheck();
         await checkAndResetDailyCounter();
         await loadUserData();
-        await checkUserPremiumStatus();
         await loadMessageCount();
         await loadConversations();
         await checkAndOpenStoredConversation();
@@ -1266,17 +1265,16 @@ async function initializeUserSession() {
     }
 }
 
-// ==================== PARTE 2: SISTEMA PREMIUM E CONTADOR ====================
+// ==================== SISTEMA PREMIUM ====================
 async function forcePremiumCheck() {
     try {
         console.log('🔍 VERIFICAÇÃO FORÇADA DE PREMIUM...');
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return false;
 
+        // Método 1: Função RPC
         const { data: premiumStatus, error: rpcError } = await supabase
             .rpc('is_user_premium', { user_uuid: user.id });
-        
-        console.log('⭐ Status Premium (RPC):', premiumStatus, 'Erro:', rpcError);
         
         if (premiumStatus) {
             console.log('🎉 USUÁRIO É PREMIUM - Liberando tudo!');
@@ -1286,6 +1284,7 @@ async function forcePremiumCheck() {
             return true;
         }
 
+        // Método 2: Tabela de subscriptions
         const { data: subscription, error: subError } = await supabase
             .from('user_subscriptions')
             .select('status, expires_at')
@@ -1301,13 +1300,14 @@ async function forcePremiumCheck() {
             return true;
         }
 
+        // Método 3: Perfil do usuário
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('is_premium, premium_expires_at')
             .eq('id', user.id)
             .single();
 
-        if (profile && profile.is_premium) {
+        if (profile && profile.is_premium && new Date(profile.premium_expires_at) > new Date()) {
             console.log('🎉 USUÁRIO É PREMIUM (via perfil)');
             isPremiumUser = true;
             updateMessageCounter('∞');
@@ -1345,59 +1345,23 @@ async function checkAndResetDailyCounter() {
         console.log('🔄 Verificando reset diário do contador...');
         
         const today = new Date().toDateString();
+        const storedResetDate = localStorage.getItem('lastResetDate');
         
-        if (lastResetDate === today) {
+        if (storedResetDate === today) {
             console.log('✅ Reset já verificado hoje');
             return;
         }
         
-        const { data: resetResult, error: resetError } = await supabase
-            .rpc('reset_daily_message_counts');
-        
-        if (resetError) {
-            console.log('ℹ️ Nenhum contador antigo para resetar');
-        } else {
-            console.log(`✅ ${resetResult || 0} contadores antigos resetados`);
-        }
-        
         lastResetDate = today;
         localStorage.setItem('lastResetDate', today);
+        console.log('✅ Reset diário verificado - nova data:', today);
         
     } catch (error) {
         console.error('Erro no reset diário:', error);
     }
 }
 
-async function checkUserPremiumStatus() {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return false;
-        
-        const { data, error } = await supabase
-            .rpc('is_user_premium', { user_uuid: user.id });
-        
-        if (error) {
-            console.error('Erro ao verificar premium:', error);
-            isPremiumUser = false;
-        } else {
-            isPremiumUser = data;
-            console.log('⭐ Status Premium:', isPremiumUser);
-            
-            if (isPremiumUser) {
-                updateMessageCounter('∞');
-            }
-        }
-        
-        checkMessageLimit();
-        return isPremiumUser;
-    } catch (error) {
-        console.error('Erro:', error);
-        isPremiumUser = false;
-        return false;
-    }
-}
-
-// ==================== PARTE 3: CONTADOR DE MENSAGENS ====================
+// ==================== CONTADOR DE MENSAGENS ====================
 async function loadMessageCount() {
     try {
         console.log('🔄 Carregando contador de mensagens...');
@@ -1485,7 +1449,6 @@ function updateMessageCounter(count) {
             counterElement.textContent = '∞ ILIMITADO';
             counterElement.style.background = '#48bb78';
             counterElement.title = 'Mensagens ilimitadas - Premium';
-            counterElement.style.fontSize = '0.7rem';
         } else {
             counterElement.textContent = `${count}/5`;
             if (count >= 5) {
@@ -1510,23 +1473,20 @@ function checkMessageLimit() {
         messageInput.placeholder = 'Digite sua mensagem... 💎 Premium';
         sendMessageBtn.disabled = false;
         sendMessageBtn.innerHTML = '📤 Enviar';
-        console.log('⭐ Interface liberada - Usuário Premium');
     } else if (currentMessageCount >= 5) {
         messageInput.disabled = true;
         messageInput.placeholder = '💡 Limite atingido! Faça upgrade para Premium.';
         sendMessageBtn.disabled = true;
         sendMessageBtn.innerHTML = '🚫 Limite';
-        console.log('🚫 Interface bloqueada - limite free atingido');
     } else {
         messageInput.disabled = false;
         messageInput.placeholder = 'Digite sua mensagem...';
         sendMessageBtn.disabled = false;
         sendMessageBtn.innerHTML = '📤 Enviar';
-        console.log('✅ Interface liberada - pode enviar');
     }
 }
 
-// ==================== PARTE 4: ENVIO DE MENSAGENS - CORRIGIDO ====================
+// ==================== ENVIO DE MENSAGENS ====================
 async function sendMessage() {
     const messageInput = document.getElementById('messageInput');
     const sendMessageBtn = document.getElementById('sendMessageBtn');
@@ -1550,16 +1510,11 @@ async function sendMessage() {
         sendMessageBtn.innerHTML = '⏳ Enviando...';
 
         await forcePremiumCheck();
-        console.log('⭐ Status Premium:', isPremiumUser);
 
-        if (!isPremiumUser) {
-            console.log('📊 Verificando limite free...', currentMessageCount);
-
-            if (currentMessageCount >= 5) {
-                showNotification('🚫 Limite de 5 mensagens diárias atingido! Faça upgrade para Premium.', 'error');
-                checkMessageLimit();
-                return;
-            }
+        if (!isPremiumUser && currentMessageCount >= 5) {
+            showNotification('🚫 Limite de 5 mensagens diárias atingido! Faça upgrade para Premium.', 'error');
+            checkMessageLimit();
+            return;
         }
 
         await sendMessageToDatabase(content);
@@ -1578,12 +1533,12 @@ async function sendMessageToDatabase(content) {
     try {
         console.log('📨 ENVIANDO MENSAGEM PARA O BANCO...');
 
-        // ✅ 1. ATUALIZAR CONTADOR (APENAS FREE)
+        // 1. ATUALIZAR CONTADOR (APENAS FREE)
         if (!isPremiumUser) {
             await updateMessageCountInDatabase();
         }
 
-        // ✅ 2. ENVIAR MENSAGEM
+        // 2. ENVIAR MENSAGEM
         const { error: messageError } = await supabase
             .from('messages')
             .insert({
@@ -1600,7 +1555,7 @@ async function sendMessageToDatabase(content) {
             // Reverter contador se houver erro
             if (!isPremiumUser && currentMessageCount > 0) {
                 currentMessageCount--;
-                await updateMessageCountInDatabase();
+                await updateMessageCountInDatabase(true); // Forçar atualização
             }
             
             throw messageError;
@@ -1608,7 +1563,7 @@ async function sendMessageToDatabase(content) {
 
         console.log('✅ Mensagem enviada com sucesso');
 
-        // ✅ 3. ATUALIZAR INTERFACE
+        // 3. ATUALIZAR INTERFACE
         await Promise.all([
             loadMessages(currentChatPartner.id),
             loadConversations()
@@ -1620,10 +1575,10 @@ async function sendMessageToDatabase(content) {
     }
 }
 
-async function updateMessageCountInDatabase() {
+async function updateMessageCountInDatabase(forceUpdate = false) {
     try {
         const today = new Date().toISOString().split('T')[0];
-        const newCount = currentMessageCount + 1;
+        const newCount = forceUpdate ? currentMessageCount : currentMessageCount + 1;
 
         console.log('📈 Atualizando contador:', { user: currentUser.id, date: today, newCount });
 
@@ -1639,27 +1594,16 @@ async function updateMessageCountInDatabase() {
             });
 
         if (error) {
-            console.error('❌ Erro no contador:', error);
-            
-            // Fallback
-            const { error: insertError } = await supabase
-                .from('daily_message_count')
-                .insert({
-                    user_id: currentUser.id,
-                    date: today,
-                    message_count: newCount,
-                    created_at: new Date().toISOString()
-                });
-
-            if (insertError) {
-                console.error('❌ Erro no fallback do contador:', insertError);
-                throw new Error('Falha ao atualizar contador');
-            }
+            console.error('❌ Erro no upsert do contador:', error);
+            throw error;
         }
 
-        currentMessageCount = newCount;
+        if (!forceUpdate) {
+            currentMessageCount = newCount;
+        }
+        
         updateMessageCounter(currentMessageCount);
-        console.log('✅ Contador atualizado:', newCount);
+        console.log('✅ Contador atualizado:', currentMessageCount);
 
     } catch (error) {
         console.error('❌ Falha no contador:', error);
@@ -1667,7 +1611,7 @@ async function updateMessageCountInDatabase() {
     }
 }
 
-// ==================== PARTE 5: CONVERSAS E MENSAGENS ====================
+// ==================== CONVERSAS E MENSAGENS ====================
 async function checkAndOpenStoredConversation() {
     try {
         const storedUserId = localStorage.getItem('openChatWithUserId');
@@ -1754,7 +1698,6 @@ async function loadConversations() {
         }
 
         if (!messages || messages.length === 0) {
-            console.log('ℹ️ Nenhuma mensagem encontrada - conversas vazias');
             conversations = [];
             renderConversations();
             return;
@@ -1766,10 +1709,7 @@ async function loadConversations() {
             const partnerId = message.sender_id === currentUser.id ? message.receiver_id : message.sender_id;
             const partnerProfile = message.sender_id === currentUser.id ? message.receiver : message.sender;
             
-            if (!partnerProfile) {
-                console.log('⚠️ Perfil do parceiro não encontrado para:', partnerId);
-                continue;
-            }
+            if (!partnerProfile) continue;
             
             if (!conversationMap.has(partnerId)) {
                 conversationMap.set(partnerId, {
@@ -2086,8 +2026,7 @@ function renderMessages(messages) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-// CONTINUA NO PRÓXIMO COMENTÁRIO...
-// ==================== PARTE 6: USUÁRIO E AVATARS ====================
+// ==================== USUÁRIO E AVATARS ====================
 async function loadUserData() {
     try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -2195,7 +2134,7 @@ async function loadCurrentUserAvatar() {
     }
 }
 
-// ==================== PARTE 7: NOTIFICAÇÕES ====================
+// ==================== NOTIFICAÇÕES ====================
 function showNotification(message, type = 'info') {
     try {
         const existingNotifications = document.querySelectorAll('.notification');
@@ -2301,58 +2240,11 @@ function addNotificationStyles() {
         .notification:hover {
             transform: scale(1.02);
         }
-        
-        .notification-error {
-            background: linear-gradient(135deg, #f56565, #e53e3e) !important;
-        }
-        
-        .notification-success {
-            background: linear-gradient(135deg, #48bb78, #38a169) !important;
-        }
-        
-        .notification-info {
-            background: linear-gradient(135deg, #4299e1, #3182ce) !important;
-        }
-        
-        .notification-warning {
-            background: linear-gradient(135deg, #ed8936, #dd6b20) !important;
-        }
-        
-        .message-counter {
-            background: #d1656d;
-            color: white;
-            border-radius: 12px;
-            padding: 2px 8px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            margin-left: 8px;
-        }
-        
-        .chat-messages .loading {
-            text-align: center;
-            padding: 2rem;
-            color: var(--text-light);
-        }
-        
-        .chat-messages .spinner {
-            width: 30px;
-            height: 30px;
-            border: 3px solid var(--bege);
-            border-top: 3px solid var(--vermelho-rosado);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 1rem;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
     `;
     document.head.appendChild(style);
 }
 
-// ==================== PARTE 8: FUNÇÕES AUXILIARES E EVENTOS ====================
+// ==================== FUNÇÕES AUXILIARES ====================
 function setupRealtimeUpdates() {
     if (messagesSubscription) {
         supabase.removeSubscription(messagesSubscription);
@@ -2860,565 +2752,6 @@ async function loadAvatarsForMessages(messages) {
             });
         }
     }
-}
-// ==================== PARTE 3: ENVIO DE MENSAGENS - CORRIGIDO ====================
-async function sendMessage() {
-    const messageInput = document.getElementById('messageInput');
-    const sendMessageBtn = document.getElementById('sendMessageBtn');
-    const content = messageInput.value.trim();
-
-    if (!content) {
-        showNotification('❌ Digite uma mensagem antes de enviar', 'error');
-        return;
-    }
-
-    if (!currentChatPartner) {
-        showNotification('❌ Selecione uma conversa primeiro', 'error');
-        return;
-    }
-
-    try {
-        console.log('🚀 INICIANDO ENVIO DE MENSAGEM...');
-
-        messageInput.disabled = true;
-        sendMessageBtn.disabled = true;
-        sendMessageBtn.innerHTML = '⏳ Enviando...';
-
-        await forcePremiumCheck();
-        console.log('⭐ Status Premium:', isPremiumUser);
-
-        if (!isPremiumUser) {
-            console.log('📊 Verificando limite free...', currentMessageCount);
-
-            if (currentMessageCount >= 5) {
-                showNotification('🚫 Limite de 5 mensagens diárias atingido! Faça upgrade para Premium.', 'error');
-                checkMessageLimit();
-                return;
-            }
-        }
-
-        await sendMessageToDatabase(content);
-        messageInput.value = '';
-        showNotification('✅ Mensagem enviada com sucesso!', 'success');
-
-    } catch (error) {
-        console.error('❌ Erro crítico ao enviar mensagem:', error);
-        showNotification('❌ Erro ao enviar mensagem. Tente novamente.', 'error');
-    } finally {
-        checkMessageLimit();
-    }
-}
-
-async function sendMessageToDatabase(content) {
-    try {
-        console.log('📨 ENVIANDO MENSAGEM PARA O BANCO...');
-
-        // ✅ 1. ATUALIZAR CONTADOR (APENAS FREE)
-        if (!isPremiumUser) {
-            await updateMessageCountInDatabase();
-        }
-
-        // ✅ 2. ENVIAR MENSAGEM
-        const { error: messageError } = await supabase
-            .from('messages')
-            .insert({
-                sender_id: currentUser.id,
-                receiver_id: currentChatPartner.id,
-                content: content,
-                is_read: false,
-                created_at: new Date().toISOString()
-            });
-
-        if (messageError) {
-            console.error('❌ Erro ao enviar mensagem:', messageError);
-            
-            // Reverter contador se houver erro
-            if (!isPremiumUser && currentMessageCount > 0) {
-                currentMessageCount--;
-                await updateMessageCountInDatabase();
-            }
-            
-            throw messageError;
-        }
-
-        console.log('✅ Mensagem enviada com sucesso');
-
-        // ✅ 3. ATUALIZAR INTERFACE
-        await Promise.all([
-            loadMessages(currentChatPartner.id),
-            loadConversations()
-        ]);
-
-    } catch (error) {
-        console.error('❌ Erro no envio:', error);
-        throw error;
-    }
-}
-
-async function updateMessageCountInDatabase() {
-    try {
-        const today = new Date().toISOString().split('T')[0];
-        const newCount = currentMessageCount + 1;
-
-        console.log('📈 Atualizando contador:', { user: currentUser.id, date: today, newCount });
-
-        const { error } = await supabase
-            .from('daily_message_count')
-            .upsert({
-                user_id: currentUser.id,
-                date: today,
-                message_count: newCount,
-                updated_at: new Date().toISOString()
-            }, {
-                onConflict: 'user_id,date'
-            });
-
-        if (error) {
-            console.error('❌ Erro no contador:', error);
-            
-            // Fallback
-            const { error: insertError } = await supabase
-                .from('daily_message_count')
-                .insert({
-                    user_id: currentUser.id,
-                    date: today,
-                    message_count: newCount,
-                    created_at: new Date().toISOString()
-                });
-
-            if (insertError) {
-                console.error('❌ Erro no fallback do contador:', insertError);
-                throw new Error('Falha ao atualizar contador');
-            }
-        }
-
-        currentMessageCount = newCount;
-        updateMessageCounter(currentMessageCount);
-        console.log('✅ Contador atualizado:', newCount);
-
-    } catch (error) {
-        console.error('❌ Falha no contador:', error);
-        throw error;
-    }
-}
-
-// ==================== PARTE 4: CONVERSAS E MENSAGENS ====================
-async function checkAndOpenStoredConversation() {
-    try {
-        const storedUserId = localStorage.getItem('openChatWithUserId');
-        
-        if (storedUserId && currentUser) {
-            console.log('🎯 Abrindo conversa armazenada:', storedUserId);
-            
-            const { data: userProfile, error } = await supabase
-                .from('profiles')
-                .select('nickname, avatar_url')
-                .eq('id', storedUserId)
-                .single();
-
-            if (error || !userProfile) {
-                console.log('❌ Usuário não encontrado:', storedUserId);
-                localStorage.removeItem('openChatWithUserId');
-                return;
-            }
-
-            const existingConversation = conversations.find(conv => conv.partnerId === storedUserId);
-            
-            if (!existingConversation) {
-                console.log('➕ Adicionando nova conversa à lista');
-                
-                const newConversation = {
-                    partnerId: storedUserId,
-                    partnerName: userProfile.nickname || 'Usuário',
-                    partnerAvatar: userProfile.avatar_url || null,
-                    lastMessage: '👋 Iniciar conversa',
-                    lastMessageTime: new Date().toISOString(),
-                    unreadCount: 0,
-                    messages: []
-                };
-                
-                conversations.unshift(newConversation);
-                
-                if (userProfile.avatar_url && !userAvatarsCache.has(storedUserId)) {
-                    const photoUrl = await loadUserPhoto(userProfile.avatar_url);
-                    if (photoUrl) {
-                        userAvatarsCache.set(storedUserId, {
-                            name: userProfile.nickname,
-                            avatar: photoUrl
-                        });
-                    }
-                }
-                
-                renderConversations();
-            }
-
-            await selectConversation(storedUserId);
-            localStorage.removeItem('openChatWithUserId');
-            console.log('✅ Conversa aberta com sucesso');
-        }
-    } catch (error) {
-        console.error('❌ Erro ao abrir conversa armazenada:', error);
-        localStorage.removeItem('openChatWithUserId');
-    }
-}
-
-async function loadConversations() {
-    try {
-        console.log('🔄 Carregando conversas...');
-        
-        const { data: messages, error } = await supabase
-            .from('messages')
-            .select(`
-                id,
-                sender_id,
-                receiver_id,
-                content,
-                is_read,
-                created_at,
-                sender:profiles!messages_sender_id_fkey(nickname, avatar_url),
-                receiver:profiles!messages_receiver_id_fkey(nickname, avatar_url)
-            `)
-            .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
-            .order('created_at', { ascending: false });
-
-        if (error) {
-            console.error('❌ Erro ao carregar mensagens:', error);
-            conversations = [];
-            renderConversations();
-            return;
-        }
-
-        if (!messages || messages.length === 0) {
-            console.log('ℹ️ Nenhuma mensagem encontrada - conversas vazias');
-            conversations = [];
-            renderConversations();
-            return;
-        }
-
-        const conversationMap = new Map();
-
-        for (const message of messages) {
-            const partnerId = message.sender_id === currentUser.id ? message.receiver_id : message.sender_id;
-            const partnerProfile = message.sender_id === currentUser.id ? message.receiver : message.sender;
-            
-            if (!partnerProfile) {
-                console.log('⚠️ Perfil do parceiro não encontrado para:', partnerId);
-                continue;
-            }
-            
-            if (!conversationMap.has(partnerId)) {
-                conversationMap.set(partnerId, {
-                    partnerId: partnerId,
-                    partnerName: partnerProfile.nickname || 'Usuário',
-                    partnerAvatar: partnerProfile.avatar_url || null,
-                    lastMessage: message.content,
-                    lastMessageTime: message.created_at,
-                    unreadCount: 0,
-                    messages: []
-                });
-            }
-
-            const conversation = conversationMap.get(partnerId);
-            conversation.messages.push(message);
-
-            if (new Date(message.created_at) > new Date(conversation.lastMessageTime)) {
-                conversation.lastMessage = message.content;
-                conversation.lastMessageTime = message.created_at;
-            }
-
-            if (!message.is_read && message.receiver_id === currentUser.id) {
-                conversation.unreadCount++;
-            }
-        }
-
-        conversations = Array.from(conversationMap.values());
-        console.log(`✅ ${conversations.length} conversas carregadas`);
-        
-        await loadConversationAvatars();
-        renderConversations();
-
-    } catch (error) {
-        console.error('Erro ao carregar conversas:', error);
-        conversations = [];
-        renderConversations();
-    }
-}
-
-async function loadConversationAvatars() {
-    for (const conversation of conversations) {
-        if (conversation.partnerAvatar && !userAvatarsCache.has(conversation.partnerId)) {
-            const photoUrl = await loadUserPhoto(conversation.partnerAvatar);
-            if (photoUrl) {
-                userAvatarsCache.set(conversation.partnerId, {
-                    name: conversation.partnerName,
-                    avatar: photoUrl
-                });
-            }
-        }
-    }
-}
-
-function renderConversations() {
-    const conversationsList = document.getElementById('conversationsList');
-    const conversationsLoading = document.getElementById('conversationsLoading');
-    const noConversations = document.getElementById('noConversations');
-
-    if (!conversationsList) return;
-
-    conversationsLoading.classList.add('hidden');
-
-    if (conversations.length === 0) {
-        noConversations.classList.remove('hidden');
-        conversationsList.innerHTML = '';
-        return;
-    }
-
-    noConversations.classList.add('hidden');
-
-    conversationsList.innerHTML = conversations.map(conversation => {
-        const cachedAvatar = userAvatarsCache.get(conversation.partnerId);
-        const avatarUrl = cachedAvatar ? cachedAvatar.avatar : null;
-        
-        const avatarHtml = avatarUrl ? 
-            `<img class="conversation-avatar-img" src="${avatarUrl}" alt="${conversation.partnerName}" style="display: block;">` :
-            conversation.partnerName.charAt(0).toUpperCase();
-
-        const avatarStyle = avatarUrl ? 
-            `style="background-image: url(${avatarUrl}); background-size: cover; background-position: center;"` : 
-            '';
-
-        return `
-            <div class="conversation-item" data-partner-id="${conversation.partnerId}">
-                <div class="conversation-avatar" ${avatarStyle}>
-                    ${avatarHtml}
-                </div>
-                <div class="conversation-info">
-                    <div class="conversation-name">${conversation.partnerName}</div>
-                    <div class="conversation-preview">${conversation.lastMessage}</div>
-                </div>
-                <div class="conversation-time">${formatTime(conversation.lastMessageTime)}</div>
-                ${conversation.unreadCount > 0 ? `<div class="unread-badge">${conversation.unreadCount}</div>` : ''}
-            </div>
-        `;
-    }).join('');
-
-    setupConversationAvatars();
-}
-
-function setupConversationAvatars() {
-    document.querySelectorAll('.conversation-item').forEach(item => {
-        item.addEventListener('click', (e) => {
-            if (!e.target.closest('.conversation-avatar')) {
-                const partnerId = item.getAttribute('data-partner-id');
-                selectConversation(partnerId);
-            }
-        });
-    });
-
-    document.addEventListener('click', (e) => {
-        if (e.target.closest('.conversation-avatar')) {
-            const conversationItem = e.target.closest('.conversation-item');
-            const partnerId = conversationItem.getAttribute('data-partner-id');
-            openProfileModal(partnerId);
-        }
-    });
-
-    document.addEventListener('click', (e) => {
-        if (e.target.closest('.chat-header-avatar') && currentChatPartner) {
-            openProfileModal(currentChatPartner.id);
-        }
-    });
-}
-
-async function selectConversation(partnerId) {
-    try {
-        document.querySelectorAll('.conversation-item').forEach(item => {
-            item.classList.remove('active');
-        });
-
-        const currentConversation = document.querySelector(`[data-partner-id="${partnerId}"]`);
-        if (currentConversation) {
-            currentConversation.classList.add('active');
-        }
-
-        const { data: partnerProfile, error } = await supabase
-            .from('profiles')
-            .select('nickname, avatar_url')
-            .eq('id', partnerId)
-            .single();
-
-        if (error) return;
-
-        currentChatPartner = {
-            id: partnerId,
-            name: partnerProfile.nickname,
-            avatar: partnerProfile.avatar_url
-        };
-
-        if (partnerProfile.avatar_url && !userAvatarsCache.has(partnerId)) {
-            const photoUrl = await loadUserPhoto(partnerProfile.avatar_url);
-            if (photoUrl) {
-                userAvatarsCache.set(partnerId, {
-                    name: partnerProfile.nickname,
-                    avatar: photoUrl
-                });
-                currentChatPartner.avatar = photoUrl;
-            }
-        } else if (userAvatarsCache.has(partnerId)) {
-            const cached = userAvatarsCache.get(partnerId);
-            currentChatPartner.avatar = cached.avatar;
-        }
-
-        updateChatHeader();
-        
-        document.getElementById('chatHeader').classList.remove('hidden');
-        document.getElementById('chatInput').classList.remove('hidden');
-        
-        checkMessageLimit();
-        await loadMessages(partnerId);
-        await markMessagesAsRead(partnerId);
-
-    } catch (error) {
-        console.error('Erro ao selecionar conversa:', error);
-    }
-}
-
-async function loadMessages(partnerId) {
-    try {
-        const { data: messages, error } = await supabase
-            .from('messages')
-            .select('*')
-            .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${currentUser.id})`)
-            .order('created_at', { ascending: true });
-
-        if (error) return;
-
-        await loadMessagesUserAvatars(messages);
-        renderMessages(messages);
-
-    } catch (error) {
-        console.error('Erro ao carregar mensagens:', error);
-    }
-}
-
-async function loadMessagesUserAvatars(messages) {
-    const userIds = new Set();
-    
-    messages.forEach(message => {
-        userIds.add(message.sender_id);
-        userIds.add(message.receiver_id);
-    });
-
-    if (!userAvatarsCache.has(currentUser.id)) {
-        const { data: currentUserProfile } = await supabase
-            .from('profiles')
-            .select('nickname, avatar_url')
-            .eq('id', currentUser.id)
-            .single();
-            
-        if (currentUserProfile) {
-            let currentUserAvatar = null;
-            if (currentUserProfile.avatar_url) {
-                currentUserAvatar = await loadUserPhoto(currentUserProfile.avatar_url);
-            }
-            
-            userAvatarsCache.set(currentUser.id, {
-                name: currentUserProfile.nickname || 'Você',
-                avatar: currentUserAvatar
-            });
-        }
-    }
-
-    const missingUserIds = Array.from(userIds).filter(id => !userAvatarsCache.has(id) && id !== currentUser.id);
-    
-    if (missingUserIds.length > 0) {
-        const { data: profiles, error } = await supabase
-            .from('profiles')
-            .select('id, nickname, avatar_url')
-            .in('id', missingUserIds);
-
-        if (!error && profiles) {
-            for (const profile of profiles) {
-                let avatarUrl = null;
-                if (profile.avatar_url) {
-                    avatarUrl = await loadUserPhoto(profile.avatar_url);
-                }
-                
-                userAvatarsCache.set(profile.id, {
-                    name: profile.nickname,
-                    avatar: avatarUrl
-                });
-            }
-        }
-    }
-}
-
-function renderMessages(messages) {
-    const chatMessages = document.getElementById('chatMessages');
-    const noMessages = document.getElementById('noMessages');
-
-    if (!chatMessages) return;
-
-    if (messages.length === 0) {
-        noMessages.classList.remove('hidden');
-        chatMessages.innerHTML = '';
-        return;
-    }
-
-    noMessages.classList.add('hidden');
-
-    chatMessages.innerHTML = messages.map(message => {
-        const isSent = message.sender_id === currentUser.id;
-        
-        let senderAvatar = null;
-        let senderName = 'Usuário';
-        
-        if (isSent) {
-            const currentUserInfo = userAvatarsCache.get(currentUser.id);
-            senderName = currentUserInfo?.name || 'Você';
-            senderAvatar = currentUserInfo?.avatar || null;
-        } else {
-            const partnerInfo = userAvatarsCache.get(currentChatPartner.id);
-            senderName = partnerInfo?.name || currentChatPartner?.name || 'Usuário';
-            senderAvatar = partnerInfo?.avatar || null;
-        }
-
-        const avatarHtml = senderAvatar ? 
-            `<img class="message-avatar-img" src="${senderAvatar}" alt="${senderName}" style="display: block;">` :
-            senderName.charAt(0).toUpperCase();
-
-        const avatarStyle = senderAvatar ? 
-            `style="background-image: url(${senderAvatar}); background-size: cover; background-position: center;"` : 
-            '';
-
-        if (isSent) {
-            return `
-                <div class="message-container sent">
-                    <div class="message sent">
-                        <div class="message-text">${message.content}</div>
-                        <div class="message-time">${formatTime(message.created_at)}</div>
-                    </div>
-                    <div class="message-avatar" ${avatarStyle}>
-                        ${avatarHtml}
-                    </div>
-                </div>
-            `;
-        } else {
-            return `
-                <div class="message-container received">
-                    <div class="message-avatar" ${avatarStyle}>
-                        ${avatarHtml}
-                    </div>
-                    <div class="message received">
-                        <div class="message-text">${message.content}</div>
-                        <div class="message-time">${formatTime(message.created_at)}</div>
-                    </div>
-                </div>
-            `;
-        }
-    }).join('');
-
-    chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 </script>
 </body>
