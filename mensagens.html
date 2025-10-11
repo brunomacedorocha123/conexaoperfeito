@@ -2106,31 +2106,39 @@ function renderMessages(messages) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-// ==================== FUNÇÃO ENVIAR MENSAGEM - SOLUÇÃO DEFINITIVA ====================
+// ==================== FUNÇÃO ENVIAR MENSAGEM - CORREÇÃO DEFINITIVA ====================
 async function sendMessage() {
     const messageInput = document.getElementById('messageInput');
     const content = messageInput.value.trim();
 
-    if (!content || !currentChatPartner) return;
+    if (!content || !currentChatPartner) {
+        console.log('❌ Mensagem vazia ou sem conversa selecionada');
+        return;
+    }
 
     try {
+        console.log('🚀 INICIANDO ENVIO DE MENSAGEM...');
+        
+        // ✅ VERIFICAR STATUS PREMIUM
         await forcePremiumCheck();
         
-        if (isPremiumUser) {
-            await sendMessageDirectly(content);
-            return;
+        // ✅ VERIFICAR LIMITE PARA USUÁRIOS FREE
+        if (!isPremiumUser) {
+            console.log('📊 Contador atual:', currentMessageCount);
+            
+            if (currentMessageCount >= 5) {
+                console.log('🚫 LIMITE ATINGIDO! Bloqueando envio...');
+                showNotification('❌ Limite de 5 mensagens por dia atingido! Faça upgrade para Premium.', 'error');
+                checkMessageLimit();
+                return;
+            }
         }
 
-        if (currentMessageCount >= 5) {
-            showNotification('❌ Limite de 5 mensagens por dia atingido!', 'error');
-            checkMessageLimit();
-            return;
-        }
-
+        console.log('✅ Pode enviar mensagem');
         await sendMessageDirectly(content);
 
     } catch (error) {
-        console.error('Erro ao enviar mensagem:', error);
+        console.error('❌ Erro ao enviar mensagem:', error);
         showNotification('❌ Erro ao enviar mensagem', 'error');
     }
 }
@@ -2139,7 +2147,36 @@ async function sendMessageDirectly(content) {
     const messageInput = document.getElementById('messageInput');
     
     try {
-        // 1. ENVIAR MENSAGEM
+        // ✅ 1. PRIMEIRO: ATUALIZAR CONTADOR NO SUPABASE (APENAS FREE)
+        if (!isPremiumUser) {
+            console.log('📈 ATUALIZANDO CONTADOR NO SUPABASE...');
+            
+            const today = new Date().toISOString().split('T')[0];
+            const newCount = currentMessageCount + 1;
+            
+            // ✅ MÉTODO SIMPLES: UPSERT
+            const { error: countError } = await supabase
+                .from('daily_message_count')
+                .upsert({
+                    user_id: currentUser.id,
+                    date: today,
+                    message_count: newCount
+                }, {
+                    onConflict: 'user_id,date'
+                });
+
+            if (countError) {
+                console.error('❌ Erro no contador:', countError);
+                // Continua mesmo com erro no contador
+            } else {
+                console.log('✅ Contador atualizado no Supabase:', newCount);
+                currentMessageCount = newCount;
+                updateMessageCounter(currentMessageCount);
+            }
+        }
+
+        // ✅ 2. ENVIAR MENSAGEM
+        console.log('📨 Enviando mensagem...');
         const { error: messageError } = await supabase
             .from('messages')
             .insert({
@@ -2149,41 +2186,78 @@ async function sendMessageDirectly(content) {
                 is_read: false
             });
 
-        if (messageError) throw messageError;
-
-        // 2. ATUALIZAR CONTADOR (APENAS FREE)
-        if (!isPremiumUser) {
-            const today = new Date().toISOString().split('T')[0];
-            const newCount = currentMessageCount + 1;
-            
-            // MÉTODO SIMPLES: UPSERT
-            const { error: countError } = await supabase
-                .from('daily_message_count')
-                .upsert({
-                    user_id: currentUser.id,
-                    date: today,
-                    message_count: newCount
-                });
-
-            if (!countError) {
-                currentMessageCount = newCount;
-                updateMessageCounter(currentMessageCount);
-            }
+        if (messageError) {
+            console.error('❌ Erro ao enviar mensagem:', messageError);
+            throw messageError;
         }
 
-        // 3. ATUALIZAR INTERFACE
+        console.log('✅ Mensagem enviada com sucesso');
+
+        // ✅ 3. ATUALIZAR INTERFACE
         messageInput.value = '';
         await loadMessages(currentChatPartner.id);
         await loadConversations();
+
         showNotification('✅ Mensagem enviada!', 'success');
         checkMessageLimit();
 
     } catch (error) {
-        console.error('Erro:', error);
+        console.error('❌ Erro no envio:', error);
         showNotification('❌ Erro ao enviar mensagem', 'error');
         throw error;
     }
 }
+
+// ==================== SISTEMA DE NOTIFICAÇÕES ====================
+function showNotification(message, type = 'info') {
+    const existingNotification = document.querySelector('.notification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    
+    let backgroundColor, textColor;
+    switch(type) {
+        case 'error':
+            backgroundColor = '#f56565';
+            textColor = 'white';
+            break;
+        case 'success':
+            backgroundColor = '#48bb78';
+            textColor = 'white';
+            break;
+        default:
+            backgroundColor = '#4299e1';
+            textColor = 'white';
+    }
+
+    notification.style.cssText = `
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        background: ${backgroundColor};
+        color: ${textColor};
+        padding: 12px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10000;
+        max-width: 300px;
+        animation: slideIn 0.3s ease;
+        font-weight: 500;
+    `;
+
+    notification.textContent = message;
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 5000);
+}
+
 // ==================== ATUALIZAÇÃO EM TEMPO REAL ====================
 function setupRealtimeUpdates() {
     if (messagesSubscription) {
@@ -2789,4 +2863,3 @@ document.head.appendChild(style);
 </script>
 </body>
 </html>
-
