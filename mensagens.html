@@ -2093,45 +2093,46 @@
                 throw error;
             }
 
-           // ✅ INCREMENTAR CONTADOR APENAS SE NÃO FOR PREMIUM
+          // ✅ INCREMENTAR CONTADOR APENAS SE NÃO FOR PREMIUM
 if (!isPremiumUser) {
     console.log('📈 Incrementando contador FREE...');
     
     const today = new Date().toISOString().split('T')[0];
     
-    // ✅ MÉTODO SIMPLES E DIRETO QUE FUNCIONA
+    // ✅ 1. BUSCAR VALOR ATUAL DO BANCO
+    const { data: currentData, error: fetchError } = await supabase
+        .from('daily_message_count')
+        .select('message_count')
+        .eq('user_id', currentUser.id)
+        .eq('date', today)
+        .single();
+
+    let currentCount = 0;
+    
+    if (!fetchError && currentData) {
+        currentCount = currentData.message_count || 0;
+    }
+    
+    // ✅ 2. INCREMENTAR E ATUALIZAR
+    const newCount = currentCount + 1;
+    
     const { error: updateError } = await supabase
         .from('daily_message_count')
         .upsert({
             user_id: currentUser.id,
             date: today,
-            message_count: currentMessageCount + 1
+            message_count: newCount
         }, {
             onConflict: 'user_id,date'
         });
 
     if (updateError) {
         console.error('❌ Erro ao atualizar contador no banco:', updateError);
-        // Fallback: incrementar localmente mesmo com erro
         currentMessageCount++;
     } else {
-        console.log('✅ Contador atualizado no banco:', currentMessageCount + 1);
-        currentMessageCount++;
+        console.log('✅ Contador atualizado no SUPABASE:', newCount);
+        currentMessageCount = newCount;
     }
-}
-
-messageInput.value = '';
-updateMessageCounter(currentMessageCount);
-await loadMessages(currentChatPartner.id);
-await loadConversations();
-
-showNotification('✅ Mensagem enviada!', 'success');
-checkMessageLimit();
-
-} catch (error) {
-    console.error('Erro ao enviar mensagem:', error);
-    showNotification('❌ Erro ao enviar mensagem', 'error');
-}
 }
 
     // ==================== SISTEMA DE NOTIFICAÇÕES ====================
