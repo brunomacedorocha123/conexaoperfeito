@@ -6,6 +6,35 @@
   <title>Painel do Usuário - Amor Conect</title>
   <link rel="stylesheet" href="painel.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    /* ✅ Badge Premium no Header */
+    .premium-badge {
+        background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+        color: white;
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        margin-left: 8px;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+
+    /* ✅ Card Premium */
+    .plan-card.premium {
+        border-color: #ffd700;
+        background: linear-gradient(135deg, #fff9e6, #fff0cc);
+    }
+
+    .plan-card.premium .plan-header h3 {
+        color: #ff6b00;
+    }
+  </style>
 </head>
 <body>
   <!-- Header -->
@@ -33,7 +62,6 @@
     </div>
   </header>
 
-
   <!-- Menu Mobile -->
   <div id="mobileMenu">
     <button id="closeMobileMenu">×</button>
@@ -46,7 +74,6 @@
       <div id="mobileUserNickname">Usuário</div>
     </div>
 
-
     <div class="mobile-nav">
       <a href="home.html" class="btn btn-outline"> Home</a>
       <a href="busca.html" class="btn btn-outline"> Buscar</a>
@@ -56,7 +83,6 @@
     </div>
   </div>
 
-
   <!-- Main Content -->
   <main class="main-content">
     <div class="container">
@@ -65,7 +91,6 @@
         <h1> Meu Perfil</h1>
         <p>Gerencie suas informações pessoais e de perfil</p>
       </section>
-
 
       <!-- Seção do Plano -->
       <section class="plan-status-section">
@@ -88,11 +113,11 @@
             </div>
           </div>
           <div class="plan-actions" id="planActions">
-            <a href="planos.html" class="btn btn-primary">⭐ Fazer Upgrade</a>
+            <!-- ✅ CORREÇÃO: pricing.html em vez de princing.html -->
+            <a href="princing.html" class="btn btn-primary">⭐ Fazer Upgrade</a>
           </div>
         </div>
       </section>
-
 
       <!-- Status do Perfil -->
       <section class="profile-status">
@@ -107,7 +132,6 @@
           Complete seu perfil para melhorar suas conexões
         </div>
       </section>
-
 
       <!-- Profile Form -->
       <section class="profile-form">
@@ -147,7 +171,6 @@
               </div>
             </div>
           </div>
-
 
           <!--  SEÇÃO PRIVADA: Endereço Completo -->
           <div class="form-section section-private">
@@ -215,7 +238,6 @@
             </div>
           </div>
 
-
           <!-- ️ SEÇÃO PÚBLICA: Informações do Perfil -->
           <div class="form-section section-public">
             <h3> Perfil Público
@@ -224,7 +246,6 @@
             <p class="section-description" style="color: var(--text-light); margin-bottom: 1rem; font-size: 0.9rem;">
               Informações visíveis para outros usuários
             </p>
-
 
             <!-- Avatar Section -->
             <div style="margin-bottom: 2rem;">
@@ -244,7 +265,6 @@
               </div>
             </div>
 
-
             <div class="form-grid">
               <div class="form-group">
                 <label for="nickname">Apelido/Nickname *</label>
@@ -262,7 +282,6 @@
               </div>
             </div>
           </div>
-
 
           <!-- ️ SEÇÃO PÚBLICA: Informações Pessoais -->
           <div class="form-section section-public">
@@ -331,7 +350,6 @@
             </div>
           </div>
 
-
           <!-- ️ SEÇÃO PÚBLICA: Estilo de Vida -->
           <div class="form-section section-public">
             <h3> Estilo de Vida
@@ -389,7 +407,6 @@
             </div>
           </div>
 
-
           <!-- ️ SEÇÃO PÚBLICA: Animais -->
           <div class="form-section section-public">
             <h3> Animais de Estimação
@@ -412,7 +429,6 @@
             </div>
           </div>
 
-
           <!-- ️ SEÇÃO PÚBLICA: Preferências -->
           <div class="form-section section-public">
             <h3> Preferências
@@ -432,7 +448,6 @@
               </div>
             </div>
           </div>
-
 
           <!-- ️ SEÇÃO PÚBLICA: Interesses -->
           <div class="form-section section-public">
@@ -492,7 +507,6 @@
             </div>
           </div>
 
-
           <!-- ️ SEÇÃO PÚBLICA: Descrição -->
           <div class="form-section section-public">
             <h3> Descrição Pessoal
@@ -508,7 +522,6 @@
             </div>
           </div>
 
-
           <!-- Form Actions -->
           <div class="form-actions">
             <button type="submit" class="btn btn-primary" id="saveButton">
@@ -522,7 +535,6 @@
       </section>
     </div>
   </main>
-
 
   <!-- Footer -->
   <footer>
@@ -555,7 +567,142 @@
     </div>
   </footer>
 
-
   <script src="painel.js"></script>
+
+  <script>
+    // ==================== VERIFICAÇÃO PREMIUM NO PAINEL ====================
+    const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function checkAndUpdatePremiumStatus() {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+            
+            // Verificar status premium atual
+            const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('is_premium, premium_expires_at')
+                .eq('id', user.id)
+                .single();
+            
+            if (error) {
+                console.error('Erro ao verificar premium:', error);
+                return;
+            }
+            
+            console.log('🔍 Status premium no painel:', profile);
+            
+            // Atualizar interface se for premium
+            if (profile.is_premium) {
+                updateUIForPremiumUser();
+            }
+            
+        } catch (error) {
+            console.error('Erro na verificação premium:', error);
+        }
+    }
+
+    function updateUIForPremiumUser() {
+        // Atualizar badge do plano
+        const planBadge = document.getElementById('planBadge');
+        const planDescription = document.getElementById('planDescription');
+        const planActions = document.getElementById('planActions');
+        const planCard = document.getElementById('planStatusCard');
+        
+        if (planBadge) {
+            planBadge.textContent = 'PREMIUM';
+            planBadge.className = 'plan-badge premium';
+        }
+        
+        if (planDescription) {
+            planDescription.textContent = 'Plano Premium com todos os benefícios ativos!';
+        }
+        
+        if (planActions) {
+            planActions.innerHTML = `
+                <button class="btn btn-primary" onclick="window.location.href='mensagens.html'">
+                    🚀 Ir para Mensagens
+                </button>
+            `;
+        }
+        
+        if (planCard) {
+            planCard.classList.add('premium');
+            
+            // Atualizar features
+            const planFeatures = document.querySelector('.plan-features');
+            if (planFeatures) {
+                planFeatures.innerHTML = `
+                    <div class="feature-item">
+                        <span class="feature-icon"></span>
+                        <span class="feature-text">Mensagens ilimitadas</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon"></span>
+                        <span class="feature-text">Histórico permanente</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">️</span>
+                        <span class="feature-text">Modo invisível</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon"></span>
+                        <span class="feature-text">Ver visitantes</span>
+                    </div>
+                `;
+            }
+        }
+        
+        // Adicionar badge premium no header
+        const userInfo = document.querySelector('.user-info');
+        if (userInfo && !userInfo.querySelector('.premium-badge')) {
+            const badge = document.createElement('span');
+            badge.className = 'premium-badge';
+            badge.textContent = '⭐ PREMIUM';
+            userInfo.appendChild(badge);
+        }
+        
+        // Adicionar badge premium no mobile
+        const mobileUserInfo = document.querySelector('.mobile-user-info');
+        if (mobileUserInfo && !mobileUserInfo.querySelector('.premium-badge')) {
+            const mobileBadge = document.createElement('span');
+            mobileBadge.className = 'premium-badge';
+            mobileBadge.textContent = '⭐ PREMIUM';
+            mobileBadge.style.cssText = `
+                background: var(--vermelho-rosado);
+                color: white;
+                padding: 4px 12px;
+                border-radius: 10px;
+                font-size: 0.8rem;
+                margin-top: 8px;
+                font-weight: bold;
+                display: block;
+            `;
+            mobileUserInfo.appendChild(mobileBadge);
+        }
+    }
+
+    // Executar quando o DOM carregar
+    document.addEventListener('DOMContentLoaded', function() {
+        // Aguardar um pouco para garantir que o painel.js carregou
+        setTimeout(() => {
+            checkAndUpdatePremiumStatus();
+        }, 1000);
+    });
+
+    // Também executar quando voltar de outras páginas
+    window.addEventListener('pageshow', function() {
+        setTimeout(() => {
+            checkAndUpdatePremiumStatus();
+        }, 500);
+    });
+
+    // Debug function - para testar no console
+    window.debugPremium = function() {
+        checkAndUpdatePremiumStatus();
+    };
+  </script>
 </body>
 </html>
