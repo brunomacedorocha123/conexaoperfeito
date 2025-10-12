@@ -1848,9 +1848,12 @@ async function simulatePixPayment() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Usuário não autenticado');
 
-        const subscription = await PremiumSystem.createSubscription(user.id, getPlanType());
+        // ✅ CHAMAR FUNÇÃO QUE GARANTE CRIAÇÃO EM AMBAS TABELAS
+        const subscription = await createSubscriptionInBothTables(user.id, getPlanType());
         
         console.log('✅ Pagamento PIX processado! Redirecionando...');
+        console.log('📦 Assinatura criada:', subscription);
+        
         setTimeout(() => {
             window.location.href = `pagamento-sucesso.html?plano=${getPlanType()}&valor=${selectedPlan.price}&metodo=pix&subscription_id=${subscription.id}`;
         }, 2000);
@@ -1862,6 +1865,101 @@ async function simulatePixPayment() {
     }
 }
 
+// ✅ FUNÇÃO QUE GARANTE CRIAÇÃO EM AMBAS TABELAS
+async function createSubscriptionInBothTables(userId, planType) {
+    try {
+        console.log('🎯 CRIANDO ASSINATURA EM AMBAS TABELAS...');
+        
+        // 1. Buscar plano REAL
+        const { data: realPlan } = await supabase
+            .from('subscription_plans')
+            .select('id, period_days, price')
+            .eq('name', planType)
+            .single();
+
+        if (!realPlan) {
+            throw new Error('Plano não encontrado: ' + planType);
+        }
+
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + realPlan.period_days);
+
+        console.log('📋 Plano:', realPlan);
+        console.log('📅 Expira em:', expiresAt);
+
+        // 2. ✅ CRIAR NA user_subscriptions (TABELA PRINCIPAL)
+        const { data: subscription, error: subError } = await supabase
+            .from('user_subscriptions')
+            .upsert({
+                user_id: userId,
+                plan_id: realPlan.id,
+                status: 'active',
+                starts_at: new Date().toISOString(),
+                expires_at: expiresAt.toISOString(),
+                auto_renew: false,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            }, {
+                onConflict: 'user_id'
+            })
+            .select()
+            .single();
+
+        if (subError) {
+            console.error('❌ Erro ao criar assinatura:', subError);
+            throw subError;
+        }
+
+        console.log('✅ ASSINATURA CRIADA NA user_subscriptions:', subscription);
+
+        // 3. ✅ ATUALIZAR PERFIL (BACKUP)
+        const { error: profileError } = await supabase
+            .from('profiles')
+            .update({
+                is_premium: true,
+                premium_expires_at: expiresAt.toISOString(),
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', userId);
+
+        if (profileError) {
+            console.error('❌ Erro ao atualizar perfil:', profileError);
+        } else {
+            console.log('✅ Perfil atualizado para premium');
+        }
+
+        // 4. ✅ REGISTRAR TRANSAÇÃO
+        try {
+            const { error: txError } = await supabase
+                .from('payment_transactions')
+                .insert({
+                    user_id: userId,
+                    plan_id: realPlan.id,
+                    amount: realPlan.price,
+                    payment_method: selectedPayment,
+                    payment_gateway: 'mercadopago',
+                    gateway_transaction_id: 'mp_' + Date.now(),
+                    gateway_status: 'approved',
+                    status: 'completed',
+                    created_at: new Date().toISOString()
+                });
+
+            if (txError) {
+                console.log('⚠️ Transação não registrada:', txError);
+            } else {
+                console.log('✅ Transação registrada');
+            }
+        } catch (txError) {
+            console.log('⚠️ Erro na transação:', txError);
+        }
+
+        return subscription;
+
+    } catch (error) {
+        console.error('❌ Erro ao criar assinatura:', error);
+        throw error;
+    }
+}
 // ==================== CARD SIMULATION ====================
 function setupCardInputs() {
     document.getElementById('cardNumber').addEventListener('input', function(e) {
