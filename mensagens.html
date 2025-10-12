@@ -1273,140 +1273,135 @@
         setupProfileModal();
     });
 
-    // ==================== VERIFICAÇÃO FORÇADA DE PREMIUM ====================
-    async function forcePremiumCheck() {
-        try {
-            console.log('🔍 VERIFICAÇÃO FORÇADA DE PREMIUM...');
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return false;
-
-            // ✅ MÉTODO 1: Verificar via função RPC
-            const { data: premiumStatus, error: rpcError } = await supabase
-                .rpc('is_user_premium', { user_uuid: user.id });
-            
-            console.log('⭐ Status Premium (RPC):', premiumStatus, 'Erro:', rpcError);
-            
-            if (premiumStatus) {
-                console.log('🎉 USUÁRIO É PREMIUM - Liberando tudo!');
-                isPremiumUser = true;
-                updateMessageCounter('∞');
-                checkMessageLimit();
-                return true;
-            }
-
-            // ✅ MÉTODO 2: Verificar diretamente na tabela de assinaturas
-            const { data: subscription, error: subError } = await supabase
-                .from('user_subscriptions')
-                .select('status, expires_at')
-                .eq('user_id', user.id)
-                .eq('status', 'active')
-                .single();
-
-            if (subscription && new Date(subscription.expires_at) > new Date()) {
-                console.log('🎉 USUÁRIO É PREMIUM (via tabela)');
-                isPremiumUser = true;
-                updateMessageCounter('∞');
-                checkMessageLimit();
-                return true;
-            }
-
-            // ✅ MÉTODO 3: Verificar no perfil
-            const { data: profile, error: profileError } = await supabase
-                .from('profiles')
-                .select('is_premium, premium_expires_at')
-                .eq('id', user.id)
-                .single();
-
-            if (profile && profile.is_premium) {
-                console.log('🎉 USUÁRIO É PREMIUM (via perfil)');
-                isPremiumUser = true;
-                updateMessageCounter('∞');
-                checkMessageLimit();
-                return true;
-            }
-
-            console.log('ℹ️ Usuário NÃO é premium');
-            isPremiumUser = false;
-            return false;
-
-        } catch (error) {
-            console.error('❌ Erro na verificação premium:', error);
-            isPremiumUser = false;
-            return false;
-        }
+    // ==================== SISTEMA PREMIUM DEFINITIVO ====================
+const PremiumSystem = {
+    async checkPremium(userId) {
+        const { data } = await supabase
+            .from('user_subscriptions')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('status', 'active')
+            .gt('expires_at', new Date().toISOString())
+            .single();
+        
+        console.log('🔍 VERIFICAÇÃO PREMIUM:', !!data);
+        return !!data;
     }
+};
 
-    // ==================== VERIFICAR PARÂMETRO PREMIUM ====================
-    function checkPremiumActivation() {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('premium') === 'activated') {
-            console.log('🎯 Premium ativado via URL - forçando atualização');
-            
-            setTimeout(async () => {
-                await forcePremiumCheck();
-                await loadMessageCount();
-                showNotification('🎉 Premium ativado! Agora você tem mensagens ilimitadas!', 'success');
-                
-                // Limpar parâmetro da URL
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }, 1000);
+// ==================== VERIFICAÇÃO FORÇADA DE PREMIUM ====================
+async function forcePremiumCheck() {
+    try {
+        console.log('🔍 VERIFICAÇÃO FORÇADA DE PREMIUM...');
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return false;
+
+        // ✅ VERIFICAÇÃO DIRETA NA TABELA DE ASSINATURAS
+        const { data: subscription, error } = await supabase
+            .from('user_subscriptions')
+            .select('status, expires_at')
+            .eq('user_id', user.id)
+            .eq('status', 'active')
+            .gt('expires_at', new Date().toISOString())
+            .single();
+
+        if (subscription && !error) {
+            console.log('🎉 USUÁRIO É PREMIUM (via tabela)');
+            isPremiumUser = true;
+            updateMessageCounter('∞');
+            checkMessageLimit();
+            showPremiumBadge();
+            return true;
         }
-    }
 
-    // ==================== AUTENTICAÇÃO ====================
-    async function checkAuth() {
-        try {
-            const { data: { user }, error } = await supabase.auth.getUser();
+        console.log('ℹ️ Usuário NÃO é premium');
+        isPremiumUser = false;
+        return false;
+
+    } catch (error) {
+        console.error('❌ Erro na verificação premium:', error);
+        isPremiumUser = false;
+        return false;
+    }
+}
+
+// ==================== VERIFICAR PARÂMETRO PREMIUM ====================
+function checkPremiumActivation() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('premium') === 'activated') {
+        console.log('🎯 Premium ativado via URL - forçando atualização');
+        
+        setTimeout(async () => {
+            await forcePremiumCheck();
+            await loadMessageCount();
+            showNotification('🎉 Premium ativado! Agora você tem mensagens ilimitadas!', 'success');
             
-            if (error || !user) {
-                window.location.href = 'login.html';
-                return;
-            }
-            
-            currentUser = user;
-            await initializeUserSession();
-            
-        } catch (error) {
-            console.error('Erro na autenticação:', error);
+            // Limpar parâmetro da URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }, 1000);
+    }
+}
+
+// ==================== AUTENTICAÇÃO ====================
+async function checkAuth() {
+    try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error || !user) {
             window.location.href = 'login.html';
+            return;
         }
+        
+        currentUser = user;
+        await initializeUserSession();
+        
+    } catch (error) {
+        console.error('Erro na autenticação:', error);
+        window.location.href = 'login.html';
     }
+}
 
-    // ==================== INICIALIZAÇÃO DA SESSÃO ====================
-   // ==================== INICIALIZAÇÃO DA SESSÃO ====================
+// ==================== INICIALIZAÇÃO DA SESSÃO ====================
 async function initializeUserSession() {
     try {
-        // ✅ 1. VERIFICAR ATIVAÇÃO PREMIUM VIA URL
-        checkPremiumActivation();
+        const { data: { user } } = await supabase.auth.getUser();
         
-        // ✅ 2. VERIFICAÇÃO FORÇADA DE PREMIUM
-        await forcePremiumCheck();
+        // ✅ VERIFICAÇÃO SIMPLES E DIRETA
+        isPremiumUser = await PremiumSystem.checkPremium(user.id);
+        console.log('🎯 STATUS PREMIUM DEFINITIVO:', isPremiumUser);
         
-        // ✅ 3. VERIFICAR E RESETAR CONTADOR DIÁRIO
-        await checkAndResetDailyCounter();
+        if (isPremiumUser) {
+            updateMessageCounter('∞');
+            showPremiumBadge();
+        } else {
+            await loadMessageCount();
+        }
         
-        // ✅ 4. CARREGAR DADOS DO USUÁRIO
+        // Continue com o resto do seu código...
         await loadUserData();
-        
-        // ✅ 5. VERIFICAR STATUS PREMIUM (redundante para garantir)
-        await checkUserPremiumStatus();
-        
-        // ✅ 6. CARREGAR CONTADOR ATUAL
-        await loadMessageCount();
-        
-        // ✅ 7. CARREGAR CONVERSAS
         await loadConversations();
-        
-        // ✅ 8. VERIFICAR E ABRIR CONVERSA ARMAZENADA (NOVA)
         await checkAndOpenStoredConversation();
-        
-        // ✅ 9. CONFIGURAR ATUALIZAÇÕES EM TEMPO REAL
         setupRealtimeUpdates();
         
-        console.log('✅ Sessão inicializada com sucesso - Premium:', isPremiumUser);
+        console.log('✅ Sessão inicializada - Premium:', isPremiumUser);
         
     } catch (error) {
         console.error('Erro na inicialização:', error);
+    }
+}
+
+// ==================== MOSTRAR BADGE PREMIUM ====================
+function showPremiumBadge() {
+    const userInfo = document.querySelector('.user-info');
+    if (userInfo) {
+        const badge = document.createElement('span');
+        badge.textContent = '⭐ PREMIUM';
+        badge.style.cssText = `
+            background: #48bb78; color: white; padding: 2px 8px;
+            border-radius: 10px; font-size: 0.7rem; margin-left: 8px;
+            font-weight: bold; display: inline-block;
+        `;
+        userInfo.appendChild(badge);
     }
 }
 
@@ -1551,7 +1546,6 @@ async function loadConversations() {
         renderConversations();
     }
 }
-
     // ==================== SISTEMA DE RESET DIÁRIO ====================
     async function checkAndResetDailyCounter() {
         try {
@@ -2664,20 +2658,22 @@ async function checkAuth() {
 // ==================== INICIALIZAÇÃO DA SESSÃO ====================
 async function initializeUserSession() {
     try {
-        // ✅ 1. VERIFICAR ATIVAÇÃO PREMIUM VIA URL
+        // ✅ 1. VERIFICAÇÃO IMEDIATA DE PREMIUM (CRÍTICA - NOVA!)
+        await checkPremiumImmediately();
+        
+        // ✅ 2. VERIFICAR ATIVAÇÃO PREMIUM VIA URL
         checkPremiumActivation();
         
-        // ✅ 2. VERIFICAÇÃO FORÇADA DE PREMIUM
+        // ✅ 3. VERIFICAÇÃO FORÇADA DE PREMIUM
         await forcePremiumCheck();
         
-        // ✅ 3. VERIFICAR E RESETAR CONTADOR DIÁRIO
+        // ✅ 4. VERIFICAR E RESETAR CONTADOR DIÁRIO
         await checkAndResetDailyCounter();
         
-        // ✅ 4. CARREGAR DADOS DO USUÁRIO
+        // ✅ 5. CARREGAR DADOS DO USUÁRIO
         await loadUserData();
         
-        // ✅ 5. VERIFICAR STATUS PREMIUM (redundante para garantir)
-        await checkUserPremiumStatus();
+        // ❌ REMOVIDO: checkUserPremiumStatus() (redundante - já verificado acima)
         
         // ✅ 6. CARREGAR CONTADOR ATUAL
         await loadMessageCount();
@@ -2685,7 +2681,7 @@ async function initializeUserSession() {
         // ✅ 7. CARREGAR CONVERSAS
         await loadConversations();
         
-        // ✅ 8. VERIFICAR E ABRIR CONVERSA ARMAZENADA (NOVA)
+        // ✅ 8. VERIFICAR E ABRIR CONVERSA ARMAZENADA
         await checkAndOpenStoredConversation();
         
         // ✅ 9. CONFIGURAR ATUALIZAÇÕES EM TEMPO REAL
@@ -2696,6 +2692,185 @@ async function initializeUserSession() {
     } catch (error) {
         console.error('Erro na inicialização:', error);
     }
+}
+
+// ==================== VERIFICAÇÃO IMEDIATA DE PREMIUM ====================
+async function checkPremiumImmediately() {
+    try {
+        console.log('🔍 VERIFICAÇÃO IMEDIATA DE PREMIUM AO CARREGAR...');
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            console.log('❌ Usuário não autenticado');
+            return;
+        }
+
+        console.log('👤 Verificando premium para usuário:', user.id);
+
+        // ✅ VERIFICAÇÃO DIRETA NA TABELA DE ASSINATURAS (FONTE DA VERDADE)
+        const { data: subscription, error } = await supabase
+            .from('user_subscriptions')
+            .select('status, expires_at')
+            .eq('user_id', user.id)
+            .eq('status', 'active')
+            .gt('expires_at', new Date().toISOString())
+            .single();
+
+        console.log('📊 Resultado da busca por assinatura:', subscription);
+        console.log('❌ Erro (se houver):', error);
+
+        if (subscription && !error) {
+            console.log('🎉 USUÁRIO É PREMIUM - Atualizando interface IMEDIATAMENTE');
+            isPremiumUser = true;
+            
+            // ✅ ATUALIZAR INTERFACE IMEDIATAMENTE
+            updateMessageCounter('∞');
+            checkMessageLimit();
+            
+            // ✅ MOSTRAR BADGE PREMIUM IMEDIATAMENTE
+            showPremiumBadgeImmediately();
+            
+            // ✅ ATUALIZAR PERFIL PARA GARANTIR SINCRONIA
+            try {
+                const { error: updateError } = await supabase
+                    .from('profiles')
+                    .update({ 
+                        is_premium: true,
+                        premium_expires_at: subscription.expires_at,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', user.id);
+
+                if (updateError) {
+                    console.error('❌ Erro ao atualizar perfil:', updateError);
+                } else {
+                    console.log('✅ Perfil sincronizado com assinatura');
+                }
+            } catch (updateError) {
+                console.error('❌ Erro na sincronização do perfil:', updateError);
+            }
+                
+        } else {
+            console.log('ℹ️ Usuário não é premium (verificação imediata)');
+            isPremiumUser = false;
+            
+            // ✅ GARANTIR que carrega o contador mesmo para free
+            await loadMessageCount();
+            
+            // ✅ VERIFICAR SE HÁ INCONSISTÊNCIA (perfil diz premium mas não tem assinatura)
+            try {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('is_premium')
+                    .eq('id', user.id)
+                    .single();
+
+                if (profile && profile.is_premium) {
+                    console.warn('⚠️ INCONSISTÊNCIA: Perfil marcado como premium sem assinatura ativa!');
+                    // Corrigir a inconsistência
+                    await supabase
+                        .from('profiles')
+                        .update({ 
+                            is_premium: false,
+                            premium_expires_at: null,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', user.id);
+                    console.log('✅ Inconsistência corrigida');
+                }
+            } catch (profileError) {
+                console.error('Erro ao verificar perfil:', profileError);
+            }
+        }
+        
+        console.log('✅ Verificação imediata concluída - Premium:', isPremiumUser);
+        
+    } catch (error) {
+        console.error('❌ Erro na verificação imediata:', error);
+        // Em caso de erro, assumir não premium e carregar contador
+        isPremiumUser = false;
+        await loadMessageCount();
+    }
+}
+
+// ==================== MOSTRAR BADGE PREMIUM ====================
+function showPremiumBadgeImmediately() {
+    console.log('⭐ TENTANDO MOSTRAR BADGE PREMIUM...');
+    console.log('📊 Status isPremiumUser:', isPremiumUser);
+    
+    // ✅ 1. BADGE NO HEADER DESKTOP
+    const userInfo = document.querySelector('.user-info');
+    if (userInfo) {
+        // Remover badge existente para evitar duplicação
+        const existingBadge = userInfo.querySelector('.premium-badge-immediate');
+        if (existingBadge) {
+            existingBadge.remove();
+        }
+        
+        if (isPremiumUser) {
+            const badge = document.createElement('span');
+            badge.className = 'premium-badge-immediate';
+            badge.textContent = '⭐ PREMIUM';
+            badge.style.cssText = `
+                background: #48bb78;
+                color: white;
+                padding: 2px 8px;
+                border-radius: 10px;
+                font-size: 0.7rem;
+                margin-left: 8px;
+                font-weight: bold;
+                display: inline-block;
+            `;
+            userInfo.appendChild(badge);
+            console.log('✅ Badge desktop adicionado');
+        }
+    } else {
+        console.log('❌ user-info não encontrado');
+    }
+    
+    // ✅ 2. BADGE NO HEADER MOBILE
+    const mobileUserInfo = document.querySelector('.mobile-user-info');
+    if (mobileUserInfo) {
+        // Remover badge existente para evitar duplicação
+        const existingMobileBadge = mobileUserInfo.querySelector('.premium-badge-immediate');
+        if (existingMobileBadge) {
+            existingMobileBadge.remove();
+        }
+        
+        if (isPremiumUser) {
+            const mobileBadge = document.createElement('span');
+            mobileBadge.className = 'premium-badge-immediate';
+            mobileBadge.textContent = '⭐ PREMIUM';
+            mobileBadge.style.cssText = `
+                background: #48bb78;
+                color: white;
+                padding: 4px 12px;
+                border-radius: 10px;
+                font-size: 0.8rem;
+                margin-top: 8px;
+                font-weight: bold;
+                display: block;
+                text-align: center;
+            `;
+            mobileUserInfo.appendChild(mobileBadge);
+            console.log('✅ Badge mobile adicionado');
+        }
+    } else {
+        console.log('❌ mobile-user-info não encontrado');
+    }
+    
+    // ✅ 3. ATUALIZAR CONTADOR VISUALMENTE
+    if (isPremiumUser) {
+        console.log('🔄 Atualizando contador para ∞');
+        updateMessageCounter('∞');
+    } else {
+        console.log('🔄 Atualizando contador free:', currentMessageCount);
+        updateMessageCounter(currentMessageCount);
+    }
+    
+    // ✅ 4. LIBERAR/BLOQUEAR INPUT BASEADO NO STATUS
+    checkMessageLimit();
+    
+    console.log('✅ showPremiumBadgeImmediately concluído');
 }
 
 // ==================== VERIFICAR E ABRIR CONVERSA AO CARREGAR ====================
