@@ -6,48 +6,116 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let currentUser = null;
 let selectedAvatarFile = null;
 
-// Sistema Premium - VERSÃO CORRIGIDA
+// Sistema Premium - VERSÃO CORRIGIDA (VERDADEIRA)
 const PremiumManager = {
     async checkPremiumStatus() {
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return false;
             
-            // ✅ VERIFICAÇÃO DIRETA NO BANCO - SEM RPC
-            const { data: profile, error } = await supabase
+            console.log('🔍 VERIFICAÇÃO REAL DE ASSINATURA...');
+            
+            // ✅ PRIMEIRO: Verificar na TABELA DE ASSINATURAS (FONTE DA VERDADE)
+            const { data: subscription, error: subError } = await supabase
+                .from('user_subscriptions')
+                .select(`
+                    id, 
+                    status, 
+                    expires_at,
+                    plan:subscription_plans(name, period_days)
+                `)
+                .eq('user_id', user.id)
+                .eq('status', 'active')
+                .gt('expires_at', new Date().toISOString())
+                .single();
+
+            if (!subError && subscription) {
+                console.log('🎉 ASSINATURA ATIVA ENCONTRADA:', subscription);
+                
+                // ✅ GARANTIR que o perfil está sincronizado
+                await this.syncProfileWithSubscription(user.id, subscription);
+                return true;
+            }
+
+            console.log('ℹ️ Nenhuma assinatura ativa encontrada');
+            
+            // ✅ SE NÃO TEM ASSINATURA, VERIFICAR SE O PERFIL ESTÁ CORRETO
+            const { data: profile, error: profileError } = await supabase
                 .from('profiles')
                 .select('is_premium, premium_expires_at')
                 .eq('id', user.id)
                 .single();
             
-            if (error) {
-                console.error('Erro ao verificar premium:', error);
+            if (profileError) {
+                console.error('Erro ao verificar perfil:', profileError);
+                return false;
+            }
+
+            console.log('📊 Status no perfil:', profile);
+            
+            // Se o perfil diz que é premium mas não tem assinatura, CORRIGIR
+            if (profile.is_premium) {
+                console.warn('⚠️ Perfil marcado como premium sem assinatura ativa! Corrigindo...');
+                await this.fixPremiumStatus(user.id, false);
                 return false;
             }
             
-            console.log('🔍 Status premium real:', profile);
-            
-            // Verifica se é premium e não expirou
-            if (profile.is_premium && profile.premium_expires_at) {
-                const expiresAt = new Date(profile.premium_expires_at);
-                const now = new Date();
-                return expiresAt > now;
-            }
-            
-            return profile.is_premium === true;
+            return false;
             
         } catch (error) {
-            console.error('Erro:', error);
+            console.error('❌ Erro na verificação premium:', error);
             return false;
+        }
+    },
+
+    async syncProfileWithSubscription(userId, subscription) {
+        try {
+            // ✅ GARANTIR que o perfil reflete a assinatura
+            const { error } = await supabase
+                .from('profiles')
+                .update({ 
+                    is_premium: true,
+                    premium_expires_at: subscription.expires_at,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', userId);
+
+            if (error) {
+                console.error('❌ Erro ao sincronizar perfil:', error);
+            } else {
+                console.log('✅ Perfil sincronizado com assinatura');
+            }
+        } catch (error) {
+            console.error('Erro na sincronização:', error);
+        }
+    },
+
+    async fixPremiumStatus(userId, shouldBePremium) {
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .update({ 
+                    is_premium: shouldBePremium,
+                    premium_expires_at: shouldBePremium ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : null,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', userId);
+
+            if (error) {
+                console.error('❌ Erro ao corrigir status:', error);
+            } else {
+                console.log('✅ Status premium corrigido para:', shouldBePremium);
+            }
+        } catch (error) {
+            console.error('Erro na correção:', error);
         }
     }
 };
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log(' Inicializando painel...');
+    console.log('🚀 Inicializando painel - SISTEMA PREMIUM REAL...');
     checkAuth();
 });
-
 // VERIFICA SE USUÁRIO ESTÁ LOGADO
 async function checkAuth() {
     console.log(' Verificando autenticação...');
@@ -291,43 +359,9 @@ async function updatePremiumStatus() {
     }
 }
 
-// ✅ NOVA FUNÇÃO: VERIFICAÇÃO DIRETA NO BANCO
+// ✅ VERIFICAÇÃO DIRETA NO BANCO - VERSÃO CORRIGIDA
 async function checkRealPremiumStatus() {
-    try {
-        console.log('🔍 VERIFICAÇÃO DIRETA NO BANCO...');
-        
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return false;
-        
-        // Busca DIRETAMENTE o perfil
-        const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('is_premium, premium_expires_at, updated_at')
-            .eq('id', user.id)
-            .single();
-        
-        if (error) {
-            console.error('❌ Erro ao buscar perfil:', error);
-            return false;
-        }
-        
-        console.log('📊 DADOS REAIS DO BANCO:', profile);
-        
-        if (profile.is_premium) {
-            console.log('🎉 USUÁRIO É PREMIUM NO BANCO! Forçando atualização...');
-            // Força a atualização da interface
-            await updatePlanStatus();
-            await updatePremiumStatus();
-            return true;
-        } else {
-            console.log('💔 Usuário NÃO é premium no banco');
-            return false;
-        }
-        
-    } catch (error) {
-        console.error('❌ Erro na verificação direta:', error);
-        return false;
-    }
+    return await PremiumManager.checkPremiumStatus();
 }
 
 // ATUALIZAR PROGRESSO DO PERFIL

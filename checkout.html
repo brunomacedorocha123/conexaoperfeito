@@ -1645,16 +1645,31 @@ const PremiumSystem = {
         console.log('👤 Usuário:', userId);
         console.log('📦 Plano:', planType);
         
-        const planMap = {
-            'weekly': { id: '1', days: 7, price: 4.90 },
-            'monthly': { id: '2', days: 30, price: 14.90 },
-            'semestral': { id: '3', days: 180, price: 74.90 },
-            'annual': { id: '4', days: 365, price: 129.90 }
-        };
+        // ✅ PRIMEIRO: Buscar o plano REAL na tabela subscription_plans
+        const { data: realPlan, error: planError } = await supabase
+            .from('subscription_plans')
+            .select('id, price, period_days')
+            .eq('name', planType)
+            .single();
 
-        const plan = planMap[planType] || planMap['monthly'];
+        if (planError || !realPlan) {
+            console.error('❌ Plano não encontrado, usando fallback:', planError);
+            // Fallback se não encontrar o plano
+            const fallbackMap = {
+                'weekly': { id: '123e4567-e89b-12d3-a456-426614174001', days: 7, price: 4.90 },
+                'monthly': { id: '123e4567-e89b-12d3-a456-426614174002', days: 30, price: 14.90 },
+                'semestral': { id: '123e4567-e89b-12d3-a456-426614174003', days: 180, price: 74.90 },
+                'annual': { id: '123e4567-e89b-12d3-a456-426614174004', days: 365, price: 129.90 }
+            };
+            
+            const fallbackPlan = fallbackMap[planType] || fallbackMap['monthly'];
+            return await this.createWithFallback(userId, fallbackPlan, planType);
+        }
+
+        console.log('📋 Plano real encontrado:', realPlan);
+
         const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + plan.days);
+        expiresAt.setDate(expiresAt.getDate() + (realPlan.period_days || 30));
 
         console.log('📅 Expira em:', expiresAt);
 
@@ -1663,7 +1678,7 @@ const PremiumSystem = {
             .from('user_subscriptions')
             .upsert({
                 user_id: userId,
-                plan_id: plan.id,
+                plan_id: realPlan.id, // ✅ ID REAL do plano
                 status: 'active',
                 starts_at: new Date().toISOString(),
                 expires_at: expiresAt.toISOString(),
@@ -1689,8 +1704,8 @@ const PremiumSystem = {
                 .from('payment_transactions')
                 .insert({
                     user_id: userId,
-                    plan_id: plan.id,
-                    amount: plan.price,
+                    plan_id: realPlan.id, // ✅ ID REAL do plano
+                    amount: realPlan.price,
                     payment_method: selectedPayment,
                     payment_gateway: 'mercadopago',
                     gateway_transaction_id: 'mp_' + Date.now(),
@@ -1708,6 +1723,31 @@ const PremiumSystem = {
             console.log('⚠️ Erro na transação:', txError);
         }
 
+        return subscription;
+    },
+
+    async createWithFallback(userId, fallbackPlan, planType) {
+        console.log('🔄 Usando fallback para criação de assinatura...');
+        
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + fallbackPlan.days);
+
+        // Criar assinatura com fallback
+        const { data: subscription, error } = await supabase
+            .from('user_subscriptions')
+            .upsert({
+                user_id: userId,
+                plan_id: fallbackPlan.id,
+                status: 'active',
+                starts_at: new Date().toISOString(),
+                expires_at: expiresAt.toISOString(),
+                auto_renew: false
+            })
+            .select()
+            .single();
+
+        if (error) throw error;
+        
         return subscription;
     }
 };
