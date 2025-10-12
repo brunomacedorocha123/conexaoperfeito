@@ -54,6 +54,7 @@ class VisitantesManager {
         try {
             console.log('📥 Carregando visitantes...');
             const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
             
             const { data, error } = await supabase
                 .from('profile_visits')
@@ -121,19 +122,19 @@ class VisitantesManager {
         const visitDate = new Date(visit.visited_at);
         const timeAgo = this.getTimeAgo(visitDate);
         
-        const displayCity = visitor.city && visitor.state ? 
+        const displayCity = visitor?.city && visitor?.state ? 
             `${visitor.city}, ${visitor.state}` : 'Localização não informada';
         
         return `
-            <div class="visitor-card" onclick="window.location.href='perfil.html?id=${visitor.id}'">
+            <div class="visitor-card" onclick="viewVisitorProfile('${visitor?.id}')">
                 <div class="visitor-avatar">
-                    ${visitor.avatar_url ? 
+                    ${visitor?.avatar_url ? 
                         `<img src="${visitor.avatar_url}" alt="${visitor.nickname}" onerror="this.style.display='none'">` : 
-                        `<span>${visitor.nickname?.charAt(0)?.toUpperCase() || 'U'}</span>`
+                        `<span>${visitor?.nickname?.charAt(0)?.toUpperCase() || 'U'}</span>`
                     }
                 </div>
                 <div class="visitor-info">
-                    <div class="visitor-name">${visitor.nickname || 'Usuário'}</div>
+                    <div class="visitor-name">${visitor?.nickname || 'Usuário'}</div>
                     <div class="visitor-details">
                         <span>${displayCity}</span>
                     </div>
@@ -160,10 +161,17 @@ class VisitantesManager {
     async showLockedSection() {
         try {
             const { data: { user } } = await supabase.auth.getUser();
-            const { count } = await supabase
+            if (!user) return;
+            
+            const { count, error } = await supabase
                 .from('profile_visits')
                 .select('*', { count: 'exact', head: true })
                 .eq('visited_id', user.id);
+
+            if (error) {
+                console.error('Erro ao contar visitas:', error);
+                return;
+            }
 
             const lockedCount = document.getElementById('lockedVisitorsCount');
             if (lockedCount) {
@@ -207,8 +215,7 @@ class VisitTracker {
                     visitor_id: user.id,
                     visited_id: visitedUserId,
                     visited_at: new Date().toISOString()
-                })
-                .select();
+                });
 
             if (error && error.code !== '23505') { // Ignora violação de unique
                 console.error('❌ Erro ao registrar visita:', error);
@@ -222,6 +229,12 @@ class VisitTracker {
     }
 }
 
+// ✅ FUNÇÃO PARA VER PERFIL DO VISITANTE
+function viewVisitorProfile(visitorId) {
+    localStorage.setItem('viewingProfileId', visitorId);
+    window.location.href = 'perfil.html';
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Inicializando painel...');
     checkAuth();
@@ -230,14 +243,23 @@ document.addEventListener('DOMContentLoaded', function() {
 // VERIFICA SE USUÁRIO ESTÁ LOGADO
 async function checkAuth() {
     console.log('🔐 Verificando autenticação...');
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user }, error } = await supabase.auth.getUser();
+    
+    if (error) {
+        console.error('Erro ao verificar autenticação:', error);
+        return;
+    }
+    
     if (!user) {
         console.log('❌ Usuário não autenticado, redirecionando...');
         window.location.href = 'login.html';
         return;
     }
+    
     currentUser = user;
     console.log('✅ Usuário autenticado:', user.email);
+    
+    // Inicializa tudo
     setupEventListeners();
     await loadUserData();
     await loadProfileData();
@@ -374,15 +396,19 @@ async function updatePlanStatus() {
         const planActions = document.getElementById('planActions');
 
         if (isPremium) {
-            planCard.classList.add('premium');
-            planBadge.textContent = 'PREMIUM';
-            planBadge.className = 'plan-badge premium';
-            planDescription.textContent = 'Plano Premium com todos os benefícios ativos!';
-            planActions.innerHTML = `
-                <button class="btn btn-primary" onclick="window.location.href='mensagens.html'">
-                    🚀 Ir para Mensagens
-                </button>
-            `;
+            if (planCard) planCard.classList.add('premium');
+            if (planBadge) {
+                planBadge.textContent = 'PREMIUM';
+                planBadge.className = 'plan-badge premium';
+            }
+            if (planDescription) planDescription.textContent = 'Plano Premium com todos os benefícios ativos!';
+            if (planActions) {
+                planActions.innerHTML = `
+                    <button class="btn btn-primary" onclick="window.location.href='mensagens.html'">
+                        🚀 Ir para Mensagens
+                    </button>
+                `;
+            }
             
             const planFeatures = document.querySelector('.plan-features');
             if (planFeatures) {
@@ -406,13 +432,17 @@ async function updatePlanStatus() {
                 `;
             }
         } else {
-            planCard.classList.remove('premium');
-            planBadge.textContent = 'GRATUITO';
-            planBadge.className = 'plan-badge gratuito';
-            planDescription.textContent = 'Plano gratuito com funcionalidades básicas';
-            planActions.innerHTML = `
-                <a href="planos.html" class="btn btn-primary">⭐ Fazer Upgrade</a>
-            `;
+            if (planCard) planCard.classList.remove('premium');
+            if (planBadge) {
+                planBadge.textContent = 'GRATUITO';
+                planBadge.className = 'plan-badge gratuito';
+            }
+            if (planDescription) planDescription.textContent = 'Plano gratuito com funcionalidades básicas';
+            if (planActions) {
+                planActions.innerHTML = `
+                    <a href="planos.html" class="btn btn-primary">⭐ Fazer Upgrade</a>
+                `;
+            }
         }
 
         console.log(`✅ Status do plano atualizado: ${isPremium ? 'PREMIUM' : 'GRATUITO'}`);
@@ -470,21 +500,27 @@ async function updatePremiumStatus() {
 // ATUALIZAR PROGRESSO DO PERFIL
 async function updateProfileCompletion() {
     try {
-        const { data: completion, error } = await supabase
-            .rpc('calculate_profile_completion', { user_uuid: currentUser.id });
+        // Função simplificada para calcular progresso
+        let percentage = 0;
         
-        if (error) {
-            console.error('❌ Erro ao calcular completude:', error);
-            return;
-        }
+        // Verifica campos obrigatórios preenchidos
+        const requiredFields = [
+            document.getElementById('fullName')?.value,
+            document.getElementById('nickname')?.value,
+            document.getElementById('birthDate')?.value,
+            document.getElementById('gender')?.value,
+            document.getElementById('lookingFor')?.value
+        ];
+        
+        const filledFields = requiredFields.filter(field => field && field.trim()).length;
+        percentage = (filledFields / requiredFields.length) * 100;
 
-        const percentage = completion || 0;
         const progressFill = document.getElementById('progressFill');
         const completionPercentage = document.getElementById('completionPercentage');
         const progressText = document.getElementById('progressText');
 
         if (progressFill) progressFill.style.width = `${percentage}%`;
-        if (completionPercentage) completionPercentage.textContent = `${percentage}%`;
+        if (completionPercentage) completionPercentage.textContent = `${Math.round(percentage)}%`;
         
         if (progressText) {
             if (percentage < 30) {
@@ -518,6 +554,11 @@ async function loadUserData() {
         if (error && error.code === 'PGRST116') {
             console.log('📝 Criando perfil novo...');
             await createUserProfile();
+            return;
+        }
+        
+        if (error) {
+            console.error('Erro ao carregar perfil:', error);
             return;
         }
         
@@ -585,14 +626,21 @@ async function createUserProfile() {
     }
 }
 
-// CARREGA AVATAR
+// ✅ CARREGA AVATAR - CÓDIGO CORRIGIDO
 async function loadAvatar(avatarPath) {
     try {
         console.log('🔄 Carregando avatar:', avatarPath);
         
-        const { data } = supabase.storage
+        // ✅ CORREÇÃO: Usar await e verificar erro
+        const { data, error } = await supabase.storage
             .from('avatars')
             .getPublicUrl(avatarPath);
+
+        if (error) {
+            console.error('❌ Erro ao obter URL pública:', error);
+            showFallbackAvatars();
+            return;
+        }
 
         if (data && data.publicUrl) {
             console.log('✅ URL pública do avatar:', data.publicUrl);
@@ -602,7 +650,7 @@ async function loadAvatar(avatarPath) {
             showFallbackAvatars();
         }
     } catch (error) {
-        console.log('❌ Erro ao carregar avatar:', error);
+        console.error('❌ Erro ao carregar avatar:', error);
         showFallbackAvatars();
     }
 }
@@ -662,6 +710,11 @@ async function loadProfileData() {
             return;
         }
 
+        if (profileError) {
+            console.error('Erro ao carregar perfil:', profileError);
+            return;
+        }
+
         const { data: userDetails, error: detailsError } = await supabase
             .from('user_details')
             .select('*')
@@ -677,6 +730,10 @@ async function loadProfileData() {
                     updated_at: new Date().toISOString()
                 });
             return;
+        }
+
+        if (detailsError) {
+            console.error('Erro ao carregar detalhes:', detailsError);
         }
 
         const emailInput = document.getElementById('email');
@@ -769,9 +826,11 @@ function handleAvatarSelect(event) {
         const avatarImgs = document.querySelectorAll('.user-avatar-img');
         const headerFallbacks = document.querySelectorAll('.user-avatar-fallback');
         
-        previewImg.src = e.target.result;
-        previewImg.style.display = 'block';
-        fallback.style.display = 'none';
+        if (previewImg) {
+            previewImg.src = e.target.result;
+            previewImg.style.display = 'block';
+        }
+        if (fallback) fallback.style.display = 'none';
         
         avatarImgs.forEach(img => {
             img.src = e.target.result;
@@ -802,45 +861,17 @@ async function uploadAvatar(file) {
 
         console.log('📁 Fazendo upload para:', filePath);
 
-        // Tenta criar a pasta primeiro listando o conteúdo
-        try {
-            await supabase.storage
-                .from('avatars')
-                .list(currentUser.id);
-        } catch (e) {
-            console.log('📁 Pasta não existe, será criada automaticamente');
-        }
-
-        // Upload com timeout
-        const uploadPromise = supabase.storage
+        // Upload simples
+        const { data, error } = await supabase.storage
             .from('avatars')
             .upload(filePath, file, {
                 cacheControl: '3600',
-                upsert: true
+                upsert: false
             });
-
-        // Timeout de 10 segundos
-        const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Timeout no upload')), 10000);
-        });
-
-        const { data, error } = await Promise.race([uploadPromise, timeoutPromise]);
 
         if (error) {
             console.error('❌ Erro no upload:', error);
-            
-            // Tentativa alternativa sem options
-            const { data: retryData, error: retryError } = await supabase.storage
-                .from('avatars')
-                .upload(filePath, file);
-                
-            if (retryError) {
-                console.error('❌ Erro na segunda tentativa:', retryError);
-                throw new Error(`Falha no upload: ${retryError.message}`);
-            }
-            
-            console.log('✅ Upload realizado na segunda tentativa:', retryData);
-            return filePath;
+            throw new Error(`Falha no upload: ${error.message}`);
         }
 
         console.log('✅ Upload realizado com sucesso:', data);
@@ -848,8 +879,6 @@ async function uploadAvatar(file) {
 
     } catch (error) {
         console.error('❌ Erro completo no upload:', error);
-        
-        // Fallback: Continuar sem avatar
         showNotification('⚠️ Imagem não pôde ser enviada, mas o perfil será salvo.', 'warning');
         return null;
     }
