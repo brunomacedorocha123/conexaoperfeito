@@ -6,22 +6,36 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let currentUser = null;
 let selectedAvatarFile = null;
 
-// Sistema Premium
+// Sistema Premium - VERSÃO CORRIGIDA
 const PremiumManager = {
     async checkPremiumStatus() {
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return false;
             
-            const { data, error } = await supabase
-                .rpc('is_user_premium', { user_uuid: user.id });
+            // ✅ VERIFICAÇÃO DIRETA NO BANCO - SEM RPC
+            const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('is_premium, premium_expires_at')
+                .eq('id', user.id)
+                .single();
             
             if (error) {
                 console.error('Erro ao verificar premium:', error);
                 return false;
             }
             
-            return data;
+            console.log('🔍 Status premium real:', profile);
+            
+            // Verifica se é premium e não expirou
+            if (profile.is_premium && profile.premium_expires_at) {
+                const expiresAt = new Date(profile.premium_expires_at);
+                const now = new Date();
+                return expiresAt > now;
+            }
+            
+            return profile.is_premium === true;
+            
         } catch (error) {
             console.error('Erro:', error);
             return false;
@@ -51,6 +65,12 @@ async function checkAuth() {
     await updatePremiumStatus();
     await updateProfileCompletion();
     await updatePlanStatus();
+    
+    // ✅ VERIFICAÇÃO EXTRA - DIRETO NO BANCO
+    setTimeout(async () => {
+        console.log('🔍 Verificação extra do status premium...');
+        await checkRealPremiumStatus();
+    }, 2000);
 }
 
 // CONFIGURA EVENTOS
@@ -166,7 +186,7 @@ function maskCEP(e) {
     e.target.value = value;
 }
 
-// ATUALIZAR STATUS DO PLANO
+// ATUALIZAR STATUS DO PLANO - VERSÃO CORRIGIDA
 async function updatePlanStatus() {
     try {
         const isPremium = await PremiumManager.checkPremiumStatus();
@@ -176,13 +196,14 @@ async function updatePlanStatus() {
         const planActions = document.getElementById('planActions');
 
         if (isPremium) {
+            console.log('🎉 Atualizando interface para PREMIUM');
             planCard.classList.add('premium');
             planBadge.textContent = 'PREMIUM';
             planBadge.className = 'plan-badge premium';
             planDescription.textContent = 'Plano Premium com todos os benefícios ativos!';
             planActions.innerHTML = `
                 <button class="btn btn-primary" onclick="window.location.href='mensagens.html'">
-                     Ir para Mensagens
+                    🚀 Ir para Mensagens
                 </button>
             `;
             
@@ -208,6 +229,7 @@ async function updatePlanStatus() {
                 `;
             }
         } else {
+            console.log('ℹ️ Mantendo interface GRATUITA');
             planCard.classList.remove('premium');
             planBadge.textContent = 'GRATUITO';
             planBadge.className = 'plan-badge gratuito';
@@ -217,18 +239,20 @@ async function updatePlanStatus() {
             `;
         }
 
-        console.log(`✅ Status do plano atualizado: ${isPremium ? 'PREMIUM' : 'GRATUITO'}`);
+        console.log(`✅ Status do plano: ${isPremium ? 'PREMIUM' : 'GRATUITO'}`);
     } catch (error) {
         console.error('❌ Erro ao atualizar status do plano:', error);
     }
 }
 
-// ATUALIZAR STATUS PREMIUM
+// ATUALIZAR STATUS PREMIUM - VERSÃO CORRIGIDA
 async function updatePremiumStatus() {
     try {
         const isPremium = await PremiumManager.checkPremiumStatus();
         
         if (isPremium) {
+            console.log('✅ Usuário é Premium - adicionando badges');
+            
             const userInfo = document.querySelector('.user-info');
             if (userInfo && !userInfo.querySelector('.premium-badge')) {
                 const badge = document.createElement('span');
@@ -259,13 +283,50 @@ async function updatePremiumStatus() {
                 mobileBadge.style.display = 'block';
                 mobileUserInfo.appendChild(mobileBadge);
             }
-
-            console.log('✅ Usuário é Premium - badges adicionados');
         } else {
             console.log('ℹ️ Usuário é Gratuito');
         }
     } catch (error) {
         console.error('❌ Erro ao verificar status premium:', error);
+    }
+}
+
+// ✅ NOVA FUNÇÃO: VERIFICAÇÃO DIRETA NO BANCO
+async function checkRealPremiumStatus() {
+    try {
+        console.log('🔍 VERIFICAÇÃO DIRETA NO BANCO...');
+        
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return false;
+        
+        // Busca DIRETAMENTE o perfil
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('is_premium, premium_expires_at, updated_at')
+            .eq('id', user.id)
+            .single();
+        
+        if (error) {
+            console.error('❌ Erro ao buscar perfil:', error);
+            return false;
+        }
+        
+        console.log('📊 DADOS REAIS DO BANCO:', profile);
+        
+        if (profile.is_premium) {
+            console.log('🎉 USUÁRIO É PREMIUM NO BANCO! Forçando atualização...');
+            // Força a atualização da interface
+            await updatePlanStatus();
+            await updatePremiumStatus();
+            return true;
+        } else {
+            console.log('💔 Usuário NÃO é premium no banco');
+            return false;
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro na verificação direta:', error);
+        return false;
     }
 }
 
@@ -925,3 +986,31 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// ✅ FUNÇÃO DE DEBUG PARA TESTAR MANUALMENTE
+window.debugPremium = async function() {
+    console.log('=== 🎯 DEBUG PREMIUM MANUAL ===');
+    const result = await checkRealPremiumStatus();
+    console.log('🔍 Resultado:', result);
+    return result;
+};
+
+// ✅ ATUALIZAÇÃO AUTOMÁTICA QUANDO VOLTA DE OUTRAS PÁGINAS
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {
+        console.log('🔄 Página restaurada do cache - verificando premium...');
+        setTimeout(() => {
+            checkRealPremiumStatus();
+        }, 1000);
+    }
+});
+
+// ✅ VERIFICAÇÃO QUANDO A PÁGINA FICA VISÍVEL
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) {
+        console.log('🔄 Página visível - verificando premium...');
+        setTimeout(() => {
+            checkRealPremiumStatus();
+        }, 500);
+    }
+});
