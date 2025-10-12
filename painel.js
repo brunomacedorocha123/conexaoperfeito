@@ -17,11 +17,11 @@ const PremiumManager = {
                 .rpc('is_user_premium', { user_uuid: user.id });
             
             if (error) {
-                console.error('Erro ao verificar premium:', error);
+                console.log('ℹ️ Usuário não é premium');
                 return false;
             }
             
-            return data;
+            return data || false;
         } catch (error) {
             console.error('Erro:', error);
             return false;
@@ -74,7 +74,7 @@ class VisitantesManager {
                 .limit(10);
 
             if (error) {
-                console.error('❌ Erro ao carregar visitantes:', error);
+                console.log('ℹ️ Nenhum visitante encontrado');
                 return;
             }
 
@@ -169,7 +169,7 @@ class VisitantesManager {
                 .eq('visited_id', user.id);
 
             if (error) {
-                console.error('Erro ao contar visitas:', error);
+                console.log('ℹ️ Erro ao contar visitas');
                 return;
             }
 
@@ -198,7 +198,7 @@ class VisitantesManager {
     }
 }
 
-// 📍 REGISTRADOR DE VISITAS (usar nas páginas de perfil)
+// 📍 REGISTRADOR DE VISITAS
 class VisitTracker {
     static async trackVisit(visitedUserId) {
         try {
@@ -217,8 +217,8 @@ class VisitTracker {
                     visited_at: new Date().toISOString()
                 });
 
-            if (error && error.code !== '23505') { // Ignora violação de unique
-                console.error('❌ Erro ao registrar visita:', error);
+            if (error && error.code !== '23505') {
+                console.log('ℹ️ Erro ao registrar visita');
             } else {
                 console.log('✅ Visita registrada com sucesso');
             }
@@ -245,13 +245,8 @@ async function checkAuth() {
     console.log('🔐 Verificando autenticação...');
     const { data: { user }, error } = await supabase.auth.getUser();
     
-    if (error) {
-        console.error('Erro ao verificar autenticação:', error);
-        return;
-    }
-    
-    if (!user) {
-        console.log('❌ Usuário não autenticado, redirecionando...');
+    if (error || !user) {
+        console.log('❌ Usuário não autenticado');
         window.location.href = 'login.html';
         return;
     }
@@ -268,7 +263,6 @@ async function checkAuth() {
     await updatePlanStatus();
     
     // ✅ INICIALIZA SISTEMA DE VISITANTES
-    console.log('👀 Inicializando sistema de visitantes...');
     const visitantesManager = new VisitantesManager();
     await visitantesManager.initialize();
 }
@@ -281,7 +275,6 @@ function setupEventListeners() {
     const profileForm = document.getElementById('profileForm');
     if (profileForm) {
         profileForm.addEventListener('submit', saveProfile);
-        console.log('✅ Formulário configurado');
     }
 
     // Avatar upload
@@ -291,15 +284,12 @@ function setupEventListeners() {
     if (avatarButton && avatarInput) {
         avatarButton.addEventListener('click', function(e) {
             e.preventDefault();
-            console.log('📷 Clicou no botão de avatar');
             avatarInput.click();
         });
-        console.log('✅ Botão de avatar configurado');
     }
 
     if (avatarInput) {
         avatarInput.addEventListener('change', handleAvatarSelect);
-        console.log('✅ Input de arquivo configurado');
     }
 
     // Máscaras para CPF, Telefone e CEP
@@ -354,8 +344,6 @@ function setupEventListeners() {
             mobileMenu.style.display = 'none';
         }
     });
-
-    console.log('🎯 Todos os event listeners configurados');
 }
 
 // MÁSCARAS DE FORMULÁRIO
@@ -445,7 +433,6 @@ async function updatePlanStatus() {
             }
         }
 
-        console.log(`✅ Status do plano atualizado: ${isPremium ? 'PREMIUM' : 'GRATUITO'}`);
     } catch (error) {
         console.error('❌ Erro ao atualizar status do plano:', error);
     }
@@ -487,10 +474,6 @@ async function updatePremiumStatus() {
                 mobileBadge.style.display = 'block';
                 mobileUserInfo.appendChild(mobileBadge);
             }
-
-            console.log('✅ Usuário é Premium - badges adicionados');
-        } else {
-            console.log('ℹ️ Usuário é Gratuito');
         }
     } catch (error) {
         console.error('❌ Erro ao verificar status premium:', error);
@@ -534,7 +517,6 @@ async function updateProfileCompletion() {
             }
         }
 
-        console.log(`📊 Progresso do perfil: ${percentage}%`);
     } catch (error) {
         console.error('❌ Erro ao atualizar progresso:', error);
     }
@@ -568,13 +550,9 @@ async function loadUserData() {
             document.getElementById('userNickname').textContent = displayName;
             document.getElementById('mobileUserNickname').textContent = displayName;
             
-            console.log('✅ Nickname no header:', displayName);
-            
             if (profile.avatar_url) {
-                console.log('🖼️ Carregando avatar existente...');
                 await loadAvatar(profile.avatar_url);
             } else {
-                console.log('❌ Nenhum avatar encontrado');
                 showFallbackAvatars();
             }
         } else {
@@ -584,12 +562,9 @@ async function loadUserData() {
         }
     } catch (error) {
         console.error('❌ Erro ao carregar dados do usuário:', error);
-        
         const fallbackName = currentUser?.email?.split('@')[0] || 'Usuário';
         document.getElementById('userNickname').textContent = fallbackName;
         document.getElementById('mobileUserNickname').textContent = fallbackName;
-        
-        showNotification('❌ Erro ao carregar dados do perfil', 'error');
     }
 }
 
@@ -631,7 +606,7 @@ async function loadAvatar(avatarPath) {
     try {
         console.log('🔄 Carregando avatar:', avatarPath);
         
-        // ✅ CORREÇÃO: Usar await e verificar erro
+        // ✅ CORREÇÃO: Usar await corretamente
         const { data, error } = await supabase.storage
             .from('avatars')
             .getPublicUrl(avatarPath);
@@ -643,10 +618,8 @@ async function loadAvatar(avatarPath) {
         }
 
         if (data && data.publicUrl) {
-            console.log('✅ URL pública do avatar:', data.publicUrl);
             updateAvatarImages(data.publicUrl);
         } else {
-            console.log('❌ Não foi possível obter URL pública');
             showFallbackAvatars();
         }
     } catch (error) {
@@ -661,13 +634,10 @@ function updateAvatarImages(imageUrl) {
     const previewImg = document.getElementById('avatarPreviewImg');
     const fallbacks = document.querySelectorAll('.user-avatar-fallback, .avatar-fallback');
     
-    console.log('✅ Atualizando avatares com URL:', imageUrl);
-    
     avatarImgs.forEach(img => {
         img.src = imageUrl;
         img.style.display = 'block';
         img.onerror = () => {
-            console.log('❌ Erro ao carregar imagem do avatar');
             img.style.display = 'none';
         };
     });
@@ -676,7 +646,6 @@ function updateAvatarImages(imageUrl) {
         previewImg.src = imageUrl;
         previewImg.style.display = 'block';
         previewImg.onerror = () => {
-            console.log('❌ Erro ao carregar preview do avatar');
             previewImg.style.display = 'none';
             document.getElementById('avatarFallback').style.display = 'flex';
         };
@@ -694,54 +663,38 @@ function showFallbackAvatars() {
     });
 }
 
-// CARREGA DADOS DO PERFIL
+// ✅ CARREGA DADOS DO PERFIL - VERSÃO CORRIGIDA
 async function loadProfileData() {
     try {
         console.log('📋 Carregando dados do perfil...');
         
+        // 1. Busca perfil principal
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', currentUser.id)
             .single();
 
-        if (profileError && profileError.code === 'PGRST116') {
-            await createUserProfile();
-            return;
-        }
-
         if (profileError) {
-            console.error('Erro ao carregar perfil:', profileError);
+            console.error('❌ Erro no perfil:', profileError);
             return;
         }
 
+        // 2. Busca detalhes do usuário
         const { data: userDetails, error: detailsError } = await supabase
             .from('user_details')
             .select('*')
             .eq('user_id', currentUser.id)
             .single();
 
-        if (detailsError && detailsError.code === 'PGRST116') {
-            await supabase
-                .from('user_details')
-                .insert({
-                    user_id: currentUser.id,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                });
-            return;
-        }
-
         if (detailsError) {
-            console.error('Erro ao carregar detalhes:', detailsError);
+            console.log('ℹ️ Detalhes não encontrados');
         }
 
-        const emailInput = document.getElementById('email');
-        if (emailInput) {
-            emailInput.value = currentUser.email || '';
-            console.log('✅ E-mail preenchido:', currentUser.email);
-        }
+        console.log('✅ Perfil carregado:', profile);
+        console.log('✅ Detalhes carregados:', userDetails);
 
+        // 3. PREENCHE OS CAMPOS DO FORMULÁRIO
         if (profile) {
             document.getElementById('fullName').value = profile.full_name || '';
             document.getElementById('cpf').value = profile.cpf || '';
@@ -754,6 +707,7 @@ async function loadProfileData() {
             document.getElementById('state').value = profile.state || '';
             document.getElementById('zipCode').value = profile.zip_code || '';
             document.getElementById('nickname').value = profile.nickname || '';
+            document.getElementById('email').value = currentUser.email || '';
             
             if (profile.city && profile.state && (!userDetails || !userDetails.display_city)) {
                 document.getElementById('displayCity').value = `${profile.city}, ${profile.state}`;
@@ -850,7 +804,7 @@ function handleAvatarSelect(event) {
     reader.readAsDataURL(file);
 }
 
-// UPLOAD DE AVATAR - CORRIGIDO
+// UPLOAD DE AVATAR
 async function uploadAvatar(file) {
     try {
         console.log('📤 Iniciando upload do avatar...');
@@ -861,7 +815,6 @@ async function uploadAvatar(file) {
 
         console.log('📁 Fazendo upload para:', filePath);
 
-        // Upload simples
         const { data, error } = await supabase.storage
             .from('avatars')
             .upload(filePath, file, {
@@ -884,7 +837,7 @@ async function uploadAvatar(file) {
     }
 }
 
-// SALVA PERFIL - CORRIGIDO
+// SALVA PERFIL
 async function saveProfile(event) {
     event.preventDefault();
     console.log('💾 Salvando perfil...');
@@ -898,7 +851,7 @@ async function saveProfile(event) {
 
         let avatarPath = null;
 
-        // Upload da imagem se foi selecionada (não bloqueia se falhar)
+        // Upload da imagem se foi selecionada
         if (selectedAvatarFile) {
             console.log('📤 Fazendo upload da imagem...');
             showNotification('📤 Enviando imagem...', 'info');
