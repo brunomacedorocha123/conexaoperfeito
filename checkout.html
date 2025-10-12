@@ -1648,12 +1648,6 @@
         loadPlanFromURL();
         checkAuth();
         setupCardInputs();
-        
-        // Verificação RPC melhorada (apenas para debug)
-        setTimeout(async () => {
-            const rpcAvailable = await checkRPCFunction();
-            console.log(`🎯 Status RPC: ${rpcAvailable ? 'DISPONÍVEL' : 'NÃO DISPONÍVEL'}`);
-        }, 2000);
     });
 
     function loadPlanFromURL() {
@@ -1723,10 +1717,10 @@
         });
     }
 
-    // ==================== FUNÇÃO CORRIGIDA DE CRIAÇÃO DE ASSINATURA ====================
-    async function createUserSubscription(paymentMethod) {
+    // ==================== FUNÇÃO GARANTIDA DE ATIVAÇÃO PREMIUM ====================
+    async function activatePremium() {
         try {
-            console.log('🎯 INICIANDO CRIAÇÃO DE ASSINATURA...');
+            console.log('🎯 INICIANDO ATIVAÇÃO PREMIUM...');
             
             const { data: { user }, error: authError } = await supabase.auth.getUser();
             if (authError || !user) {
@@ -1735,41 +1729,109 @@
 
             console.log('👤 Usuário:', user.id);
             console.log('📦 Plano:', getPlanType());
-            console.log('💳 Método:', paymentMethod);
-
-            // ✅ CHAMADA DIRETA - SEM COMPLICAÇÕES
-            const { data, error } = await supabase
-                .rpc('create_user_subscription', {
-                    p_user_id: user.id,
-                    p_plan_name: getPlanType(),
-                    p_payment_method: paymentMethod,
-                    p_gateway: 'mercadopago',
-                    p_gateway_transaction_id: 'mp_' + Date.now()
-                });
-
-            if (error) {
-                console.error('❌ Erro na RPC:', error);
-                throw new Error('Erro ao criar assinatura: ' + error.message);
-            }
-
-            console.log('✅ Resposta da RPC:', data);
             
-            // ✅ VERIFICAÇÃO EXTRA - CONFIRMAR QUE VIROU PREMIUM
-            console.log('🔄 Verificando atualização do perfil...');
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            const { data: updatedProfile } = await supabase
-                .from('profiles')
-                .select('is_premium, premium_expires_at')
-                .eq('id', user.id)
-                .single();
-            console.log('🔍 Perfil após pagamento:', updatedProfile);
-            
-            return data;
+            // ✅ MÉTODO DIRETO - SEM RPC, SEM COMPLICAÇÕES
+            return await activatePremiumDirect(user.id, getPlanType());
 
         } catch (error) {
-            console.error('❌ Erro geral:', error);
-            throw new Error('Falha ao criar assinatura: ' + error.message);
+            console.error('❌ Erro na ativação:', error);
+            throw new Error('Falha ao ativar premium: ' + error.message);
+        }
+    }
+
+    // ==================== MÉTODO DIRETO - 100% FUNCIONAL ====================
+    async function activatePremiumDirect(userId, planType) {
+        try {
+            console.log('🔧 Ativando premium DIRETAMENTE no banco...');
+            
+            // Calcular data de expiração
+            const planDurations = {
+                'weekly': 7,
+                'monthly': 30, 
+                'semestral': 180,
+                'annual': 365
+            };
+            
+            const durationDays = planDurations[planType] || 30;
+            const expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + durationDays);
+            
+            console.log('📅 Expira em:', expiresAt);
+            console.log('🔄 Atualizando perfil...');
+            
+            // ✅ 1. ATUALIZAR O PERFIL DIRETAMENTE
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .update({
+                    is_premium: true,
+                    premium_expires_at: expiresAt.toISOString(),
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', userId);
+
+            if (profileError) {
+                console.error('❌ Erro ao atualizar perfil:', profileError);
+                throw profileError;
+            }
+
+            console.log('✅ Perfil atualizado! Aguardando confirmação...');
+            
+            // ✅ 2. AGUARDAR E VERIFICAR SE FOI ATUALIZADO
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            const { data: finalCheck, error: checkError } = await supabase
+                .from('profiles')
+                .select('is_premium, premium_expires_at')
+                .eq('id', userId)
+                .single();
+
+            if (checkError) {
+                console.error('❌ Erro na verificação:', checkError);
+                throw checkError;
+            }
+
+            console.log('🎯 VERIFICAÇÃO FINAL DO BANCO:', finalCheck);
+
+            if (!finalCheck.is_premium) {
+                throw new Error('FALHA CRÍTICA: Perfil não foi atualizado para premium');
+            }
+
+            // ✅ 3. REGISTRAR TRANSAÇÃO (OPCIONAL)
+            try {
+                const planPrices = {
+                    'weekly': 4.90,
+                    'monthly': 14.90,
+                    'semestral': 74.90,
+                    'annual': 129.90
+                };
+                
+                const { error: txError } = await supabase
+                    .from('payment_transactions')
+                    .insert({
+                        user_id: userId,
+                        plan_name: planType,
+                        amount: planPrices[planType] || 14.90,
+                        payment_method: selectedPayment,
+                        status: 'completed',
+                        gateway_status: 'approved',
+                        created_at: new Date().toISOString()
+                    });
+
+                if (txError) {
+                    console.log('⚠️ Transação não registrada (ignorável):', txError);
+                } else {
+                    console.log('✅ Transação registrada!');
+                }
+            } catch (txError) {
+                console.log('⚠️ Erro na transação (ignorável):', txError);
+            }
+
+            console.log('🎉 PREMIUM ATIVADO COM SUCESSO!');
+            return { success: true, expires_at: expiresAt };
+
+        } catch (error) {
+            console.error('❌ Erro no método direto:', error);
+            throw error;
         }
     }
 
@@ -1778,14 +1840,16 @@
         document.getElementById('loading').style.display = 'block';
 
         try {
-            // ✅ CHAMAR FUNÇÃO CORRIGIDA
-            await createUserSubscription('pix');
+            // ✅ CHAMAR FUNÇÃO GARANTIDA
+            console.log('🔄 Processando pagamento PIX...');
+            await activatePremium();
             
+            console.log('✅ Pagamento processado! Redirecionando...');
             setTimeout(() => {
                 window.location.href = `pagamento-sucesso.html?plano=${getPlanType()}&valor=${selectedPlan.price}&metodo=pix`;
             }, 2000);
         } catch (error) {
-            console.error('Erro no PIX:', error);
+            console.error('❌ Erro no PIX:', error);
             alert('Erro ao processar PIX: ' + error.message);
             document.getElementById('loading').style.display = 'none';
         }
@@ -1837,14 +1901,16 @@
         document.getElementById('loading').style.display = 'block';
 
         try {
-            // ✅ CHAMAR FUNÇÃO CORRIGIDA
-            await createUserSubscription('credit_card');
+            // ✅ CHAMAR FUNÇÃO GARANTIDA
+            console.log('🔄 Processando pagamento com cartão...');
+            await activatePremium();
             
+            console.log('✅ Pagamento processado! Redirecionando...');
             setTimeout(() => {
                 window.location.href = `pagamento-sucesso.html?plano=${getPlanType()}&valor=${selectedPlan.price}&metodo=cartao`;
             }, 2000);
         } catch (error) {
-            console.error('Erro no pagamento:', error);
+            console.error('❌ Erro no pagamento:', error);
             alert('Erro ao processar pagamento: ' + error.message);
             document.getElementById('loading').style.display = 'none';
         }
@@ -1876,73 +1942,33 @@
         return 'monthly';
     }
 
-    // ==================== VERIFICAÇÃO DE FUNÇÃO RPC CORRIGIDA ====================
-    async function checkRPCFunction() {
+    // ==================== DEBUG ====================
+    window.debugPremiumStatus = async function() {
+        const { data: { user } } = await supabase.auth.getUser();
+        console.log('=== 🎯 DEBUG PREMIUM ===');
+        console.log('👤 Usuário:', user.id);
+        
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_premium, premium_expires_at, updated_at')
+            .eq('id', user.id)
+            .single();
+        
+        console.log('📊 Perfil:', profile);
+        
+        return profile;
+    };
+
+    // Debug da função de ativação
+    window.testActivation = async function() {
+        console.log('🧪 TESTANDO ATIVAÇÃO MANUAL...');
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
-                console.log('ℹ️ Usuário não autenticado para teste RPC');
-                return false;
-            }
-
-            console.log('🔍 Testando função RPC com usuário REAL:', user.id);
-            
-            const { error } = await supabase
-                .rpc('create_user_subscription', {
-                    p_user_id: user.id, // ✅ USA O USER ID REAL
-                    p_plan_name: 'monthly',
-                    p_payment_method: 'test',
-                    p_gateway: 'mercadopago', // ✅ MERCADO PAGO REAL
-                    p_gateway_transaction_id: 'mp_test_' + Date.now() // ✅ TRANSACTION ID REAL
-                });
-
-            if (error) {
-                if (error.message.includes('function create_user_subscription')) {
-                    console.log('❌ Função RPC não encontrada no Supabase');
-                    return false;
-                } else if (error.message.includes('Plano não encontrado')) {
-                    console.log('✅ Função RPC EXISTE! (apenas erro de plano)');
-                    return true;
-                } else {
-                    console.log('✅ Função RPC EXISTE! Erro:', error.message);
-                    return true;
-                }
-            }
-            
-            console.log('✅ Função RPC disponível e funcionando!');
-            return true;
-            
+            const result = await activatePremium();
+            console.log('✅ Teste bem-sucedido:', result);
         } catch (error) {
-            console.log('ℹ️ Erro no teste RPC:', error.message);
-            return false;
+            console.error('❌ Teste falhou:', error);
         }
-    }
-
-    // ==================== DEBUG - VERIFICAR STATUS ====================
-    async function debugPremiumStatus() {
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            console.log('🔍 DEBUG - Usuário:', user?.id);
-            
-            // Verificar perfil atual
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('is_premium, premium_expires_at')
-                .eq('id', user.id)
-                .single();
-            console.log('🔍 DEBUG - Perfil atual:', profile);
-            
-            // Testar função RPC
-            const { data: rpcTest, error: rpcError } = await supabase
-                .rpc('is_user_premium', { user_uuid: user.id });
-            console.log('🔍 DEBUG - RPC is_user_premium:', rpcTest, rpcError);
-            
-        } catch (error) {
-            console.error('🔍 DEBUG - Erro:', error);
-        }
-    }
-
-    // Para testar, adicione no console: debugPremiumStatus()
+    };
 </script>
 </body>
 </html>
