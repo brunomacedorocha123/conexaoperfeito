@@ -380,18 +380,50 @@
         </div>
     </main>
 
-    <script>
+       <script>
         // Configuração do Supabase
         const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        // 👀 TRACKER DE VISITAS
+        class VisitTracker {
+            static async trackVisit(visitedUserId) {
+                try {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    
+                    // Não registra se for o próprio usuário ou não estiver logado
+                    if (!user || user.id === visitedUserId) return;
+
+                    console.log(`👀 Registrando visita: ${user.id} → ${visitedUserId}`);
+
+                    const { error } = await supabase
+                        .from('profile_visits')
+                        .insert({
+                            visitor_id: user.id,
+                            visited_id: visitedUserId,
+                            visited_at: new Date().toISOString()
+                        })
+                        .select();
+
+                    if (error && error.code !== '23505') { // Ignora violação de unique
+                        console.error('❌ Erro ao registrar visita:', error);
+                    } else {
+                        console.log('✅ Visita registrada com sucesso');
+                    }
+
+                } catch (error) {
+                    console.error('❌ Erro no tracker:', error);
+                }
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             loadProfile();
         });
 
-        // ✅ CARREGAR PERFIL DO USUÁRIO SELECIONADO COM FOTO
+        // ✅ CARREGAR PERFIL DO USUÁRIO SELECIONADO COM FOTO E REGISTRAR VISITA
         async function loadProfile() {
             try {
                 // Pegar o ID do perfil do localStorage (enviado da home)
@@ -403,6 +435,9 @@
                 }
 
                 console.log('🔄 Carregando perfil:', profileId);
+
+                // ✅ REGISTRAR VISITA ANTES DE CARREGAR O PERFIL
+                await VisitTracker.trackVisit(profileId);
 
                 // Buscar dados PÚBLICOS do perfil INCLUINDO avatar_url
                 const { data: profile, error: profileError } = await supabase

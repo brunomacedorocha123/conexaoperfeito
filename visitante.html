@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meus Visitantes - Amor Conect</title>
+    <link rel="stylesheet" href="painel.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* Estilos específicos para a página de visitantes */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--branco);
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 2px solid var(--lilas);
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--vermelho-rosado);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .filters-section {
+            background: var(--branco);
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            border: 1px solid var(--lilas);
+        }
+
+        .filters-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .filter-options {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1.2rem;
+            border: 2px solid var(--lilas);
+            background: var(--branco);
+            color: var(--text);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.9rem;
+        }
+
+        .filter-btn.active {
+            background: var(--vermelho-rosado);
+            color: var(--branco);
+            border-color: var(--vermelho-rosado);
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .visitors-list-detailed {
+            background: var(--branco);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--lilas);
+            overflow: hidden;
+        }
+
+        .visitor-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--bege);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .visitor-item:hover {
+            background: var(--bege);
+        }
+
+        .visitor-item:last-child {
+            border-bottom: none;
+        }
+
+        .visitor-avatar-large {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--branco);
+            font-weight: bold;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .visitor-avatar-large img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .visitor-info-detailed {
+            flex: 1;
+        }
+
+        .visitor-name-large {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.3rem;
+            font-size: 1.1rem;
+        }
+
+        .visitor-details-detailed {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            flex-wrap: wrap;
+            margin-bottom: 0.5rem;
+        }
+
+        .visitor-visit-info {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .visitor-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--lilas);
+            background: var(--branco);
+            color: var(--text);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.8rem;
+            text-decoration: none;
+        }
+
+        .action-btn:hover {
+            background: var(--lilas);
+            color: var(--branco);
+        }
+
+        .action-btn.primary {
+            background: var(--vermelho-rosado);
+            color: var(--branco);
+            border-color: var(--vermelho-rosado);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-light);
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .premium-upsell {
+            background: linear-gradient(135deg, #fff9e6, #fff0cc);
+            border: 2px solid #ffd700;
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .premium-upsell h3 {
+            color: #ff6b00;
+            margin-bottom: 1rem;
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--bege);
+            border-top: 4px solid var(--vermelho-rosado);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .filters-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .filter-options {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .visitor-item {
+                padding: 1rem;
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .visitor-actions {
+                justify-content: center;
+                width: 100%;
+            }
+
+            .stat-number {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-options {
+                flex-direction: column;
+            }
+
+            .filter-btn {
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <button id="hamburgerBtn">☰</button>
+                <div class="logo">
+                    <img src="logoamorconect.png" alt="Amor Conect">
+                    <h1>Amor Conect</h1>
+                </div>
+                <div class="user-menu">
+                    <a href="home.html" class="btn btn-outline">🏠 Home</a>
+                    <a href="mensagens.html" class="btn btn-outline">💌 Mensagens</a>
+                    <a href="painel.html" class="btn btn-outline">👤 Perfil</a>
+                    <div class="user-info">
+                        <div class="user-avatar" id="userAvatar">
+                            <img class="user-avatar-img" src="" alt="Avatar">
+                            <div class="user-avatar-fallback">U</div>
+                        </div>
+                        <span id="userNickname">Usuário</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Menu Mobile -->
+    <div id="mobileMenu">
+        <button id="closeMobileMenu">×</button>
+        
+        <div class="mobile-user-info">
+            <div class="user-avatar" id="mobileUserAvatar">
+                <img class="user-avatar-img" src="" alt="Avatar">
+                <div class="user-avatar-fallback">U</div>
+            </div>
+            <div id="mobileUserNickname">Usuário</div>
+        </div>
+
+        <div class="mobile-nav">
+            <a href="home.html" class="btn btn-outline">🏠 Home</a>
+            <a href="mensagens.html" class="btn btn-outline">💌 Mensagens</a>
+            <a href="painel.html" class="btn btn-outline">👤 Perfil</a>
+            <button class="btn btn-outline" id="mobileLogoutBtn">🚪 Sair</button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Page Header -->
+            <section class="page-header">
+                <h1>👀 Meus Visitantes</h1>
+                <p>Veja quem visitou seu perfil e aumente suas conexões</p>
+            </section>
+
+            <!-- Conteúdo será carregado via JavaScript -->
+            <div id="visitorsContent">
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Carregando seus visitantes...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Configuração do Supabase
+        const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let currentUser = null;
+        let currentFilter = 'all';
+
+        // Sistema Premium
+        const PremiumManager = {
+            async checkPremiumStatus() {
+                try {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!user) return false;
+                    
+                    const { data, error } = await supabase
+                        .rpc('is_user_premium', { user_uuid: user.id });
+                    
+                    if (error) {
+                        console.error('Erro ao verificar premium:', error);
+                        return false;
+                    }
+                    
+                    return data;
+                } catch (error) {
+                    console.error('Erro:', error);
+                    return false;
+                }
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('👀 Inicializando página de visitantes...');
+            checkAuth();
+        });
+
+        // VERIFICA SE USUÁRIO ESTÁ LOGADO
+        async function checkAuth() {
+            console.log('🔐 Verificando autenticação...');
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                console.log('❌ Usuário não autenticado, redirecionando...');
+                window.location.href = 'login.html';
+                return;
+            }
+            currentUser = user;
+            console.log('✅ Usuário autenticado:', user.email);
+            
+            await loadUserData();
+            await initializeVisitorsPage();
+        }
+
+        // CARREGA DADOS DO USUÁRIO
+        async function loadUserData() {
+            try {
+                const { data: profile, error } = await supabase
+                    .from('profiles')
+                    .select('nickname, avatar_url')
+                    .eq('id', currentUser.id)
+                    .single();
+                
+                if (profile) {
+                    const displayName = profile.nickname || currentUser.email.split('@')[0];
+                    
+                    document.getElementById('userNickname').textContent = displayName;
+                    document.getElementById('mobileUserNickname').textContent = displayName;
+                    
+                    if (profile.avatar_url) {
+                        await loadAvatar(profile.avatar_url);
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Erro ao carregar dados do usuário:', error);
+            }
+        }
+
+        // CARREGA AVATAR
+        async function loadAvatar(avatarPath) {
+            try {
+                const { data } = supabase.storage
+                    .from('avatars')
+                    .getPublicUrl(avatarPath);
+
+                if (data && data.publicUrl) {
+                    updateAvatarImages(data.publicUrl);
+                }
+            } catch (error) {
+                console.log('❌ Erro ao carregar avatar:', error);
+            }
+        }
+
+        // ATUALIZA IMAGENS DE AVATAR
+        function updateAvatarImages(imageUrl) {
+            const avatarImgs = document.querySelectorAll('.user-avatar-img');
+            const fallbacks = document.querySelectorAll('.user-avatar-fallback');
+            
+            avatarImgs.forEach(img => {
+                img.src = imageUrl;
+                img.style.display = 'block';
+                img.onerror = () => {
+                    img.style.display = 'none';
+                };
+            });
+            
+            fallbacks.forEach(fb => {
+                fb.style.display = 'none';
+            });
+        }
+
+        // INICIALIZA PÁGINA DE VISITANTES
+        async function initializeVisitorsPage() {
+            const isPremium = await PremiumManager.checkPremiumStatus();
+            
+            if (isPremium) {
+                await loadVisitorsStats();
+                await loadVisitorsList();
+                setupFilters();
+            } else {
+                showPremiumUpsell();
+            }
+
+            setupMobileMenu();
+        }
+
+        // CARREGA ESTATÍSTICAS DE VISITANTES
+        async function loadVisitorsStats() {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                
+                // Total de visitantes
+                const { count: totalCount } = await supabase
+                    .from('profile_visits')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('visited_id', user.id);
+
+                // Visitantes hoje
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const { count: todayCount } = await supabase
+                    .from('profile_visits')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('visited_id', user.id)
+                    .gte('visited_at', today.toISOString());
+
+                // Visitantes esta semana
+                const weekAgo = new Date();
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                const { count: weekCount } = await supabase
+                    .from('profile_visits')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('visited_id', user.id)
+                    .gte('visited_at', weekAgo.toISOString());
+
+                displayVisitorsStats({
+                    total: totalCount || 0,
+                    today: todayCount || 0,
+                    week: weekCount || 0
+                });
+
+            } catch (error) {
+                console.error('❌ Erro ao carregar estatísticas:', error);
+            }
+        }
+
+        // MOSTRA ESTATÍSTICAS
+        function displayVisitorsStats(stats) {
+            const visitorsContent = document.getElementById('visitorsContent');
+            
+            visitorsContent.innerHTML = `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-number">${stats.total}</span>
+                        <span class="stat-label">Total de Visitas</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">${stats.today}</span>
+                        <span class="stat-label">Visitas Hoje</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">${stats.week}</span>
+                        <span class="stat-label">Esta Semana</span>
+                    </div>
+                </div>
+
+                <div class="filters-section">
+                    <div class="filters-header">
+                        <h3>Filtrar Visitantes</h3>
+                        <div class="filter-options">
+                            <button class="filter-btn active" data-filter="all">Todos</button>
+                            <button class="filter-btn" data-filter="today">Hoje</button>
+                            <button class="filter-btn" data-filter="week">Esta Semana</button>
+                            <button class="filter-btn" data-filter="month">Este Mês</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="visitorsListContainer">
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        <p>Carregando lista de visitantes...</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // CARREGA LISTA DE VISITANTES
+        async function loadVisitorsList(filter = 'all') {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                
+                let query = supabase
+                    .from('profile_visits')
+                    .select(`
+                        id,
+                        visited_at,
+                        visitor:visitor_id (
+                            id,
+                            nickname,
+                            avatar_url,
+                            city,
+                            state,
+                            user_details (
+                                age,
+                                profession,
+                                description
+                            )
+                        )
+                    `)
+                    .eq('visited_id', user.id)
+                    .order('visited_at', { ascending: false });
+
+                // Aplicar filtro de data
+                if (filter !== 'all') {
+                    const dateFilter = getDateFilter(filter);
+                    query = query.gte('visited_at', dateFilter.toISOString());
+                }
+
+                const { data, error } = await query;
+
+                if (error) {
+                    console.error('❌ Erro ao carregar visitantes:', error);
+                    showError('Erro ao carregar visitantes');
+                    return;
+                }
+
+                displayVisitorsList(data || [], filter);
+
+            } catch (error) {
+                console.error('❌ Erro ao carregar lista:', error);
+                showError('Erro ao carregar lista de visitantes');
+            }
+        }
+
+        // MOSTRA LISTA DE VISITANTES
+        function displayVisitorsList(visitors, filter) {
+            const container = document.getElementById('visitorsListContainer');
+            
+            if (visitors.length === 0) {
+                let message = 'Nenhum visitante ainda';
+                if (filter !== 'all') {
+                    message = `Nenhum visitante ${getFilterLabel(filter)}`;
+                }
+                
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">👀</div>
+                        <h3>${message}</h3>
+                        <p>Seu perfil aparecerá para mais pessoas conforme você usa o app!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="visitors-list-detailed">
+                    ${visitors.map(visit => createVisitorItem(visit)).join('')}
+                </div>
+            `;
+        }
+
+        // CRIA ITEM DE VISITANTE
+        function createVisitorItem(visit) {
+            const visitor = visit.visitor;
+            const details = visitor.user_details || {};
+            const visitDate = new Date(visit.visited_at);
+            const timeAgo = getTimeAgo(visitDate);
+            
+            const displayCity = visitor.city && visitor.state ? 
+                `${visitor.city}, ${visitor.state}` : 'Localização não informada';
+            
+            const age = details.age ? `, ${details.age} anos` : '';
+            const profession = details.profession ? ` • ${details.profession}` : '';
+
+            return `
+                <div class="visitor-item" onclick="viewProfile('${visitor.id}')">
+                    <div class="visitor-avatar-large">
+                        ${visitor.avatar_url ? 
+                            `<img src="${visitor.avatar_url}" alt="${visitor.nickname}" onerror="this.style.display='none'">` : 
+                            `<span>${visitor.nickname?.charAt(0)?.toUpperCase() || 'U'}</span>`
+                        }
+                    </div>
+                    <div class="visitor-info-detailed">
+                        <div class="visitor-name-large">${visitor.nickname || 'Usuário'}${age}</div>
+                        <div class="visitor-details-detailed">
+                            <span>${displayCity}</span>
+                            ${profession ? `<span>${profession}</span>` : ''}
+                        </div>
+                        <div class="visitor-visit-info">Visitou ${timeAgo}</div>
+                        ${details.description ? `
+                            <div class="visitor-visit-info" style="font-style: italic; margin-top: 0.3rem;">
+                                "${details.description}"
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="visitor-actions">
+                        <a href="#" class="action-btn primary" onclick="event.stopPropagation(); sendMessage('${visitor.id}')">
+                            💌 Mensagem
+                        </a>
+                        <button class="action-btn" onclick="event.stopPropagation(); viewProfile('${visitor.id}')">
+                            👀 Ver Perfil
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // CONFIGURA FILTROS
+        function setupFilters() {
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('filter-btn')) {
+                    // Remove active de todos
+                    document.querySelectorAll('.filter-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    
+                    // Adiciona active no clicado
+                    e.target.classList.add('active');
+                    
+                    // Atualiza filtro e recarrega lista
+                    currentFilter = e.target.dataset.filter;
+                    loadVisitorsList(currentFilter);
+                }
+            });
+        }
+
+        // MOSTRA UPSEL PREMIUM
+        function showPremiumUpsell() {
+            const visitorsContent = document.getElementById('visitorsContent');
+            
+            visitorsContent.innerHTML = `
+                <div class="premium-upsell">
+                    <div class="locked-icon">👑</div>
+                    <h3>Desbloqueie Seus Visitantes</h3>
+                    <p>Com o plano Premium, você pode ver quem visitou seu perfil e aumentar suas chances de match!</p>
+                    
+                    <div class="locked-stats">
+                        <span class="stat-number" id="premiumUpsellCount">0</span>
+                        <span class="stat-label">pessoas te visitaram</span>
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="window.location.href='planos.html'" style="margin-top: 1.5rem;">
+                        🚀 Ver Planos Premium
+                    </button>
+                </div>
+            `;
+
+            // Carrega contagem de visitantes para o upsell
+            loadUpsellCount();
+        }
+
+        // CARREGA CONTAGEM PARA UPSELL
+        async function loadUpsellCount() {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                const { count } = await supabase
+                    .from('profile_visits')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('visited_id', user.id);
+
+                const countElement = document.getElementById('premiumUpsellCount');
+                if (countElement) {
+                    countElement.textContent = count || 0;
+                }
+            } catch (error) {
+                console.error('❌ Erro ao carregar contagem:', error);
+            }
+        }
+
+        // FUNÇÕES AUXILIARES
+        function getDateFilter(filter) {
+            const now = new Date();
+            switch (filter) {
+                case 'today':
+                    return new Date(now.setHours(0, 0, 0, 0));
+                case 'week':
+                    return new Date(now.setDate(now.getDate() - 7));
+                case 'month':
+                    return new Date(now.setMonth(now.getMonth() - 1));
+                default:
+                    return new Date(0); // Desde sempre
+            }
+        }
+
+        function getFilterLabel(filter) {
+            const labels = {
+                'all': 'encontrado',
+                'today': 'hoje',
+                'week': 'esta semana',
+                'month': 'este mês'
+            };
+            return labels[filter] || '';
+        }
+
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return 'agora mesmo';
+            if (diffMins < 60) return `há ${diffMins} min`;
+            if (diffHours < 24) return `há ${diffHours} h`;
+            if (diffDays < 7) return `há ${diffDays} dia${diffDays > 1 ? 's' : ''}`;
+            return `em ${date.toLocaleDateString('pt-BR')}`;
+        }
+
+        // AÇÕES DOS VISITANTES
+        function viewProfile(userId) {
+            localStorage.setItem('viewingProfileId', userId);
+            window.location.href = 'perfil.html';
+        }
+
+        function sendMessage(userId) {
+            localStorage.setItem('messageRecipientId', userId);
+            window.location.href = 'mensagens.html';
+        }
+
+        function showError(message) {
+            const container = document.getElementById('visitorsListContainer');
+            container.innerHTML = `
+                <div class="error-state">
+                    <div class="error-icon">😕</div>
+                    <h3>${message}</h3>
+                    <button class="btn btn-secondary" onclick="location.reload()">
+                        🔄 Tentar Novamente
+                    </button>
+                </div>
+            `;
+        }
+
+        // CONFIGURA MENU MOBILE
+        function setupMobileMenu() {
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const closeMobileMenu = document.getElementById('closeMobileMenu');
+            const mobileMenu = document.getElementById('mobileMenu');
+            const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+
+            if (hamburgerBtn) {
+                hamburgerBtn.addEventListener('click', function() {
+                    if (mobileMenu) mobileMenu.style.display = 'flex';
+                });
+            }
+
+            if (closeMobileMenu) {
+                closeMobileMenu.addEventListener('click', function() {
+                    if (mobileMenu) mobileMenu.style.display = 'none';
+                });
+            }
+
+            if (mobileLogoutBtn) {
+                mobileLogoutBtn.addEventListener('click', logout);
+            }
+
+            // Fechar menu ao clicar em links
+            document.querySelectorAll('.mobile-nav a').forEach(link => {
+                link.addEventListener('click', () => {
+                    if (mobileMenu) mobileMenu.style.display = 'none';
+                });
+            });
+        }
+
+        // LOGOUT
+        async function logout() {
+            try {
+                await supabase.auth.signOut();
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Erro ao fazer logout:', error);
+            }
+        }
+    </script>
+</body>
+</html>

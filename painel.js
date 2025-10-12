@@ -29,6 +29,199 @@ const PremiumManager = {
     }
 };
 
+// 👀 SISTEMA DE VISITANTES
+class VisitantesManager {
+    constructor() {
+        this.visitors = [];
+        this.isPremium = false;
+    }
+
+    async initialize() {
+        console.log('👀 Inicializando sistema de visitantes...');
+        
+        // Verifica se é premium
+        this.isPremium = await PremiumManager.checkPremiumStatus();
+        
+        if (this.isPremium) {
+            await this.loadVisitors();
+            this.showVisitorsSection();
+        } else {
+            await this.showLockedSection();
+        }
+    }
+
+    async loadVisitors() {
+        try {
+            console.log('📥 Carregando visitantes...');
+            const { data: { user } } = await supabase.auth.getUser();
+            
+            const { data, error } = await supabase
+                .from('profile_visits')
+                .select(`
+                    id,
+                    visited_at,
+                    visitor:visitor_id (
+                        id,
+                        nickname,
+                        avatar_url,
+                        city,
+                        state
+                    )
+                `)
+                .eq('visited_id', user.id)
+                .order('visited_at', { ascending: false })
+                .limit(10);
+
+            if (error) {
+                console.error('❌ Erro ao carregar visitantes:', error);
+                return;
+            }
+
+            this.visitors = data || [];
+            console.log(`✅ ${this.visitors.length} visitantes carregados`);
+            
+            this.updateVisitorsUI();
+
+        } catch (error) {
+            console.error('❌ Erro no carregamento:', error);
+        }
+    }
+
+    updateVisitorsUI() {
+        const visitorsList = document.getElementById('visitorsList');
+        const visitorsCount = document.getElementById('visitorsCount');
+        const noVisitors = document.getElementById('noVisitors');
+        const visitorsActions = document.getElementById('visitorsActions');
+
+        if (!visitorsList) return;
+
+        // Atualiza contador
+        if (visitorsCount) {
+            visitorsCount.textContent = `${this.visitors.length} visita${this.visitors.length !== 1 ? 's' : ''}`;
+        }
+
+        // Mostra/oculta "sem visitantes"
+        if (noVisitors) {
+            noVisitors.style.display = this.visitors.length === 0 ? 'block' : 'none';
+        }
+
+        // Mostra botão "ver todos" se tiver visitantes
+        if (visitorsActions) {
+            visitorsActions.classList.toggle('hidden', this.visitors.length === 0);
+        }
+
+        // Renderiza lista de visitantes
+        if (this.visitors.length > 0) {
+            visitorsList.innerHTML = this.visitors.map(visit => this.createVisitorCard(visit)).join('');
+        }
+    }
+
+    createVisitorCard(visit) {
+        const visitor = visit.visitor;
+        const visitDate = new Date(visit.visited_at);
+        const timeAgo = this.getTimeAgo(visitDate);
+        
+        const displayCity = visitor.city && visitor.state ? 
+            `${visitor.city}, ${visitor.state}` : 'Localização não informada';
+        
+        return `
+            <div class="visitor-card" onclick="window.location.href='perfil.html?id=${visitor.id}'">
+                <div class="visitor-avatar">
+                    ${visitor.avatar_url ? 
+                        `<img src="${visitor.avatar_url}" alt="${visitor.nickname}" onerror="this.style.display='none'">` : 
+                        `<span>${visitor.nickname?.charAt(0)?.toUpperCase() || 'U'}</span>`
+                    }
+                </div>
+                <div class="visitor-info">
+                    <div class="visitor-name">${visitor.nickname || 'Usuário'}</div>
+                    <div class="visitor-details">
+                        <span>${displayCity}</span>
+                    </div>
+                </div>
+                <div class="visit-time">${timeAgo}</div>
+            </div>
+        `;
+    }
+
+    getTimeAgo(date) {
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        if (diffMins < 1) return 'Agora';
+        if (diffMins < 60) return `${diffMins} min`;
+        if (diffHours < 24) return `${diffHours} h`;
+        if (diffDays < 7) return `${diffDays} dia${diffDays > 1 ? 's' : ''}`;
+        return date.toLocaleDateString('pt-BR');
+    }
+
+    async showLockedSection() {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            const { count } = await supabase
+                .from('profile_visits')
+                .select('*', { count: 'exact', head: true })
+                .eq('visited_id', user.id);
+
+            const lockedCount = document.getElementById('lockedVisitorsCount');
+            if (lockedCount) {
+                lockedCount.textContent = count || 0;
+            }
+
+            // Mostra seção bloqueada
+            const visitorsSection = document.getElementById('visitorsSection');
+            const premiumLock = document.getElementById('premiumVisitorsLock');
+            
+            if (visitorsSection) visitorsSection.classList.add('hidden');
+            if (premiumLock) premiumLock.classList.remove('hidden');
+        } catch (error) {
+            console.error('❌ Erro ao carregar contagem de visitantes:', error);
+        }
+    }
+
+    showVisitorsSection() {
+        const visitorsSection = document.getElementById('visitorsSection');
+        const premiumLock = document.getElementById('premiumVisitorsLock');
+        
+        if (visitorsSection) visitorsSection.classList.remove('hidden');
+        if (premiumLock) premiumLock.classList.add('hidden');
+    }
+}
+
+// 📍 REGISTRADOR DE VISITAS (usar nas páginas de perfil)
+class VisitTracker {
+    static async trackVisit(visitedUserId) {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            
+            // Não registra se for o próprio usuário
+            if (!user || user.id === visitedUserId) return;
+
+            console.log(`👀 Registrando visita: ${user.id} → ${visitedUserId}`);
+
+            const { error } = await supabase
+                .from('profile_visits')
+                .insert({
+                    visitor_id: user.id,
+                    visited_id: visitedUserId,
+                    visited_at: new Date().toISOString()
+                })
+                .select();
+
+            if (error && error.code !== '23505') { // Ignora violação de unique
+                console.error('❌ Erro ao registrar visita:', error);
+            } else {
+                console.log('✅ Visita registrada com sucesso');
+            }
+
+        } catch (error) {
+            console.error('❌ Erro no tracker:', error);
+        }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Inicializando painel...');
     checkAuth();
@@ -51,6 +244,11 @@ async function checkAuth() {
     await updatePremiumStatus();
     await updateProfileCompletion();
     await updatePlanStatus();
+    
+    // ✅ INICIALIZA SISTEMA DE VISITANTES
+    console.log('👀 Inicializando sistema de visitantes...');
+    const visitantesManager = new VisitantesManager();
+    await visitantesManager.initialize();
 }
 
 // CONFIGURA EVENTOS
@@ -922,6 +1120,10 @@ style.textContent = `
         font-size: 18px;
         cursor: pointer;
         margin-left: 10px;
+    }
+    
+    .hidden {
+        display: none !important;
     }
 `;
 document.head.appendChild(style);

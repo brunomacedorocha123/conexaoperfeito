@@ -103,6 +103,48 @@
                 </div>
             </section>
 
+            <!-- 👀 SEÇÃO DE VISITANTES -->
+            <section class="visitors-section hidden" id="visitorsSection">
+                <div class="section-header">
+                    <h3>👀 Quem Visitou Meu Perfil</h3>
+                    <div class="visitors-stats">
+                        <span class="visitors-count" id="visitorsCount">0 visitas</span>
+                        <span class="visitors-today" id="visitorsToday">+0 hoje</span>
+                    </div>
+                </div>
+                
+                <div class="visitors-container">
+                    <div class="visitors-list" id="visitorsList">
+                        <div class="no-visitors" id="noVisitors">
+                            <p>📊 Nenhum visitante ainda</p>
+                            <small>Seu perfil aparecerá para mais pessoas conforme você usa o app!</small>
+                        </div>
+                    </div>
+                    
+                    <div class="visitors-actions hidden" id="visitorsActions">
+                        <button class="btn btn-outline" onclick="window.location.href='visitantes.html'">
+                            Ver Todos os Visitantes
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 🔒 SEÇÃO BLOQUEADA PARA FREE USERS -->
+            <section class="premium-feature-locked hidden" id="premiumVisitorsLock">
+                <div class="locked-content">
+                    <div class="locked-icon">👀</div>
+                    <h3>Descubra Quem Visitou Seu Perfil</h3>
+                    <p>Veja quem se interessou por você e aumente suas chances de match</p>
+                    <div class="locked-stats">
+                        <span class="stat-number" id="lockedVisitorsCount">0</span>
+                        <span class="stat-label">pessoas te visitaram</span>
+                    </div>
+                    <button class="btn btn-primary" onclick="window.location.href='planos.html'">
+                        🚀 Desbloquear com Premium
+                    </button>
+                </div>
+            </section>
+
             <!-- Profile Form -->
             <section class="profile-form">
                 <form id="profileForm">
