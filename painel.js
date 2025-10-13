@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 // VERIFICA SE USUÁRIO ESTÁ LOGADO
 async function checkAuth() {
-    console.log(' Verificando autenticação...');
+    console.log('🔐 Verificando autenticação...');
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
         console.log('❌ Usuário não autenticado, redirecionando...');
@@ -133,6 +133,7 @@ async function checkAuth() {
     await updatePremiumStatus();
     await updateProfileCompletion();
     await updatePlanStatus();
+    await loadInvisibleModeStatus(); // ✅ LINHA ADICIONADA
     
     // ✅ VERIFICAÇÃO EXTRA - DIRETO NO BANCO
     setTimeout(async () => {
@@ -143,7 +144,7 @@ async function checkAuth() {
 
 // CONFIGURA EVENTOS
 function setupEventListeners() {
-    console.log(' Configurando event listeners...');
+    console.log('⚙️ Configurando event listeners...');
     
     // Form submission
     const profileForm = document.getElementById('profileForm');
@@ -151,7 +152,6 @@ function setupEventListeners() {
         profileForm.addEventListener('submit', saveProfile);
         console.log('✅ Formulário configurado');
     }
-
     // Avatar upload
     const avatarButton = document.getElementById('avatarButton');
     const avatarInput = document.getElementById('avatarInput');
@@ -1048,3 +1048,104 @@ document.addEventListener('visibilitychange', function() {
         }, 500);
     }
 });
+
+// ==================== SISTEMA DE MODO INVISÍVEL ====================
+
+// Carregar status do modo invisível
+async function loadInvisibleModeStatus() {
+    try {
+        console.log('👻 Carregando status do modo invisível...');
+        
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('is_invisible, is_premium')
+            .eq('id', currentUser.id)
+            .single();
+            
+        if (error) {
+            console.error('❌ Erro ao carregar modo invisível:', error);
+            return;
+        }
+        
+        const toggle = document.getElementById('invisibleModeToggle');
+        const statusText = document.getElementById('invisibleStatus');
+        const freeMessage = document.getElementById('invisibleFreeMessage');
+        
+        if (!profile.is_premium) {
+            // Usuário free - mostrar mensagem e desabilitar toggle
+            console.log('ℹ️ Usuário free - modo invisível não disponível');
+            if (toggle) toggle.disabled = true;
+            if (statusText) statusText.textContent = 'Apenas Premium';
+            if (freeMessage) freeMessage.style.display = 'flex';
+            return;
+        }
+        
+        // Usuário premium - configurar toggle
+        const isInvisible = profile.is_invisible || false;
+        console.log(`✅ Status do modo invisível: ${isInvisible ? 'ATIVO' : 'INATIVO'}`);
+        
+        if (toggle) {
+            toggle.checked = isInvisible;
+            toggle.disabled = false;
+            
+            // Adicionar event listener
+            toggle.addEventListener('change', function() {
+                toggleInvisibleMode(this.checked);
+            });
+        }
+        
+        if (statusText) {
+            statusText.textContent = isInvisible ? 'Ativado' : 'Desativado';
+            statusText.className = isInvisible ? 'toggle-status active' : 'toggle-status inactive';
+        }
+        
+        if (freeMessage) {
+            freeMessage.style.display = 'none';
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro ao carregar modo invisível:', error);
+    }
+}
+
+// Alternar modo invisível
+async function toggleInvisibleMode(isInvisible) {
+    try {
+        console.log(`👻 Alternando modo invisível para: ${isInvisible}`);
+        
+        // Verificar se é premium
+        const isPremium = await PremiumManager.checkPremiumStatus();
+        if (!isPremium) {
+            showNotification('❌ Apenas usuários Premium podem usar o modo invisível!', 'error');
+            document.getElementById('invisibleModeToggle').checked = false;
+            return;
+        }
+        
+        const { error } = await supabase
+            .from('profiles')
+            .update({ 
+                is_invisible: isInvisible,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', currentUser.id);
+            
+        if (error) throw error;
+        
+        // Atualizar interface
+        const statusText = document.getElementById('invisibleStatus');
+        if (statusText) {
+            statusText.textContent = isInvisible ? 'Ativado' : 'Desativado';
+            statusText.className = isInvisible ? 'toggle-status active' : 'toggle-status inactive';
+        }
+        
+        console.log(`✅ Modo invisível ${isInvisible ? 'ativado' : 'desativado'}`);
+        showNotification(`👻 Modo invisível ${isInvisible ? 'ativado' : 'desativado'}!`, 'success');
+        
+    } catch (error) {
+        console.error('❌ Erro ao alterar modo invisível:', error);
+        showNotification('❌ Erro ao alterar modo invisível', 'error');
+        
+        // Reverter toggle em caso de erro
+        document.getElementById('invisibleModeToggle').checked = !isInvisible;
+    }
+}

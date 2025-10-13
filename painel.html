@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Painel do Usuário - Amor Conect</title>
   <link rel="stylesheet" href="painel.css">
-  <!-- ✅ FONT AWESOME PARA OS ÍCONES -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -52,6 +51,7 @@
       <a href="home.html" class="btn btn-outline"><i class="fas fa-home"></i> Home</a>
       <a href="busca.html" class="btn btn-outline"><i class="fas fa-search"></i> Buscar</a>
       <a href="mensagens.html" class="btn btn-outline"><i class="fas fa-envelope"></i> Mensagens</a>
+      <a href="visitas.html" class="btn btn-outline"><i class="fas fa-eye"></i> Quem me viu</a>
       <a href="configuracoes.html" class="btn btn-outline"><i class="fas fa-cog"></i> Configurações</a>
       <button class="btn btn-outline" id="mobileLogoutBtn"><i class="fas fa-sign-out-alt"></i> Sair</button>
     </div>
@@ -87,7 +87,7 @@
             </div>
           </div>
           <div class="plan-actions" id="planActions">
-            <a href="pricing.html" class="btn btn-primary"><i class="fas fa-star"></i> Fazer Upgrade</a>
+            <a href="princing.html" class="btn btn-primary"><i class="fas fa-star"></i> Fazer Upgrade</a>
           </div>
         </div>
       </section>
@@ -495,6 +495,45 @@
             </div>
           </div>
 
+          <!-- SEÇÃO: Modo Invisível -->
+          <div class="form-section section-public">
+            <h3><i class="fas fa-user-secret"></i> Modo Invisível
+              <span class="section-badge badge-public">Premium</span>
+            </h3>
+            
+            <div class="invisible-mode-card">
+              <div class="invisible-info">
+                <div class="info-icon">👻</div>
+                <div class="info-content">
+                  <h4>Navegue sem ser visto</h4>
+                  <p>Com o modo invisível ativado, você pode visitar perfis sem que os outros usuários saibam.</p>
+                </div>
+              </div>
+              
+              <div class="invisible-toggle-section">
+                <div class="toggle-info">
+                  <span class="toggle-label">Modo Invisível</span>
+                  <span class="toggle-status" id="invisibleStatus">Desativado</span>
+                </div>
+                
+                <label class="switch">
+                  <input type="checkbox" id="invisibleModeToggle">
+                  <span class="slider round"></span>
+                </label>
+              </div>
+              
+              <!-- Mensagem para usuários free -->
+              <div class="free-message" id="invisibleFreeMessage" style="display: none;">
+                <div class="message-icon">⭐</div>
+                <div class="message-content">
+                  <p><strong>Recurso Premium</strong></p>
+                  <p>Ative o modo invisível e outros recursos exclusivos tornando-se Premium.</p>
+                  <a href="princing.html" class="btn btn-premium btn-sm">Ver Planos Premium</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Form Actions -->
           <div class="form-actions">
             <button type="submit" class="btn btn-primary" id="saveButton">
@@ -502,6 +541,9 @@
             </button>
             <a href="home.html" class="btn btn-secondary">
               <i class="fas fa-home"></i> Voltar para Home
+            </a>
+            <a href="visitas.html" class="btn btn-outline">
+              <i class="fas fa-eye"></i> Ver Visitantes
             </a>
           </div>
         </form>
@@ -523,6 +565,7 @@
             <li><a href="index.html">Página Inicial</a></li>
             <li><a href="home.html">Home</a></li>
             <li><a href="mensagens.html">Mensagens</a></li>
+            <li><a href="visitas.html">Quem me visitou</a></li>
           </ul>
         </div>
         <div class="footer-column">
@@ -541,141 +584,5 @@
   </footer>
 
   <script src="painel.js"></script>
-
-  <script>
-    // ==================== VERIFICAÇÃO PREMIUM NO PAINEL ====================
-    const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    async function checkAndUpdatePremiumStatus() {
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-            
-            // Verificar status premium atual
-            const { data: profile, error } = await supabase
-                .from('profiles')
-                .select('is_premium, premium_expires_at')
-                .eq('id', user.id)
-                .single();
-            
-            if (error) {
-                console.error('Erro ao verificar premium:', error);
-                return;
-            }
-            
-            console.log('🔍 Status premium no painel:', profile);
-            
-            // Atualizar interface se for premium
-            if (profile.is_premium) {
-                updateUIForPremiumUser();
-            }
-            
-        } catch (error) {
-            console.error('Erro na verificação premium:', error);
-        }
-    }
-
-    function updateUIForPremiumUser() {
-        // Atualizar badge do plano
-        const planBadge = document.getElementById('planBadge');
-        const planDescription = document.getElementById('planDescription');
-        const planActions = document.getElementById('planActions');
-        const planCard = document.getElementById('planStatusCard');
-        
-        if (planBadge) {
-            planBadge.textContent = 'PREMIUM';
-            planBadge.className = 'plan-badge premium';
-        }
-        
-        if (planDescription) {
-            planDescription.textContent = 'Plano Premium com todos os benefícios ativos!';
-        }
-        
-        if (planActions) {
-            planActions.innerHTML = `
-                <button class="btn btn-primary" onclick="window.location.href='mensagens.html'">
-                    <i class="fas fa-rocket"></i> Ir para Mensagens
-                </button>
-            `;
-        }
-        
-        if (planCard) {
-            planCard.classList.add('premium');
-            
-            // Atualizar features
-            const planFeatures = document.querySelector('.plan-features');
-            if (planFeatures) {
-                planFeatures.innerHTML = `
-                    <div class="feature-item">
-                        <span class="feature-icon"><i class="fas fa-comment"></i></span>
-                        <span class="feature-text">Mensagens ilimitadas</span>
-                    </div>
-                    <div class="feature-item">
-                        <span class="feature-icon"><i class="fas fa-history"></i></span>
-                        <span class="feature-text">Histórico permanente</span>
-                    </div>
-                    <div class="feature-item">
-                        <span class="feature-icon"><i class="fas fa-user-secret"></i></span>
-                        <span class="feature-text">Modo invisível</span>
-                    </div>
-                    <div class="feature-item">
-                        <span class="feature-icon"><i class="fas fa-eye"></i></span>
-                        <span class="feature-text">Ver visitantes</span>
-                    </div>
-                `;
-            }
-        }
-        
-        // Adicionar badge premium no header
-        const userInfo = document.querySelector('.user-info');
-        if (userInfo && !userInfo.querySelector('.premium-badge')) {
-            const badge = document.createElement('span');
-            badge.className = 'premium-badge';
-            badge.innerHTML = '<i class="fas fa-star"></i> PREMIUM';
-            userInfo.appendChild(badge);
-        }
-        
-        // Adicionar badge premium no mobile
-        const mobileUserInfo = document.querySelector('.mobile-user-info');
-        if (mobileUserInfo && !mobileUserInfo.querySelector('.premium-badge')) {
-            const mobileBadge = document.createElement('span');
-            mobileBadge.className = 'premium-badge';
-            mobileBadge.innerHTML = '<i class="fas fa-star"></i> PREMIUM';
-            mobileBadge.style.cssText = `
-                background: var(--vermelho-rosado);
-                color: white;
-                padding: 4px 12px;
-                border-radius: 10px;
-                font-size: 0.8rem;
-                margin-top: 8px;
-                font-weight: bold;
-                display: block;
-            `;
-            mobileUserInfo.appendChild(mobileBadge);
-        }
-    }
-
-    // Executar quando o DOM carregar
-    document.addEventListener('DOMContentLoaded', function() {
-        // Aguardar um pouco para garantir que o painel.js carregou
-        setTimeout(() => {
-            checkAndUpdatePremiumStatus();
-        }, 1000);
-    });
-
-    // Também executar quando voltar de outras páginas
-    window.addEventListener('pageshow', function() {
-        setTimeout(() => {
-            checkAndUpdatePremiumStatus();
-        }, 500);
-    });
-
-    // Debug function - para testar no console
-    window.debugPremium = function() {
-        checkAndUpdatePremiumStatus();
-    };
-  </script>
 </body>
 </html>

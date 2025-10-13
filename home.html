@@ -6,7 +6,7 @@
   <title>Home - Amor Conect</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-   * {
+      * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -779,7 +779,305 @@ footer {
 #mobileMenu {
   transition: opacity 0.3s ease;
 }
-   </style>
+
+/* ==================== SISTEMA DE VISITANTES ==================== */
+
+.visitors-section {
+    margin-bottom: 3rem;
+}
+
+.visitors-card {
+    background: var(--branco);
+    padding: 1.5rem;
+    border-radius: 15px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--lilas);
+    transition: var(--transition);
+}
+
+.visitors-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.visitors-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.visitors-header h2 {
+    font-size: 1.5rem;
+    color: var(--vermelho-rosado);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+}
+
+.visitors-count {
+    background: var(--lilas);
+    color: var(--branco);
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.visitors-preview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.visitor-item {
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    padding: 0.5rem;
+    border-radius: 10px;
+}
+
+.visitor-item:hover {
+    background: var(--bege);
+    transform: translateY(-3px);
+}
+
+.visitor-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    border: 3px solid var(--branco);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.visitor-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: none;
+}
+
+.visitor-info {
+    text-align: center;
+    margin-top: 0.5rem;
+}
+
+.visitor-name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 0.2rem;
+}
+
+.visitor-time {
+    font-size: 0.7rem;
+    color: var(--text-light);
+}
+
+.visitors-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.invisible-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text);
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: var(--vermelho-rosado);
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.free-content {
+    text-align: center;
+    padding: 2rem;
+}
+
+.free-content .icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.7;
+}
+
+.free-content h3 {
+    color: var(--vermelho-rosado);
+    margin-bottom: 0.5rem;
+    font-size: 1.2rem;
+}
+
+.free-content p {
+    color: var(--text-light);
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+}
+
+.visitors-empty {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-light);
+}
+
+.visitors-empty .icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.visitors-empty p {
+    margin-bottom: 1rem;
+}
+
+.online-badge {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    background: var(--success);
+    border: 2px solid var(--branco);
+    border-radius: 50%;
+}
+
+.visitors-loading {
+    text-align: center;
+    padding: 2rem;
+}
+
+.visitors-spinner {
+    width: 30px;
+    height: 30px;
+    border: 3px solid var(--bege);
+    border-top: 3px solid var(--vermelho-rosado);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+/* Responsividade Visitantes */
+@media (max-width: 768px) {
+    .visitors-preview {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.8rem;
+    }
+    
+    .visitor-avatar {
+        width: 50px;
+        height: 50px;
+        font-size: 1rem;
+    }
+    
+    .visitors-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+    
+    .invisible-toggle {
+        justify-content: center;
+    }
+    
+    .visitors-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .visitors-count {
+        align-self: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .visitors-preview {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .visitor-avatar {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .visitor-name {
+        font-size: 0.75rem;
+    }
+    
+    .visitor-time {
+        font-size: 0.65rem;
+    }
+    
+    .free-content {
+        padding: 1.5rem;
+    }
+    
+    .free-content .icon {
+        font-size: 2.5rem;
+    }
+}
+</style>
 </head>
 <body>
   <!-- Header -->
@@ -789,7 +1087,6 @@ footer {
         <button id="hamburgerBtn">☰</button>
         <div class="logo">
           <img src="logoamorconect.png" alt="Amor Conect">
-          <!-- Título removido do desktop -->
         </div>
         <div class="user-menu">
           <div class="user-info">
@@ -799,7 +1096,6 @@ footer {
             </div>
             <span id="userNickname">Usuário</span>
           </div>
-          <!-- BOTÃO PREMIUM ADICIONADO NO DESKTOP -->
           <a href="princing.html" class="btn btn-premium">Premium</a>
           <a href="mensagens.html" class="btn btn-outline">Mensagens</a>
           <a href="busca.html" class="btn btn-outline">Buscar</a>
@@ -823,7 +1119,6 @@ footer {
     </div>
 
     <div class="mobile-nav">
-      <!-- BOTÃO PREMIUM ADICIONADO NO MOBILE -->
       <a href="princing.html" class="btn btn-premium">Premium</a>
       <a href="busca.html" class="btn btn-outline">Buscar</a>
       <a href="painel.html" class="btn btn-outline">Perfil</a>
@@ -840,7 +1135,6 @@ footer {
       <section class="welcome-section">
         <h2>Olá, <span id="welcomeNickname">Amoroso</span>! ❤️</h2>
         <p>Encontre conexões genuínas e construa relacionamentos significativos</p>
-        <!-- BOTÃO PREMIUM NA WELCOME SECTION -->
         <div style="margin-top: 1.5rem;">
           <a href="princing.html" class="btn btn-premium" style="padding: 0.8rem 2rem; font-size: 1rem;">
             Desbloqueie Recursos Premium
@@ -868,11 +1162,55 @@ footer {
         </div>
       </div>
 
+      <!-- NOVO: Card de Visitantes -->
+      <section class="visitors-section" style="margin-bottom: 3rem;">
+        <div class="visitors-card" style="background: var(--branco); padding: 1.5rem; border-radius: 15px; box-shadow: var(--shadow); border: 1px solid var(--lilas);">
+          <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.5rem; color: var(--vermelho-rosado); display: flex; align-items: center; gap: 0.5rem;">
+                👀 Quem te visitou
+            </h2>
+            <div class="visitors-count" id="visitorsCount" style="background: var(--lilas); color: var(--branco); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.9rem; font-weight: bold;">
+                0 visitas
+            </div>
+          </div>
+
+          <!-- Conteúdo Premium -->
+          <div class="premium-content" id="premiumVisitors" style="display: none;">
+            <div class="visitors-preview" id="visitorsPreview" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                <!-- Visitantes serão carregados aqui -->
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <button class="btn btn-primary" onclick="window.location.href='visitas.html'" style="padding: 0.6rem 1.2rem;">
+                    Ver todos os visitantes
+                </button>
+                <div class="invisible-toggle" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem;">
+                    <span>Modo invisível:</span>
+                    <label class="switch">
+                        <input type="checkbox" id="invisibleToggle">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </div>
+          </div>
+
+          <!-- Conteúdo Free -->
+          <div class="free-content" id="freeVisitors" style="text-align: center; padding: 2rem;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🔒</div>
+            <h3 style="color: var(--vermelho-rosado); margin-bottom: 0.5rem;">Descubra quem se interessou por você!</h3>
+            <p style="color: var(--text-light); margin-bottom: 1.5rem;">
+                <span id="freeVisitorsCount">0 pessoas</span> visitaram seu perfil esta semana
+            </p>
+            <a href="princing.html" class="btn btn-premium" style="padding: 0.8rem 1.5rem;">
+                Seja Premium para ver
+            </a>
+          </div>
+        </div>
+      </section>
+
       <!-- Users Grid -->
       <section class="users-section">
         <div class="section-header">
           <h2>Conheça Novas Pessoas</h2>
-          <!-- BOTÃO PREMIUM NO HEADER -->
           <a href="princing.html" class="btn btn-premium btn-sm">Premium</a>
         </div>
         <div class="users-grid" id="usersGrid">
@@ -902,7 +1240,6 @@ footer {
             <h3>Minhas Mensagens</h3>
             <p>Ver e responder mensagens</p>
           </a>
-          <!-- CARD PREMIUM NAS AÇÕES RÁPIDAS -->
           <a href="princing.html" class="action-card" style="background: linear-gradient(135deg, #fff9c4, #ffecb3); border: 2px solid #ffd700;">
             <div class="action-icon">⭐</div>
             <h3>Plano Premium</h3>
@@ -945,7 +1282,7 @@ footer {
     </div>
   </footer>
 
- <script>
+<script>
 // Configuração do Supabase
 const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
@@ -1025,8 +1362,9 @@ async function checkAuth() {
         currentUser = user;
         await loadUserData();
         await loadRealUsers();
+        await loadVisitorsSystem(); // ✅ NOVO: CARREGAR SISTEMA DE VISITANTES
         updateStats();
-        startStatsAutoUpdate(); // ✅ INICIAR ATUALIZAÇÃO AUTOMÁTICA
+        startStatsAutoUpdate();
         
     } catch (error) {
         console.error('Erro na autenticação:', error);
@@ -1269,6 +1607,230 @@ async function createUserCardWithPhoto(user) {
     `;
 }
 
+// ==================== SISTEMA DE VISITANTES ====================
+
+// ✅ CARREGAR VISITANTES E STATUS PREMIUM
+async function loadVisitorsSystem() {
+    try {
+        console.log('🔄 Carregando sistema de visitantes...');
+        
+        // Verificar status premium
+        const isPremium = await checkPremiumStatus();
+        
+        if (isPremium) {
+            console.log('✅ Usuário Premium - carregando visitantes');
+            await loadPremiumVisitors();
+        } else {
+            console.log('ℹ️ Usuário Free - carregando estatísticas');
+            await loadFreeVisitorsStats();
+        }
+        
+        // Carregar configuração do modo invisível
+        await loadInvisibleModeStatus();
+        
+    } catch (error) {
+        console.error('❌ Erro no sistema de visitantes:', error);
+    }
+}
+
+// ✅ VERIFICAR STATUS PREMIUM
+async function checkPremiumStatus() {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return false;
+        
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_premium')
+            .eq('id', user.id)
+            .single();
+            
+        return profile?.is_premium || false;
+    } catch (error) {
+        console.error('Erro ao verificar premium:', error);
+        return false;
+    }
+}
+
+// ✅ CARREGAR VISITANTES PARA PREMIUM
+async function loadPremiumVisitors() {
+    try {
+        // Mostrar seção premium
+        document.getElementById('premiumVisitors').style.display = 'block';
+        document.getElementById('freeVisitors').style.display = 'none';
+        
+        // Buscar últimas visitas
+        const { data: visits, error } = await supabase
+            .from('profile_visits')
+            .select(`
+                visitor_id,
+                visited_at,
+                profiles:visitor_id (
+                    nickname,
+                    avatar_url
+                )
+            `)
+            .eq('visited_id', currentUser.id)
+            .order('visited_at', { ascending: false })
+            .limit(5);
+
+        if (error) throw error;
+        
+        const visitorsPreview = document.getElementById('visitorsPreview');
+        const visitorsCount = document.getElementById('visitorsCount');
+        
+        // Atualizar contador
+        visitorsCount.textContent = `${visits?.length || 0} visitas`;
+        
+        if (!visits || visits.length === 0) {
+            visitorsPreview.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-light);">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">👀</div>
+                    <p>Ninguém visitou seu perfil ainda.<br>Complete seu perfil para aparecer mais!</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Exibir visitantes
+        let visitorsHTML = '';
+        for (const visit of visits) {
+            const visitor = visit.profiles;
+            const nickname = visitor?.nickname || 'Usuário';
+            const timeAgo = getTimeAgo(visit.visited_at);
+            const initial = nickname.charAt(0).toUpperCase();
+            
+            // Tentar carregar foto
+            let avatarHTML = '';
+            if (visitor?.avatar_url) {
+                const photoUrl = await loadUserPhoto(visitor.avatar_url);
+                if (photoUrl) {
+                    avatarHTML = `
+                        <div class="visitor-avatar" style="background-image: url('${photoUrl}'); background-size: cover; background-position: center;">
+                            <div style="display: none;">${initial}</div>
+                        </div>
+                    `;
+                }
+            }
+            
+            if (!avatarHTML) {
+                avatarHTML = `
+                    <div class="visitor-avatar">
+                        ${initial}
+                    </div>
+                `;
+            }
+            
+            visitorsHTML += `
+                <div class="visitor-item" onclick="viewProfile('${visit.visitor_id}')">
+                    ${avatarHTML}
+                    <div class="visitor-info">
+                        <div class="visitor-name">${nickname}</div>
+                        <div class="visitor-time">${timeAgo}</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        visitorsPreview.innerHTML = visitorsHTML;
+        
+    } catch (error) {
+        console.error('Erro ao carregar visitantes premium:', error);
+    }
+}
+
+// ✅ CARREGAR ESTATÍSTICAS PARA FREE USERS
+async function loadFreeVisitorsStats() {
+    try {
+        // Mostrar seção free
+        document.getElementById('premiumVisitors').style.display = 'none';
+        document.getElementById('freeVisitors').style.display = 'block';
+        
+        // Buscar contagem de visitas (apenas número)
+        const { count } = await supabase
+            .from('profile_visits')
+            .select('*', { count: 'exact', head: true })
+            .eq('visited_id', currentUser.id)
+            .gte('visited_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+        
+        const countText = count === 1 ? '1 pessoa' : `${count || 0} pessoas`;
+        document.getElementById('freeVisitorsCount').textContent = countText;
+        
+    } catch (error) {
+        console.error('Erro ao carregar stats free:', error);
+    }
+}
+
+// ✅ CARREGAR STATUS DO MODO INVISÍVEL
+async function loadInvisibleModeStatus() {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_invisible')
+            .eq('id', user.id)
+            .single();
+            
+        const toggle = document.getElementById('invisibleToggle');
+        if (toggle && profile) {
+            toggle.checked = profile.is_invisible || false;
+        }
+    } catch (error) {
+        console.error('Erro ao carregar modo invisível:', error);
+    }
+}
+
+// ✅ ALTERNAR MODO INVISÍVEL
+async function toggleInvisibleMode(isInvisible) {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        
+        // Verificar se é premium
+        const canUse = await checkPremiumStatus();
+        if (!canUse) {
+            alert('⚠️ Apenas usuários Premium podem usar o modo invisível!');
+            document.getElementById('invisibleToggle').checked = false;
+            return;
+        }
+        
+        const { error } = await supabase
+            .from('profiles')
+            .update({ 
+                is_invisible: isInvisible,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', user.id);
+            
+        if (error) throw error;
+        
+        console.log(`✅ Modo invisível ${isInvisible ? 'ativado' : 'desativado'}`);
+        
+    } catch (error) {
+        console.error('❌ Erro ao alterar modo invisível:', error);
+        alert('Erro ao alterar modo invisível');
+        document.getElementById('invisibleToggle').checked = !isInvisible;
+    }
+}
+
+// ✅ FUNÇÃO AUXILIAR - TEMPO DECORRIDO
+function getTimeAgo(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'Agora';
+    if (diffMins < 60) return `${diffMins}min`;
+    if (diffHours < 24) return `${diffHours}h`;
+    if (diffDays < 7) return `${diffDays}d`;
+    return `${Math.floor(diffDays / 7)}sem`;
+}
+
 // ==================== FUNÇÕES DE INTERAÇÃO CORRIGIDAS ====================
 function sendMessage(userId) {
     console.log('💌 Redirecionando para mensagens com usuário:', userId);
@@ -1447,6 +2009,7 @@ async function logout() {
 window.sendMessage = sendMessage;
 window.viewProfile = viewProfile;
 window.sendMessageToUser = sendMessageToUser;
+window.toggleInvisibleMode = toggleInvisibleMode;
 
 console.log('✅ Home.js carregado e pronto!');
 </script>

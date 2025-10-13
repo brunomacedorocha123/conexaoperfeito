@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quem Visitou - Amor Conect</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    /* REUTILIZANDO SEUS ESTILOS EXISTENTES */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    :root {
+      --bege: #f6ecc5;
+      --vermelho-rosado: #d1656d;
+      --lilas: #dfc9ed;
+      --branco: #ffffff;
+      --text: #444;
+      --text-light: #666;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      --transition: all 0.3s ease;
+      --error: #e53e3e;
+      --success: #38a169;
+    }
+
+    body {
+      background-color: var(--bege);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Header (mesmo estilo da home) */
+    header {
+      background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+      color: var(--branco);
+      padding: 0.8rem 0;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 70px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+      justify-content: center;
+      flex: 1;
+    }
+
+    .logo img {
+      height: 220px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--branco);
+      color: var(--vermelho-rosado);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .user-avatar-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      display: none;
+    }
+
+    .user-avatar-fallback {
+      font-size: 1.2rem;
+    }
+
+    .btn {
+      padding: 0.6rem 1rem;
+      border-radius: 30px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 2px solid var(--branco);
+      color: var(--branco);
+    }
+
+    .btn-primary {
+      background: var(--branco);
+      color: var(--vermelho-rosado);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 2px solid var(--vermelho-rosado);
+      color: var(--vermelho-rosado);
+    }
+
+    .btn-premium {
+      background: linear-gradient(135deg, #ffd700, #ff6b00);
+      color: var(--branco);
+      border: none;
+      font-weight: 700;
+      box-shadow: 0 4px 15px rgba(255, 107, 0, 0.3);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Conteúdo Principal */
+    .main-content {
+      padding: 2rem 0;
+      min-height: 70vh;
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 2rem;
+      padding: 2rem;
+      background: var(--branco);
+      border-radius: 15px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--lilas);
+    }
+
+    .page-header h1 {
+      font-size: 2.5rem;
+      color: var(--vermelho-rosado);
+      margin-bottom: 1rem;
+    }
+
+    .page-header p {
+      color: var(--text-light);
+      font-size: 1.1rem;
+    }
+
+    /* Estatísticas de Visitas */
+    .visit-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--branco);
+      padding: 1.5rem;
+      border-radius: 15px;
+      box-shadow: var(--shadow);
+      text-align: center;
+      transition: var(--transition);
+      border: 1px solid var(--lilas);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-3px);
+    }
+
+    .stat-number {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--vermelho-rosado);
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+      color: var(--text-light);
+      font-size: 0.9rem;
+    }
+
+    /* Lista de Visitantes */
+    .visitors-list {
+      background: var(--branco);
+      border-radius: 15px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--lilas);
+      overflow: hidden;
+    }
+
+    .visitors-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--lilas);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .visitors-header h2 {
+      color: var(--vermelho-rosado);
+      font-size: 1.5rem;
+    }
+
+    .visitors-count {
+      background: var(--lilas);
+      color: var(--branco);
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: bold;
+    }
+
+    .visitor-item {
+      display: flex;
+      align-items: center;
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--bege);
+      transition: var(--transition);
+      cursor: pointer;
+    }
+
+    .visitor-item:hover {
+      background: var(--bege);
+    }
+
+    .visitor-item:last-child {
+      border-bottom: none;
+    }
+
+    .visitor-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 1.5rem;
+      margin-right: 1rem;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .visitor-avatar-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      display: none;
+    }
+
+    .visitor-info {
+      flex: 1;
+    }
+
+    .visitor-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.3rem;
+    }
+
+    .visitor-time {
+      font-size: 0.9rem;
+      color: var(--text-light);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .visitor-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn-sm {
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+    }
+
+    /* Estado Vazio */
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-light);
+    }
+
+    .empty-state-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    /* Conteúdo Free */
+    .free-content {
+      text-align: center;
+      padding: 3rem;
+    }
+
+    .free-content .icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.7;
+    }
+
+    .free-content h2 {
+      color: var(--vermelho-rosado);
+      margin-bottom: 1rem;
+    }
+
+    .free-content p {
+      color: var(--text-light);
+      margin-bottom: 2rem;
+      font-size: 1rem;
+    }
+
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 3rem;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid var(--bege);
+      border-top: 4px solid var(--vermelho-rosado);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Footer */
+    footer {
+      background-color: var(--bege);
+      color: var(--text);
+      padding: 2rem 0 1rem;
+      border-top: 1px solid var(--lilas);
+      margin-top: 3rem;
+    }
+
+    .footer-content {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .footer-column h3 {
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+      color: var(--vermelho-rosado);
+    }
+
+    .footer-column ul {
+      list-style: none;
+    }
+
+    .footer-column ul li {
+      margin-bottom: 0.5rem;
+    }
+
+    .footer-column a {
+      color: var(--text);
+      text-decoration: none;
+      transition: var(--transition);
+      font-size: 0.9rem;
+    }
+
+    .footer-column a:hover {
+      color: var(--vermelho-rosado);
+    }
+
+    .copyright {
+      text-align: center;
+      padding-top: 1rem;
+      border-top: 1px solid var(--lilas);
+      font-size: 0.8rem;
+      color: var(--text-light);
+    }
+
+    /* Responsividade */
+    @media (max-width: 768px) {
+      .header-content {
+        flex-direction: row;
+        justify-content: space-between;
+      }
+
+      .user-menu {
+        display: none;
+      }
+
+      .logo img {
+        height: 180px;
+      }
+
+      .visit-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+      }
+
+      .stat-card {
+        padding: 1rem;
+      }
+
+      .stat-number {
+        font-size: 1.5rem;
+      }
+
+      .visitor-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+      }
+
+      .visitor-avatar {
+        margin-right: 0;
+      }
+
+      .visitor-actions {
+        justify-content: center;
+      }
+
+      .page-header {
+        padding: 1.5rem;
+      }
+
+      .page-header h1 {
+        font-size: 2rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .visit-stats {
+        grid-template-columns: 1fr;
+      }
+
+      .logo img {
+        height: 160px;
+      }
+
+      .page-header h1 {
+        font-size: 1.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="home.html" class="logo">
+          <img src="logoamorconect.png" alt="Amor Conect">
+        </a>
+        <div class="user-menu">
+          <div class="user-info">
+            <div class="user-avatar" id="userAvatar">
+              <img class="user-avatar-img" src="" alt="Avatar" style="display: none;">
+              <div class="user-avatar-fallback">U</div>
+            </div>
+            <span id="userNickname">Usuário</span>
+          </div>
+          <a href="princing.html" class="btn btn-premium">Premium</a>
+          <a href="home.html" class="btn btn-outline">Home</a>
+          <button class="btn btn-outline" id="logoutBtn">Sair</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="container">
+      <!-- Page Header -->
+      <section class="page-header">
+        <h1>👀 Quem Visitou Seu Perfil</h1>
+        <p>Veja quem se interessou por você e iniciou novas conexões</p>
+      </section>
+
+      <!-- Conteúdo Premium -->
+      <div class="premium-content" id="premiumContent" style="display: none;">
+        <!-- Estatísticas -->
+        <div class="visit-stats">
+          <div class="stat-card">
+            <div class="stat-number" id="totalVisits">0</div>
+            <div class="stat-label">Total de Visitas</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="visitsToday">0</div>
+            <div class="stat-label">Visitas Hoje</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="visitsThisWeek">0</div>
+            <div class="stat-label">Esta Semana</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="uniqueVisitors">0</div>
+            <div class="stat-label">Visitantes Únicos</div>
+          </div>
+        </div>
+
+        <!-- Lista de Visitantes -->
+        <div class="visitors-list">
+          <div class="visitors-header">
+            <h2>Seus Visitantes</h2>
+            <div class="visitors-count" id="visitorsCount">0 visitantes</div>
+          </div>
+          
+          <div id="visitorsList">
+            <div class="loading">
+              <div class="spinner"></div>
+              <p>Carregando visitantes...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Conteúdo Free -->
+      <div class="free-content" id="freeContent">
+        <div class="icon">🔒</div>
+        <h2>Desbloqueie para ver quem te visitou</h2>
+        <p>Como usuário Premium, você pode ver todos os perfis que visitaram seu perfil e iniciar conversas</p>
+        <a href="princing.html" class="btn btn-premium" style="padding: 1rem 2rem; font-size: 1.1rem;">
+          Tornar-se Premium
+        </a>
+        <div style="margin-top: 2rem;">
+          <a href="home.html" class="btn btn-secondary">Voltar para Home</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-column">
+          <h3>Amor Conect</h3>
+          <p>Conectando corações, construindo relacionamentos</p>
+        </div>
+        <div class="footer-column">
+          <h3>Navegação</h3>
+          <ul>
+            <li><a href="home.html">Página Inicial</a></li>
+            <li><a href="busca.html">Buscar Pessoas</a></li>
+            <li><a href="mensagens.html">Mensagens</a></li>
+            <li><a href="princing.html">Planos Premium</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h3>Suporte</h3>
+          <ul>
+            <li><a href="#">Central de Ajuda</a></li>
+            <li><a href="#">Política de Privacidade</a></li>
+            <li><a href="#">Termos de Uso</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="copyright">
+        <p>&copy; 2023 Amor Conect. Todos os direitos reservados.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Configuração do Supabase
+    const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let currentUser = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      checkAuth();
+      setupEventListeners();
+    });
+
+    // Verificar autenticação
+    async function checkAuth() {
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error) throw error;
+        
+        if (!user) {
+          window.location.href = 'login.html';
+          return;
+        }
+        
+        currentUser = user;
+        await loadUserData();
+        await checkPremiumAndLoadVisitors();
+        
+      } catch (error) {
+        console.error('Erro na autenticação:', error);
+        window.location.href = 'login.html';
+      }
+    }
+
+    // Carregar dados do usuário
+    async function loadUserData() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        // Buscar perfil
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', currentUser.id)
+          .single();
+
+        // Definir nome de exibição
+        let displayName = 'Usuário';
+        if (user.user_metadata?.nickname) {
+          displayName = user.user_metadata.nickname;
+        } else if (user.user_metadata?.full_name) {
+          displayName = user.user_metadata.full_name;
+        } else if (user.email) {
+          displayName = user.email.split('@')[0];
+        }
+
+        // Atualizar avatar
+        await updateUserAvatar(displayName, profile);
+
+        // Atualizar interface
+        document.getElementById('userNickname').textContent = displayName;
+
+      } catch (error) {
+        console.error('Erro ao carregar dados do usuário:', error);
+      }
+    }
+
+    // Atualizar avatar
+    async function updateUserAvatar(displayName, profile) {
+      const avatarElement = document.getElementById('userAvatar');
+      if (!avatarElement) return;
+      
+      const userAvatarFallback = avatarElement.querySelector('.user-avatar-fallback');
+      const userAvatarImg = avatarElement.querySelector('.user-avatar-img');
+      
+      userAvatarImg.style.display = 'none';
+      userAvatarFallback.style.display = 'flex';
+      
+      if (profile?.avatar_url) {
+        const photoUrl = await loadUserPhoto(profile.avatar_url);
+        if (photoUrl) {
+          userAvatarImg.src = photoUrl;
+          userAvatarImg.style.display = 'block';
+          userAvatarFallback.style.display = 'none';
+        }
+      }
+      
+      userAvatarFallback.textContent = displayName.charAt(0).toUpperCase();
+    }
+
+    // Carregar foto do usuário
+    async function loadUserPhoto(avatarUrl) {
+      try {
+        if (!avatarUrl) return null;
+
+        const { data } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(avatarUrl);
+
+        return data?.publicUrl || null;
+      } catch (error) {
+        console.error('Erro ao carregar foto:', error);
+        return null;
+      }
+    }
+
+    // Verificar premium e carregar visitantes
+    async function checkPremiumAndLoadVisitors() {
+      try {
+        const isPremium = await checkPremiumStatus();
+        
+        if (isPremium) {
+          document.getElementById('premiumContent').style.display = 'block';
+          document.getElementById('freeContent').style.display = 'none';
+          await loadVisitStats();
+          await loadAllVisitors();
+        } else {
+          document.getElementById('premiumContent').style.display = 'none';
+          document.getElementById('freeContent').style.display = 'block';
+        }
+        
+      } catch (error) {
+        console.error('Erro ao verificar premium:', error);
+      }
+    }
+
+    // Verificar status premium
+    async function checkPremiumStatus() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return false;
+        
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_premium')
+          .eq('id', user.id)
+          .single();
+          
+        return profile?.is_premium || false;
+      } catch (error) {
+        console.error('Erro ao verificar premium:', error);
+        return false;
+      }
+    }
+
+    // Carregar estatísticas de visitas
+    async function loadVisitStats() {
+      try {
+        // Total de visitas (30 dias)
+        const { count: totalVisits } = await supabase
+          .from('profile_visits')
+          .select('*', { count: 'exact', head: true })
+          .eq('visited_id', currentUser.id)
+          .gte('visited_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+
+        // Visitas hoje
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const { count: visitsToday } = await supabase
+          .from('profile_visits')
+          .select('*', { count: 'exact', head: true })
+          .eq('visited_id', currentUser.id)
+          .gte('visited_at', today.toISOString());
+
+        // Visitas esta semana
+        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        const { count: visitsThisWeek } = await supabase
+          .from('profile_visits')
+          .select('*', { count: 'exact', head: true })
+          .eq('visited_id', currentUser.id)
+          .gte('visited_at', weekAgo.toISOString());
+
+        // Visitantes únicos (30 dias)
+        const { data: uniqueVisitors } = await supabase
+          .from('profile_visits')
+          .select('visitor_id')
+          .eq('visited_id', currentUser.id)
+          .gte('visited_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+
+        const uniqueCount = new Set(uniqueVisitors?.map(v => v.visitor_id)).size;
+
+        // Atualizar interface
+        document.getElementById('totalVisits').textContent = totalVisits || 0;
+        document.getElementById('visitsToday').textContent = visitsToday || 0;
+        document.getElementById('visitsThisWeek').textContent = visitsThisWeek || 0;
+        document.getElementById('uniqueVisitors').textContent = uniqueCount || 0;
+
+      } catch (error) {
+        console.error('Erro ao carregar estatísticas:', error);
+      }
+    }
+
+    // Carregar todos os visitantes
+    async function loadAllVisitors() {
+      try {
+        const { data: visits, error } = await supabase
+          .from('profile_visits')
+          .select(`
+            visitor_id,
+            visited_at,
+            profiles:visitor_id (
+              nickname,
+              full_name,
+              avatar_url,
+              user_details (
+                gender,
+                zodiac,
+                profession
+              )
+            )
+          `)
+          .eq('visited_id', currentUser.id)
+          .order('visited_at', { ascending: false });
+
+        const visitorsList = document.getElementById('visitorsList');
+        
+        if (error) throw error;
+
+        // Atualizar contador
+        document.getElementById('visitorsCount').textContent = 
+          `${visits?.length || 0} visitante${visits?.length !== 1 ? 's' : ''}`;
+
+        if (!visits || visits.length === 0) {
+          visitorsList.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">👀</div>
+              <h3>Nenhuma visita ainda</h3>
+              <p>Seu perfil ainda não foi visitado. Complete seu perfil para aparecer mais nas buscas!</p>
+              <a href="painel.html" class="btn btn-primary" style="margin-top: 1rem;">
+                Completar Perfil
+              </a>
+            </div>
+          `;
+          return;
+        }
+
+        // Exibir visitantes
+        let visitorsHTML = '';
+        for (const visit of visits) {
+          const visitor = visit.profiles;
+          const nickname = visitor?.nickname || visitor?.full_name?.split(' ')[0] || 'Usuário';
+          const timeAgo = getTimeAgo(visit.visited_at);
+          const initial = nickname.charAt(0).toUpperCase();
+          
+          // Carregar foto
+          let avatarHTML = '';
+          if (visitor?.avatar_url) {
+            const photoUrl = await loadUserPhoto(visitor.avatar_url);
+            if (photoUrl) {
+              avatarHTML = `
+                <div class="visitor-avatar" style="background-image: url('${photoUrl}'); background-size: cover; background-position: center;">
+                  <div style="display: none;">${initial}</div>
+                </div>
+              `;
+            }
+          }
+          
+          if (!avatarHTML) {
+            avatarHTML = `
+              <div class="visitor-avatar">
+                ${initial}
+              </div>
+            `;
+          }
+
+          // Informações adicionais
+          const details = visitor?.user_details || {};
+          const ageInfo = details.age ? `, ${details.age}` : '';
+          const profession = details.profession ? ` • ${details.profession}` : '';
+
+          visitorsHTML += `
+            <div class="visitor-item" onclick="viewProfile('${visit.visitor_id}')">
+              ${avatarHTML}
+              <div class="visitor-info">
+                <div class="visitor-name">${nickname}${ageInfo}</div>
+                <div class="visitor-time">
+                  ⏱️ ${timeAgo}${profession}
+                </div>
+              </div>
+              <div class="visitor-actions">
+                <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); sendMessage('${visit.visitor_id}')">
+                  💌 Mensagem
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewProfile('${visit.visitor_id}')">
+                  👀 Ver Perfil
+                </button>
+              </div>
+            </div>
+          `;
+        }
+        
+        visitorsList.innerHTML = visitorsHTML;
+
+      } catch (error) {
+        console.error('Erro ao carregar visitantes:', error);
+        visitorsList.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">❌</div>
+            <h3>Erro ao carregar visitantes</h3>
+            <p>Tente recarregar a página</p>
+            <button class="btn btn-primary" onclick="location.reload()" style="margin-top: 1rem;">
+              Recarregar
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    // Função auxiliar - tempo decorrido
+    function getTimeAgo(dateString) {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+      
+      if (diffMins < 1) return 'Agora mesmo';
+      if (diffMins < 60) return `${diffMins} minuto${diffMins !== 1 ? 's' : ''} atrás`;
+      if (diffHours < 24) return `${diffHours} hora${diffHours !== 1 ? 's' : ''} atrás`;
+      if (diffDays < 7) return `${diffDays} dia${diffDays !== 1 ? 's' : ''} atrás`;
+      return `${Math.floor(diffDays / 7)} semana${Math.floor(diffDays / 7) !== 1 ? 's' : ''} atrás`;
+    }
+
+    // Funções de interação
+    function sendMessage(userId) {
+      console.log('💌 Enviar mensagem para:', userId);
+      localStorage.setItem('openChatWithUserId', userId);
+      window.location.href = 'mensagens.html';
+    }
+
+    function viewProfile(userId) {
+      console.log('👀 Ver perfil:', userId);
+      localStorage.setItem('viewingProfileId', userId);
+      window.location.href = 'perfil.html';
+    }
+
+    // Configurar event listeners
+    function setupEventListeners() {
+      const logoutBtn = document.getElementById('logoutBtn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', logout);
+      }
+    }
+
+    // Logout
+    async function logout() {
+      try {
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+        window.location.href = 'index.html';
+      } catch (error) {
+        console.error('Erro ao fazer logout:', error);
+        alert('Erro ao fazer logout. Tente novamente.');
+      }
+    }
+
+    // Exportar funções para o HTML
+    window.sendMessage = sendMessage;
+    window.viewProfile = viewProfile;
+  </script>
+</body>
+</html>
