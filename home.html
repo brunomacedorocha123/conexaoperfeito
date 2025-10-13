@@ -1521,8 +1521,11 @@ async function checkAuth() {
         updateStats();
         startStatsAutoUpdate();
         
-        // ✅ NOVO: Iniciar sistema de status online
+        // ✅ NOVO: Iniciar sistema de status online E sincronização
         startOnlineStatusUpdater();
+        
+        // ✅ NOVO: Iniciar sistema de escuta do modo invisível
+        setupInvisibleModeSyncListener();
         
     } catch (error) {
         console.error('Erro na autenticação:', error);
@@ -1578,6 +1581,66 @@ function isUserOnline(userProfile, currentUserId) {
     }
     
     return isActuallyOnline;
+}
+
+// ✅ NOVO: SISTEMA DE SINCRONIZAÇÃO DO MODO INVISÍVEL NA HOME
+function setupInvisibleModeSyncListener() {
+    try {
+        console.log('👂 Configurando ouvinte de sincronização do modo invisível na HOME...');
+        
+        // 1. Escutar evento customizado do painel
+        window.addEventListener('invisibleModeUpdated', function(event) {
+            console.log('🔄 Evento de modo invisível recebido na HOME:', event.detail);
+            handleInvisibleModeChangeInHome(event.detail.isInvisible);
+        });
+        
+        // 2. Escutar mudanças no localStorage (para abas diferentes)
+        window.addEventListener('storage', function(event) {
+            if (event.key === 'invisibleModeChanged') {
+                console.log('🔄 Storage change detectado na HOME para modo invisível');
+                const isInvisible = localStorage.getItem('invisibleModeStatus') === 'true';
+                handleInvisibleModeChangeInHome(isInvisible);
+            }
+        });
+        
+        // 3. Verificar status atual ao carregar
+        setTimeout(() => {
+            const savedStatus = localStorage.getItem('invisibleModeStatus');
+            if (savedStatus) {
+                const isInvisible = savedStatus === 'true';
+                console.log(`📝 Status salvo encontrado: ${isInvisible}`);
+                handleInvisibleModeChangeInHome(isInvisible);
+            }
+        }, 1000);
+        
+        console.log('✅ Ouvinte de sincronização configurado na HOME');
+        
+    } catch (error) {
+        console.error('❌ Erro ao configurar sincronização na HOME:', error);
+    }
+}
+
+// ✅ NOVO: PROCESSAR MUDANÇA DO MODO INVISÍVEL NA HOME
+async function handleInvisibleModeChangeInHome(isInvisible) {
+    try {
+        console.log(`🔄 HOME: Processando mudança do modo invisível para: ${isInvisible}`);
+        
+        // Atualizar o badge na seção de visitantes
+        const statusElement = document.getElementById('invisibleStatusHome');
+        if (statusElement) {
+            if (isInvisible) {
+                statusElement.style.display = 'flex';
+                statusElement.querySelector('strong').textContent = 'Ativo';
+            } else {
+                statusElement.style.display = 'none';
+            }
+        }
+        
+        console.log(`✅ HOME: Badge atualizado para modo invisível: ${isInvisible ? 'ATIVO' : 'INATIVO'}`);
+        
+    } catch (error) {
+        console.error('❌ Erro ao processar mudança do modo invisível na HOME:', error);
+    }
 }
 
 // ✅ NOVO: Iniciar atualização periódica do status
@@ -1851,8 +1914,6 @@ async function loadVisitorsSystem() {
             await loadFreeVisitorsStats();
         }
         
-        // ❌ REMOVIDO: await loadInvisibleModeStatus(); - Não precisa mais do toggle
-        
     } catch (error) {
         console.error('Erro no sistema de visitantes:', error);
     }
@@ -2071,10 +2132,6 @@ async function loadFreeVisitorsStats() {
     }
 }
 
-// ❌ REMOVIDO: Funções relacionadas ao toggle da home
-// - loadInvisibleModeStatus()
-// - toggleInvisibleMode()
-
 // FUNÇÃO AUXILIAR - TEMPO DECORRIDO
 function getTimeAgo(dateString) {
     const date = new Date(dateString);
@@ -2178,6 +2235,7 @@ function showEmptyState(message) {
         </div>
     `;
 }
+
 // FUNÇÕES AUXILIARES
 function calculateAge(birthDate) {
     if (!birthDate) return null;
@@ -2247,7 +2305,6 @@ async function logout() {
 // EXPORTAR FUNÇÕES PARA O HTML
 window.sendMessage = sendMessage;
 window.viewProfile = viewProfile;
-window.toggleInvisibleMode = toggleInvisibleMode;
 window.registerProfileVisit = registerProfileVisit;
 
 console.log('Home.js carregado e pronto!');

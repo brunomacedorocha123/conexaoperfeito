@@ -117,7 +117,6 @@ document.addEventListener('DOMContentLoaded', function() {
     checkAuth();
 });
 // VERIFICA SE USUÁRIO ESTÁ LOGADO
-// VERIFICA SE USUÁRIO ESTÁ LOGADO
 async function checkAuth() {
     console.log('🔐 Verificando autenticação...');
     const { data: { user } } = await supabase.auth.getUser();
@@ -1149,6 +1148,9 @@ async function toggleInvisibleMode(isInvisible) {
         console.log(`✅ Modo invisível ${isInvisible ? 'ativado' : 'desativado'}`);
         showNotification(`👻 Modo invisível ${isInvisible ? 'ativado' : 'desativado'}!`, 'success');
         
+        // ✅ NOVO: SINCRONIZAR COM OUTRAS ABAS/PÁGINAS
+        syncInvisibleModeToOtherTabs(isInvisible);
+        
         // Atualizar status online também
         updateOnlineStatus();
         
@@ -1158,6 +1160,78 @@ async function toggleInvisibleMode(isInvisible) {
         
         // Reverter toggle em caso de erro
         document.getElementById('invisibleModeToggle').checked = !isInvisible;
+    }
+}
+
+// ✅ NOVO: SINCRONIZAR MODO INVISÍVEL COM OUTRAS ABAS
+function syncInvisibleModeToOtherTabs(isInvisible) {
+    try {
+        // 1. Atualizar localStorage como gatilho
+        localStorage.setItem('invisibleModeChanged', Date.now().toString());
+        localStorage.setItem('invisibleModeStatus', isInvisible.toString());
+        
+        // 2. Disparar evento customizado para outras abas da mesma origem
+        window.dispatchEvent(new CustomEvent('invisibleModeUpdated', {
+            detail: { isInvisible: isInvisible }
+        }));
+        
+        console.log(`🔄 Modo invisível sincronizado para outras abas: ${isInvisible}`);
+        
+    } catch (error) {
+        console.error('❌ Erro ao sincronizar modo invisível:', error);
+    }
+}
+
+// ✅ NOVO: ESCUTAR MUDANÇAS DO MODO INVISÍVEL DE OUTRAS ABAS
+function setupInvisibleModeSyncListener() {
+    try {
+        // 1. Escutar evento customizado
+        window.addEventListener('invisibleModeUpdated', function(event) {
+            console.log('🔄 Evento de modo invisível recebido:', event.detail);
+            handleInvisibleModeChange(event.detail.isInvisible);
+        });
+        
+        // 2. Escutar mudanças no localStorage (para abas diferentes)
+        window.addEventListener('storage', function(event) {
+            if (event.key === 'invisibleModeChanged') {
+                console.log('🔄 Storage change detectado para modo invisível');
+                const isInvisible = localStorage.getItem('invisibleModeStatus') === 'true';
+                handleInvisibleModeChange(isInvisible);
+            }
+        });
+        
+        console.log('👂 Ouvinte de sincronização do modo invisível configurado');
+        
+    } catch (error) {
+        console.error('❌ Erro ao configurar sincronização:', error);
+    }
+}
+
+// ✅ NOVO: PROCESSAR MUDANÇA DO MODO INVISÍVEL
+function handleInvisibleModeChange(isInvisible) {
+    try {
+        console.log(`🔄 Processando mudança do modo invisível para: ${isInvisible}`);
+        
+        // Atualizar toggle visualmente
+        const toggle = document.getElementById('invisibleModeToggle');
+        if (toggle && toggle.checked !== isInvisible) {
+            toggle.checked = isInvisible;
+        }
+        
+        // Atualizar texto de status
+        const statusText = document.getElementById('invisibleStatus');
+        if (statusText) {
+            statusText.textContent = isInvisible ? 'Ativado' : 'Desativado';
+            statusText.className = isInvisible ? 'toggle-status active' : 'toggle-status inactive';
+        }
+        
+        // Mostrar notificação suave
+        showNotification(`👻 Modo invisível ${isInvisible ? 'ativado' : 'desativado'} (sincronizado)`, 'success', 3000);
+        
+        console.log(`✅ Interface atualizada para modo invisível: ${isInvisible}`);
+        
+    } catch (error) {
+        console.error('❌ Erro ao processar mudança do modo invisível:', error);
     }
 }
 
@@ -1231,5 +1305,8 @@ function startOnlineStatusUpdater() {
         document.addEventListener(event, updateOnlineStatus, { passive: true });
     });
     
-    console.log('🟢 Sistema de status online iniciado');
+    // ✅ NOVO: Iniciar ouvinte de sincronização
+    setupInvisibleModeSyncListener();
+    
+    console.log('🟢 Sistema de status online e sincronização iniciado');
 }
