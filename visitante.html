@@ -835,14 +835,6 @@
               <div class="empty-state-icon">👀</div>
               <h3>Nenhuma visita ainda</h3>
               <p>Seu perfil ainda não foi visitado por outros usuários</p>
-              <div style="margin-top: 1rem;">
-                <button class="btn btn-premium" onclick="testVisit()">
-                  Testar Visita
-                </button>
-                <button class="btn btn-outline" onclick="debugVisits()" style="margin-left: 0.5rem;">
-                  Debug
-                </button>
-              </div>
             </div>
           `;
           return;
@@ -886,15 +878,15 @@
       }
     }
 
-    // ✅ FUNÇÃO CORRIGIDA - Criar card do visitante
+    // ✅ FUNÇÃO COMPLETAMENTE CORRIGIDA - Criar card do visitante COM CIDADE REAL
     async function createVisitorCard(visit) {
       try {
         console.log('🔍 Buscando perfil do visitante:', visit.visitor_id);
         
-        // ✅ BUSCA DIRETA - primeiro o perfil básico
+        // ✅ BUSCA COMPLETA - com city da tabela profiles (onde usuário digitou a cidade)
         const { data: profile, error } = await supabase
           .from('profiles')
-          .select('id, nickname, full_name, avatar_url')
+          .select('id, nickname, full_name, avatar_url, city')
           .eq('id', visit.visitor_id)
           .single();
 
@@ -905,22 +897,13 @@
 
         console.log('✅ Perfil encontrado:', profile);
 
-        // ✅ BUSCA DETALHES SEPARADAMENTE
-        const { data: details } = await supabase
-          .from('user_details')
-          .select('city, state')
-          .eq('user_id', visit.visitor_id)
-          .single();
-
         // Dados do visitante
         const nickname = profile.nickname || 
                         profile.full_name?.split(' ')[0] || 
                         'Usuário';
         
-        const location = details ? 
-                        `${details.city || 'Cidade não informada'}${details.state ? ', ' + details.state : ''}` : 
-                        'Localização não informada';
-
+        // ✅ CIDADE REAL - do campo city da tabela profiles (ex: "Porto Seguro")
+        const city = profile.city || 'Cidade não informada';
         const timeAgo = getTimeAgo(visit.visited_at);
         const initial = nickname.charAt(0).toUpperCase();
 
@@ -943,7 +926,7 @@
               ${avatarContent}
             </div>
             <div class="visitor-name">${nickname}</div>
-            <div class="visitor-location">${location}</div>
+            <div class="visitor-location">${city}</div>
             <div class="visitor-time">${timeAgo}</div>
           </div>
         `;
@@ -984,104 +967,6 @@
       return `${Math.floor(diffDays / 7)}sem`;
     }
 
-    // ✅ FUNÇÃO DE TESTE - Criar uma visita manualmente
-    async function testVisit() {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        // Buscar outro usuário para simular visita
-        const { data: otherUsers } = await supabase
-          .from('profiles')
-          .select('id')
-          .neq('id', user.id)
-          .limit(1);
-
-        if (!otherUsers || otherUsers.length === 0) {
-          alert('Não há outros usuários para testar');
-          return;
-        }
-
-        const testVisitorId = otherUsers[0].id;
-        
-        console.log('🧪 Criando visita de teste:', testVisitorId, '→', user.id);
-
-        const { error } = await supabase
-          .from('profile_visits')
-          .insert({
-            visitor_id: testVisitorId,
-            visited_id: user.id,
-            visited_at: new Date().toISOString(),
-            visit_date: new Date().toISOString().split('T')[0]
-          });
-
-        if (error) {
-          console.error('❌ Erro ao criar visita teste:', error);
-          alert('Erro ao criar visita teste: ' + error.message);
-        } else {
-          console.log('✅ Visita teste criada com sucesso!');
-          alert('Visita teste criada! Recarregando...');
-          location.reload();
-        }
-
-      } catch (error) {
-        console.error('❌ Erro no teste:', error);
-        alert('Erro no teste: ' + error.message);
-      }
-    }
-
-    // ✅ VERIFICAR SE EXISTEM VISITAS NO BANCO
-    async function debugVisits() {
-      try {
-        console.log('🐛 DEBUG: Verificando visitas no banco para:', currentUser.id);
-        
-        // Verificar TODAS as visitas na tabela
-        const { data: allVisits, error: allError } = await supabase
-          .from('profile_visits')
-          .select('*')
-          .order('visited_at', { ascending: false })
-          .limit(10);
-
-        if (allError) {
-          console.error('❌ Erro ao buscar todas visitas:', allError);
-        } else {
-          console.log('🐛 DEBUG - Últimas 10 visitas no sistema:', allVisits);
-        }
-
-        // Verificar visitas específicas para o usuário atual
-        const { data: userVisits, error: userError } = await supabase
-          .from('profile_visits')
-          .select('*')
-          .eq('visited_id', currentUser.id);
-
-        if (userError) {
-          console.error('❌ Erro ao buscar visitas do usuário:', userError);
-          return;
-        }
-
-        console.log('🐛 DEBUG - Visitas para o usuário atual:', userVisits);
-        
-        if (userVisits && userVisits.length > 0) {
-          console.log('🐛 DEBUG - Primeira visita do usuário:', userVisits[0]);
-          
-          // Verificar se o visitante existe
-          const { data: visitor } = await supabase
-            .from('profiles')
-            .select('id, nickname')
-            .eq('id', userVisits[0].visitor_id)
-            .single();
-            
-          console.log('🐛 DEBUG - Visitante encontrado:', visitor);
-        } else {
-          console.log('🐛 DEBUG - NENHUMA visita encontrada para o usuário atual!');
-          alert('DEBUG: Nenhuma visita encontrada no banco para seu usuário. Verifique o console.');
-        }
-
-      } catch (error) {
-        console.error('❌ Erro no debug:', error);
-      }
-    }
-
     // Funções de interação
     function sendMessage(userId) {
       console.log('💌 Enviar mensagem para:', userId);
@@ -1118,15 +1003,8 @@
     // Exportar funções para o HTML
     window.sendMessage = sendMessage;
     window.viewProfile = viewProfile;
-    window.testVisit = testVisit;
-    window.debugVisits = debugVisits;
 
     console.log('✅ Visitante.js carregado e pronto!');
-    
-    // Executar debug automaticamente
-    setTimeout(() => {
-      debugVisits();
-    }, 1000);
 </script>
 </body>
 </html>
