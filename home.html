@@ -1356,7 +1356,6 @@ function setupMobileMenu() {
         mobileLogoutBtn.addEventListener('click', logout);
     }
 
-    // Fechar menu ao clicar em um link
     mobileMenu.querySelectorAll('a').forEach(link => {
         link.addEventListener('click', () => {
             mobileMenu.style.display = 'none';
@@ -1364,7 +1363,6 @@ function setupMobileMenu() {
         });
     });
 
-    // Verificar tamanho da tela
     function checkScreenSize() {
         if (window.innerWidth <= 768) {
             document.querySelector('.user-menu').style.display = 'none';
@@ -1414,19 +1412,13 @@ function startStatsAutoUpdate() {
 // CARREGAR FOTO DO USUÁRIO
 async function loadUserPhoto(avatarUrl) {
     try {
-        if (!avatarUrl) {
-            return null;
-        }
+        if (!avatarUrl) return null;
 
         const { data } = supabase.storage
             .from('avatars')
             .getPublicUrl(avatarUrl);
 
-        if (data && data.publicUrl) {
-            return data.publicUrl;
-        } else {
-            return null;
-        }
+        return data?.publicUrl || null;
 
     } catch (error) {
         console.error('Erro ao carregar foto:', error);
@@ -1439,7 +1431,6 @@ async function loadUserData() {
     try {
         const { data: { user } } = await supabase.auth.getUser();
         
-        // Buscar perfil do banco
         const { data: profile } = await supabase
             .from('profiles')
             .select('*')
@@ -1448,7 +1439,6 @@ async function loadUserData() {
 
         userProfile = profile;
 
-        // Definir nome de exibição
         let displayName = 'Usuário';
         
         if (user.user_metadata?.nickname) {
@@ -1459,10 +1449,8 @@ async function loadUserData() {
             displayName = user.email.split('@')[0];
         }
 
-        // ATUALIZAR AVATAR COM FOTO (Desktop e Mobile)
         await updateUserAvatar(displayName, profile);
 
-        // Atualizar interface
         document.getElementById('userNickname').textContent = displayName;
         document.getElementById('mobileUserNickname').textContent = displayName;
         document.getElementById('welcomeNickname').textContent = displayName;
@@ -1506,10 +1494,8 @@ async function updateUserAvatar(displayName, profile) {
 // CARREGAR USUÁRIOS REAIS DO BANCO COM FOTOS
 async function loadRealUsers() {
     try {
-        // Ajustar limite baseado no tamanho da tela
         const limit = window.innerWidth <= 768 ? 4 : 8;
         
-        // Buscar perfis com detalhes públicos E avatar_url
         const { data: users, error } = await supabase
             .from('profiles')
             .select(`
@@ -1534,7 +1520,6 @@ async function loadRealUsers() {
         const usersGrid = document.getElementById('usersGrid');
         
         if (error) {
-            console.error('Erro ao buscar usuários:', error);
             showEmptyState('Erro ao carregar usuários. Tente novamente.');
             return;
         }
@@ -1544,11 +1529,9 @@ async function loadRealUsers() {
             return;
         }
         
-        // CARREGAR FOTOS ASSINCRONAMENTE
         await displayUsersWithPhotos(users);
 
     } catch (error) {
-        console.error('Erro ao carregar usuários:', error);
         showEmptyState('Erro ao carregar usuários. Tente novamente.');
     }
 }
@@ -1576,7 +1559,6 @@ async function createUserCardWithPhoto(user) {
     const age = user.birth_date ? calculateAge(user.birth_date) : null;
     const details = user.user_details || {};
     
-    // CARREGAR FOTO DO USUÁRIO
     let avatarHtml = '';
     let photoUrl = null;
     
@@ -1598,7 +1580,6 @@ async function createUserCardWithPhoto(user) {
         `;
     }
 
-    // Informações públicas para mostrar
     const zodiac = details.zodiac ? getZodiacIcon(details.zodiac) + ' ' + formatZodiac(details.zodiac) : null;
     const profession = details.profession || null;
     const interests = details.interests ? details.interests.slice(0, 2).join(', ') : null;
@@ -1638,10 +1619,7 @@ async function registerProfileVisit(visitedUserId) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        // Não registrar auto-visita
-        if (user.id === visitedUserId) {
-            return;
-        }
+        if (user.id === visitedUserId) return;
 
         // ✅✅✅ USAR A NOVA FUNÇÃO DO BANCO
         const { data, error } = await supabase.rpc('register_profile_visit_simple', {
@@ -1651,10 +1629,7 @@ async function registerProfileVisit(visitedUserId) {
 
         if (error) {
             console.error('Erro ao registrar visita:', error);
-            return;
         }
-
-        console.log('Visita registrada:', data);
 
     } catch (error) {
         console.error('Erro no registro de visita:', error);
@@ -1664,7 +1639,6 @@ async function registerProfileVisit(visitedUserId) {
 // CARREGAR VISITANTES E STATUS PREMIUM
 async function loadVisitorsSystem() {
     try {
-        // Verificar status premium
         const isPremium = await checkPremiumStatus();
         
         if (isPremium) {
@@ -1673,7 +1647,6 @@ async function loadVisitorsSystem() {
             await loadFreeVisitorsStats();
         }
         
-        // Carregar configuração do modo invisível
         await loadInvisibleModeStatus();
         
     } catch (error) {
@@ -1700,26 +1673,20 @@ async function checkPremiumStatus() {
     }
 }
 
-// ✅✅✅ FUNÇÃO COMPLETAMENTE CORRIGIDA - CARREGAR VISITANTES
+// ✅✅✅ FUNÇÃO COMPLETAMENTE CORRIGIDA - CARREGAR VISITANTES PARA O QUADRO "QUEM TE VISITOU"
 async function loadPremiumVisitors() {
     try {
+        console.log('🔄 Carregando visitantes para o quadro grande...');
+        
         // Mostrar seção premium
         document.getElementById('premiumVisitors').style.display = 'block';
         document.getElementById('freeVisitors').style.display = 'none';
         
-        // ✅✅✅ QUERY DIRETA - BUSCAR VISITAS DO USUÁRIO ATUAL
+        // ✅✅✅ QUERY SIMPLIFICADA E CORRIGIDA
+        // Primeiro: buscar apenas as visitas básicas
         const { data: visits, error } = await supabase
             .from('profile_visits')
-            .select(`
-                visitor_id,
-                visited_at,
-                profiles!profile_visits_visitor_id_fkey (
-                    nickname,
-                    avatar_url,
-                    full_name,
-                    city
-                )
-            `)
+            .select('visitor_id, visited_at')
             .eq('visited_id', currentUser.id)
             .order('visited_at', { ascending: false })
             .limit(8);
@@ -1728,20 +1695,24 @@ async function loadPremiumVisitors() {
         const visitorsCount = document.getElementById('visitorsCount');
         
         if (error) {
-            console.error('Erro ao buscar visitas:', error);
+            console.error('❌ Erro ao buscar visitas:', error);
             visitorsGrid.innerHTML = `
                 <div class="visitors-empty">
                     <div class="icon">❌</div>
                     <h3>Erro ao carregar visitantes</h3>
-                    <p>Tente recarregar a página</p>
+                    <p>${error.message}</p>
                 </div>
             `;
             return;
         }
 
-        // Atualizar contador
+        console.log('✅ Visitas encontradas:', visits);
+
+        // ✅✅✅ ATUALIZAR CONTADOR - AGORA DEVE MOSTRAR O NÚMERO CORRETO
         const visitCount = visits?.length || 0;
         visitorsCount.textContent = `${visitCount} visita${visitCount !== 1 ? 's' : ''}`;
+        
+        console.log(`📊 Contador atualizado: ${visitCount} visitas`);
 
         if (!visits || visits.length === 0) {
             visitorsGrid.innerHTML = `
@@ -1754,26 +1725,30 @@ async function loadPremiumVisitors() {
             return;
         }
         
-        // CARREGAR CARDS COM FOTOS
+        // ✅✅✅ CARREGAR INFORMAÇÕES DOS PERFIS SEPARADAMENTE
         let visitorsHTML = '';
         
         for (const visit of visits) {
             try {
-                const visitor = visit.profiles;
-                if (!visitor) continue;
-                
-                const nickname = visitor.nickname || 
-                                visitor.full_name?.split(' ')[0] || 
+                // Buscar perfil do visitante
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('nickname, avatar_url, full_name, city')
+                    .eq('id', visit.visitor_id)
+                    .single();
+
+                const nickname = profile?.nickname || 
+                                profile?.full_name?.split(' ')[0] || 
                                 'Usuário';
                 
-                const city = visitor.city || 'Cidade não informada';
+                const city = profile?.city || 'Cidade não informada';
                 const timeAgo = getTimeAgo(visit.visited_at);
                 const initial = nickname.charAt(0).toUpperCase();
 
                 // Carregar foto
                 let avatarContent = '';
-                if (visitor.avatar_url) {
-                    const photoUrl = await loadUserPhoto(visitor.avatar_url);
+                if (profile?.avatar_url) {
+                    const photoUrl = await loadUserPhoto(profile.avatar_url);
                     if (photoUrl) {
                         avatarContent = `<img class="visitor-avatar-img" src="${photoUrl}" alt="${nickname}" style="display: block;">`;
                     } else {
@@ -1795,7 +1770,7 @@ async function loadPremiumVisitors() {
                 `;
                 
             } catch (error) {
-                console.error('Erro ao criar card:', error);
+                console.error('Erro ao criar card para visita:', visit, error);
                 // Card básico em caso de erro
                 visitorsHTML += `
                     <div class="visitor-card" onclick="viewProfile('${visit.visitor_id}')">
@@ -1811,9 +1786,10 @@ async function loadPremiumVisitors() {
         }
         
         visitorsGrid.innerHTML = visitorsHTML;
+        console.log(`✅ ${visits.length} cards de visitantes carregados com sucesso`);
 
     } catch (error) {
-        console.error('Erro ao carregar visitantes premium:', error);
+        console.error('❌ Erro geral ao carregar visitantes:', error);
         const visitorsGrid = document.getElementById('visitorsGrid');
         visitorsGrid.innerHTML = `
             <div class="visitors-empty">
@@ -1828,11 +1804,9 @@ async function loadPremiumVisitors() {
 // CARREGAR ESTATÍSTICAS PARA FREE USERS
 async function loadFreeVisitorsStats() {
     try {
-        // Mostrar seção free
         document.getElementById('premiumVisitors').style.display = 'none';
         document.getElementById('freeVisitors').style.display = 'block';
         
-        // BUSCAR CONTAGEM REAL DE VISITAS (7 DIAS)
         const { count } = await supabase
             .from('profile_visits')
             .select('*', { count: 'exact', head: true })
@@ -1846,7 +1820,6 @@ async function loadFreeVisitorsStats() {
         document.getElementById('visitorsCount').textContent = `${visitCount} visita${visitCount !== 1 ? 's' : ''}`;
         
     } catch (error) {
-        console.error('Erro ao carregar stats free:', error);
         document.getElementById('freeVisitorsCount').textContent = '0 pessoas';
         document.getElementById('visitorsCount').textContent = '0 visitas';
     }
@@ -1879,7 +1852,6 @@ async function toggleInvisibleMode(isInvisible) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
         
-        // Verificar se é premium
         const canUse = await checkPremiumStatus();
         if (!canUse) {
             alert('Apenas usuários Premium podem usar o modo invisível!');
@@ -1939,7 +1911,6 @@ function viewProfile(userId) {
         return;
     }
     
-    // REGISTRAR VISITA ANTES DE REDIRECIONAR
     registerProfileVisit(userId);
     
     localStorage.setItem('viewingProfileId', userId);
@@ -1956,19 +1927,16 @@ function isProfileComplete() {
 // ATUALIZAR ESTATÍSTICAS REAIS
 async function updateStats() {
     try {
-        // Total de usuários
         const { count: totalUsers } = await supabase
             .from('profiles')
             .select('*', { count: 'exact', head: true });
         
-        // CONTAGEM DE MENSAGENS NÃO LIDAS
         const { count: newMessages } = await supabase
             .from('messages')
             .select('*', { count: 'exact', head: true })
             .eq('receiver_id', currentUser.id)
             .eq('is_read', false);
 
-        // VISUALIZAÇÕES DO PERFIL (ÚLTIMOS 7 DIAS)
         const { count: profileViews } = await supabase
             .from('profile_visits')
             .select('*', { count: 'exact', head: true })
@@ -1981,7 +1949,6 @@ async function updateStats() {
         document.getElementById('profileViews').textContent = profileViews || 0;
 
     } catch (error) {
-        console.error('Erro ao carregar estatísticas:', error);
         document.getElementById('totalUsers').textContent = '1';
         document.getElementById('newMatches').textContent = '0';
         document.getElementById('usersOnline').textContent = '1';
