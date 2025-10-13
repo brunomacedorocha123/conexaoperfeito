@@ -803,31 +803,26 @@
       }
     }
 
-    // Carregar todos os visitantes
+    // ✅ FUNÇÃO COMPLETAMENTE CORRIGIDA - Carregar todos os visitantes
     async function loadAllVisitors() {
       try {
+        console.log('🔄 Carregando todos os visitantes...');
+        
+        // ✅ MÉTODO SIMPLES E DIRETO - buscar IDs primeiro
         const { data: visits, error } = await supabase
           .from('profile_visits')
-          .select(`
-            visitor_id,
-            visited_at,
-            profiles:visitor_id (
-              nickname,
-              full_name,
-              avatar_url,
-              user_details (
-                gender,
-                zodiac,
-                profession
-              )
-            )
-          `)
+          .select('visitor_id, visited_at')
           .eq('visited_id', currentUser.id)
           .order('visited_at', { ascending: false });
 
         const visitorsList = document.getElementById('visitorsList');
         
-        if (error) throw error;
+        if (error) {
+          console.error('❌ Erro ao carregar visitas:', error);
+          throw error;
+        }
+
+        console.log(`✅ ${visits?.length || 0} visitas encontradas:`, visits);
 
         // Atualizar contador
         document.getElementById('visitorsCount').textContent = 
@@ -847,76 +842,141 @@
           return;
         }
 
-        // Exibir visitantes
+        // ✅ BUSCAR DADOS DOS PERFIS SEPARADAMENTE
         let visitorsHTML = '';
+        
         for (const visit of visits) {
-          const visitor = visit.profiles;
-          const nickname = visitor?.nickname || visitor?.full_name?.split(' ')[0] || 'Usuário';
-          const timeAgo = getTimeAgo(visit.visited_at);
-          const initial = nickname.charAt(0).toUpperCase();
-          
-          // Carregar foto
-          let avatarHTML = '';
-          if (visitor?.avatar_url) {
-            const photoUrl = await loadUserPhoto(visitor.avatar_url);
-            if (photoUrl) {
-              avatarHTML = `
-                <div class="visitor-avatar" style="background-image: url('${photoUrl}'); background-size: cover; background-position: center;">
-                  <div style="display: none;">${initial}</div>
-                </div>
-              `;
+          try {
+            // Buscar perfil do visitante
+            const { data: visitorProfile, error: profileError } = await supabase
+              .from('profiles')
+              .select(`
+                nickname,
+                full_name,
+                avatar_url,
+                birth_date,
+                user_details (
+                  zodiac,
+                  profession,
+                  description
+                )
+              `)
+              .eq('id', visit.visitor_id)
+              .single();
+
+            if (profileError) {
+              console.error('❌ Erro ao carregar perfil do visitante:', profileError);
+              // Mostrar visitante básico mesmo com erro
+              visitorsHTML += createVisitorCard(visit, null);
+              continue;
             }
-          }
-          
-          if (!avatarHTML) {
-            avatarHTML = `
-              <div class="visitor-avatar">
-                ${initial}
-              </div>
-            `;
-          }
 
-          // Informações adicionais
-          const details = visitor?.user_details || {};
-          const ageInfo = details.age ? `, ${details.age}` : '';
-          const profession = details.profession ? ` • ${details.profession}` : '';
-
-          visitorsHTML += `
-            <div class="visitor-item" onclick="viewProfile('${visit.visitor_id}')">
-              ${avatarHTML}
-              <div class="visitor-info">
-                <div class="visitor-name">${nickname}${ageInfo}</div>
-                <div class="visitor-time">
-                  ⏱️ ${timeAgo}${profession}
-                </div>
-              </div>
-              <div class="visitor-actions">
-                <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); sendMessage('${visit.visitor_id}')">
-                  💌 Mensagem
-                </button>
-                <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewProfile('${visit.visitor_id}')">
-                  👀 Ver Perfil
-                </button>
-              </div>
-            </div>
-          `;
+            visitorsHTML += createVisitorCard(visit, visitorProfile);
+            
+          } catch (error) {
+            console.error('❌ Erro no processamento do visitante:', error);
+            visitorsHTML += createVisitorCard(visit, null);
+          }
         }
         
         visitorsList.innerHTML = visitorsHTML;
+        console.log('✅ Lista de visitantes carregada com sucesso');
 
       } catch (error) {
-        console.error('Erro ao carregar visitantes:', error);
+        console.error('❌ Erro ao carregar visitantes:', error);
         visitorsList.innerHTML = `
           <div class="empty-state">
             <div class="empty-state-icon">❌</div>
             <h3>Erro ao carregar visitantes</h3>
-            <p>Tente recarregar a página</p>
+            <p>${error.message || 'Tente recarregar a página'}</p>
             <button class="btn btn-primary" onclick="location.reload()" style="margin-top: 1rem;">
               Recarregar
             </button>
           </div>
         `;
       }
+    }
+
+    // ✅ FUNÇÃO AUXILIAR - Criar card do visitante
+    function createVisitorCard(visit, visitorProfile) {
+      const nickname = visitorProfile?.nickname || visitorProfile?.full_name?.split(' ')[0] || 'Usuário';
+      const timeAgo = getTimeAgo(visit.visited_at);
+      const initial = nickname.charAt(0).toUpperCase();
+      
+      // Calcular idade
+      const age = visitorProfile?.birth_date ? calculateAge(visitorProfile.birth_date) : null;
+      const ageInfo = age ? `, ${age}` : '';
+      
+      // Carregar foto
+      let avatarHTML = '';
+      if (visitorProfile?.avatar_url) {
+        avatarHTML = `
+          <div class="visitor-avatar" style="background-image: url('${visitorProfile.avatar_url}'); background-size: cover; background-position: center;">
+            <div style="display: none;">${initial}</div>
+          </div>
+        `;
+      } else {
+        avatarHTML = `
+          <div class="visitor-avatar">
+            ${initial}
+          </div>
+        `;
+      }
+
+      // Informações adicionais
+      const details = visitorProfile?.user_details || {};
+      const zodiac = details.zodiac ? ` • ${formatZodiac(details.zodiac)}` : '';
+      const profession = details.profession ? ` • ${details.profession}` : '';
+
+      return `
+        <div class="visitor-item" onclick="viewProfile('${visit.visitor_id}')">
+          ${avatarHTML}
+          <div class="visitor-info">
+            <div class="visitor-name">${nickname}${ageInfo}</div>
+            <div class="visitor-time">
+              ⏱️ ${timeAgo}${zodiac}${profession}
+            </div>
+            ${details.description ? `
+              <div class="visitor-bio" style="margin-top: 0.5rem; font-size: 0.9rem; color: var(--text-light);">
+                ${details.description}
+              </div>
+            ` : ''}
+          </div>
+          <div class="visitor-actions">
+            <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); sendMessage('${visit.visitor_id}')">
+              💌 Mensagem
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewProfile('${visit.visitor_id}')">
+              👀 Ver Perfil
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // ✅ FUNÇÃO AUXILIAR - Calcular idade
+    function calculateAge(birthDate) {
+      if (!birthDate) return null;
+      const today = new Date();
+      const birth = new Date(birthDate);
+      let age = today.getFullYear() - birth.getFullYear();
+      const monthDiff = today.getMonth() - birth.getMonth();
+      
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--;
+      }
+      
+      return age;
+    }
+
+    // ✅ FUNÇÃO AUXILIAR - Formatar signo
+    function formatZodiac(zodiac) {
+      const names = {
+        'aries': 'Áries', 'touro': 'Touro', 'gemeos': 'Gêmeos', 'cancer': 'Câncer',
+        'leao': 'Leão', 'virgem': 'Virgem', 'libra': 'Libra', 'escorpiao': 'Escorpião',
+        'sagitario': 'Sagitário', 'capricornio': 'Capricórnio', 'aquario': 'Aquário', 'peixes': 'Peixes'
+      };
+      return names[zodiac] || zodiac;
     }
 
     // Função auxiliar - tempo decorrido
@@ -971,6 +1031,8 @@
     // Exportar funções para o HTML
     window.sendMessage = sendMessage;
     window.viewProfile = viewProfile;
+    window.calculateAge = calculateAge;
+    window.formatZodiac = formatZodiac;
   </script>
 </body>
 </html>
