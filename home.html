@@ -1338,6 +1338,7 @@ function setupMobileMenu() {
 }
 
 // Verificar autenticação
+// Verificar autenticação
 async function checkAuth() {
     try {
         const { data: { user }, error } = await supabase.auth.getUser();
@@ -1599,6 +1600,38 @@ async function createUserCardWithPhoto(user) {
 
 // ==================== SISTEMA DE VISITANTES ====================
 
+// ✅ FUNÇÃO PARA REGISTRAR VISITA (NOVA FUNÇÃO)
+async function registerProfileVisit(visitedUserId) {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // Não registrar auto-visita
+        if (user.id === visitedUserId) {
+            console.log('🚫 Auto-visita não registrada');
+            return;
+        }
+
+        console.log('📝 Registrando visita do usuário:', user.id, 'para:', visitedUserId);
+
+        // Chamar a função do Supabase
+        const { data, error } = await supabase.rpc('register_profile_visit', {
+            p_visited_user_id: visitedUserId,
+            p_visitor_user_id: user.id
+        });
+
+        if (error) {
+            console.error('❌ Erro ao registrar visita:', error);
+            return;
+        }
+
+        console.log('✅ Visita registrada com sucesso:', data);
+
+    } catch (error) {
+        console.error('❌ Erro no registro de visita:', error);
+    }
+}
+
 // ✅ CARREGAR VISITANTES E STATUS PREMIUM
 async function loadVisitorsSystem() {
     try {
@@ -1642,36 +1675,43 @@ async function checkPremiumStatus() {
     }
 }
 
-// ✅ CARREGAR VISITANTES PARA PREMIUM
+// ✅ CARREGAR VISITANTES PARA PREMIUM - CORRIGIDA
 async function loadPremiumVisitors() {
     try {
         // Mostrar seção premium
         document.getElementById('premiumVisitors').style.display = 'block';
         document.getElementById('freeVisitors').style.display = 'none';
         
-        // Buscar últimas visitas
+        // Buscar últimas visitas - QUERY CORRIGIDA
         const { data: visits, error } = await supabase
             .from('profile_visits')
             .select(`
                 visitor_id,
                 visited_at,
-                profiles:visitor_id (
+                profiles!profile_visits_visitor_id_fkey (
                     nickname,
-                    avatar_url
+                    avatar_url,
+                    full_name
                 )
             `)
             .eq('visited_id', currentUser.id)
             .order('visited_at', { ascending: false })
-            .limit(5);
+            .limit(8);
 
-        if (error) throw error;
+        if (error) {
+            console.error('❌ Erro ao buscar visitas:', error);
+            throw error;
+        }
         
         const visitorsPreview = document.getElementById('visitorsPreview');
         const visitorsCount = document.getElementById('visitorsCount');
         
         // Atualizar contador
-        visitorsCount.textContent = `${visits?.length || 0} visitas`;
+        const visitCount = visits?.length || 0;
+        visitorsCount.textContent = `${visitCount} visita${visitCount !== 1 ? 's' : ''}`;
         
+        console.log(`✅ ${visitCount} visitas carregadas`);
+
         if (!visits || visits.length === 0) {
             visitorsPreview.innerHTML = `
                 <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-light);">
@@ -1686,7 +1726,7 @@ async function loadPremiumVisitors() {
         let visitorsHTML = '';
         for (const visit of visits) {
             const visitor = visit.profiles;
-            const nickname = visitor?.nickname || 'Usuário';
+            const nickname = visitor?.nickname || visitor?.full_name?.split(' ')[0] || 'Usuário';
             const timeAgo = getTimeAgo(visit.visited_at);
             const initial = nickname.charAt(0).toUpperCase();
             
@@ -1836,6 +1876,7 @@ function sendMessage(userId) {
     window.location.href = 'mensagens.html';
 }
 
+// ✅ FUNÇÃO viewProfile ATUALIZADA - AGORA REGISTRA VISITA
 function viewProfile(userId) {
     console.log('👀 Visualizando perfil:', userId);
     
@@ -1844,6 +1885,9 @@ function viewProfile(userId) {
         window.location.href = 'painel.html';
         return;
     }
+    
+    // ✅ REGISTRAR VISITA ANTES DE REDIRECIONAR
+    registerProfileVisit(userId);
     
     localStorage.setItem('viewingProfileId', userId);
     window.location.href = 'perfil.html';
@@ -2000,6 +2044,7 @@ window.sendMessage = sendMessage;
 window.viewProfile = viewProfile;
 window.sendMessageToUser = sendMessageToUser;
 window.toggleInvisibleMode = toggleInvisibleMode;
+window.registerProfileVisit = registerProfileVisit; // ✅ NOVA FUNÇÃO EXPORTADA
 
 console.log('✅ Home.js carregado e pronto!');
 </script>
