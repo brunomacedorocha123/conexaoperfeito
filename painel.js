@@ -117,6 +117,7 @@ document.addEventListener('DOMContentLoaded', function() {
     checkAuth();
 });
 // VERIFICA SE USUÁRIO ESTÁ LOGADO
+// VERIFICA SE USUÁRIO ESTÁ LOGADO
 async function checkAuth() {
     console.log('🔐 Verificando autenticação...');
     const { data: { user } } = await supabase.auth.getUser();
@@ -133,7 +134,10 @@ async function checkAuth() {
     await updatePremiumStatus();
     await updateProfileCompletion();
     await updatePlanStatus();
-    await loadInvisibleModeStatus(); // ✅ LINHA ADICIONADA
+    await loadInvisibleModeStatus();
+    
+    // ✅ NOVO: INICIAR SISTEMA DE STATUS ONLINE
+    startOnlineStatusUpdater();
     
     // ✅ VERIFICAÇÃO EXTRA - DIRETO NO BANCO
     setTimeout(async () => {
@@ -159,7 +163,7 @@ function setupEventListeners() {
     if (avatarButton && avatarInput) {
         avatarButton.addEventListener('click', function(e) {
             e.preventDefault();
-            console.log(' Clicou no botão de avatar');
+            console.log('📷 Clicou no botão de avatar');
             avatarInput.click();
         });
         console.log('✅ Botão de avatar configurado');
@@ -223,7 +227,7 @@ function setupEventListeners() {
         }
     });
 
-    console.log(' Todos os event listeners configurados');
+    console.log('🎯 Todos os event listeners configurados');
 }
 
 // MÁSCARAS DE FORMULÁRIO
@@ -279,19 +283,19 @@ async function updatePlanStatus() {
             if (planFeatures) {
                 planFeatures.innerHTML = `
                     <div class="feature-item">
-                        <span class="feature-icon"></span>
+                        <span class="feature-icon">💬</span>
                         <span class="feature-text">Mensagens ilimitadas</span>
                     </div>
                     <div class="feature-item">
-                        <span class="feature-icon"></span>
+                        <span class="feature-icon">🕒</span>
                         <span class="feature-text">Histórico permanente</span>
                     </div>
                     <div class="feature-item">
-                        <span class="feature-icon">️</span>
+                        <span class="feature-icon">👻</span>
                         <span class="feature-text">Modo invisível</span>
                     </div>
                     <div class="feature-item">
-                        <span class="feature-icon"></span>
+                        <span class="feature-icon">👀</span>
                         <span class="feature-text">Ver visitantes</span>
                     </div>
                 `;
@@ -391,11 +395,11 @@ async function updateProfileCompletion() {
             } else if (percentage < 100) {
                 progressText.textContent = 'Quase lá! Complete os últimos detalhes';
             } else {
-                progressText.textContent = ' Perfil 100% completo!';
+                progressText.textContent = '🎉 Perfil 100% completo!';
             }
         }
 
-        console.log(` Progresso do perfil: ${percentage}%`);
+        console.log(`📊 Progresso do perfil: ${percentage}%`);
     } catch (error) {
         console.error('❌ Erro ao atualizar progresso:', error);
     }
@@ -404,7 +408,7 @@ async function updateProfileCompletion() {
 // CARREGA DADOS BÁSICOS DO USUÁRIO
 async function loadUserData() {
     try {
-        console.log(' Carregando dados do usuário...');
+        console.log('👤 Carregando dados do usuário...');
         
         const { data: profile, error } = await supabase
             .from('profiles')
@@ -413,7 +417,7 @@ async function loadUserData() {
             .single();
         
         if (error && error.code === 'PGRST116') {
-            console.log(' Criando perfil novo...');
+            console.log('🆕 Criando perfil novo...');
             await createUserProfile();
             return;
         }
@@ -427,7 +431,7 @@ async function loadUserData() {
             console.log('✅ Nickname no header:', displayName);
             
             if (profile.avatar_url) {
-                console.log('️ Carregando avatar existente...');
+                console.log('🖼️ Carregando avatar existente...');
                 await loadAvatar(profile.avatar_url);
             } else {
                 console.log('❌ Nenhum avatar encontrado');
@@ -485,7 +489,7 @@ async function createUserProfile() {
 // CARREGA AVATAR
 async function loadAvatar(avatarPath) {
     try {
-        console.log(' Carregando avatar:', avatarPath);
+        console.log('🔄 Carregando avatar:', avatarPath);
         
         const { data } = supabase.storage
             .from('avatars')
@@ -546,7 +550,7 @@ function showFallbackAvatars() {
 // CARREGA DADOS DO PERFIL
 async function loadProfileData() {
     try {
-        console.log(' Carregando dados do perfil...');
+        console.log('📋 Carregando dados do perfil...');
         
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
@@ -637,7 +641,7 @@ async function loadProfileData() {
 
 // HANDLE AVATAR SELECT
 function handleAvatarSelect(event) {
-    console.log(' Arquivo selecionado:', event.target.files[0]);
+    console.log('📁 Arquivo selecionado:', event.target.files[0]);
     const file = event.target.files[0];
     if (!file) {
         console.log('❌ Nenhum arquivo selecionado');
@@ -659,7 +663,7 @@ function handleAvatarSelect(event) {
 
     const reader = new FileReader();
     reader.onload = function(e) {
-        console.log('️ Criando preview da imagem...');
+        console.log('🖼️ Criando preview da imagem...');
         
         const previewImg = document.getElementById('avatarPreviewImg');
         const fallback = document.getElementById('avatarFallback');
@@ -691,13 +695,13 @@ function handleAvatarSelect(event) {
 // UPLOAD DE AVATAR - CORRIGIDO
 async function uploadAvatar(file) {
     try {
-        console.log(' Iniciando upload do avatar...');
+        console.log('📤 Iniciando upload do avatar...');
         
         const fileExt = file.name.split('.').pop();
         const fileName = `${Date.now()}_avatar.${fileExt}`;
         const filePath = `${currentUser.id}/${fileName}`;
 
-        console.log(' Fazendo upload para:', filePath);
+        console.log('📁 Fazendo upload para:', filePath);
 
         // Tenta criar a pasta primeiro listando o conteúdo
         try {
@@ -705,7 +709,7 @@ async function uploadAvatar(file) {
                 .from('avatars')
                 .list(currentUser.id);
         } catch (e) {
-            console.log(' Pasta não existe, será criada automaticamente');
+            console.log('📁 Pasta não existe, será criada automaticamente');
         }
 
         // Upload com timeout
@@ -755,7 +759,7 @@ async function uploadAvatar(file) {
 // SALVA PERFIL - CORRIGIDO
 async function saveProfile(event) {
     event.preventDefault();
-    console.log(' Salvando perfil...');
+    console.log('💾 Salvando perfil...');
     
     const saveButton = document.getElementById('saveButton');
     const originalText = saveButton.innerHTML;
@@ -768,8 +772,8 @@ async function saveProfile(event) {
 
         // Upload da imagem se foi selecionada (não bloqueia se falhar)
         if (selectedAvatarFile) {
-            console.log(' Fazendo upload da imagem...');
-            showNotification(' Enviando imagem...', 'info');
+            console.log('📤 Fazendo upload da imagem...');
+            showNotification('📤 Enviando imagem...', 'info');
             try {
                 avatarPath = await uploadAvatar(selectedAvatarFile);
                 if (avatarPath) {
@@ -874,8 +878,8 @@ async function saveProfile(event) {
         }
 
         // Salva no banco
-        console.log(' Salvando no banco de dados...');
-        showNotification(' Salvando dados do perfil...', 'info');
+        console.log('💾 Salvando no banco de dados...');
+        showNotification('💾 Salvando dados do perfil...', 'info');
 
         // Atualiza perfil principal
         const { error: profileError } = await supabase
@@ -1049,7 +1053,7 @@ document.addEventListener('visibilitychange', function() {
     }
 });
 
-// ==================== SISTEMA DE MODO INVISÍVEL ====================
+// ==================== SISTEMA DE MODO INVISÍVEL ATUALIZADO ====================
 
 // Carregar status do modo invisível
 async function loadInvisibleModeStatus() {
@@ -1058,7 +1062,7 @@ async function loadInvisibleModeStatus() {
         
         const { data: profile, error } = await supabase
             .from('profiles')
-            .select('is_invisible, is_premium')
+            .select('is_invisible, is_premium, last_online_at')
             .eq('id', currentUser.id)
             .single();
             
@@ -1071,7 +1075,10 @@ async function loadInvisibleModeStatus() {
         const statusText = document.getElementById('invisibleStatus');
         const freeMessage = document.getElementById('invisibleFreeMessage');
         
-        if (!profile.is_premium) {
+        // Verificar se é premium usando a função correta
+        const isPremium = await PremiumManager.checkPremiumStatus();
+        
+        if (!isPremium) {
             // Usuário free - mostrar mensagem e desabilitar toggle
             console.log('ℹ️ Usuário free - modo invisível não disponível');
             if (toggle) toggle.disabled = true;
@@ -1125,6 +1132,7 @@ async function toggleInvisibleMode(isInvisible) {
             .from('profiles')
             .update({ 
                 is_invisible: isInvisible,
+                last_online_at: new Date().toISOString(), // Atualiza status também
                 updated_at: new Date().toISOString()
             })
             .eq('id', currentUser.id);
@@ -1141,6 +1149,9 @@ async function toggleInvisibleMode(isInvisible) {
         console.log(`✅ Modo invisível ${isInvisible ? 'ativado' : 'desativado'}`);
         showNotification(`👻 Modo invisível ${isInvisible ? 'ativado' : 'desativado'}!`, 'success');
         
+        // Atualizar status online também
+        updateOnlineStatus();
+        
     } catch (error) {
         console.error('❌ Erro ao alterar modo invisível:', error);
         showNotification('❌ Erro ao alterar modo invisível', 'error');
@@ -1148,4 +1159,77 @@ async function toggleInvisibleMode(isInvisible) {
         // Reverter toggle em caso de erro
         document.getElementById('invisibleModeToggle').checked = !isInvisible;
     }
+}
+
+// ==================== SISTEMA DE STATUS ONLINE ====================
+
+// Atualizar status online do usuário
+async function updateOnlineStatus() {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // Atualizar último seen no banco
+        const { error } = await supabase
+            .from('profiles')
+            .update({ 
+                last_online_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', user.id);
+
+        if (error) {
+            console.error('Erro ao atualizar status online:', error);
+        } else {
+            console.log('✅ Status online atualizado');
+        }
+        
+    } catch (error) {
+        console.error('Erro no sistema de status online:', error);
+    }
+}
+
+// Verificar se usuário está online (considerando modo invisível)
+function isUserOnline(userProfile, currentUserId) {
+    if (!userProfile.last_online_at) return false;
+    
+    const lastOnline = new Date(userProfile.last_online_at);
+    const now = new Date();
+    const minutesDiff = (now - lastOnline) / (1000 * 60);
+    
+    // Considera online se esteve ativo nos últimos 5 minutos
+    const isActuallyOnline = minutesDiff <= 5;
+    
+    // Se é o próprio usuário, sempre mostra online
+    if (userProfile.id === currentUserId) return true;
+    
+    // Se o usuário está invisível, mostra como offline para outros
+    if (userProfile.is_invisible && userProfile.id !== currentUserId) {
+        return false;
+    }
+    
+    return isActuallyOnline;
+}
+
+// Iniciar atualização periódica do status
+function startOnlineStatusUpdater() {
+    // Atualizar imediatamente
+    updateOnlineStatus();
+    
+    // Atualizar a cada 1 minuto
+    setInterval(updateOnlineStatus, 60000);
+    
+    // Atualizar também quando a página ganha foco
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            updateOnlineStatus();
+        }
+    });
+    
+    // Atualizar em interações do usuário
+    ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => {
+        document.addEventListener(event, updateOnlineStatus, { passive: true });
+    });
+    
+    console.log('🟢 Sistema de status online iniciado');
 }

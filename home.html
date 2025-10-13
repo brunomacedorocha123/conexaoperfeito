@@ -1020,17 +1020,6 @@ input:checked + .slider:before {
     margin-bottom: 1rem;
 }
 
-.online-badge {
-    position: absolute;
-    bottom: 2px;
-    right: 2px;
-    width: 12px;
-    height: 12px;
-    background: var(--success);
-    border: 2px solid var(--branco);
-    border-radius: 50%;
-}
-
 .visitors-loading {
     text-align: center;
     padding: 2rem;
@@ -1045,6 +1034,169 @@ input:checked + .slider:before {
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin: 0 auto 1rem;
+}
+
+/* ==================== SISTEMA DE STATUS ONLINE/OFFLINE ==================== */
+
+/* Bolinha Online (Verde) */
+.online-badge {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 12px;
+    height: 12px;
+    background: #48bb78; /* Verde */
+    border: 2px solid var(--branco);
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    animation: pulse-online 2s infinite;
+}
+
+/* Bolinha Offline (Cinza) */
+.offline-badge {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 12px;
+    height: 12px;
+    background: #a0aec0; /* Cinza */
+    border: 2px solid var(--branco);
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Animação para bolinha online */
+@keyframes pulse-online {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.7);
+    }
+    70% {
+        transform: scale(1.1);
+        box-shadow: 0 0 0 6px rgba(72, 187, 120, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(72, 187, 120, 0);
+    }
+}
+
+/* Ajustes para os avatares dos cards de usuário */
+.user-card-avatar {
+    position: relative;
+    overflow: visible !important;
+}
+
+.user-card-avatar .online-badge,
+.user-card-avatar .offline-badge {
+    bottom: 8px;
+    right: 8px;
+    width: 14px;
+    height: 14px;
+    border: 3px solid var(--branco);
+}
+
+/* Ajustes para os avatares dos visitantes */
+.visitor-avatar {
+    position: relative;
+    overflow: visible !important;
+}
+
+.visitor-avatar .online-badge,
+.visitor-avatar .offline-badge {
+    bottom: 5px;
+    right: 5px;
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--branco);
+}
+
+/* Ajustes para os avatares no header */
+.user-avatar {
+    position: relative;
+    overflow: visible !important;
+}
+
+.user-avatar .online-badge,
+.user-avatar .offline-badge {
+    bottom: 2px;
+    right: 2px;
+    width: 10px;
+    height: 10px;
+    border: 2px solid var(--branco);
+}
+
+/* Status no tooltip para melhor UX */
+.user-card:hover .online-badge::after,
+.visitor-card:hover .online-badge::after {
+    content: "Online";
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2d3748;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    white-space: nowrap;
+    z-index: 1000;
+}
+
+.user-card:hover .offline-badge::after,
+.visitor-card:hover .offline-badge::after {
+    content: "Offline";
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2d3748;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    white-space: nowrap;
+    z-index: 1000;
+}
+
+/* Versão mobile - bolinhas menores */
+@media (max-width: 768px) {
+    .user-card-avatar .online-badge,
+    .user-card-avatar .offline-badge {
+        width: 12px;
+        height: 12px;
+        bottom: 6px;
+        right: 6px;
+    }
+    
+    .visitor-avatar .online-badge,
+    .visitor-avatar .offline-badge {
+        width: 10px;
+        height: 10px;
+        bottom: 4px;
+        right: 4px;
+    }
+    
+    .user-avatar .online-badge,
+    .user-avatar .offline-badge {
+        width: 8px;
+        height: 8px;
+        bottom: 1px;
+        right: 1px;
+    }
+}
+
+/* Efeito de hover suave */
+.user-card-avatar:hover .online-badge,
+.visitor-avatar:hover .online-badge {
+    transform: scale(1.2);
+    transition: transform 0.2s ease;
+}
+
+.user-card-avatar:hover .offline-badge,
+.visitor-avatar:hover .offline-badge {
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
 }
 
 /* Responsividade Visitantes */
@@ -1111,7 +1263,7 @@ input:checked + .slider:before {
         font-size: 2.5rem;
     }
 }
-  </style>
+</style>
 </head>
 <body>
   <!-- Header -->
@@ -1398,6 +1550,9 @@ async function checkAuth() {
         updateStats();
         startStatsAutoUpdate();
         
+        // ✅ NOVO: Iniciar sistema de status online
+        startOnlineStatusUpdater();
+        
     } catch (error) {
         console.error('Erro na autenticação:', error);
         window.location.href = 'login.html';
@@ -1407,6 +1562,72 @@ async function checkAuth() {
 // ATUALIZAÇÃO PERIÓDICA DAS ESTATÍSTICAS
 function startStatsAutoUpdate() {
     setInterval(updateStats, 30000);
+}
+
+// ✅ NOVO: SISTEMA DE STATUS ONLINE PARA HOME
+async function updateOnlineStatus() {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { error } = await supabase
+            .from('profiles')
+            .update({ 
+                last_online_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', user.id);
+
+        if (error) {
+            console.error('Erro ao atualizar status online:', error);
+        }
+        
+    } catch (error) {
+        console.error('Erro no sistema de status online:', error);
+    }
+}
+
+// ✅ NOVO: Verificar se usuário está online
+function isUserOnline(userProfile, currentUserId) {
+    if (!userProfile.last_online_at) return false;
+    
+    const lastOnline = new Date(userProfile.last_online_at);
+    const now = new Date();
+    const minutesDiff = (now - lastOnline) / (1000 * 60);
+    
+    // Considera online se esteve ativo nos últimos 5 minutos
+    const isActuallyOnline = minutesDiff <= 5;
+    
+    // Se é o próprio usuário, sempre mostra online
+    if (userProfile.id === currentUserId) return true;
+    
+    // Se o usuário está invisível, mostra como offline para outros
+    if (userProfile.is_invisible && userProfile.id !== currentUserId) {
+        return false;
+    }
+    
+    return isActuallyOnline;
+}
+
+// ✅ NOVO: Iniciar atualização periódica do status
+function startOnlineStatusUpdater() {
+    // Atualizar imediatamente
+    updateOnlineStatus();
+    
+    // Atualizar a cada 1 minuto
+    setInterval(updateOnlineStatus, 60000);
+    
+    // Atualizar também quando a página ganha foco
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            updateOnlineStatus();
+        }
+    });
+    
+    // Atualizar em interações do usuário
+    ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => {
+        document.addEventListener(event, updateOnlineStatus, { passive: true });
+    });
 }
 
 // CARREGAR FOTO DO USUÁRIO
@@ -1496,6 +1717,7 @@ async function loadRealUsers() {
     try {
         const limit = window.innerWidth <= 768 ? 4 : 8;
         
+        // ✅ CORRIGIDO: Agora busca também last_online_at e is_invisible
         const { data: users, error } = await supabase
             .from('profiles')
             .select(`
@@ -1504,6 +1726,8 @@ async function loadRealUsers() {
                 full_name,
                 birth_date,
                 avatar_url,
+                last_online_at,
+                is_invisible,
                 user_details (
                     gender,
                     zodiac,
@@ -1559,6 +1783,12 @@ async function createUserCardWithPhoto(user) {
     const age = user.birth_date ? calculateAge(user.birth_date) : null;
     const details = user.user_details || {};
     
+    // ✅ NOVO: Verificar status online
+    const isOnline = isUserOnline(user, currentUser.id);
+    const onlineBadge = isOnline ? 
+        '<div class="online-badge" title="Online"></div>' : 
+        '<div class="offline-badge" title="Offline"></div>';
+    
     let avatarHtml = '';
     let photoUrl = null;
     
@@ -1569,12 +1799,14 @@ async function createUserCardWithPhoto(user) {
     if (photoUrl) {
         avatarHtml = `
             <div class="user-card-avatar" style="background-image: url('${photoUrl}'); background-size: cover; background-position: center;">
+                ${onlineBadge}
                 <div class="user-card-avatar-fallback" style="display: none;">${nickname.charAt(0).toUpperCase()}</div>
             </div>
         `;
     } else {
         avatarHtml = `
             <div class="user-card-avatar">
+                ${onlineBadge}
                 <div class="user-card-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
             </div>
         `;
@@ -1733,7 +1965,7 @@ async function loadPremiumVisitors() {
                 // Buscar perfil do visitante
                 const { data: profile } = await supabase
                     .from('profiles')
-                    .select('nickname, avatar_url, full_name, city')
+                    .select('nickname, avatar_url, full_name, city, last_online_at, is_invisible')
                     .eq('id', visit.visitor_id)
                     .single();
 
@@ -1745,17 +1977,32 @@ async function loadPremiumVisitors() {
                 const timeAgo = getTimeAgo(visit.visited_at);
                 const initial = nickname.charAt(0).toUpperCase();
 
+                // ✅ NOVO: Verificar status online do visitante
+                const isOnline = isUserOnline(profile, currentUser.id);
+                const onlineBadge = isOnline ? 
+                    '<div class="online-badge" title="Online"></div>' : 
+                    '<div class="offline-badge" title="Offline"></div>';
+
                 // Carregar foto
                 let avatarContent = '';
                 if (profile?.avatar_url) {
                     const photoUrl = await loadUserPhoto(profile.avatar_url);
                     if (photoUrl) {
-                        avatarContent = `<img class="visitor-avatar-img" src="${photoUrl}" alt="${nickname}" style="display: block;">`;
+                        avatarContent = `
+                            <img class="visitor-avatar-img" src="${photoUrl}" alt="${nickname}" style="display: block;">
+                            ${onlineBadge}
+                        `;
                     } else {
-                        avatarContent = `<div class="visitor-avatar-fallback">${initial}</div>`;
+                        avatarContent = `
+                            <div class="visitor-avatar-fallback">${initial}</div>
+                            ${onlineBadge}
+                        `;
                     }
                 } else {
-                    avatarContent = `<div class="visitor-avatar-fallback">${initial}</div>`;
+                    avatarContent = `
+                        <div class="visitor-avatar-fallback">${initial}</div>
+                        ${onlineBadge}
+                    `;
                 }
 
                 visitorsHTML += `
@@ -1776,6 +2023,7 @@ async function loadPremiumVisitors() {
                     <div class="visitor-card" onclick="viewProfile('${visit.visitor_id}')">
                         <div class="visitor-avatar">
                             👤
+                            <div class="offline-badge" title="Offline"></div>
                         </div>
                         <div class="visitor-name">Usuário</div>
                         <div class="visitor-location">---</div>
@@ -1924,7 +2172,7 @@ function isProfileComplete() {
            userProfile.birth_date;
 }
 
-// ATUALIZAR ESTATÍSTICAS REAIS
+// ✅ CORRIGIDO: ATUALIZAR ESTATÍSTICAS REAIS COM CONTADOR ONLINE CORRETO
 async function updateStats() {
     try {
         const { count: totalUsers } = await supabase
@@ -1943,15 +2191,24 @@ async function updateStats() {
             .eq('visited_id', currentUser.id)
             .gte('visited_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
 
+        // ✅ NOVO: Contar usuários realmente online (ignorando invisíveis)
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+        const { count: onlineUsers } = await supabase
+            .from('profiles')
+            .select('*', { count: 'exact', head: true })
+            .gte('last_online_at', fiveMinutesAgo)
+            .eq('is_invisible', false)
+            .neq('id', currentUser.id);
+
         document.getElementById('totalUsers').textContent = totalUsers || 0;
         document.getElementById('newMatches').textContent = newMessages || 0;
-        document.getElementById('usersOnline').textContent = Math.floor((totalUsers || 1) * 0.3);
+        document.getElementById('usersOnline').textContent = onlineUsers || 0; // ✅ AGORA MOSTRA NÚMERO REAL
         document.getElementById('profileViews').textContent = profileViews || 0;
 
     } catch (error) {
         document.getElementById('totalUsers').textContent = '1';
         document.getElementById('newMatches').textContent = '0';
-        document.getElementById('usersOnline').textContent = '1';
+        document.getElementById('usersOnline').textContent = '0'; // ✅ CORRIGIDO
         document.getElementById('profileViews').textContent = '0';
     }
 }
