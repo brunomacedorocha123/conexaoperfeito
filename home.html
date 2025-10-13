@@ -1316,7 +1316,7 @@ input:checked + .slider:before {
       </div>
     </div>
   </footer>
-  <script>
+ <script>
 // Configuração do Supabase
 const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
@@ -1396,7 +1396,7 @@ async function checkAuth() {
         currentUser = user;
         await loadUserData();
         await loadRealUsers();
-        await loadVisitorsSystem(); // ✅ CARREGAR SISTEMA DE VISITANTES CORRIGIDO
+        await loadVisitorsSystem();
         updateStats();
         startStatsAutoUpdate();
         
@@ -1406,33 +1406,30 @@ async function checkAuth() {
     }
 }
 
-// ✅ ATUALIZAÇÃO PERIÓDICA DAS ESTATÍSTICAS
+// ATUALIZAÇÃO PERIÓDICA DAS ESTATÍSTICAS
 function startStatsAutoUpdate() {
     setInterval(updateStats, 30000);
 }
 
-// ✅ CARREGAR FOTO DO USUÁRIO
+// CARREGAR FOTO DO USUÁRIO
 async function loadUserPhoto(avatarUrl) {
     try {
         if (!avatarUrl) {
             return null;
         }
 
-        console.log('🔄 Buscando foto:', avatarUrl);
         const { data } = supabase.storage
             .from('avatars')
             .getPublicUrl(avatarUrl);
 
         if (data && data.publicUrl) {
-            console.log('✅ URL pública encontrada:', data.publicUrl);
             return data.publicUrl;
         } else {
-            console.log('❌ Não foi possível obter URL pública');
             return null;
         }
 
     } catch (error) {
-        console.error('❌ Erro ao carregar foto:', error);
+        console.error('Erro ao carregar foto:', error);
         return null;
     }
 }
@@ -1462,7 +1459,7 @@ async function loadUserData() {
             displayName = user.email.split('@')[0];
         }
 
-        // ✅ ATUALIZAR AVATAR COM FOTO (Desktop e Mobile)
+        // ATUALIZAR AVATAR COM FOTO (Desktop e Mobile)
         await updateUserAvatar(displayName, profile);
 
         // Atualizar interface
@@ -1475,7 +1472,7 @@ async function loadUserData() {
     }
 }
 
-// ✅ FUNÇÃO AUXILIAR PARA ATUALIZAR AVATAR
+// FUNÇÃO AUXILIAR PARA ATUALIZAR AVATAR
 async function updateUserAvatar(displayName, profile) {
     const avatarElements = [
         document.getElementById('userAvatar'),
@@ -1506,11 +1503,9 @@ async function updateUserAvatar(displayName, profile) {
     }
 }
 
-// ✅ CARREGAR USUÁRIOS REAIS DO BANCO COM FOTOS
+// CARREGAR USUÁRIOS REAIS DO BANCO COM FOTOS
 async function loadRealUsers() {
     try {
-        console.log('🔄 Buscando usuários reais do banco...');
-        
         // Ajustar limite baseado no tamanho da tela
         const limit = window.innerWidth <= 768 ? 4 : 8;
         
@@ -1532,14 +1527,14 @@ async function loadRealUsers() {
                     description
                 )
             `)
-            .neq('id', currentUser.id) // Excluir próprio usuário
+            .neq('id', currentUser.id)
             .limit(limit)
             .order('created_at', { ascending: false });
 
         const usersGrid = document.getElementById('usersGrid');
         
         if (error) {
-            console.error('❌ Erro ao buscar usuários:', error);
+            console.error('Erro ao buscar usuários:', error);
             showEmptyState('Erro ao carregar usuários. Tente novamente.');
             return;
         }
@@ -1548,23 +1543,20 @@ async function loadRealUsers() {
             showEmptyState('Ainda não há outros usuários cadastrados. Seja o primeiro!');
             return;
         }
-
-        console.log(`✅ ${users.length} usuários reais carregados`);
         
-        // ✅ CARREGAR FOTOS ASSINCRONAMENTE
+        // CARREGAR FOTOS ASSINCRONAMENTE
         await displayUsersWithPhotos(users);
 
     } catch (error) {
-        console.error('❌ Erro ao carregar usuários:', error);
+        console.error('Erro ao carregar usuários:', error);
         showEmptyState('Erro ao carregar usuários. Tente novamente.');
     }
 }
 
-// ✅ EXIBIR USUÁRIOS COM FOTOS - ASSÍNCRONO
+// EXIBIR USUÁRIOS COM FOTOS - ASSÍNCRONO
 async function displayUsersWithPhotos(users) {
     const usersGrid = document.getElementById('usersGrid');
     
-    // ✅ CARREGAR FOTOS PARA CADA USUÁRIO
     const userCards = [];
     for (const user of users) {
         const card = await createUserCardWithPhoto(user);
@@ -1572,13 +1564,11 @@ async function displayUsersWithPhotos(users) {
     }
     
     usersGrid.innerHTML = userCards.join('');
-    console.log('✅ Cards com fotos renderizados');
 }
 
-// ✅ CRIAR CARD DE USUÁRIO COM FOTO - ASSÍNCRONO
+// CRIAR CARD DE USUÁRIO COM FOTO - ASSÍNCRONO
 async function createUserCardWithPhoto(user) {
     if (!user.user_details || !user.nickname) {
-        console.warn('⚠️ Usuário sem dados suficientes:', user);
         return '';
     }
 
@@ -1586,7 +1576,7 @@ async function createUserCardWithPhoto(user) {
     const age = user.birth_date ? calculateAge(user.birth_date) : null;
     const details = user.user_details || {};
     
-    // ✅ CARREGAR FOTO DO USUÁRIO
+    // CARREGAR FOTO DO USUÁRIO
     let avatarHtml = '';
     let photoUrl = null;
     
@@ -1642,7 +1632,7 @@ async function createUserCardWithPhoto(user) {
 
 // ==================== SISTEMA DE VISITANTES CORRIGIDO ====================
 
-// ✅ FUNÇÃO PARA REGISTRAR VISITA
+// ✅✅✅ FUNÇÃO CORRIGIDA PARA REGISTRAR VISITA
 async function registerProfileVisit(visitedUserId) {
     try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -1650,43 +1640,36 @@ async function registerProfileVisit(visitedUserId) {
 
         // Não registrar auto-visita
         if (user.id === visitedUserId) {
-            console.log('🚫 Auto-visita não registrada');
             return;
         }
 
-        console.log('📝 Registrando visita do usuário:', user.id, 'para:', visitedUserId);
-
-        // Chamar a função do Supabase
-        const { data, error } = await supabase.rpc('register_profile_visit', {
-            p_visited_user_id: visitedUserId,
-            p_visitor_user_id: user.id
+        // ✅✅✅ USAR A NOVA FUNÇÃO DO BANCO
+        const { data, error } = await supabase.rpc('register_profile_visit_simple', {
+            p_visitor_id: user.id,
+            p_visited_id: visitedUserId
         });
 
         if (error) {
-            console.error('❌ Erro ao registrar visita:', error);
+            console.error('Erro ao registrar visita:', error);
             return;
         }
 
-        console.log('✅ Visita registrada com sucesso:', data);
+        console.log('Visita registrada:', data);
 
     } catch (error) {
-        console.error('❌ Erro no registro de visita:', error);
+        console.error('Erro no registro de visita:', error);
     }
 }
 
-// ✅ CARREGAR VISITANTES E STATUS PREMIUM - CORRIGIDO
+// CARREGAR VISITANTES E STATUS PREMIUM
 async function loadVisitorsSystem() {
     try {
-        console.log('🔄 Carregando sistema de visitantes...');
-        
         // Verificar status premium
         const isPremium = await checkPremiumStatus();
         
         if (isPremium) {
-            console.log('✅ Usuário Premium - carregando visitantes');
             await loadPremiumVisitors();
         } else {
-            console.log('ℹ️ Usuário Free - carregando estatísticas');
             await loadFreeVisitorsStats();
         }
         
@@ -1694,11 +1677,11 @@ async function loadVisitorsSystem() {
         await loadInvisibleModeStatus();
         
     } catch (error) {
-        console.error('❌ Erro no sistema de visitantes:', error);
+        console.error('Erro no sistema de visitantes:', error);
     }
 }
 
-// ✅ VERIFICAR STATUS PREMIUM
+// VERIFICAR STATUS PREMIUM
 async function checkPremiumStatus() {
     try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -1717,22 +1700,20 @@ async function checkPremiumStatus() {
     }
 }
 
-// ✅✅✅ FUNÇÃO CORRIGIDA - CARREGAR VISITANTES PARA PREMIUM
+// ✅✅✅ FUNÇÃO COMPLETAMENTE CORRIGIDA - CARREGAR VISITANTES
 async function loadPremiumVisitors() {
     try {
-        console.log('🔍 Buscando visitantes para usuário:', currentUser.id);
-        
         // Mostrar seção premium
         document.getElementById('premiumVisitors').style.display = 'block';
         document.getElementById('freeVisitors').style.display = 'none';
         
-        // ✅✅✅ QUERY SIMPLIFICADA E CORRIGIDA
+        // ✅✅✅ QUERY DIRETA - BUSCAR VISITAS DO USUÁRIO ATUAL
         const { data: visits, error } = await supabase
             .from('profile_visits')
             .select(`
                 visitor_id,
                 visited_at,
-                profiles:visitor_id (
+                profiles!profile_visits_visitor_id_fkey (
                     nickname,
                     avatar_url,
                     full_name,
@@ -1747,27 +1728,20 @@ async function loadPremiumVisitors() {
         const visitorsCount = document.getElementById('visitorsCount');
         
         if (error) {
-            console.error('❌ Erro ao buscar visitas:', error);
+            console.error('Erro ao buscar visitas:', error);
             visitorsGrid.innerHTML = `
                 <div class="visitors-empty">
                     <div class="icon">❌</div>
                     <h3>Erro ao carregar visitantes</h3>
-                    <p>${error.message}</p>
-                    <button class="btn btn-primary" onclick="location.reload()" style="margin-top: 1rem;">
-                        Tentar Novamente
-                    </button>
+                    <p>Tente recarregar a página</p>
                 </div>
             `;
             return;
         }
 
-        console.log('✅ Visitas encontradas:', visits);
-
-        // Atualizar contador - DEVE MOSTRAR 1
+        // Atualizar contador
         const visitCount = visits?.length || 0;
         visitorsCount.textContent = `${visitCount} visita${visitCount !== 1 ? 's' : ''}`;
-        
-        console.log(`📊 Contador atualizado: ${visitCount} visitas`);
 
         if (!visits || visits.length === 0) {
             visitorsGrid.innerHTML = `
@@ -1780,7 +1754,7 @@ async function loadPremiumVisitors() {
             return;
         }
         
-        // ✅ CARREGAR CARDS COM FOTOS
+        // CARREGAR CARDS COM FOTOS
         let visitorsHTML = '';
         
         for (const visit of visits) {
@@ -1821,7 +1795,7 @@ async function loadPremiumVisitors() {
                 `;
                 
             } catch (error) {
-                console.error('❌ Erro ao criar card para visita:', visit, error);
+                console.error('Erro ao criar card:', error);
                 // Card básico em caso de erro
                 visitorsHTML += `
                     <div class="visitor-card" onclick="viewProfile('${visit.visitor_id}')">
@@ -1837,32 +1811,28 @@ async function loadPremiumVisitors() {
         }
         
         visitorsGrid.innerHTML = visitorsHTML;
-        console.log(`✅ ${visits.length} cards de visitantes carregados com sucesso`);
 
     } catch (error) {
-        console.error('❌ Erro geral ao carregar visitantes premium:', error);
+        console.error('Erro ao carregar visitantes premium:', error);
         const visitorsGrid = document.getElementById('visitorsGrid');
         visitorsGrid.innerHTML = `
             <div class="visitors-empty">
                 <div class="icon">❌</div>
                 <h3>Erro ao carregar visitantes</h3>
-                <p>${error.message || 'Erro desconhecido'}</p>
-                <button class="btn btn-primary" onclick="location.reload()" style="margin-top: 1rem;">
-                    Tentar Novamente
-                </button>
+                <p>Tente recarregar a página</p>
             </div>
         `;
     }
 }
 
-// ✅ CARREGAR ESTATÍSTICAS PARA FREE USERS - CORRIGIDO
+// CARREGAR ESTATÍSTICAS PARA FREE USERS
 async function loadFreeVisitorsStats() {
     try {
         // Mostrar seção free
         document.getElementById('premiumVisitors').style.display = 'none';
         document.getElementById('freeVisitors').style.display = 'block';
         
-        // ✅ BUSCAR CONTAGEM REAL DE VISITAS (7 DIAS)
+        // BUSCAR CONTAGEM REAL DE VISITAS (7 DIAS)
         const { count } = await supabase
             .from('profile_visits')
             .select('*', { count: 'exact', head: true })
@@ -1875,8 +1845,6 @@ async function loadFreeVisitorsStats() {
         document.getElementById('freeVisitorsCount').textContent = countText;
         document.getElementById('visitorsCount').textContent = `${visitCount} visita${visitCount !== 1 ? 's' : ''}`;
         
-        console.log(`📊 Free user: ${visitCount} visitas esta semana`);
-        
     } catch (error) {
         console.error('Erro ao carregar stats free:', error);
         document.getElementById('freeVisitorsCount').textContent = '0 pessoas';
@@ -1884,7 +1852,7 @@ async function loadFreeVisitorsStats() {
     }
 }
 
-// ✅ CARREGAR STATUS DO MODO INVISÍVEL
+// CARREGAR STATUS DO MODO INVISÍVEL
 async function loadInvisibleModeStatus() {
     try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -1905,7 +1873,7 @@ async function loadInvisibleModeStatus() {
     }
 }
 
-// ✅ ALTERNAR MODO INVISÍVEL
+// ALTERNAR MODO INVISÍVEL
 async function toggleInvisibleMode(isInvisible) {
     try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -1914,7 +1882,7 @@ async function toggleInvisibleMode(isInvisible) {
         // Verificar se é premium
         const canUse = await checkPremiumStatus();
         if (!canUse) {
-            alert('⚠️ Apenas usuários Premium podem usar o modo invisível!');
+            alert('Apenas usuários Premium podem usar o modo invisível!');
             document.getElementById('invisibleToggle').checked = false;
             return;
         }
@@ -1929,16 +1897,14 @@ async function toggleInvisibleMode(isInvisible) {
             
         if (error) throw error;
         
-        console.log(`✅ Modo invisível ${isInvisible ? 'ativado' : 'desativado'}`);
-        
     } catch (error) {
-        console.error('❌ Erro ao alterar modo invisível:', error);
+        console.error('Erro ao alterar modo invisível:', error);
         alert('Erro ao alterar modo invisível');
         document.getElementById('invisibleToggle').checked = !isInvisible;
     }
 }
 
-// ✅ FUNÇÃO AUXILIAR - TEMPO DECORRIDO
+// FUNÇÃO AUXILIAR - TEMPO DECORRIDO
 function getTimeAgo(dateString) {
     const date = new Date(dateString);
     const now = new Date();
@@ -1956,10 +1922,8 @@ function getTimeAgo(dateString) {
 
 // ==================== FUNÇÕES DE INTERAÇÃO ====================
 function sendMessage(userId) {
-    console.log('💌 Redirecionando para mensagens com usuário:', userId);
-    
     if (!isProfileComplete()) {
-        alert('📝 Complete seu perfil primeiro para enviar mensagens!');
+        alert('Complete seu perfil primeiro para enviar mensagens!');
         window.location.href = 'painel.html';
         return;
     }
@@ -1968,17 +1932,14 @@ function sendMessage(userId) {
     window.location.href = 'mensagens.html';
 }
 
-// ✅ FUNÇÃO viewProfile ATUALIZADA - AGORA REGISTRA VISITA
 function viewProfile(userId) {
-    console.log('👀 Visualizando perfil:', userId);
-    
     if (!isProfileComplete()) {
-        alert('📝 Complete seu perfil primeiro para ver outros perfis!');
+        alert('Complete seu perfil primeiro para ver outros perfis!');
         window.location.href = 'painel.html';
         return;
     }
     
-    // ✅ REGISTRAR VISITA ANTES DE REDIRECIONAR
+    // REGISTRAR VISITA ANTES DE REDIRECIONAR
     registerProfileVisit(userId);
     
     localStorage.setItem('viewingProfileId', userId);
@@ -1992,7 +1953,7 @@ function isProfileComplete() {
            userProfile.birth_date;
 }
 
-// ✅ ATUALIZAR ESTATÍSTICAS REAIS - FUNÇÃO MELHORADA
+// ATUALIZAR ESTATÍSTICAS REAIS
 async function updateStats() {
     try {
         // Total de usuários
@@ -2000,14 +1961,14 @@ async function updateStats() {
             .from('profiles')
             .select('*', { count: 'exact', head: true });
         
-        // ✅ CONTAGEM DE MENSAGENS NÃO LIDAS
+        // CONTAGEM DE MENSAGENS NÃO LIDAS
         const { count: newMessages } = await supabase
             .from('messages')
             .select('*', { count: 'exact', head: true })
             .eq('receiver_id', currentUser.id)
             .eq('is_read', false);
 
-        // ✅ VISUALIZAÇÕES DO PERFIL (ÚLTIMOS 7 DIAS)
+        // VISUALIZAÇÕES DO PERFIL (ÚLTIMOS 7 DIAS)
         const { count: profileViews } = await supabase
             .from('profile_visits')
             .select('*', { count: 'exact', head: true })
@@ -2016,12 +1977,11 @@ async function updateStats() {
 
         document.getElementById('totalUsers').textContent = totalUsers || 0;
         document.getElementById('newMatches').textContent = newMessages || 0;
-        document.getElementById('usersOnline').textContent = Math.floor((totalUsers || 1) * 0.3); // 30% online
+        document.getElementById('usersOnline').textContent = Math.floor((totalUsers || 1) * 0.3);
         document.getElementById('profileViews').textContent = profileViews || 0;
 
     } catch (error) {
         console.error('Erro ao carregar estatísticas:', error);
-        // Valores padrão
         document.getElementById('totalUsers').textContent = '1';
         document.getElementById('newMatches').textContent = '0';
         document.getElementById('usersOnline').textContent = '1';
@@ -2029,7 +1989,7 @@ async function updateStats() {
     }
 }
 
-// ✅ MOSTRAR ESTADO VAZIO
+// MOSTRAR ESTADO VAZIO
 function showEmptyState(message) {
     const usersGrid = document.getElementById('usersGrid');
     usersGrid.innerHTML = `
@@ -2044,7 +2004,7 @@ function showEmptyState(message) {
     `;
 }
 
-// ✅ FUNÇÕES AUXILIARES
+// FUNÇÕES AUXILIARES
 function calculateAge(birthDate) {
     if (!birthDate) return null;
     const today = new Date();
@@ -2094,7 +2054,6 @@ function setupEventListeners() {
         logoutBtn.addEventListener('click', logout);
     }
     
-    // Prevenir zoom em inputs no iOS
     document.addEventListener('touchstart', function() {}, { passive: true });
 }
 
@@ -2111,13 +2070,13 @@ async function logout() {
     }
 }
 
-// ==================== EXPORTAR FUNÇÕES PARA O HTML ====================
+// EXPORTAR FUNÇÕES PARA O HTML
 window.sendMessage = sendMessage;
 window.viewProfile = viewProfile;
 window.toggleInvisibleMode = toggleInvisibleMode;
 window.registerProfileVisit = registerProfileVisit;
 
-console.log('✅ Home.js carregado e pronto!');
+console.log('Home.js carregado e pronto!');
 </script>
 </body>
 </html>
