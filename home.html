@@ -1717,20 +1717,22 @@ async function checkPremiumStatus() {
     }
 }
 
-// ✅ CARREGAR VISITANTES PARA PREMIUM - COMPLETAMENTE CORRIGIDO
+// ✅✅✅ FUNÇÃO CORRIGIDA - CARREGAR VISITANTES PARA PREMIUM
 async function loadPremiumVisitors() {
     try {
+        console.log('🔍 Buscando visitantes para usuário:', currentUser.id);
+        
         // Mostrar seção premium
         document.getElementById('premiumVisitors').style.display = 'block';
         document.getElementById('freeVisitors').style.display = 'none';
         
-        // Buscar últimas visitas - QUERY CORRIGIDA
+        // ✅✅✅ QUERY SIMPLIFICADA E CORRIGIDA
         const { data: visits, error } = await supabase
             .from('profile_visits')
             .select(`
                 visitor_id,
                 visited_at,
-                profiles!profile_visits_visitor_id_fkey (
+                profiles:visitor_id (
                     nickname,
                     avatar_url,
                     full_name,
@@ -1741,19 +1743,31 @@ async function loadPremiumVisitors() {
             .order('visited_at', { ascending: false })
             .limit(8);
 
-        if (error) {
-            console.error('❌ Erro ao buscar visitas:', error);
-            throw error;
-        }
-        
         const visitorsGrid = document.getElementById('visitorsGrid');
         const visitorsCount = document.getElementById('visitorsCount');
         
-        // Atualizar contador
+        if (error) {
+            console.error('❌ Erro ao buscar visitas:', error);
+            visitorsGrid.innerHTML = `
+                <div class="visitors-empty">
+                    <div class="icon">❌</div>
+                    <h3>Erro ao carregar visitantes</h3>
+                    <p>${error.message}</p>
+                    <button class="btn btn-primary" onclick="location.reload()" style="margin-top: 1rem;">
+                        Tentar Novamente
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        console.log('✅ Visitas encontradas:', visits);
+
+        // Atualizar contador - DEVE MOSTRAR 1
         const visitCount = visits?.length || 0;
         visitorsCount.textContent = `${visitCount} visita${visitCount !== 1 ? 's' : ''}`;
         
-        console.log(`✅ ${visitCount} visitas carregadas`);
+        console.log(`📊 Contador atualizado: ${visitCount} visitas`);
 
         if (!visits || visits.length === 0) {
             visitorsGrid.innerHTML = `
@@ -1766,95 +1780,79 @@ async function loadPremiumVisitors() {
             return;
         }
         
-        // ✅ CARREGAR CARDS COM FOTOS - IGUAL AO VISITANTE.HTML
+        // ✅ CARREGAR CARDS COM FOTOS
         let visitorsHTML = '';
-        let cardsCarregados = 0;
         
         for (const visit of visits) {
             try {
-                const cardHTML = await createVisitorCard(visit);
-                if (cardHTML) {
-                    visitorsHTML += cardHTML;
-                    cardsCarregados++;
+                const visitor = visit.profiles;
+                if (!visitor) continue;
+                
+                const nickname = visitor.nickname || 
+                                visitor.full_name?.split(' ')[0] || 
+                                'Usuário';
+                
+                const city = visitor.city || 'Cidade não informada';
+                const timeAgo = getTimeAgo(visit.visited_at);
+                const initial = nickname.charAt(0).toUpperCase();
+
+                // Carregar foto
+                let avatarContent = '';
+                if (visitor.avatar_url) {
+                    const photoUrl = await loadUserPhoto(visitor.avatar_url);
+                    if (photoUrl) {
+                        avatarContent = `<img class="visitor-avatar-img" src="${photoUrl}" alt="${nickname}" style="display: block;">`;
+                    } else {
+                        avatarContent = `<div class="visitor-avatar-fallback">${initial}</div>`;
+                    }
+                } else {
+                    avatarContent = `<div class="visitor-avatar-fallback">${initial}</div>`;
                 }
+
+                visitorsHTML += `
+                    <div class="visitor-card" onclick="viewProfile('${visit.visitor_id}')">
+                        <div class="visitor-avatar">
+                            ${avatarContent}
+                        </div>
+                        <div class="visitor-name">${nickname}</div>
+                        <div class="visitor-location">${city}</div>
+                        <div class="visitor-time">${timeAgo}</div>
+                    </div>
+                `;
+                
             } catch (error) {
-                console.error('❌ Erro ao criar card:', error);
-                visitorsHTML += createBasicVisitorCard(visit);
-                cardsCarregados++;
+                console.error('❌ Erro ao criar card para visita:', visit, error);
+                // Card básico em caso de erro
+                visitorsHTML += `
+                    <div class="visitor-card" onclick="viewProfile('${visit.visitor_id}')">
+                        <div class="visitor-avatar">
+                            👤
+                        </div>
+                        <div class="visitor-name">Usuário</div>
+                        <div class="visitor-location">---</div>
+                        <div class="visitor-time">${getTimeAgo(visit.visited_at)}</div>
+                    </div>
+                `;
             }
         }
         
         visitorsGrid.innerHTML = visitorsHTML;
-        console.log(`✅ ${cardsCarregados} cards carregados com sucesso`);
+        console.log(`✅ ${visits.length} cards de visitantes carregados com sucesso`);
 
     } catch (error) {
-        console.error('Erro ao carregar visitantes premium:', error);
+        console.error('❌ Erro geral ao carregar visitantes premium:', error);
         const visitorsGrid = document.getElementById('visitorsGrid');
         visitorsGrid.innerHTML = `
             <div class="visitors-empty">
                 <div class="icon">❌</div>
                 <h3>Erro ao carregar visitantes</h3>
-                <p>Tente recarregar a página</p>
+                <p>${error.message || 'Erro desconhecido'}</p>
+                <button class="btn btn-primary" onclick="location.reload()" style="margin-top: 1rem;">
+                    Tentar Novamente
+                </button>
             </div>
         `;
     }
-}
-
-// ✅ CRIAR CARD DO VISITANTE - IGUAL AO VISITANTE.HTML
-async function createVisitorCard(visit) {
-    try {
-        const visitor = visit.profiles;
-        const nickname = visitor?.nickname || 
-                        visitor?.full_name?.split(' ')[0] || 
-                        'Usuário';
-        
-        // ✅ CIDADE REAL - do campo city da tabela profiles
-        const city = visitor?.city || 'Cidade não informada';
-        const timeAgo = getTimeAgo(visit.visited_at);
-        const initial = nickname.charAt(0).toUpperCase();
-
-        // ✅ Carregar foto
-        let avatarContent = '';
-        if (visitor?.avatar_url) {
-            const photoUrl = await loadUserPhoto(visitor.avatar_url);
-            if (photoUrl) {
-                avatarContent = `<img class="visitor-avatar-img" src="${photoUrl}" alt="${nickname}" style="display: block;">`;
-            } else {
-                avatarContent = `<div class="visitor-avatar-fallback">${initial}</div>`;
-            }
-        } else {
-            avatarContent = `<div class="visitor-avatar-fallback">${initial}</div>`;
-        }
-
-        return `
-            <div class="visitor-card" onclick="viewProfile('${visit.visitor_id}')">
-                <div class="visitor-avatar">
-                    ${avatarContent}
-                </div>
-                <div class="visitor-name">${nickname}</div>
-                <div class="visitor-location">${city}</div>
-                <div class="visitor-time">${timeAgo}</div>
-            </div>
-        `;
-
-    } catch (error) {
-        console.error('❌ Erro em createVisitorCard:', error);
-        return createBasicVisitorCard(visit);
-    }
-}
-
-// ✅ CARD BÁSICO PARA VISITANTE
-function createBasicVisitorCard(visit) {
-    return `
-        <div class="visitor-card" onclick="viewProfile('${visit.visitor_id}')">
-            <div class="visitor-avatar">
-                👤
-            </div>
-            <div class="visitor-name">Usuário</div>
-            <div class="visitor-location">---</div>
-            <div class="visitor-time">${getTimeAgo(visit.visited_at)}</div>
-        </div>
-    `;
 }
 
 // ✅ CARREGAR ESTATÍSTICAS PARA FREE USERS - CORRIGIDO
