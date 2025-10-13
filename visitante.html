@@ -6,7 +6,6 @@
   <title>Quem Visitou - Amor Conect</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    /* REUTILIZANDO SEUS ESTILOS EXISTENTES */
     * {
       margin: 0;
       padding: 0;
@@ -23,15 +22,12 @@
       --text-light: #666;
       --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
       --transition: all 0.3s ease;
-      --error: #e53e3e;
-      --success: #38a169;
     }
 
     body {
       background-color: var(--bege);
       color: var(--text);
       line-height: 1.6;
-      overflow-x: hidden;
     }
 
     .container {
@@ -41,7 +37,7 @@
       padding: 0 20px;
     }
 
-    /* Header (mesmo estilo da home) */
+    /* Header */
     header {
       background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
       color: var(--branco);
@@ -62,14 +58,12 @@
     .logo {
       display: flex;
       align-items: center;
-      gap: 12px;
-      flex-shrink: 0;
       justify-content: center;
       flex: 1;
     }
 
     .logo img {
-      height: 220px;
+      height: 180px;
       width: auto;
       object-fit: contain;
     }
@@ -109,10 +103,6 @@
       display: none;
     }
 
-    .user-avatar-fallback {
-      font-size: 1.2rem;
-    }
-
     .btn {
       padding: 0.6rem 1rem;
       border-radius: 30px;
@@ -124,7 +114,6 @@
       display: inline-block;
       text-align: center;
       font-size: 0.85rem;
-      white-space: nowrap;
     }
 
     .btn-outline {
@@ -133,28 +122,15 @@
       color: var(--branco);
     }
 
-    .btn-primary {
-      background: var(--branco);
-      color: var(--vermelho-rosado);
-    }
-
-    .btn-secondary {
-      background: transparent;
-      border: 2px solid var(--vermelho-rosado);
-      color: var(--vermelho-rosado);
-    }
-
     .btn-premium {
       background: linear-gradient(135deg, #ffd700, #ff6b00);
       color: var(--branco);
       border: none;
       font-weight: 700;
-      box-shadow: 0 4px 15px rgba(255, 107, 0, 0.3);
     }
 
     .btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     }
 
     /* Conteúdo Principal */
@@ -174,96 +150,111 @@
     }
 
     .page-header h1 {
-      font-size: 2.5rem;
+      font-size: 2.2rem;
       color: var(--vermelho-rosado);
       margin-bottom: 1rem;
     }
 
-    .page-header p {
-      color: var(--text-light);
-      font-size: 1.1rem;
-    }
-
-    /* Estatísticas de Visitas */
+    /* Estatísticas */
     .visit-stats {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
       margin-bottom: 2rem;
     }
 
     .stat-card {
       background: var(--branco);
-      padding: 1.5rem;
-      border-radius: 15px;
+      padding: 1.2rem;
+      border-radius: 12px;
       box-shadow: var(--shadow);
       text-align: center;
-      transition: var(--transition);
       border: 1px solid var(--lilas);
     }
 
-    .stat-card:hover {
-      transform: translateY(-3px);
-    }
-
     .stat-number {
-      font-size: 2rem;
+      font-size: 1.8rem;
       font-weight: bold;
       color: var(--vermelho-rosado);
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.3rem;
     }
 
     .stat-label {
       color: var(--text-light);
-      font-size: 0.9rem;
+      font-size: 0.8rem;
     }
 
-    /* Lista de Visitantes */
-    .visitors-list {
+    /* NOVO: Grid de Cards Pequenos */
+    .visitors-section {
       background: var(--branco);
       border-radius: 15px;
       box-shadow: var(--shadow);
       border: 1px solid var(--lilas);
-      overflow: hidden;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
     }
 
-    .visitors-header {
-      padding: 1.5rem;
-      border-bottom: 1px solid var(--lilas);
+    .section-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      margin-bottom: 1.5rem;
     }
 
-    .visitors-header h2 {
+    .section-header h2 {
       color: var(--vermelho-rosado);
-      font-size: 1.5rem;
+      font-size: 1.4rem;
     }
 
     .visitors-count {
       background: var(--lilas);
       color: var(--branco);
       padding: 0.3rem 0.8rem;
-      border-radius: 20px;
-      font-size: 0.9rem;
+      border-radius: 15px;
+      font-size: 0.8rem;
       font-weight: bold;
     }
 
-    .visitor-item {
+    .visitors-grid {
       display: flex;
-      align-items: center;
-      padding: 1.5rem;
-      border-bottom: 1px solid var(--bege);
-      transition: var(--transition);
-      cursor: pointer;
+      gap: 1rem;
+      overflow-x: auto;
+      padding: 0.5rem 0.2rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--lilas) var(--bege);
     }
 
-    .visitor-item:hover {
+    .visitors-grid::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    .visitors-grid::-webkit-scrollbar-track {
       background: var(--bege);
+      border-radius: 3px;
     }
 
-    .visitor-item:last-child {
-      border-bottom: none;
+    .visitors-grid::-webkit-scrollbar-thumb {
+      background: var(--lilas);
+      border-radius: 3px;
+    }
+
+    /* Cards Pequenos */
+    .visitor-card {
+      flex: 0 0 auto;
+      width: 120px;
+      background: var(--bege);
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      border: 2px solid transparent;
+    }
+
+    .visitor-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--lilas);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
     }
 
     .visitor-avatar {
@@ -276,11 +267,12 @@
       justify-content: center;
       color: white;
       font-weight: bold;
-      font-size: 1.5rem;
-      margin-right: 1rem;
+      font-size: 1.2rem;
+      margin: 0 auto 0.8rem;
       position: relative;
       overflow: hidden;
-      flex-shrink: 0;
+      border: 3px solid var(--branco);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
     .visitor-avatar-img {
@@ -291,33 +283,29 @@
       display: none;
     }
 
-    .visitor-info {
-      flex: 1;
-    }
-
     .visitor-name {
-      font-size: 1.1rem;
+      font-size: 0.9rem;
       font-weight: 600;
       color: var(--text);
       margin-bottom: 0.3rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .visitor-location {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .visitor-time {
-      font-size: 0.9rem;
-      color: var(--text-light);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .visitor-actions {
-      display: flex;
-      gap: 0.5rem;
-    }
-
-    .btn-sm {
-      padding: 0.5rem 1rem;
-      font-size: 0.9rem;
+      font-size: 0.7rem;
+      color: var(--vermelho-rosado);
+      margin-top: 0.3rem;
+      font-weight: 500;
     }
 
     /* Estado Vazio */
@@ -325,10 +313,11 @@
       text-align: center;
       padding: 3rem;
       color: var(--text-light);
+      width: 100%;
     }
 
     .empty-state-icon {
-      font-size: 4rem;
+      font-size: 3rem;
       margin-bottom: 1rem;
       opacity: 0.5;
     }
@@ -353,20 +342,20 @@
     .free-content p {
       color: var(--text-light);
       margin-bottom: 2rem;
-      font-size: 1rem;
     }
 
     /* Loading */
     .loading {
       text-align: center;
-      padding: 3rem;
+      padding: 2rem;
+      width: 100%;
     }
 
     .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid var(--bege);
-      border-top: 4px solid var(--vermelho-rosado);
+      width: 30px;
+      height: 30px;
+      border: 3px solid var(--bege);
+      border-top: 3px solid var(--vermelho-rosado);
       border-radius: 50%;
       animation: spin 1s linear infinite;
       margin: 0 auto 1rem;
@@ -438,34 +427,11 @@
       }
 
       .logo img {
-        height: 180px;
+        height: 150px;
       }
 
       .visit-stats {
         grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
-      }
-
-      .stat-card {
-        padding: 1rem;
-      }
-
-      .stat-number {
-        font-size: 1.5rem;
-      }
-
-      .visitor-item {
-        flex-direction: column;
-        text-align: center;
-        gap: 1rem;
-      }
-
-      .visitor-avatar {
-        margin-right: 0;
-      }
-
-      .visitor-actions {
-        justify-content: center;
       }
 
       .page-header {
@@ -473,7 +439,18 @@
       }
 
       .page-header h1 {
-        font-size: 2rem;
+        font-size: 1.8rem;
+      }
+
+      .visitor-card {
+        width: 110px;
+        padding: 0.8rem;
+      }
+
+      .visitor-avatar {
+        width: 50px;
+        height: 50px;
+        font-size: 1rem;
       }
     }
 
@@ -483,11 +460,11 @@
       }
 
       .logo img {
-        height: 160px;
+        height: 130px;
       }
 
-      .page-header h1 {
-        font-size: 1.8rem;
+      .visitor-card {
+        width: 100px;
       }
     }
   </style>
@@ -522,7 +499,7 @@
       <!-- Page Header -->
       <section class="page-header">
         <h1>👀 Quem Visitou Seu Perfil</h1>
-        <p>Veja quem se interessou por você e iniciou novas conexões</p>
+        <p>Descubra quem se interessou por você</p>
       </section>
 
       <!-- Conteúdo Premium -->
@@ -547,32 +524,34 @@
           </div>
         </div>
 
-        <!-- Lista de Visitantes -->
-        <div class="visitors-list">
-          <div class="visitors-header">
+        <!-- NOVO: Grid de Cards Pequenos -->
+        <section class="visitors-section">
+          <div class="section-header">
             <h2>Seus Visitantes</h2>
             <div class="visitors-count" id="visitorsCount">0 visitantes</div>
           </div>
           
-          <div id="visitorsList">
+          <div class="visitors-grid" id="visitorsGrid">
             <div class="loading">
               <div class="spinner"></div>
               <p>Carregando visitantes...</p>
             </div>
           </div>
-        </div>
+        </section>
       </div>
 
       <!-- Conteúdo Free -->
       <div class="free-content" id="freeContent">
         <div class="icon">🔒</div>
         <h2>Desbloqueie para ver quem te visitou</h2>
-        <p>Como usuário Premium, você pode ver todos os perfis que visitaram seu perfil e iniciar conversas</p>
+        <p>Como usuário Premium, você pode ver todos os perfis que visitaram seu perfil</p>
         <a href="princing.html" class="btn btn-premium" style="padding: 1rem 2rem; font-size: 1.1rem;">
           Tornar-se Premium
         </a>
         <div style="margin-top: 2rem;">
-          <a href="home.html" class="btn btn-secondary">Voltar para Home</a>
+          <a href="home.html" class="btn btn-outline" style="color: var(--vermelho-rosado); border-color: var(--vermelho-rosado);">
+            Voltar para Home
+          </a>
         </div>
       </div>
     </div>
@@ -609,7 +588,6 @@
       </div>
     </div>
   </footer>
-
   <script>
     // Configuração do Supabase
     const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
@@ -803,93 +781,77 @@
       }
     }
 
-    // ✅ FUNÇÃO COMPLETAMENTE CORRIGIDA - Carregar todos os visitantes
+    // ✅ FUNÇÃO PRINCIPAL CORRIGIDA - Carregar todos os visitantes
     async function loadAllVisitors() {
       try {
         console.log('🔄 Carregando todos os visitantes...');
         
-        // ✅ MÉTODO SIMPLES E DIRETO - buscar IDs primeiro
+        // Buscar IDs das visitas primeiro
         const { data: visits, error } = await supabase
           .from('profile_visits')
           .select('visitor_id, visited_at')
           .eq('visited_id', currentUser.id)
           .order('visited_at', { ascending: false });
 
-        const visitorsList = document.getElementById('visitorsList');
+        const visitorsGrid = document.getElementById('visitorsGrid');
         
         if (error) {
           console.error('❌ Erro ao carregar visitas:', error);
           throw error;
         }
 
-        console.log(`✅ ${visits?.length || 0} visitas encontradas:`, visits);
+        console.log(`✅ ${visits?.length || 0} visitas encontradas`);
 
         // Atualizar contador
         document.getElementById('visitorsCount').textContent = 
           `${visits?.length || 0} visitante${visits?.length !== 1 ? 's' : ''}`;
 
         if (!visits || visits.length === 0) {
-          visitorsList.innerHTML = `
+          visitorsGrid.innerHTML = `
             <div class="empty-state">
               <div class="empty-state-icon">👀</div>
               <h3>Nenhuma visita ainda</h3>
-              <p>Seu perfil ainda não foi visitado. Complete seu perfil para aparecer mais nas buscas!</p>
-              <a href="painel.html" class="btn btn-primary" style="margin-top: 1rem;">
-                Completar Perfil
-              </a>
+              <p>Seu perfil ainda não foi visitado</p>
             </div>
           `;
           return;
         }
 
-        // ✅ BUSCAR DADOS DOS PERFIS SEPARADAMENTE
+        // ✅ CARREGAR CARDS PEQUENOS
         let visitorsHTML = '';
         
         for (const visit of visits) {
           try {
-            // Buscar perfil do visitante
-            const { data: visitorProfile, error: profileError } = await supabase
-              .from('profiles')
-              .select(`
-                nickname,
-                full_name,
-                avatar_url,
-                birth_date,
-                user_details (
-                  zodiac,
-                  profession,
-                  description
-                )
-              `)
-              .eq('id', visit.visitor_id)
-              .single();
-
-            if (profileError) {
-              console.error('❌ Erro ao carregar perfil do visitante:', profileError);
-              // Mostrar visitante básico mesmo com erro
-              visitorsHTML += createVisitorCard(visit, null);
-              continue;
-            }
-
-            visitorsHTML += createVisitorCard(visit, visitorProfile);
-            
+            const cardHTML = await createVisitorCard(visit);
+            visitorsHTML += cardHTML;
           } catch (error) {
-            console.error('❌ Erro no processamento do visitante:', error);
-            visitorsHTML += createVisitorCard(visit, null);
+            console.error('❌ Erro ao criar card:', error);
+            // Card básico em caso de erro
+            visitorsHTML += `
+              <div class="visitor-card" onclick="viewProfile('${visit.visitor_id}')">
+                <div class="visitor-avatar">
+                  U
+                </div>
+                <div class="visitor-name">Usuário</div>
+                <div class="visitor-location">---</div>
+                <div class="visitor-time">${getTimeAgo(visit.visited_at)}</div>
+              </div>
+            `;
           }
         }
         
-        visitorsList.innerHTML = visitorsHTML;
-        console.log('✅ Lista de visitantes carregada com sucesso');
+        visitorsGrid.innerHTML = visitorsHTML;
+        console.log('✅ Grid de visitantes carregado com sucesso');
 
       } catch (error) {
         console.error('❌ Erro ao carregar visitantes:', error);
-        visitorsList.innerHTML = `
+        const visitorsGrid = document.getElementById('visitorsGrid');
+        visitorsGrid.innerHTML = `
           <div class="empty-state">
             <div class="empty-state-icon">❌</div>
             <h3>Erro ao carregar visitantes</h3>
-            <p>${error.message || 'Tente recarregar a página'}</p>
-            <button class="btn btn-primary" onclick="location.reload()" style="margin-top: 1rem;">
+            <p>Tente recarregar a página</p>
+            <button class="btn btn-premium" onclick="location.reload()" style="margin-top: 1rem;">
               Recarregar
             </button>
           </div>
@@ -897,61 +859,71 @@
       }
     }
 
-    // ✅ FUNÇÃO AUXILIAR - Criar card do visitante
-    function createVisitorCard(visit, visitorProfile) {
-      const nickname = visitorProfile?.nickname || visitorProfile?.full_name?.split(' ')[0] || 'Usuário';
-      const timeAgo = getTimeAgo(visit.visited_at);
-      const initial = nickname.charAt(0).toUpperCase();
-      
-      // Calcular idade
-      const age = visitorProfile?.birth_date ? calculateAge(visitorProfile.birth_date) : null;
-      const ageInfo = age ? `, ${age}` : '';
-      
-      // Carregar foto
-      let avatarHTML = '';
-      if (visitorProfile?.avatar_url) {
-        avatarHTML = `
-          <div class="visitor-avatar" style="background-image: url('${visitorProfile.avatar_url}'); background-size: cover; background-position: center;">
-            <div style="display: none;">${initial}</div>
-          </div>
-        `;
-      } else {
-        avatarHTML = `
-          <div class="visitor-avatar">
-            ${initial}
-          </div>
-        `;
-      }
+    // ✅ FUNÇÃO PARA CRIAR CARD DO VISITANTE
+    async function createVisitorCard(visit) {
+      try {
+        // Buscar perfil do visitante
+        const { data: visitorProfile, error: profileError } = await supabase
+          .from('profiles')
+          .select(`
+            nickname,
+            full_name,
+            avatar_url,
+            birth_date,
+            user_details (
+              city,
+              state
+            )
+          `)
+          .eq('id', visit.visitor_id)
+          .single();
 
-      // Informações adicionais
-      const details = visitorProfile?.user_details || {};
-      const zodiac = details.zodiac ? ` • ${formatZodiac(details.zodiac)}` : '';
-      const profession = details.profession ? ` • ${details.profession}` : '';
+        if (profileError) {
+          console.error('❌ Erro ao carregar perfil:', profileError);
+          throw profileError;
+        }
 
-      return `
-        <div class="visitor-item" onclick="viewProfile('${visit.visitor_id}')">
-          ${avatarHTML}
-          <div class="visitor-info">
-            <div class="visitor-name">${nickname}${ageInfo}</div>
-            <div class="visitor-time">
-              ⏱️ ${timeAgo}${zodiac}${profession}
+        const nickname = visitorProfile?.nickname || visitorProfile?.full_name?.split(' ')[0] || 'Usuário';
+        const timeAgo = getTimeAgo(visit.visited_at);
+        const initial = nickname.charAt(0).toUpperCase();
+        
+        // Localização
+        const details = visitorProfile?.user_details || {};
+        const city = details.city || '---';
+        const state = details.state ? `, ${details.state}` : '';
+        const location = `${city}${state}`;
+
+        // ✅ CARREGAR FOTO CORRETAMENTE
+        let avatarContent = '';
+        if (visitorProfile?.avatar_url) {
+          const photoUrl = await loadUserPhoto(visitorProfile.avatar_url);
+          if (photoUrl) {
+            avatarContent = `
+              <img class="visitor-avatar-img" src="${photoUrl}" alt="${nickname}" style="display: block;">
+              <div class="visitor-avatar-fallback" style="display: none;">${initial}</div>
+            `;
+          } else {
+            avatarContent = `<div class="visitor-avatar-fallback">${initial}</div>`;
+          }
+        } else {
+          avatarContent = `<div class="visitor-avatar-fallback">${initial}</div>`;
+        }
+
+        return `
+          <div class="visitor-card" onclick="viewProfile('${visit.visitor_id}')">
+            <div class="visitor-avatar">
+              ${avatarContent}
             </div>
-            ${details.description ? `
-              <div class="visitor-bio" style="margin-top: 0.5rem; font-size: 0.9rem; color: var(--text-light);">
-                ${details.description}
-              </div>
-            ` : ''}
+            <div class="visitor-name">${nickname}</div>
+            <div class="visitor-location">${location}</div>
+            <div class="visitor-time">${timeAgo}</div>
           </div>
-          <div class="visitor-actions">
-            <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); sendMessage('${visit.visitor_id}')">
-              💌 Mensagem
-            </button>
-            <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewProfile('${visit.visitor_id}')">
-              👀 Ver Perfil
-            </button>
-          </div>
-        </div>
-      `;
+        `;
+
+      } catch (error) {
+        console.error('❌ Erro no createVisitorCard:', error);
+        throw error;
+      }
     }
 
     // ✅ FUNÇÃO AUXILIAR - Calcular idade
@@ -979,7 +951,7 @@
       return names[zodiac] || zodiac;
     }
 
-    // Função auxiliar - tempo decorrido
+    // ✅ FUNÇÃO AUXILIAR - Tempo decorrido (versão curta)
     function getTimeAgo(dateString) {
       const date = new Date(dateString);
       const now = new Date();
@@ -988,11 +960,11 @@
       const diffHours = Math.floor(diffMs / 3600000);
       const diffDays = Math.floor(diffMs / 86400000);
       
-      if (diffMins < 1) return 'Agora mesmo';
-      if (diffMins < 60) return `${diffMins} minuto${diffMins !== 1 ? 's' : ''} atrás`;
-      if (diffHours < 24) return `${diffHours} hora${diffHours !== 1 ? 's' : ''} atrás`;
-      if (diffDays < 7) return `${diffDays} dia${diffDays !== 1 ? 's' : ''} atrás`;
-      return `${Math.floor(diffDays / 7)} semana${Math.floor(diffDays / 7) !== 1 ? 's' : ''} atrás`;
+      if (diffMins < 1) return 'Agora';
+      if (diffMins < 60) return `${diffMins}m`;
+      if (diffHours < 24) return `${diffHours}h`;
+      if (diffDays < 7) return `${diffDays}d`;
+      return `${Math.floor(diffDays / 7)}sem`;
     }
 
     // Funções de interação
@@ -1033,6 +1005,8 @@
     window.viewProfile = viewProfile;
     window.calculateAge = calculateAge;
     window.formatZodiac = formatZodiac;
+
+    console.log('✅ Visitante.js carregado e pronto!');
   </script>
 </body>
 </html>
