@@ -679,14 +679,13 @@
       userAvatarFallback.textContent = displayName.charAt(0).toUpperCase();
     }
 
-    // ✅ FUNÇÃO CORRIGIDA - Carregar foto (igual ao perfil.html)
+    // ✅ FUNÇÃO CORRIGIDA - Carregar foto
     async function loadUserPhoto(avatarUrl) {
       try {
         if (!avatarUrl) return null;
 
         console.log('📸 Carregando foto:', avatarUrl);
         
-        // ✅ MÉTODO QUE FUNCIONA NO PERFIL.HTML
         const { data } = supabase.storage
           .from('avatars')
           .getPublicUrl(avatarUrl);
@@ -824,7 +823,7 @@
           return;
         }
 
-        // ✅ CARREGAR CARDS PEQUENOS - MÉTODO GARANTIDO
+        // ✅ CARREGAR CARDS PEQUENOS - MÉTODO CORRIGIDO
         let visitorsHTML = '';
         let cardsCarregados = 0;
         
@@ -878,14 +877,23 @@
       console.log('🎯 Criando card para visitante:', visit.visitor_id);
       
       try {
-        // ✅ BUSCA SIMPLES E DIRETA - igual ao perfil.html
+        // ✅ BUSCA COMPLETA E CORRIGIDA - trazendo todos os dados necessários
         const { data: visitorProfile, error: profileError } = await supabase
           .from('profiles')
-          .select('nickname, full_name, avatar_url, user_details(city, state)')
+          .select(`
+            id,
+            nickname, 
+            full_name,
+            avatar_url,
+            user_details (
+              city,
+              state
+            )
+          `)
           .eq('id', visit.visitor_id)
           .single();
 
-        console.log('🔍 Resultado da busca:', visitorProfile);
+        console.log('🔍 Resultado da busca do visitante:', visitorProfile);
 
         // Se não encontrar perfil, criar card básico
         if (profileError || !visitorProfile) {
@@ -902,16 +910,19 @@
           `;
         }
 
-        // ✅ DADOS REAIS DO PERFIL
-        const nickname = visitorProfile.nickname || visitorProfile.full_name?.split(' ')[0] || 'Usuário';
+        // ✅ DADOS REAIS DO PERFIL - CORRIGIDO
+        const nickname = visitorProfile.nickname || 
+                        visitorProfile.full_name?.split(' ')[0] || 
+                        'Usuário';
+        
         const timeAgo = getTimeAgo(visit.visited_at);
         const initial = nickname.charAt(0).toUpperCase();
         
-        // Localização
+        // ✅ LOCALIZAÇÃO CORRIGIDA
         const details = visitorProfile.user_details || {};
         const city = details.city || 'Cidade não informada';
         const state = details.state ? `, ${details.state}` : '';
-        const location = `${city}${state}`;
+        const location = city + state;
 
         // ✅ CARREGAR FOTO - método garantido
         let avatarContent = '';
@@ -920,7 +931,7 @@
           if (photoUrl) {
             avatarContent = `
               <img class="visitor-avatar-img" src="${photoUrl}" alt="${nickname}" 
-                   style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block;">
+                   style="display: block;">
               <div style="display: none;">${initial}</div>
             `;
           } else {
@@ -1015,6 +1026,6 @@
     window.viewProfile = viewProfile;
 
     console.log('✅ Visitante.js carregado e pronto!');
-  </script>
+</script>
 </body>
 </html>
