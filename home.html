@@ -780,8 +780,7 @@ footer {
   transition: opacity 0.3s ease;
 }
 
-/* ==================== SISTEMA DE VISITANTES ==================== */
-
+/* ==================== SISTEMA DE VISITANTES ATUALIZADO ==================== */
 .visitors-section {
     margin-bottom: 3rem;
 }
@@ -825,24 +824,48 @@ footer {
     font-weight: bold;
 }
 
-.visitors-preview {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+/* NOVO: Grid de Cards Pequenos - IGUAL AO VISITANTE.HTML */
+.visitors-grid {
+    display: flex;
     gap: 1rem;
+    overflow-x: auto;
+    padding: 0.5rem 0.2rem;
     margin-bottom: 1.5rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--lilas) var(--bege);
 }
 
-.visitor-item {
+.visitors-grid::-webkit-scrollbar {
+    height: 6px;
+}
+
+.visitors-grid::-webkit-scrollbar-track {
+    background: var(--bege);
+    border-radius: 3px;
+}
+
+.visitors-grid::-webkit-scrollbar-thumb {
+    background: var(--lilas);
+    border-radius: 3px;
+}
+
+/* Cards Pequenos - IGUAL AO VISITANTE.HTML */
+.visitor-card {
+    flex: 0 0 auto;
+    width: 120px;
+    background: var(--bege);
+    border-radius: 12px;
+    padding: 1rem;
     text-align: center;
     cursor: pointer;
     transition: var(--transition);
-    padding: 0.5rem;
-    border-radius: 10px;
+    border: 2px solid transparent;
 }
 
-.visitor-item:hover {
-    background: var(--bege);
-    transform: translateY(-3px);
+.visitor-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--lilas);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
 .visitor-avatar {
@@ -856,7 +879,7 @@ footer {
     color: white;
     font-weight: bold;
     font-size: 1.2rem;
-    margin: 0 auto;
+    margin: 0 auto 0.8rem;
     position: relative;
     overflow: hidden;
     border: 3px solid var(--branco);
@@ -871,24 +894,29 @@ footer {
     display: none;
 }
 
-.visitor-info {
-    text-align: center;
-    margin-top: 0.5rem;
-}
-
 .visitor-name {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     font-weight: 600;
     color: var(--text);
+    margin-bottom: 0.3rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    margin-bottom: 0.2rem;
+}
+
+.visitor-location {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .visitor-time {
     font-size: 0.7rem;
-    color: var(--text-light);
+    color: var(--vermelho-rosado);
+    margin-top: 0.3rem;
+    font-weight: 500;
 }
 
 .visitors-actions {
@@ -979,6 +1007,7 @@ input:checked + .slider:before {
     text-align: center;
     padding: 2rem;
     color: var(--text-light);
+    width: 100%;
 }
 
 .visitors-empty .icon {
@@ -1005,6 +1034,7 @@ input:checked + .slider:before {
 .visitors-loading {
     text-align: center;
     padding: 2rem;
+    width: 100%;
 }
 
 .visitors-spinner {
@@ -1019,9 +1049,13 @@ input:checked + .slider:before {
 
 /* Responsividade Visitantes */
 @media (max-width: 768px) {
-    .visitors-preview {
-        grid-template-columns: repeat(4, 1fr);
+    .visitors-grid {
         gap: 0.8rem;
+    }
+    
+    .visitor-card {
+        width: 110px;
+        padding: 0.8rem;
     }
     
     .visitor-avatar {
@@ -1036,7 +1070,6 @@ input:checked + .slider:before {
         gap: 1rem;
     }
     
-    
     .visitors-header {
         flex-direction: column;
         gap: 1rem;
@@ -1049,8 +1082,8 @@ input:checked + .slider:before {
 }
 
 @media (max-width: 480px) {
-    .visitors-preview {
-        grid-template-columns: repeat(3, 1fr);
+    .visitor-card {
+        width: 100px;
     }
     
     .visitor-avatar {
@@ -1060,6 +1093,10 @@ input:checked + .slider:before {
     
     .visitor-name {
         font-size: 0.75rem;
+    }
+    
+    .visitor-location {
+        font-size: 0.65rem;
     }
     
     .visitor-time {
@@ -1074,7 +1111,7 @@ input:checked + .slider:before {
         font-size: 2.5rem;
     }
 }
-</style>
+  </style>
 </head>
 <body>
   <!-- Header -->
@@ -1159,39 +1196,47 @@ input:checked + .slider:before {
         </div>
       </div>
 
-      <!-- NOVO: Card de Visitantes -->
-      <section class="visitors-section" style="margin-bottom: 3rem;">
-        <div class="visitors-card" style="background: var(--branco); padding: 1.5rem; border-radius: 15px; box-shadow: var(--shadow); border: 1px solid var(--lilas);">
-          <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <h2 style="font-size: 1.5rem; color: var(--vermelho-rosado); display: flex; align-items: center; gap: 0.5rem;">
-                👀 Quem te visitou
-            </h2>
-            <div class="visitors-count" id="visitorsCount" style="background: var(--lilas); color: var(--branco); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.9rem; font-weight: bold;">
-                0 visitas
-            </div>
+      <!-- NOVO: Card de Visitantes ATUALIZADO -->
+      <section class="visitors-section">
+        <div class="visitors-card">
+          <div class="visitors-header">
+            <h2>👀 Quem te visitou</h2>
+            <div class="visitors-count" id="visitorsCount">0 visitas</div>
           </div>
 
           <!-- Conteúdo Premium -->
           <div class="premium-content" id="premiumVisitors" style="display: none;">
-            <div class="visitors-preview" id="visitorsPreview" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-                <!-- Visitantes serão carregados aqui -->
+            <!-- NOVO: Grid de Cards Pequenos -->
+            <div class="visitors-grid" id="visitorsGrid">
+              <div class="visitors-loading">
+                <div class="visitors-spinner"></div>
+                <p>Carregando visitantes...</p>
+              </div>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <button class="btn btn-primary" onclick="window.location.href='visitante.html'" style="padding: 0.6rem 1.2rem;">
-                    Ver todos os visitantes
-                </button>
+            
+            <div class="visitors-actions">
+              <button class="btn btn-primary" onclick="window.location.href='visitante.html'">
+                Ver todos os visitantes
+              </button>
+              <div class="invisible-toggle">
+                <label for="invisibleToggle">Modo invisível:</label>
+                <label class="switch">
+                  <input type="checkbox" id="invisibleToggle" onchange="toggleInvisibleMode(this.checked)">
+                  <span class="slider"></span>
+                </label>
+              </div>
             </div>
           </div>
 
           <!-- Conteúdo Free -->
-          <div class="free-content" id="freeVisitors" style="text-align: center; padding: 2rem;">
-            <div style="font-size: 3rem; margin-bottom: 1rem;">🔒</div>
-            <h3 style="color: var(--vermelho-rosado); margin-bottom: 0.5rem;">Descubra quem se interessou por você!</h3>
-            <p style="color: var(--text-light); margin-bottom: 1.5rem;">
-                <span id="freeVisitorsCount">0 pessoas</span> visitaram seu perfil esta semana
+          <div class="free-content" id="freeVisitors">
+            <div class="icon">🔒</div>
+            <h3>Descubra quem se interessou por você!</h3>
+            <p>
+              <span id="freeVisitorsCount">0 pessoas</span> visitaram seu perfil esta semana
             </p>
-            <a href="princing.html" class="btn btn-premium" style="padding: 0.8rem 1.5rem;">
-                Seja Premium para ver
+            <a href="princing.html" class="btn btn-premium">
+              Seja Premium para ver
             </a>
           </div>
         </div>
@@ -1271,8 +1316,7 @@ input:checked + .slider:before {
       </div>
     </div>
   </footer>
-
-<script>
+  <script>
 // Configuração do Supabase
 const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
@@ -1289,7 +1333,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setupMobileMenu();
 });
 
-// Configurar menu mobile - CORRIGIDO
+// Configurar menu mobile
 function setupMobileMenu() {
     const hamburgerBtn = document.getElementById('hamburgerBtn');
     const mobileMenu = document.getElementById('mobileMenu');
@@ -1338,7 +1382,6 @@ function setupMobileMenu() {
 }
 
 // Verificar autenticação
-// Verificar autenticação
 async function checkAuth() {
     try {
         const { data: { user }, error } = await supabase.auth.getUser();
@@ -1353,7 +1396,7 @@ async function checkAuth() {
         currentUser = user;
         await loadUserData();
         await loadRealUsers();
-        await loadVisitorsSystem(); // ✅ NOVO: CARREGAR SISTEMA DE VISITANTES
+        await loadVisitorsSystem(); // ✅ CARREGAR SISTEMA DE VISITANTES CORRIGIDO
         updateStats();
         startStatsAutoUpdate();
         
@@ -1363,9 +1406,8 @@ async function checkAuth() {
     }
 }
 
-// ✅ ADICIONAR ATUALIZAÇÃO PERIÓDICA DAS ESTATÍSTICAS
+// ✅ ATUALIZAÇÃO PERIÓDICA DAS ESTATÍSTICAS
 function startStatsAutoUpdate() {
-    // Atualizar stats a cada 30 segundos
     setInterval(updateStats, 30000);
 }
 
@@ -1598,9 +1640,9 @@ async function createUserCardWithPhoto(user) {
     `;
 }
 
-// ==================== SISTEMA DE VISITANTES ====================
+// ==================== SISTEMA DE VISITANTES CORRIGIDO ====================
 
-// ✅ FUNÇÃO PARA REGISTRAR VISITA (NOVA FUNÇÃO)
+// ✅ FUNÇÃO PARA REGISTRAR VISITA
 async function registerProfileVisit(visitedUserId) {
     try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -1632,7 +1674,7 @@ async function registerProfileVisit(visitedUserId) {
     }
 }
 
-// ✅ CARREGAR VISITANTES E STATUS PREMIUM
+// ✅ CARREGAR VISITANTES E STATUS PREMIUM - CORRIGIDO
 async function loadVisitorsSystem() {
     try {
         console.log('🔄 Carregando sistema de visitantes...');
@@ -1675,7 +1717,7 @@ async function checkPremiumStatus() {
     }
 }
 
-// ✅ CARREGAR VISITANTES PARA PREMIUM - CORRIGIDA
+// ✅ CARREGAR VISITANTES PARA PREMIUM - COMPLETAMENTE CORRIGIDO
 async function loadPremiumVisitors() {
     try {
         // Mostrar seção premium
@@ -1691,7 +1733,8 @@ async function loadPremiumVisitors() {
                 profiles!profile_visits_visitor_id_fkey (
                     nickname,
                     avatar_url,
-                    full_name
+                    full_name,
+                    city
                 )
             `)
             .eq('visited_id', currentUser.id)
@@ -1703,7 +1746,7 @@ async function loadPremiumVisitors() {
             throw error;
         }
         
-        const visitorsPreview = document.getElementById('visitorsPreview');
+        const visitorsGrid = document.getElementById('visitorsGrid');
         const visitorsCount = document.getElementById('visitorsCount');
         
         // Atualizar contador
@@ -1713,81 +1756,133 @@ async function loadPremiumVisitors() {
         console.log(`✅ ${visitCount} visitas carregadas`);
 
         if (!visits || visits.length === 0) {
-            visitorsPreview.innerHTML = `
-                <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-light);">
-                    <div style="font-size: 3rem; margin-bottom: 1rem;">👀</div>
-                    <p>Ninguém visitou seu perfil ainda.<br>Complete seu perfil para aparecer mais!</p>
+            visitorsGrid.innerHTML = `
+                <div class="visitors-empty">
+                    <div class="icon">👀</div>
+                    <h3>Nenhuma visita ainda</h3>
+                    <p>Seu perfil ainda não foi visitado por outros usuários</p>
                 </div>
             `;
             return;
         }
         
-        // Exibir visitantes
+        // ✅ CARREGAR CARDS COM FOTOS - IGUAL AO VISITANTE.HTML
         let visitorsHTML = '';
+        let cardsCarregados = 0;
+        
         for (const visit of visits) {
-            const visitor = visit.profiles;
-            const nickname = visitor?.nickname || visitor?.full_name?.split(' ')[0] || 'Usuário';
-            const timeAgo = getTimeAgo(visit.visited_at);
-            const initial = nickname.charAt(0).toUpperCase();
-            
-            // Tentar carregar foto
-            let avatarHTML = '';
-            if (visitor?.avatar_url) {
-                const photoUrl = await loadUserPhoto(visitor.avatar_url);
-                if (photoUrl) {
-                    avatarHTML = `
-                        <div class="visitor-avatar" style="background-image: url('${photoUrl}'); background-size: cover; background-position: center;">
-                            <div style="display: none;">${initial}</div>
-                        </div>
-                    `;
+            try {
+                const cardHTML = await createVisitorCard(visit);
+                if (cardHTML) {
+                    visitorsHTML += cardHTML;
+                    cardsCarregados++;
                 }
+            } catch (error) {
+                console.error('❌ Erro ao criar card:', error);
+                visitorsHTML += createBasicVisitorCard(visit);
+                cardsCarregados++;
             }
-            
-            if (!avatarHTML) {
-                avatarHTML = `
-                    <div class="visitor-avatar">
-                        ${initial}
-                    </div>
-                `;
-            }
-            
-            visitorsHTML += `
-                <div class="visitor-item" onclick="viewProfile('${visit.visitor_id}')">
-                    ${avatarHTML}
-                    <div class="visitor-info">
-                        <div class="visitor-name">${nickname}</div>
-                        <div class="visitor-time">${timeAgo}</div>
-                    </div>
-                </div>
-            `;
         }
         
-        visitorsPreview.innerHTML = visitorsHTML;
-        
+        visitorsGrid.innerHTML = visitorsHTML;
+        console.log(`✅ ${cardsCarregados} cards carregados com sucesso`);
+
     } catch (error) {
         console.error('Erro ao carregar visitantes premium:', error);
+        const visitorsGrid = document.getElementById('visitorsGrid');
+        visitorsGrid.innerHTML = `
+            <div class="visitors-empty">
+                <div class="icon">❌</div>
+                <h3>Erro ao carregar visitantes</h3>
+                <p>Tente recarregar a página</p>
+            </div>
+        `;
     }
 }
 
-// ✅ CARREGAR ESTATÍSTICAS PARA FREE USERS
+// ✅ CRIAR CARD DO VISITANTE - IGUAL AO VISITANTE.HTML
+async function createVisitorCard(visit) {
+    try {
+        const visitor = visit.profiles;
+        const nickname = visitor?.nickname || 
+                        visitor?.full_name?.split(' ')[0] || 
+                        'Usuário';
+        
+        // ✅ CIDADE REAL - do campo city da tabela profiles
+        const city = visitor?.city || 'Cidade não informada';
+        const timeAgo = getTimeAgo(visit.visited_at);
+        const initial = nickname.charAt(0).toUpperCase();
+
+        // ✅ Carregar foto
+        let avatarContent = '';
+        if (visitor?.avatar_url) {
+            const photoUrl = await loadUserPhoto(visitor.avatar_url);
+            if (photoUrl) {
+                avatarContent = `<img class="visitor-avatar-img" src="${photoUrl}" alt="${nickname}" style="display: block;">`;
+            } else {
+                avatarContent = `<div class="visitor-avatar-fallback">${initial}</div>`;
+            }
+        } else {
+            avatarContent = `<div class="visitor-avatar-fallback">${initial}</div>`;
+        }
+
+        return `
+            <div class="visitor-card" onclick="viewProfile('${visit.visitor_id}')">
+                <div class="visitor-avatar">
+                    ${avatarContent}
+                </div>
+                <div class="visitor-name">${nickname}</div>
+                <div class="visitor-location">${city}</div>
+                <div class="visitor-time">${timeAgo}</div>
+            </div>
+        `;
+
+    } catch (error) {
+        console.error('❌ Erro em createVisitorCard:', error);
+        return createBasicVisitorCard(visit);
+    }
+}
+
+// ✅ CARD BÁSICO PARA VISITANTE
+function createBasicVisitorCard(visit) {
+    return `
+        <div class="visitor-card" onclick="viewProfile('${visit.visitor_id}')">
+            <div class="visitor-avatar">
+                👤
+            </div>
+            <div class="visitor-name">Usuário</div>
+            <div class="visitor-location">---</div>
+            <div class="visitor-time">${getTimeAgo(visit.visited_at)}</div>
+        </div>
+    `;
+}
+
+// ✅ CARREGAR ESTATÍSTICAS PARA FREE USERS - CORRIGIDO
 async function loadFreeVisitorsStats() {
     try {
         // Mostrar seção free
         document.getElementById('premiumVisitors').style.display = 'none';
         document.getElementById('freeVisitors').style.display = 'block';
         
-        // Buscar contagem de visitas (apenas número)
+        // ✅ BUSCAR CONTAGEM REAL DE VISITAS (7 DIAS)
         const { count } = await supabase
             .from('profile_visits')
             .select('*', { count: 'exact', head: true })
             .eq('visited_id', currentUser.id)
             .gte('visited_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
         
-        const countText = count === 1 ? '1 pessoa' : `${count || 0} pessoas`;
+        const visitCount = count || 0;
+        const countText = visitCount === 1 ? '1 pessoa' : `${visitCount} pessoas`;
+        
         document.getElementById('freeVisitorsCount').textContent = countText;
+        document.getElementById('visitorsCount').textContent = `${visitCount} visita${visitCount !== 1 ? 's' : ''}`;
+        
+        console.log(`📊 Free user: ${visitCount} visitas esta semana`);
         
     } catch (error) {
         console.error('Erro ao carregar stats free:', error);
+        document.getElementById('freeVisitorsCount').textContent = '0 pessoas';
+        document.getElementById('visitorsCount').textContent = '0 visitas';
     }
 }
 
@@ -1861,7 +1956,7 @@ function getTimeAgo(dateString) {
     return `${Math.floor(diffDays / 7)}sem`;
 }
 
-// ==================== FUNÇÕES DE INTERAÇÃO CORRIGIDAS ====================
+// ==================== FUNÇÕES DE INTERAÇÃO ====================
 function sendMessage(userId) {
     console.log('💌 Redirecionando para mensagens com usuário:', userId);
     
@@ -1871,7 +1966,6 @@ function sendMessage(userId) {
         return;
     }
     
-    // ✅ CORREÇÃO: REDIRECIONAR PARA PÁGINA DE MENSAGENS (igual ao busca.html)
     localStorage.setItem('openChatWithUserId', userId);
     window.location.href = 'mensagens.html';
 }
@@ -1894,7 +1988,6 @@ function viewProfile(userId) {
 }
 
 function isProfileComplete() {
-    // ✅ VERIFICAÇÃO SIMPLIFICADA IGUAL AO BUSCA.HTML
     return userProfile &&
            userProfile.full_name &&
            userProfile.full_name.trim() !== '' &&
@@ -1909,17 +2002,24 @@ async function updateStats() {
             .from('profiles')
             .select('*', { count: 'exact', head: true });
         
-        // ✅ CONTAGEM DE MENSAGENS NÃO LIDAS - MELHORADA
+        // ✅ CONTAGEM DE MENSAGENS NÃO LIDAS
         const { count: newMessages } = await supabase
             .from('messages')
             .select('*', { count: 'exact', head: true })
             .eq('receiver_id', currentUser.id)
             .eq('is_read', false);
 
+        // ✅ VISUALIZAÇÕES DO PERFIL (ÚLTIMOS 7 DIAS)
+        const { count: profileViews } = await supabase
+            .from('profile_visits')
+            .select('*', { count: 'exact', head: true })
+            .eq('visited_id', currentUser.id)
+            .gte('visited_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+
         document.getElementById('totalUsers').textContent = totalUsers || 0;
         document.getElementById('newMatches').textContent = newMessages || 0;
         document.getElementById('usersOnline').textContent = Math.floor((totalUsers || 1) * 0.3); // 30% online
-        document.getElementById('profileViews').textContent = Math.floor(Math.random() * 20); // Simulado por enquanto
+        document.getElementById('profileViews').textContent = profileViews || 0;
 
     } catch (error) {
         console.error('Erro ao carregar estatísticas:', error);
@@ -1928,32 +2028,6 @@ async function updateStats() {
         document.getElementById('newMatches').textContent = '0';
         document.getElementById('usersOnline').textContent = '1';
         document.getElementById('profileViews').textContent = '0';
-    }
-}
-
-// ✅ ENVIAR MENSAGEM - FUNÇÃO ATUALIZADA
-async function sendMessageToUser(receiverId, content) {
-    try {
-        const { error } = await supabase
-            .from('messages')
-            .insert([
-                {
-                    sender_id: currentUser.id,
-                    receiver_id: receiverId,
-                    content: content
-                }
-            ]);
-
-        if (error) throw error;
-        
-        // ✅ ATUALIZAR CONTADOR APÓS ENVIAR MENSAGEM
-        await updateStats();
-        
-        alert('Mensagem enviada com sucesso! 💌');
-        
-    } catch (error) {
-        console.error('Erro ao enviar mensagem:', error);
-        alert('✅ Mensagem registrada!');
     }
 }
 
@@ -2042,9 +2116,8 @@ async function logout() {
 // ==================== EXPORTAR FUNÇÕES PARA O HTML ====================
 window.sendMessage = sendMessage;
 window.viewProfile = viewProfile;
-window.sendMessageToUser = sendMessageToUser;
 window.toggleInvisibleMode = toggleInvisibleMode;
-window.registerProfileVisit = registerProfileVisit; // ✅ NOVA FUNÇÃO EXPORTADA
+window.registerProfileVisit = registerProfileVisit;
 
 console.log('✅ Home.js carregado e pronto!');
 </script>
