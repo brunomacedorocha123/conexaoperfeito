@@ -588,7 +588,7 @@
       </div>
     </div>
   </footer>
- <script>
+<script>
     // Configuração do Supabase
     const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
@@ -787,15 +787,15 @@
       }
     }
 
-    // ✅ FUNÇÃO PRINCIPAL CORRIGIDA - Carregar todos os visitantes
+    // ✅ FUNÇÃO PRINCIPAL COMPLETAMENTE CORRIGIDA - Carregar todos os visitantes
     async function loadAllVisitors() {
       try {
-        console.log('🔄 Carregando todos os visitantes...');
+        console.log('🔄 Carregando todos os visitantes para:', currentUser.id);
         
-        // Buscar IDs das visitas primeiro
+        // ✅ BUSCA DIRETA E SIMPLES - sem joins complexos
         const { data: visits, error } = await supabase
           .from('profile_visits')
-          .select('visitor_id, visited_at')
+          .select('*')
           .eq('visited_id', currentUser.id)
           .order('visited_at', { ascending: false });
 
@@ -803,7 +803,14 @@
         
         if (error) {
           console.error('❌ Erro ao carregar visitas:', error);
-          throw error;
+          visitorsGrid.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">❌</div>
+              <h3>Erro ao carregar visitas</h3>
+              <p>${error.message}</p>
+            </div>
+          `;
+          return;
         }
 
         console.log(`✅ ${visits?.length || 0} visitas encontradas:`, visits);
@@ -818,46 +825,33 @@
               <div class="empty-state-icon">👀</div>
               <h3>Nenhuma visita ainda</h3>
               <p>Seu perfil ainda não foi visitado</p>
+              <button class="btn btn-premium" onclick="testVisit()" style="margin-top: 1rem;">
+                Testar Visita
+              </button>
             </div>
           `;
           return;
         }
 
-        // ✅ CARREGAR CARDS PEQUENOS - MÉTODO CORRIGIDO
+        // ✅ CARREGAR CARDS - método simplificado
         let visitorsHTML = '';
-        let cardsCarregados = 0;
         
         for (const visit of visits) {
           try {
-            console.log(`🎯 Processando visitante ${cardsCarregados + 1}:`, visit.visitor_id);
-            
+            console.log(`🎯 Processando visita de:`, visit.visitor_id);
             const cardHTML = await createVisitorCard(visit);
-            if (cardHTML) {
-              visitorsHTML += cardHTML;
-              cardsCarregados++;
-            }
+            visitorsHTML += cardHTML;
           } catch (error) {
             console.error('❌ Erro ao criar card:', error);
-            // Criar card básico em caso de erro
-            visitorsHTML += `
-              <div class="visitor-card" onclick="viewProfile('${visit.visitor_id}')">
-                <div class="visitor-avatar">
-                  👤
-                </div>
-                <div class="visitor-name">Usuário</div>
-                <div class="visitor-location">---</div>
-                <div class="visitor-time">${getTimeAgo(visit.visited_at)}</div>
-              </div>
-            `;
-            cardsCarregados++;
+            visitorsHTML += createBasicCard(visit);
           }
         }
         
         visitorsGrid.innerHTML = visitorsHTML;
-        console.log(`✅ ${cardsCarregados} cards carregados com sucesso`);
+        console.log(`✅ ${visits.length} cards carregados`);
 
       } catch (error) {
-        console.error('❌ Erro ao carregar visitantes:', error);
+        console.error('❌ Erro geral ao carregar visitantes:', error);
         const visitorsGrid = document.getElementById('visitorsGrid');
         visitorsGrid.innerHTML = `
           <div class="empty-state">
@@ -872,68 +866,50 @@
       }
     }
 
-    // ✅ FUNÇÃO COMPLETAMENTE CORRIGIDA - CRIAR CARD DO VISITANTE
+    // ✅ FUNÇÃO CORRIGIDA - Criar card do visitante
     async function createVisitorCard(visit) {
-      console.log('🎯 Criando card para visitante:', visit.visitor_id);
-      
       try {
-        // ✅ BUSCA COMPLETA E CORRIGIDA - trazendo todos os dados necessários
-        const { data: visitorProfile, error: profileError } = await supabase
+        console.log('🔍 Buscando perfil do visitante:', visit.visitor_id);
+        
+        // ✅ BUSCA DIRETA - primeiro o perfil básico
+        const { data: profile, error } = await supabase
           .from('profiles')
-          .select(`
-            id,
-            nickname, 
-            full_name,
-            avatar_url,
-            user_details (
-              city,
-              state
-            )
-          `)
+          .select('id, nickname, full_name, avatar_url')
           .eq('id', visit.visitor_id)
           .single();
 
-        console.log('🔍 Resultado da busca do visitante:', visitorProfile);
-
-        // Se não encontrar perfil, criar card básico
-        if (profileError || !visitorProfile) {
-          console.log('🔍 Visitante não encontrado, criando card básico');
-          return `
-            <div class="visitor-card" onclick="viewProfile('${visit.visitor_id}')">
-              <div class="visitor-avatar">
-                👤
-              </div>
-              <div class="visitor-name">Usuário</div>
-              <div class="visitor-location">---</div>
-              <div class="visitor-time">${getTimeAgo(visit.visited_at)}</div>
-            </div>
-          `;
+        if (error || !profile) {
+          console.log('❌ Perfil não encontrado, criando card básico');
+          return createBasicCard(visit);
         }
 
-        // ✅ DADOS REAIS DO PERFIL - CORRIGIDO
-        const nickname = visitorProfile.nickname || 
-                        visitorProfile.full_name?.split(' ')[0] || 
+        console.log('✅ Perfil encontrado:', profile);
+
+        // ✅ BUSCA DETALHES SEPARADAMENTE
+        const { data: details } = await supabase
+          .from('user_details')
+          .select('city, state')
+          .eq('user_id', visit.visitor_id)
+          .single();
+
+        // Dados do visitante
+        const nickname = profile.nickname || 
+                        profile.full_name?.split(' ')[0] || 
                         'Usuário';
         
+        const location = details ? 
+                        `${details.city || 'Cidade não informada'}${details.state ? ', ' + details.state : ''}` : 
+                        'Localização não informada';
+
         const timeAgo = getTimeAgo(visit.visited_at);
         const initial = nickname.charAt(0).toUpperCase();
-        
-        // ✅ LOCALIZAÇÃO CORRIGIDA
-        const details = visitorProfile.user_details || {};
-        const city = details.city || 'Cidade não informada';
-        const state = details.state ? `, ${details.state}` : '';
-        const location = city + state;
 
-        // ✅ CARREGAR FOTO - método garantido
+        // ✅ Carregar foto
         let avatarContent = '';
-        if (visitorProfile.avatar_url) {
-          const photoUrl = await loadUserPhoto(visitorProfile.avatar_url);
+        if (profile.avatar_url) {
+          const photoUrl = await loadUserPhoto(profile.avatar_url);
           if (photoUrl) {
-            avatarContent = `
-              <img class="visitor-avatar-img" src="${photoUrl}" alt="${nickname}" 
-                   style="display: block;">
-              <div style="display: none;">${initial}</div>
-            `;
+            avatarContent = `<img class="visitor-avatar-img" src="${photoUrl}" alt="${nickname}" style="display: block;">`;
           } else {
             avatarContent = `<div class="visitor-avatar-fallback">${initial}</div>`;
           }
@@ -941,7 +917,7 @@
           avatarContent = `<div class="visitor-avatar-fallback">${initial}</div>`;
         }
 
-        const cardHTML = `
+        return `
           <div class="visitor-card" onclick="viewProfile('${visit.visitor_id}')">
             <div class="visitor-avatar">
               ${avatarContent}
@@ -952,27 +928,27 @@
           </div>
         `;
 
-        console.log('✅ Card criado com sucesso para:', nickname);
-        return cardHTML;
-
       } catch (error) {
         console.error('❌ Erro em createVisitorCard:', error);
-        
-        // ✅ SEMPRE RETORNAR UM CARD (mesmo que básico)
-        return `
-          <div class="visitor-card" onclick="viewProfile('${visit.visitor_id}')">
-            <div class="visitor-avatar">
-              👤
-            </div>
-            <div class="visitor-name">Usuário</div>
-            <div class="visitor-location">---</div>
-            <div class="visitor-time">${getTimeAgo(visit.visited_at)}</div>
-          </div>
-        `;
+        return createBasicCard(visit);
       }
     }
 
-    // ✅ FUNÇÃO AUXILIAR - Tempo decorrido (versão curta)
+    // ✅ FUNÇÃO AUXILIAR - Card básico
+    function createBasicCard(visit) {
+      return `
+        <div class="visitor-card" onclick="viewProfile('${visit.visitor_id}')">
+          <div class="visitor-avatar">
+            👤
+          </div>
+          <div class="visitor-name">Usuário</div>
+          <div class="visitor-location">---</div>
+          <div class="visitor-time">${getTimeAgo(visit.visited_at)}</div>
+        </div>
+      `;
+    }
+
+    // ✅ FUNÇÃO AUXILIAR - Tempo decorrido
     function getTimeAgo(dateString) {
       const date = new Date(dateString);
       const now = new Date();
@@ -986,6 +962,86 @@
       if (diffHours < 24) return `${diffHours}h`;
       if (diffDays < 7) return `${diffDays}d`;
       return `${Math.floor(diffDays / 7)}sem`;
+    }
+
+    // ✅ FUNÇÃO DE TESTE - Criar uma visita manualmente
+    async function testVisit() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // Buscar outro usuário para simular visita
+        const { data: otherUsers } = await supabase
+          .from('profiles')
+          .select('id')
+          .neq('id', user.id)
+          .limit(1);
+
+        if (!otherUsers || otherUsers.length === 0) {
+          alert('Não há outros usuários para testar');
+          return;
+        }
+
+        const testVisitorId = otherUsers[0].id;
+        
+        console.log('🧪 Criando visita de teste:', testVisitorId, '→', user.id);
+
+        const { error } = await supabase
+          .from('profile_visits')
+          .insert({
+            visitor_id: testVisitorId,
+            visited_id: user.id,
+            visited_at: new Date().toISOString()
+          });
+
+        if (error) {
+          console.error('❌ Erro ao criar visita teste:', error);
+          alert('Erro ao criar visita teste: ' + error.message);
+        } else {
+          console.log('✅ Visita teste criada com sucesso!');
+          alert('Visita teste criada! Recarregando...');
+          location.reload();
+        }
+
+      } catch (error) {
+        console.error('❌ Erro no teste:', error);
+        alert('Erro no teste: ' + error.message);
+      }
+    }
+
+    // ✅ VERIFICAR SE EXISTEM VISITAS NO BANCO
+    async function debugVisits() {
+      try {
+        console.log('🐛 DEBUG: Verificando visitas no banco...');
+        
+        const { data: visits, error } = await supabase
+          .from('profile_visits')
+          .select('*')
+          .eq('visited_id', currentUser.id);
+
+        if (error) {
+          console.error('❌ Erro no debug:', error);
+          return;
+        }
+
+        console.log('🐛 DEBUG - Visitas encontradas:', visits);
+        
+        if (visits && visits.length > 0) {
+          console.log('🐛 DEBUG - Primeira visita:', visits[0]);
+          
+          // Verificar se o visitante existe
+          const { data: visitor } = await supabase
+            .from('profiles')
+            .select('id, nickname')
+            .eq('id', visits[0].visitor_id)
+            .single();
+            
+          console.log('🐛 DEBUG - Visitante encontrado:', visitor);
+        }
+
+      } catch (error) {
+        console.error('❌ Erro no debug:', error);
+      }
     }
 
     // Funções de interação
@@ -1024,8 +1080,15 @@
     // Exportar funções para o HTML
     window.sendMessage = sendMessage;
     window.viewProfile = viewProfile;
+    window.testVisit = testVisit;
+    window.debugVisits = debugVisits;
 
     console.log('✅ Visitante.js carregado e pronto!');
+    
+    // Executar debug automaticamente
+    setTimeout(() => {
+      debugVisits();
+    }, 2000);
 </script>
 </body>
 </html>
