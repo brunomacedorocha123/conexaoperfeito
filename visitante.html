@@ -743,6 +743,8 @@
     // Carregar estatísticas de visitas
     async function loadVisitStats() {
       try {
+        console.log('📊 Carregando estatísticas para:', currentUser.id);
+        
         // Total de visitas (30 dias)
         const { count: totalVisits } = await supabase
           .from('profile_visits')
@@ -776,6 +778,13 @@
 
         const uniqueCount = new Set(uniqueVisitors?.map(v => v.visitor_id)).size;
 
+        console.log('📊 Estatísticas carregadas:', {
+          totalVisits,
+          visitsToday, 
+          visitsThisWeek,
+          uniqueCount
+        });
+
         // Atualizar interface
         document.getElementById('totalVisits').textContent = totalVisits || 0;
         document.getElementById('visitsToday').textContent = visitsToday || 0;
@@ -792,7 +801,7 @@
       try {
         console.log('🔄 Carregando todos os visitantes para:', currentUser.id);
         
-        // ✅ BUSCA DIRETA E SIMPLES - sem joins complexos
+        // ✅ BUSCA SIMPLES - apenas as visitas
         const { data: visits, error } = await supabase
           .from('profile_visits')
           .select('*')
@@ -813,11 +822,12 @@
           return;
         }
 
-        console.log(`✅ ${visits?.length || 0} visitas encontradas:`, visits);
+        console.log(`✅ ${visits?.length || 0} visitas encontradas no banco:`, visits);
 
         // Atualizar contador
+        const visitorsCount = visits?.length || 0;
         document.getElementById('visitorsCount').textContent = 
-          `${visits?.length || 0} visitante${visits?.length !== 1 ? 's' : ''}`;
+          `${visitorsCount} visitante${visitorsCount !== 1 ? 's' : ''}`;
 
         if (!visits || visits.length === 0) {
           visitorsGrid.innerHTML = `
@@ -835,20 +845,25 @@
 
         // ✅ CARREGAR CARDS - método simplificado
         let visitorsHTML = '';
+        let cardsCarregados = 0;
         
         for (const visit of visits) {
           try {
             console.log(`🎯 Processando visita de:`, visit.visitor_id);
             const cardHTML = await createVisitorCard(visit);
-            visitorsHTML += cardHTML;
+            if (cardHTML) {
+              visitorsHTML += cardHTML;
+              cardsCarregados++;
+            }
           } catch (error) {
             console.error('❌ Erro ao criar card:', error);
             visitorsHTML += createBasicCard(visit);
+            cardsCarregados++;
           }
         }
         
         visitorsGrid.innerHTML = visitorsHTML;
-        console.log(`✅ ${visits.length} cards carregados`);
+        console.log(`✅ ${cardsCarregados} cards carregados com sucesso`);
 
       } catch (error) {
         console.error('❌ Erro geral ao carregar visitantes:', error);
@@ -991,7 +1006,8 @@
           .insert({
             visitor_id: testVisitorId,
             visited_id: user.id,
-            visited_at: new Date().toISOString()
+            visited_at: new Date().toISOString(),
+            visit_date: new Date().toISOString().split('T')[0]
           });
 
         if (error) {
@@ -1012,7 +1028,7 @@
     // ✅ VERIFICAR SE EXISTEM VISITAS NO BANCO
     async function debugVisits() {
       try {
-        console.log('🐛 DEBUG: Verificando visitas no banco...');
+        console.log('🐛 DEBUG: Verificando visitas no banco para:', currentUser.id);
         
         const { data: visits, error } = await supabase
           .from('profile_visits')
@@ -1037,6 +1053,8 @@
             .single();
             
           console.log('🐛 DEBUG - Visitante encontrado:', visitor);
+        } else {
+          console.log('🐛 DEBUG - NENHUMA visita encontrada no banco!');
         }
 
       } catch (error) {
@@ -1088,7 +1106,7 @@
     // Executar debug automaticamente
     setTimeout(() => {
       debugVisits();
-    }, 2000);
+    }, 1000);
 </script>
 </body>
 </html>
