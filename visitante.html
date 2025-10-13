@@ -796,16 +796,16 @@
       }
     }
 
-    // ✅ FUNÇÃO PRINCIPAL COMPLETAMENTE CORRIGIDA - Carregar todos os visitantes
+    // ✅ FUNÇÃO PRINCIPAL COMPLETAMENTE CORRIGIDA - Carregar visitantes do USUÁRIO ATUAL
     async function loadAllVisitors() {
       try {
-        console.log('🔄 Carregando todos os visitantes para:', currentUser.id);
+        console.log('🔄 Buscando visitas PARA o usuário:', currentUser.id);
         
-        // ✅ BUSCA SIMPLES - apenas as visitas
+        // ✅ BUSCA CORRETA - visitas onde visited_id = usuário atual (ELE foi visitado)
         const { data: visits, error } = await supabase
           .from('profile_visits')
           .select('*')
-          .eq('visited_id', currentUser.id)
+          .eq('visited_id', currentUser.id)  // Onde ELE foi visitado
           .order('visited_at', { ascending: false });
 
         const visitorsGrid = document.getElementById('visitorsGrid');
@@ -822,7 +822,7 @@
           return;
         }
 
-        console.log(`✅ ${visits?.length || 0} visitas encontradas no banco:`, visits);
+        console.log(`✅ ${visits?.length || 0} visitas ENCONTRADAS para ${currentUser.id}:`, visits);
 
         // Atualizar contador
         const visitorsCount = visits?.length || 0;
@@ -834,16 +834,21 @@
             <div class="empty-state">
               <div class="empty-state-icon">👀</div>
               <h3>Nenhuma visita ainda</h3>
-              <p>Seu perfil ainda não foi visitado</p>
-              <button class="btn btn-premium" onclick="testVisit()" style="margin-top: 1rem;">
-                Testar Visita
-              </button>
+              <p>Seu perfil ainda não foi visitado por outros usuários</p>
+              <div style="margin-top: 1rem;">
+                <button class="btn btn-premium" onclick="testVisit()">
+                  Testar Visita
+                </button>
+                <button class="btn btn-outline" onclick="debugVisits()" style="margin-left: 0.5rem;">
+                  Debug
+                </button>
+              </div>
             </div>
           `;
           return;
         }
 
-        // ✅ CARREGAR CARDS - método simplificado
+        // ✅ CARREGAR CARDS
         let visitorsHTML = '';
         let cardsCarregados = 0;
         
@@ -1030,31 +1035,46 @@
       try {
         console.log('🐛 DEBUG: Verificando visitas no banco para:', currentUser.id);
         
-        const { data: visits, error } = await supabase
+        // Verificar TODAS as visitas na tabela
+        const { data: allVisits, error: allError } = await supabase
+          .from('profile_visits')
+          .select('*')
+          .order('visited_at', { ascending: false })
+          .limit(10);
+
+        if (allError) {
+          console.error('❌ Erro ao buscar todas visitas:', allError);
+        } else {
+          console.log('🐛 DEBUG - Últimas 10 visitas no sistema:', allVisits);
+        }
+
+        // Verificar visitas específicas para o usuário atual
+        const { data: userVisits, error: userError } = await supabase
           .from('profile_visits')
           .select('*')
           .eq('visited_id', currentUser.id);
 
-        if (error) {
-          console.error('❌ Erro no debug:', error);
+        if (userError) {
+          console.error('❌ Erro ao buscar visitas do usuário:', userError);
           return;
         }
 
-        console.log('🐛 DEBUG - Visitas encontradas:', visits);
+        console.log('🐛 DEBUG - Visitas para o usuário atual:', userVisits);
         
-        if (visits && visits.length > 0) {
-          console.log('🐛 DEBUG - Primeira visita:', visits[0]);
+        if (userVisits && userVisits.length > 0) {
+          console.log('🐛 DEBUG - Primeira visita do usuário:', userVisits[0]);
           
           // Verificar se o visitante existe
           const { data: visitor } = await supabase
             .from('profiles')
             .select('id, nickname')
-            .eq('id', visits[0].visitor_id)
+            .eq('id', userVisits[0].visitor_id)
             .single();
             
           console.log('🐛 DEBUG - Visitante encontrado:', visitor);
         } else {
-          console.log('🐛 DEBUG - NENHUMA visita encontrada no banco!');
+          console.log('🐛 DEBUG - NENHUMA visita encontrada para o usuário atual!');
+          alert('DEBUG: Nenhuma visita encontrada no banco para seu usuário. Verifique o console.');
         }
 
       } catch (error) {
