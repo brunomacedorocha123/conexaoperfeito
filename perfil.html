@@ -1006,87 +1006,67 @@
         `;
     }
 
-    // ✅ CRIAR SEÇÃO DA GALERIA NO PERFIL - CORREÇÃO DEFINITIVA
+    // ✅ CRIAR SEÇÃO DA GALERIA NO PERFIL - VERSÃO DEFINITIVA
 async function createGallerySection(profileId, currentUser) {
     try {
-        console.log('🔄 Carregando galeria do perfil VISITADO:', profileId);
-        console.log('👤 Usuário atual visitante:', currentUser?.id);
+        console.log('🔄 Buscando galeria para perfil:', profileId);
         
-        // Buscar imagens da galeria do perfil VISITADO
+        // Buscar imagens da galeria
         const { data: images, error } = await supabase
             .from('user_gallery')
             .select('*')
-            .eq('user_id', profileId) // Galeria do perfil que está sendo visitado
+            .eq('user_id', profileId)
             .order('created_at', { ascending: false });
 
         if (error) {
-            console.error('❌ Erro ao carregar galeria do perfil:', error);
+            console.error('❌ Erro ao buscar galeria:', error);
             return '';
         }
 
-        currentProfileGallery = images || [];
-        console.log(`✅ ${currentProfileGallery.length} imagens encontradas na galeria de ${profileId}`);
+        const galleryImages = images || [];
+        console.log(`✅ Encontradas ${galleryImages.length} imagens`);
 
-        if (currentProfileGallery.length === 0) {
-            console.log('ℹ️ Galeria vazia - não mostrando seção');
-            return ''; // Não mostra seção se não tiver imagens
+        // Se não tem imagens, não mostra seção
+        if (galleryImages.length === 0) {
+            return '';
         }
 
-        // ✅ CORREÇÃO CRÍTICA: Verificar se o USUÁRIO ATUAL (visitante) é PREMIUM
-        const isPremium = currentUser ? await PremiumManager.verifyPremiumStatus(currentUser.id) : false;
+        // Verificar status do usuário atual
         const isOwner = currentUser && currentUser.id === profileId;
+        const isPremium = currentUser ? await PremiumManager.verifyPremiumStatus(currentUser.id) : false;
 
-        console.log(`👤 Status: Visitante é Dono=${isOwner}, Visitante é Premium=${isPremium}`);
+        console.log(`👤 Status: Dono=${isOwner}, Premium=${isPremium}`);
 
-        // ✅ CORREÇÃO: Se visitante é PREMIUM (não precisa ser dono), mostra galeria completa
-        if (isPremium) {
-            console.log('⭐ Mostrando galeria COMPLETA para visitante PREMIUM');
-            const galleryGrid = await createGalleryGrid(currentProfileGallery);
-            
+        // Usuário premium ou dono: mostra galeria completa
+        if (isPremium || isOwner) {
+            const galleryGrid = await createGalleryGrid(galleryImages);
             return `
                 <div class="gallery-section">
-                    <h3><i class="fas fa-images"></i> Galeria de Fotos (${currentProfileGallery.length})</h3>
+                    <h3><i class="fas fa-images"></i> Galeria de Fotos</h3>
                     <div class="premium-gallery-view">
-                        <div class="gallery-grid" id="profileGalleryGrid">
+                        <div class="gallery-grid">
                             ${galleryGrid}
                         </div>
                     </div>
                 </div>
             `;
         } 
-        // Se é o dono (mesmo não sendo premium), também mostra
-        else if (isOwner) {
-            console.log('👤 Mostrando galeria para DONO do perfil');
-            const galleryGrid = await createGalleryGrid(currentProfileGallery);
-            
-            return `
-                <div class="gallery-section">
-                    <h3><i class="fas fa-images"></i> Minha Galeria (${currentProfileGallery.length})</h3>
-                    <div class="premium-gallery-view">
-                        <div class="gallery-grid" id="profileGalleryGrid">
-                            ${galleryGrid}
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
+        // Usuário free: mostra preview bloqueado
         else {
-            // Usuário free visitando - mostra preview bloqueado
-            console.log('🔒 Mostrando preview BLOQUEADO para visitante FREE');
             return `
                 <div class="gallery-section">
-                    <h3><i class="fas fa-images"></i> Galeria de Fotos (${currentProfileGallery.length})</h3>
+                    <h3><i class="fas fa-images"></i> Galeria de Fotos</h3>
                     <div class="free-gallery-preview">
                         <div class="preview-overlay">
                             <i class="fas fa-lock"></i>
                             <h4>Conteúdo Exclusivo Premium</h4>
-                            <p>Faça upgrade para visualizar ${currentProfileGallery.length} foto(s) desta galeria</p>
+                            <p>Faça upgrade para visualizar esta galeria</p>
                             <button class="btn btn-primary" onclick="goPremium()">
                                 🔓 Tornar-se Premium
                             </button>
                         </div>
                         <div class="blurred-gallery">
-                            ${createBlurredPreview(currentProfileGallery)}
+                            ${createBlurredPreview(galleryImages)}
                         </div>
                     </div>
                 </div>
@@ -1094,12 +1074,12 @@ async function createGallerySection(profileId, currentUser) {
         }
 
     } catch (error) {
-        console.error('❌ Erro ao criar seção da galeria:', error);
+        console.error('❌ Erro na galeria:', error);
         return '';
     }
 }
 
-// ✅ CRIAR GRID DA GALERIA - CORRIGIDA
+// ✅ CRIAR GRID DA GALERIA
 async function createGalleryGrid(images) {
     if (!images || images.length === 0) {
         return `
@@ -1128,7 +1108,7 @@ async function createGalleryGrid(images) {
 
 // ✅ CRIAR PREVIEW COM BLUR
 function createBlurredPreview(images) {
-    const previewCount = Math.min(images.length, 6); // Máximo 6 previews
+    const previewCount = Math.min(images.length, 6);
     let blurredHTML = '';
     
     for (let i = 0; i < previewCount; i++) {
@@ -1159,17 +1139,9 @@ function setupGalleryModal() {
     const modalPrev = document.getElementById('modalPrev');
     const modalNext = document.getElementById('modalNext');
 
-    if (modalClose) {
-        modalClose.addEventListener('click', closeGalleryModal);
-    }
-
-    if (modalPrev) {
-        modalPrev.addEventListener('click', showPrevImage);
-    }
-
-    if (modalNext) {
-        modalNext.addEventListener('click', showNextImage);
-    }
+    if (modalClose) modalClose.addEventListener('click', closeGalleryModal);
+    if (modalPrev) modalPrev.addEventListener('click', showPrevImage);
+    if (modalNext) modalNext.addEventListener('click', showNextImage);
 
     // Fechar modal com ESC
     document.addEventListener('keydown', function(e) {
@@ -1356,7 +1328,7 @@ function formatPets(hasPets, petsDetails) {
     return null;
 }
 
-// ✅✅✅ FUNÇÃO SENDMESSAGE CORRIGIDA
+// ✅ ENVIAR MENSAGEM
 async function sendMessage(userId) {
     console.log('💌 Iniciando conversa com usuário:', userId);
     
@@ -1418,6 +1390,6 @@ function showError(message) {
         </div>
     `;
 }
-</script>
+    </script>
 </body>
 </html>
