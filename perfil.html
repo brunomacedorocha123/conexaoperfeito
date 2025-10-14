@@ -1006,399 +1006,418 @@
         `;
     }
 
-    // ✅ CRIAR SEÇÃO DA GALERIA NO PERFIL - CORRIGIDA
-    async function createGallerySection(profileId, currentUser) {
-        try {
-            console.log('🔄 Carregando galeria do perfil:', profileId);
-            
-            // Buscar imagens da galeria do perfil
-            const { data: images, error } = await supabase
-                .from('user_gallery')
-                .select('*')
-                .eq('user_id', profileId)
-                .order('created_at', { ascending: false });
+    // ✅ CRIAR SEÇÃO DA GALERIA NO PERFIL - CORREÇÃO DEFINITIVA
+async function createGallerySection(profileId, currentUser) {
+    try {
+        console.log('🔄 Carregando galeria do perfil VISITADO:', profileId);
+        console.log('👤 Usuário atual visitante:', currentUser?.id);
+        
+        // Buscar imagens da galeria do perfil VISITADO
+        const { data: images, error } = await supabase
+            .from('user_gallery')
+            .select('*')
+            .eq('user_id', profileId) // Galeria do perfil que está sendo visitado
+            .order('created_at', { ascending: false });
 
-            if (error) {
-                console.error('❌ Erro ao carregar galeria do perfil:', error);
-                return '';
-            }
-
-            currentProfileGallery = images || [];
-            console.log(`✅ ${currentProfileGallery.length} imagens encontradas na galeria`);
-
-            if (currentProfileGallery.length === 0) {
-                console.log('ℹ️ Galeria vazia - não mostrando seção');
-                return ''; // Não mostra seção se não tiver imagens
-            }
-
-            const isOwner = currentUser && currentUser.id === profileId;
-            const isPremium = currentUser ? await PremiumManager.verifyPremiumStatus(currentUser.id) : false;
-
-            console.log(`👤 Status: Dono=${isOwner}, Premium=${isPremium}`);
-
-            // Se é o dono ou usuário premium, mostra galeria completa
-            if (isOwner || isPremium) {
-                console.log('⭐ Mostrando galeria completa para usuário premium/dono');
-                const galleryGrid = await createGalleryGrid(currentProfileGallery);
-                
-                return `
-                    <div class="gallery-section">
-                        <h3><i class="fas fa-images"></i> Galeria de Fotos (${currentProfileGallery.length})</h3>
-                        <div class="premium-gallery-view" style="display: block;">
-                            <div class="gallery-grid" id="profileGalleryGrid">
-                                ${galleryGrid}
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } else {
-                // Usuário free - mostra preview bloqueado
-                console.log('🔒 Mostrando preview bloqueado para usuário free');
-                return `
-                    <div class="gallery-section">
-                        <h3><i class="fas fa-images"></i> Galeria de Fotos (${currentProfileGallery.length})</h3>
-                        <div class="free-gallery-preview">
-                            <div class="preview-overlay">
-                                <i class="fas fa-lock"></i>
-                                <h4>Conteúdo Exclusivo Premium</h4>
-                                <p>Faça upgrade para visualizar ${currentProfileGallery.length} foto(s) desta galeria</p>
-                                <button class="btn btn-primary" onclick="goPremium()">
-                                    🔓 Tornar-se Premium
-                                </button>
-                            </div>
-                            <div class="blurred-gallery">
-                                ${createBlurredPreview(currentProfileGallery)}
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-
-        } catch (error) {
-            console.error('❌ Erro ao criar seção da galeria:', error);
+        if (error) {
+            console.error('❌ Erro ao carregar galeria do perfil:', error);
             return '';
         }
-    }
 
-    // ✅ CRIAR GRID DA GALERIA - CORRIGIDA
-    async function createGalleryGrid(images) {
-        if (!images || images.length === 0) {
+        currentProfileGallery = images || [];
+        console.log(`✅ ${currentProfileGallery.length} imagens encontradas na galeria de ${profileId}`);
+
+        if (currentProfileGallery.length === 0) {
+            console.log('ℹ️ Galeria vazia - não mostrando seção');
+            return ''; // Não mostra seção se não tiver imagens
+        }
+
+        // ✅ CORREÇÃO CRÍTICA: Verificar se o USUÁRIO ATUAL (visitante) é PREMIUM
+        const isPremium = currentUser ? await PremiumManager.verifyPremiumStatus(currentUser.id) : false;
+        const isOwner = currentUser && currentUser.id === profileId;
+
+        console.log(`👤 Status: Visitante é Dono=${isOwner}, Visitante é Premium=${isPremium}`);
+
+        // ✅ CORREÇÃO: Se visitante é PREMIUM (não precisa ser dono), mostra galeria completa
+        if (isPremium) {
+            console.log('⭐ Mostrando galeria COMPLETA para visitante PREMIUM');
+            const galleryGrid = await createGalleryGrid(currentProfileGallery);
+            
             return `
-                <div class="empty-gallery">
-                    <i class="fas fa-images"></i>
-                    <p>Nenhuma foto na galeria</p>
+                <div class="gallery-section">
+                    <h3><i class="fas fa-images"></i> Galeria de Fotos (${currentProfileGallery.length})</h3>
+                    <div class="premium-gallery-view">
+                        <div class="gallery-grid" id="profileGalleryGrid">
+                            ${galleryGrid}
+                        </div>
+                    </div>
+                </div>
+            `;
+        } 
+        // Se é o dono (mesmo não sendo premium), também mostra
+        else if (isOwner) {
+            console.log('👤 Mostrando galeria para DONO do perfil');
+            const galleryGrid = await createGalleryGrid(currentProfileGallery);
+            
+            return `
+                <div class="gallery-section">
+                    <h3><i class="fas fa-images"></i> Minha Galeria (${currentProfileGallery.length})</h3>
+                    <div class="premium-gallery-view">
+                        <div class="gallery-grid" id="profileGalleryGrid">
+                            ${galleryGrid}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        else {
+            // Usuário free visitando - mostra preview bloqueado
+            console.log('🔒 Mostrando preview BLOQUEADO para visitante FREE');
+            return `
+                <div class="gallery-section">
+                    <h3><i class="fas fa-images"></i> Galeria de Fotos (${currentProfileGallery.length})</h3>
+                    <div class="free-gallery-preview">
+                        <div class="preview-overlay">
+                            <i class="fas fa-lock"></i>
+                            <h4>Conteúdo Exclusivo Premium</h4>
+                            <p>Faça upgrade para visualizar ${currentProfileGallery.length} foto(s) desta galeria</p>
+                            <button class="btn btn-primary" onclick="goPremium()">
+                                🔓 Tornar-se Premium
+                            </button>
+                        </div>
+                        <div class="blurred-gallery">
+                            ${createBlurredPreview(currentProfileGallery)}
+                        </div>
+                    </div>
                 </div>
             `;
         }
 
-        let gridHTML = '';
-        
-        for (let i = 0; i < images.length; i++) {
-            const image = images[i];
-            const imageUrl = await getGalleryImageUrl(image.image_url);
-            
-            gridHTML += `
-                <div class="gallery-item" onclick="openGalleryModal(${i})">
-                    <img src="${imageUrl}" alt="Foto da galeria" class="gallery-image" loading="lazy">
-                </div>
-            `;
-        }
-
-        return gridHTML;
+    } catch (error) {
+        console.error('❌ Erro ao criar seção da galeria:', error);
+        return '';
     }
+}
 
-    // ✅ CRIAR PREVIEW COM BLUR
-    function createBlurredPreview(images) {
-        const previewCount = Math.min(images.length, 6); // Máximo 6 previews
-        let blurredHTML = '';
-        
-        for (let i = 0; i < previewCount; i++) {
-            blurredHTML += '<div class="blurred-image"></div>';
-        }
-        
-        return blurredHTML;
-    }
-
-    // ✅ OBTER URL DA IMAGEM DA GALERIA
-    async function getGalleryImageUrl(imagePath) {
-        try {
-            const { data } = supabase.storage
-                .from('gallery')
-                .getPublicUrl(imagePath);
-            
-            return data?.publicUrl || '';
-        } catch (error) {
-            console.error('❌ Erro ao obter URL da imagem:', error);
-            return '';
-        }
-    }
-
-    // ✅ CONFIGURAR MODAL DA GALERIA
-    function setupGalleryModal() {
-        const modal = document.getElementById('galleryModal');
-        const modalClose = document.getElementById('modalClose');
-        const modalPrev = document.getElementById('modalPrev');
-        const modalNext = document.getElementById('modalNext');
-
-        if (modalClose) {
-            modalClose.addEventListener('click', closeGalleryModal);
-        }
-
-        if (modalPrev) {
-            modalPrev.addEventListener('click', showPrevImage);
-        }
-
-        if (modalNext) {
-            modalNext.addEventListener('click', showNextImage);
-        }
-
-        // Fechar modal com ESC
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && modal.style.display === 'flex') {
-                closeGalleryModal();
-            }
-        });
-
-        // Fechar modal clicando fora da imagem
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                closeGalleryModal();
-            }
-        });
-    }
-
-    // ✅ ABRIR MODAL DA GALERIA
-    function openGalleryModal(index) {
-        const modal = document.getElementById('galleryModal');
-        const modalImage = document.getElementById('modalImage');
-        
-        if (currentProfileGallery.length === 0) return;
-        
-        currentModalIndex = index;
-        const image = currentProfileGallery[currentModalIndex];
-        
-        getGalleryImageUrl(image.image_url).then(url => {
-            modalImage.src = url;
-            modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        });
-    }
-
-    // ✅ FECHAR MODAL DA GALERIA
-    function closeGalleryModal() {
-        const modal = document.getElementById('galleryModal');
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-    }
-
-    // ✅ MOSTRAR IMAGEM ANTERIOR
-    function showPrevImage() {
-        if (currentProfileGallery.length === 0) return;
-        
-        currentModalIndex = (currentModalIndex - 1 + currentProfileGallery.length) % currentProfileGallery.length;
-        const image = currentProfileGallery[currentModalIndex];
-        
-        getGalleryImageUrl(image.image_url).then(url => {
-            document.getElementById('modalImage').src = url;
-        });
-    }
-
-    // ✅ MOSTRAR PRÓXIMA IMAGEM
-    function showNextImage() {
-        if (currentProfileGallery.length === 0) return;
-        
-        currentModalIndex = (currentModalIndex + 1) % currentProfileGallery.length;
-        const image = currentProfileGallery[currentModalIndex];
-        
-        getGalleryImageUrl(image.image_url).then(url => {
-            document.getElementById('modalImage').src = url;
-        });
-    }
-
-    // ✅ FUNÇÕES DE FORMATAÇÃO
-    function calculateAge(birthDate) {
-        const today = new Date();
-        const birth = new Date(birthDate);
-        let age = today.getFullYear() - birth.getFullYear();
-        const monthDiff = today.getMonth() - birth.getMonth();
-        
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-            age--;
-        }
-        
-        return age;
-    }
-
-    function formatGender(gender) {
-        const genders = {
-            'feminino': 'Feminino',
-            'masculino': 'Masculino',
-            'nao_informar': 'Prefiro não informar'
-        };
-        return genders[gender] || gender;
-    }
-
-    function formatZodiac(zodiac) {
-        const zodiacs = {
-            'aries': 'Áries', 'touro': 'Touro', 'gemeos': 'Gêmeos', 'cancer': 'Câncer',
-            'leao': 'Leão', 'virgem': 'Virgem', 'libra': 'Libra', 'escorpiao': 'Escorpião',
-            'sagitario': 'Sagitário', 'capricornio': 'Capricórnio', 'aquario': 'Aquário', 'peixes': 'Peixes'
-        };
-        return zodiacs[zodiac] || zodiac;
-    }
-
-    function formatSexualOrientation(orientation) {
-        const orientations = {
-            'heterossexual': 'Heterossexual',
-            'homossexual': 'Homossexual', 
-            'bissexual': 'Bissexual',
-            'outro': 'Outro',
-            'prefiro_nao_informar': 'Prefiro não informar'
-        };
-        return orientations[orientation] || orientation;
-    }
-
-    function formatDrinking(drinking) {
-        const options = {
-            'nao_bebo': 'Não bebo',
-            'socialmente': 'Socialmente',
-            'frequentemente': 'Com frequência'
-        };
-        return options[drinking] || drinking;
-    }
-
-    function formatSmoking(smoking) {
-        const options = {
-            'nao_fumo': 'Não fumo',
-            'socialmente': 'Socialmente', 
-            'frequentemente': 'Com frequência'
-        };
-        return options[smoking] || smoking;
-    }
-
-    function formatExercise(exercise, exerciseDetails) {
-        if (exercise === 'ocasionalmente') {
-            return exerciseDetails ? `Ocasionalmente (${exerciseDetails})` : 'Ocasionalmente';
-        } else if (exercise === 'regularmente') {
-            return exerciseDetails ? `Regularmente (${exerciseDetails})` : 'Regularmente';
-        } else if (exercise === 'nao_pratico') {
-            return 'Não pratico';
-        }
-        return null;
-    }
-
-    function formatReligion(religion) {
-        const religions = {
-            'catolica': 'Católica',
-            'evangelica': 'Evangélica',
-            'espirita': 'Espírita',
-            'umbanda_candomble': 'Umbanda/Candomblé',
-            'budista': 'Budista',
-            'judaica': 'Judaica',
-            'islamica': 'Islâmica',
-            'outra': 'Outra',
-            'nenhuma': 'Nenhuma',
-            'prefiro_nao_informar': 'Prefiro não informar'
-        };
-        return religions[religion] || religion;
-    }
-
-    function formatEducation(education) {
-        const levels = {
-            'fundamental_incompleto': 'Fundamental Incompleto',
-            'fundamental_completo': 'Fundamental Completo',
-            'medio_incompleto': 'Médio Incompleto',
-            'medio_completo': 'Médio Completo',
-            'superior_incompleto': 'Superior Incompleto',
-            'superior_completo': 'Superior Completo',
-            'pos_graduacao': 'Pós-graduação',
-            'mestrado': 'Mestrado',
-            'doutorado': 'Doutorado'
-        };
-        return levels[education] || education;
-    }
-
-    function formatLookingFor(lookingFor) {
-        const options = {
-            'amizade': 'Amizade',
-            'namoro': 'Namoro',
-            'relacionamento_serio': 'Relacionamento Sério',
-            'conversa': 'Apenas Conversa'
-        };
-        return options[lookingFor] || lookingFor;
-    }
-
-    function formatPets(hasPets, petsDetails) {
-        if (hasPets === 'sim') {
-            return petsDetails ? `Sim, ${petsDetails}` : 'Sim, tenho';
-        } else if (hasPets === 'nao') {
-            return 'Não tenho';
-        }
-        return null;
-    }
-
-    // ✅✅✅ FUNÇÃO SENDMESSAGE CORRIGIDA
-    async function sendMessage(userId) {
-        console.log('💌 Iniciando conversa com usuário:', userId);
-        
-        const { data: { user } } = await supabase.auth.getUser();
-        const { data: userProfile } = await supabase
-            .from('profiles')
-            .select('full_name, birth_date')
-            .eq('id', user.id)
-            .single();
-        
-        if (!userProfile || !userProfile.full_name || !userProfile.birth_date) {
-            alert('Complete seu perfil primeiro para enviar mensagens!');
-            window.location.href = 'painel.html';
-            return;
-        }
-        
-        try {
-            const { error: messageError } = await supabase
-                .from('messages')
-                .insert({
-                    sender_id: user.id,
-                    receiver_id: userId,
-                    content: '👋 Iniciou uma conversa',
-                    is_read: false
-                });
-
-            if (messageError) {
-                console.error('❌ Erro ao criar conversa:', messageError);
-            } else {
-                console.log('✅ Conversa criada com sucesso');
-            }
-            
-            localStorage.setItem('openChatWithUserId', userId);
-            window.location.href = 'mensagens.html';
-            
-        } catch (error) {
-            console.error('❌ Erro ao enviar mensagem:', error);
-            localStorage.setItem('openChatWithUserId', userId);
-            window.location.href = 'mensagens.html';
-        }
-    }
-
-    // ✅ IR PARA PÁGINA PREMIUM
-    function goPremium() {
-        window.location.href = 'premium.html';
-    }
-
-    // ✅ MOSTRAR ERRO
-    function showError(message) {
-        const profileContent = document.getElementById('profileContent');
-        profileContent.innerHTML = `
-            <div class="error-state">
-                <div class="error-icon">😕</div>
-                <h3>${message}</h3>
-                <p>Volte para a página inicial e tente novamente.</p>
-                <button class="btn btn-primary" onclick="window.location.href='home.html'" style="margin-top: 1rem;">
-                    ← Voltar para Home
-                </button>
+// ✅ CRIAR GRID DA GALERIA - CORRIGIDA
+async function createGalleryGrid(images) {
+    if (!images || images.length === 0) {
+        return `
+            <div class="empty-gallery">
+                <i class="fas fa-images"></i>
+                <p>Nenhuma foto na galeria</p>
             </div>
         `;
     }
+
+    let gridHTML = '';
+    
+    for (let i = 0; i < images.length; i++) {
+        const image = images[i];
+        const imageUrl = await getGalleryImageUrl(image.image_url);
+        
+        gridHTML += `
+            <div class="gallery-item" onclick="openGalleryModal(${i})">
+                <img src="${imageUrl}" alt="Foto da galeria" class="gallery-image" loading="lazy">
+            </div>
+        `;
+    }
+
+    return gridHTML;
+}
+
+// ✅ CRIAR PREVIEW COM BLUR
+function createBlurredPreview(images) {
+    const previewCount = Math.min(images.length, 6); // Máximo 6 previews
+    let blurredHTML = '';
+    
+    for (let i = 0; i < previewCount; i++) {
+        blurredHTML += '<div class="blurred-image"></div>';
+    }
+    
+    return blurredHTML;
+}
+
+// ✅ OBTER URL DA IMAGEM DA GALERIA
+async function getGalleryImageUrl(imagePath) {
+    try {
+        const { data } = supabase.storage
+            .from('gallery')
+            .getPublicUrl(imagePath);
+        
+        return data?.publicUrl || '';
+    } catch (error) {
+        console.error('❌ Erro ao obter URL da imagem:', error);
+        return '';
+    }
+}
+
+// ✅ CONFIGURAR MODAL DA GALERIA
+function setupGalleryModal() {
+    const modal = document.getElementById('galleryModal');
+    const modalClose = document.getElementById('modalClose');
+    const modalPrev = document.getElementById('modalPrev');
+    const modalNext = document.getElementById('modalNext');
+
+    if (modalClose) {
+        modalClose.addEventListener('click', closeGalleryModal);
+    }
+
+    if (modalPrev) {
+        modalPrev.addEventListener('click', showPrevImage);
+    }
+
+    if (modalNext) {
+        modalNext.addEventListener('click', showNextImage);
+    }
+
+    // Fechar modal com ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal.style.display === 'flex') {
+            closeGalleryModal();
+        }
+    });
+
+    // Fechar modal clicando fora da imagem
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeGalleryModal();
+        }
+    });
+}
+
+// ✅ ABRIR MODAL DA GALERIA
+function openGalleryModal(index) {
+    const modal = document.getElementById('galleryModal');
+    const modalImage = document.getElementById('modalImage');
+    
+    if (currentProfileGallery.length === 0) return;
+    
+    currentModalIndex = index;
+    const image = currentProfileGallery[currentModalIndex];
+    
+    getGalleryImageUrl(image.image_url).then(url => {
+        modalImage.src = url;
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    });
+}
+
+// ✅ FECHAR MODAL DA GALERIA
+function closeGalleryModal() {
+    const modal = document.getElementById('galleryModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+// ✅ MOSTRAR IMAGEM ANTERIOR
+function showPrevImage() {
+    if (currentProfileGallery.length === 0) return;
+    
+    currentModalIndex = (currentModalIndex - 1 + currentProfileGallery.length) % currentProfileGallery.length;
+    const image = currentProfileGallery[currentModalIndex];
+    
+    getGalleryImageUrl(image.image_url).then(url => {
+        document.getElementById('modalImage').src = url;
+    });
+}
+
+// ✅ MOSTRAR PRÓXIMA IMAGEM
+function showNextImage() {
+    if (currentProfileGallery.length === 0) return;
+    
+    currentModalIndex = (currentModalIndex + 1) % currentProfileGallery.length;
+    const image = currentProfileGallery[currentModalIndex];
+    
+    getGalleryImageUrl(image.image_url).then(url => {
+        document.getElementById('modalImage').src = url;
+    });
+}
+
+// ✅ FUNÇÕES DE FORMATAÇÃO
+function calculateAge(birthDate) {
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--;
+    }
+    
+    return age;
+}
+
+function formatGender(gender) {
+    const genders = {
+        'feminino': 'Feminino',
+        'masculino': 'Masculino',
+        'nao_informar': 'Prefiro não informar'
+    };
+    return genders[gender] || gender;
+}
+
+function formatZodiac(zodiac) {
+    const zodiacs = {
+        'aries': 'Áries', 'touro': 'Touro', 'gemeos': 'Gêmeos', 'cancer': 'Câncer',
+        'leao': 'Leão', 'virgem': 'Virgem', 'libra': 'Libra', 'escorpiao': 'Escorpião',
+        'sagitario': 'Sagitário', 'capricornio': 'Capricórnio', 'aquario': 'Aquário', 'peixes': 'Peixes'
+    };
+    return zodiacs[zodiac] || zodiac;
+}
+
+function formatSexualOrientation(orientation) {
+    const orientations = {
+        'heterossexual': 'Heterossexual',
+        'homossexual': 'Homossexual', 
+        'bissexual': 'Bissexual',
+        'outro': 'Outro',
+        'prefiro_nao_informar': 'Prefiro não informar'
+    };
+    return orientations[orientation] || orientation;
+}
+
+function formatDrinking(drinking) {
+    const options = {
+        'nao_bebo': 'Não bebo',
+        'socialmente': 'Socialmente',
+        'frequentemente': 'Com frequência'
+    };
+    return options[drinking] || drinking;
+}
+
+function formatSmoking(smoking) {
+    const options = {
+        'nao_fumo': 'Não fumo',
+        'socialmente': 'Socialmente', 
+        'frequentemente': 'Com frequência'
+    };
+    return options[smoking] || smoking;
+}
+
+function formatExercise(exercise, exerciseDetails) {
+    if (exercise === 'ocasionalmente') {
+        return exerciseDetails ? `Ocasionalmente (${exerciseDetails})` : 'Ocasionalmente';
+    } else if (exercise === 'regularmente') {
+        return exerciseDetails ? `Regularmente (${exerciseDetails})` : 'Regularmente';
+    } else if (exercise === 'nao_pratico') {
+        return 'Não pratico';
+    }
+    return null;
+}
+
+function formatReligion(religion) {
+    const religions = {
+        'catolica': 'Católica',
+        'evangelica': 'Evangélica',
+        'espirita': 'Espírita',
+        'umbanda_candomble': 'Umbanda/Candomblé',
+        'budista': 'Budista',
+        'judaica': 'Judaica',
+        'islamica': 'Islâmica',
+        'outra': 'Outra',
+        'nenhuma': 'Nenhuma',
+        'prefiro_nao_informar': 'Prefiro não informar'
+    };
+    return religions[religion] || religion;
+}
+
+function formatEducation(education) {
+    const levels = {
+        'fundamental_incompleto': 'Fundamental Incompleto',
+        'fundamental_completo': 'Fundamental Completo',
+        'medio_incompleto': 'Médio Incompleto',
+        'medio_completo': 'Médio Completo',
+        'superior_incompleto': 'Superior Incompleto',
+        'superior_completo': 'Superior Completo',
+        'pos_graduacao': 'Pós-graduação',
+        'mestrado': 'Mestrado',
+        'doutorado': 'Doutorado'
+    };
+    return levels[education] || education;
+}
+
+function formatLookingFor(lookingFor) {
+    const options = {
+        'amizade': 'Amizade',
+        'namoro': 'Namoro',
+        'relacionamento_serio': 'Relacionamento Sério',
+        'conversa': 'Apenas Conversa'
+    };
+    return options[lookingFor] || lookingFor;
+}
+
+function formatPets(hasPets, petsDetails) {
+    if (hasPets === 'sim') {
+        return petsDetails ? `Sim, ${petsDetails}` : 'Sim, tenho';
+    } else if (hasPets === 'nao') {
+        return 'Não tenho';
+    }
+    return null;
+}
+
+// ✅✅✅ FUNÇÃO SENDMESSAGE CORRIGIDA
+async function sendMessage(userId) {
+    console.log('💌 Iniciando conversa com usuário:', userId);
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('full_name, birth_date')
+        .eq('id', user.id)
+        .single();
+    
+    if (!userProfile || !userProfile.full_name || !userProfile.birth_date) {
+        alert('Complete seu perfil primeiro para enviar mensagens!');
+        window.location.href = 'painel.html';
+        return;
+    }
+    
+    try {
+        const { error: messageError } = await supabase
+            .from('messages')
+            .insert({
+                sender_id: user.id,
+                receiver_id: userId,
+                content: '👋 Iniciou uma conversa',
+                is_read: false
+            });
+
+        if (messageError) {
+            console.error('❌ Erro ao criar conversa:', messageError);
+        } else {
+            console.log('✅ Conversa criada com sucesso');
+        }
+        
+        localStorage.setItem('openChatWithUserId', userId);
+        window.location.href = 'mensagens.html';
+        
+    } catch (error) {
+        console.error('❌ Erro ao enviar mensagem:', error);
+        localStorage.setItem('openChatWithUserId', userId);
+        window.location.href = 'mensagens.html';
+    }
+}
+
+// ✅ IR PARA PÁGINA PREMIUM
+function goPremium() {
+    window.location.href = 'premium.html';
+}
+
+// ✅ MOSTRAR ERRO
+function showError(message) {
+    const profileContent = document.getElementById('profileContent');
+    profileContent.innerHTML = `
+        <div class="error-state">
+            <div class="error-icon">😕</div>
+            <h3>${message}</h3>
+            <p>Volte para a página inicial e tente novamente.</p>
+            <button class="btn btn-primary" onclick="window.location.href='home.html'" style="margin-top: 1rem;">
+                ← Voltar para Home
+            </button>
+        </div>
+    `;
+}
 </script>
 </body>
 </html>
