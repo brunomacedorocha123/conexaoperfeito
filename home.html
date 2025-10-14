@@ -2186,7 +2186,7 @@ async function sendMessage(userId, event) {
     }
 }
 
-// ✅✅✅ FUNÇÃO VIEWPROFILE CORRIGIDA - AGORA É ASSÍNCRONA
+// ✅✅✅ FUNÇÃO VIEWPROFILE OTIMIZADA - REDIRECIONAMENTO INSTANTÂNEO
 async function viewProfile(userId, event) {
     if (event) event.stopPropagation();
     
@@ -2196,21 +2196,20 @@ async function viewProfile(userId, event) {
         return;
     }
     
-    try {
-        // ✅✅✅ REGISTRAR VISITA PRIMEIRO
-        const visitRegistered = await registerProfileVisit(userId);
-        console.log('👀 Visitando perfil:', userId, 'Visita registrada:', visitRegistered);
-        
-        // ✅✅✅ REDIRECIONAR PARA PERFIL
-        localStorage.setItem('viewingProfileId', userId);
-        window.location.href = 'perfil.html';
-        
-    } catch (error) {
-        console.error('❌ Erro ao visualizar perfil:', error);
-        // Redirecionar mesmo com erro
-        localStorage.setItem('viewingProfileId', userId);
-        window.location.href = 'perfil.html';
-    }
+    // ✅✅✅ REDIRECIONAR IMEDIATAMENTE (SEM ESPERAR NADA)
+    localStorage.setItem('viewingProfileId', userId);
+    window.location.href = 'perfil.html';
+    
+    // ✅✅✅ REGISTRAR VISITA EM BACKGROUND (NÃO BLOQUEIA REDIRECIONAMENTO)
+    setTimeout(async () => {
+        try {
+            console.log('👀 Registrando visita em background para:', userId);
+            const visitRegistered = await registerProfileVisit(userId);
+            console.log('✅ Visita registrada em background:', visitRegistered);
+        } catch (visitError) {
+            console.log('⚠️ Visita não registrada (background):', visitError);
+        }
+    }, 100);
 }
 
 function isProfileComplete() {
@@ -2219,7 +2218,6 @@ function isProfileComplete() {
            userProfile.full_name.trim() !== '' &&
            userProfile.birth_date;
 }
-
 // ✅ CORRIGIDO: ATUALIZAR ESTATÍSTICAS REAIS
 async function updateStats() {
     try {
