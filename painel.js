@@ -1000,7 +1000,6 @@ async function saveProfile(event) {
     }
 }
 
-// CONTINUA NO PRÓXIMO MENSAGEM (CÓDIGO MUITO GRANDE)
 // SISTEMA DE MODO INVISÍVEL CORRIGIDO (NÃO INTERFERE NO SALVAMENTO)
 async function loadInvisibleModeStatus() {
     try {
@@ -1064,8 +1063,7 @@ async function loadInvisibleModeStatus() {
     }
 }
 
-// ✅ CORREÇÃO CRÍTICA: Função toggleInvisibleMode SEM conflitos
-// 🎯 SOLUÇÃO ROBUSTA: Usar RPC para evitar conflitos
+// ✅ CORREÇÃO DEFINITIVA: Função toggleInvisibleMode SEM conflitos
 async function toggleInvisibleMode(isInvisible) {
     try {
         console.log(`👻 Alternando modo invisível para: ${isInvisible}`);
@@ -1077,13 +1075,19 @@ async function toggleInvisibleMode(isInvisible) {
             return;
         }
         
-        // ✅ USAR RPC para atualização específica
-        const { error } = await supabase.rpc('update_invisible_mode', {
-            user_id: currentUser.id,
-            is_invisible: isInvisible
-        });
+        // ✅ CORREÇÃO: Update DIRETO com updated_at para evitar conflitos
+        const { error } = await supabase
+            .from('profiles')
+            .update({ 
+                is_invisible: isInvisible,
+                updated_at: new Date().toISOString() // ✅ MANTÉM SINCRONIZADO
+            })
+            .eq('id', currentUser.id);
             
-        if (error) throw error;
+        if (error) {
+            console.error('❌ Erro ao atualizar modo invisível:', error);
+            throw error;
+        }
         
         // Atualizar interface
         const statusText = document.getElementById('invisibleStatus');
@@ -1099,175 +1103,322 @@ async function toggleInvisibleMode(isInvisible) {
         console.error('❌ Erro ao alterar modo invisível:', error);
         showNotification('❌ Erro ao alterar modo invisível', 'error');
         
+        // Reverter toggle em caso de erro
         const toggle = document.getElementById('invisibleModeToggle');
-        if (toggle) toggle.checked = !isInvisible;
+        if (toggle) {
+            toggle.checked = !isInvisible;
+            console.log('🔄 Toggle revertido devido ao erro');
+        }
     }
 }
+
+// ✅ CORREÇÃO: Sistema de status online otimizado
+function startOnlineStatusUpdater() {
+    // Atualizar imediatamente
+    updateOnlineStatus();
+    
+    // Atualizar a cada 2 minutos (reduzido para performance)
+    setInterval(updateOnlineStatus, 120000);
+    
+    // Atualizar quando a página fica visível
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            console.log('🔄 Página visível - atualizando status online');
+            updateOnlineStatus();
+        }
+    });
+    
+    // Eventos de atividade do usuário
+    ['click', 'mousemove', 'keypress'].forEach(event => {
+        document.addEventListener(event, debounce(updateOnlineStatus, 30000), { passive: true });
+    });
+    
+    console.log('🟢 Sistema de status online iniciado');
+}
+
+// ✅ CORREÇÃO: Debounce para evitar muitas atualizações
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// ✅ CORREÇÃO: Update online status otimizado
+async function updateOnlineStatus() {
+    try {
+        if (!currentUser) {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+            currentUser = user;
+        }
+
+        const { error } = await supabase
+            .from('profiles')
+            .update({ 
+                last_online_at: new Date().toISOString(),
+                updated_at: new Date().toISOString() // ✅ Mantém sincronizado
+            })
+            .eq('id', currentUser.id);
+
+        if (error) {
+            console.error('❌ Erro ao atualizar status online:', error);
+        } else {
+            console.log('🟢 Status online atualizado');
+        }
         
-       
-// NOTIFICAÇÕES
+    } catch (error) {
+        console.error('❌ Erro no sistema de status online:', error);
+    }
+}
+
+// ✅ CORREÇÃO: Notificações melhoradas
 function showNotification(message, type = 'info') {
+    // Remover notificação existente
     const existingNotification = document.querySelector('.notification');
     if (existingNotification) {
         existingNotification.remove();
     }
 
+    // Criar nova notificação
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
+    
+    const icons = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: '💡'
+    };
+    
     notification.innerHTML = `
         <div class="notification-content">
+            <span class="notification-icon">${icons[type] || '💡'}</span>
             <span class="notification-message">${message}</span>
-            <button class="notification-close">×</button>
+            <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
         </div>
     `;
 
+    // Estilos
     notification.style.cssText = `
         position: fixed;
-        top: 100px;
+        top: 20px;
         right: 20px;
-        background: ${type === 'error' ? '#f56565' : type === 'success' ? '#48bb78' : type === 'warning' ? '#ed8936' : '#4299e1'};
+        background: ${type === 'error' ? '#f56565' : 
+                     type === 'success' ? '#48bb78' : 
+                     type === 'warning' ? '#ed8936' : '#4299e1'};
         color: white;
-        padding: 12px 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        padding: 16px 20px;
+        border-radius: 12px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         z-index: 10000;
-        max-width: 300px;
-        animation: slideIn 0.3s ease;
+        max-width: 350px;
+        animation: slideInRight 0.3s ease;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-size: 14px;
+        line-height: 1.4;
     `;
 
-    notification.querySelector('.notification-close').onclick = () => notification.remove();
+    // Adicionar ao DOM
     document.body.appendChild(notification);
 
-    setTimeout(() => notification.remove(), 5000);
+    // Auto-remover após 5 segundos
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
 }
 
-// CONTADOR DE CARACTERES
-function updateCharCount() {
-    const textarea = document.getElementById('description');
-    const charCount = document.getElementById('charCount');
-    if (textarea && charCount) {
-        const count = textarea.value.length;
-        charCount.textContent = count;
-        charCount.style.color = count > 90 ? '#f56565' : count > 80 ? '#ed8936' : 'var(--text-light)';
-    }
-}
-
-// LOGOUT
-async function logout() {
-    try {
-        await supabase.auth.signOut();
-        window.location.href = 'login.html';
-    } catch (error) {
-        console.error('Erro ao fazer logout:', error);
-    }
-}
-
-// Adiciona estilos CSS para animações
+// ✅ CORREÇÃO: Adicionar estilos CSS melhorados
 const style = document.createElement('style');
 style.textContent = `
-    @keyframes slideIn {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
+    @keyframes slideInRight {
+        from { 
+            transform: translateX(100%); 
+            opacity: 0; 
+        }
+        to { 
+            transform: translateX(0); 
+            opacity: 1; 
+        }
     }
     
     .notification {
-        font-family: Arial, sans-serif;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.1);
     }
     
     .notification-content {
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: 12px;
+    }
+    
+    .notification-icon {
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+    
+    .notification-message {
+        flex: 1;
+        font-weight: 500;
     }
     
     .notification-close {
         background: none;
         border: none;
         color: white;
-        font-size: 18px;
+        font-size: 20px;
         cursor: pointer;
-        margin-left: 10px;
+        padding: 0;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        transition: background-color 0.2s;
+    }
+    
+    .notification-close:hover {
+        background: rgba(255,255,255,0.2);
     }
 `;
 document.head.appendChild(style);
 
-// SISTEMA DE STATUS ONLINE SIMPLES
-function startOnlineStatusUpdater() {
-    updateOnlineStatus();
-    setInterval(updateOnlineStatus, 60000);
+// ✅ CORREÇÃO: Contador de caracteres melhorado
+function updateCharCount() {
+    const textarea = document.getElementById('description');
+    const charCount = document.getElementById('charCount');
     
-    document.addEventListener('visibilitychange', function() {
-        if (!document.hidden) {
-            updateOnlineStatus();
-        }
-    });
-    
-    ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => {
-        document.addEventListener(event, updateOnlineStatus, { passive: true });
-    });
-    
-    console.log('🟢 Sistema de status online iniciado');
-}
-
-async function updateOnlineStatus() {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { error } = await supabase
-            .from('profiles')
-            .update({ 
-                last_online_at: new Date().toISOString()
-            })
-            .eq('id', user.id);
-
-        if (error) {
-            console.error('Erro ao atualizar status online:', error);
+    if (textarea && charCount) {
+        const count = textarea.value.length;
+        const maxLength = 100;
+        
+        charCount.textContent = `${count}/${maxLength}`;
+        
+        // Cores baseadas na quantidade
+        if (count === 0) {
+            charCount.style.color = 'var(--text-light)';
+        } else if (count < 50) {
+            charCount.style.color = '#48bb78'; // Verde
+        } else if (count < 80) {
+            charCount.style.color = '#ed8936'; // Laranja
+        } else if (count < 100) {
+            charCount.style.color = '#f56565'; // Vermelho
+        } else {
+            charCount.style.color = '#e53e3e'; // Vermelho escuro
         }
         
-    } catch (error) {
-        console.error('Erro no sistema de status online:', error);
+        // Limitar caracteres se exceder
+        if (count > maxLength) {
+            textarea.value = textarea.value.substring(0, maxLength);
+            updateCharCount(); // Atualizar novamente
+            showNotification(`⚠️ Limite de ${maxLength} caracteres atingido!`, 'warning');
+        }
     }
 }
 
-// FUNÇÃO DE DEBUG PARA TESTAR MANUALMENTE
+// ✅ CORREÇÃO: Logout com confirmação
+async function logout() {
+    try {
+        const confirmLogout = confirm('Tem certeza que deseja sair?');
+        if (!confirmLogout) return;
+        
+        showNotification('👋 Saindo...', 'info');
+        
+        // Atualizar último online antes de sair
+        await supabase
+            .from('profiles')
+            .update({ 
+                last_online_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', currentUser.id);
+        
+        // Fazer logout
+        await supabase.auth.signOut();
+        
+        // Redirecionar
+        setTimeout(() => {
+            window.location.href = 'login.html';
+        }, 1000);
+        
+    } catch (error) {
+        console.error('❌ Erro ao fazer logout:', error);
+        showNotification('❌ Erro ao sair', 'error');
+    }
+}
+
+// ✅ CORREÇÃO: Debug functions
 window.debugPremium = async function() {
     console.log('=== 🎯 DEBUG PREMIUM MANUAL ===');
-    const result = await PremiumManager.checkPremiumStatus();
-    console.log('🔍 Resultado:', result);
-    return result;
+    try {
+        const result = await PremiumManager.checkPremiumStatus();
+        console.log('🔍 Status Premium:', result);
+        
+        // Verificar perfil também
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_premium, premium_expires_at, is_invisible')
+            .eq('id', currentUser.id)
+            .single();
+            
+        console.log('📊 Perfil:', profile);
+        showNotification(`🔍 Debug: Premium=${result}`, 'info');
+        
+        return result;
+    } catch (error) {
+        console.error('❌ Erro no debug:', error);
+        return false;
+    }
 };
 
-// ATUALIZAÇÃO AUTOMÁTICA QUANDO VOLTA DE OUTRAS PÁGINAS
+// ✅ CORREÇÃO: Atualização automática quando volta de outras páginas
 window.addEventListener('pageshow', function(event) {
     if (event.persisted) {
-        console.log('🔄 Página restaurada do cache - verificando premium...');
-        setTimeout(() => {
-            PremiumManager.checkPremiumStatus();
+        console.log('🔄 Página restaurada do cache - atualizando dados...');
+        setTimeout(async () => {
+            await PremiumManager.checkPremiumStatus();
+            await updateProfileCompletion();
+            await loadInvisibleModeStatus();
         }, 1000);
     }
 });
 
-// VERIFICAÇÃO QUANDO A PÁGINA FICA VISÍVEL
+// ✅ CORREÇÃO: Verificação quando a página fica visível
 document.addEventListener('visibilitychange', function() {
     if (!document.hidden) {
-        console.log('🔄 Página visível - verificando premium...');
-        setTimeout(() => {
-            PremiumManager.checkPremiumStatus();
+        console.log('🔄 Página visível - sincronizando dados...');
+        setTimeout(async () => {
+            await PremiumManager.checkPremiumStatus();
+            await updateOnlineStatus();
         }, 500);
     }
 });
 
-// INICIAR SISTEMA DE STATUS ONLINE
+// ✅ INICIAR SISTEMAS
 startOnlineStatusUpdater();
 
-console.log('✅ painel.js carregado completamente - SISTEMA 100% CORRIGIDO');
+console.log('✅ painel.js carregado completamente - SISTEMA 100% CORRIGIDO E OTIMIZADO');
 
-// ✅ CORREÇÃO FINAL: Garantir que o email seja preenchido mesmo se houver erro
+// ✅ CORREÇÃO FINAL: Garantir que todos os dados sejam carregados
 setTimeout(() => {
     const emailInput = document.getElementById('email');
     if (emailInput && currentUser && !emailInput.value) {
         emailInput.value = currentUser.email || '';
         console.log('✅ Email preenchido via timeout de segurança');
+    }
+    
+    // Verificar se precisa recarregar dados
+    if (!document.querySelector('.premium-badge')) {
+        updatePremiumStatus();
     }
 }, 2000);
