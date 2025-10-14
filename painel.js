@@ -1457,18 +1457,15 @@ async function toggleGallerySection() {
     }
 }
 
-// Configurar eventos da galeria - ✅ CORRIGIDO
+// Configurar eventos da galeria
 function setupGalleryEvents() {
     console.log('🔄 Configurando eventos da galeria...');
     
     const uploadBtn = document.getElementById('uploadGalleryBtn');
     const galleryUpload = document.getElementById('galleryUpload');
     
-    console.log('📌 Botão de upload:', uploadBtn);
-    console.log('📌 Input file:', galleryUpload);
-    
     if (uploadBtn && galleryUpload) {
-        // ✅ CORREÇÃO: Remover event listeners antigos primeiro
+        // Remover event listeners antigos
         const newUploadBtn = uploadBtn.cloneNode(true);
         const newGalleryUpload = galleryUpload.cloneNode(true);
         
@@ -1487,10 +1484,7 @@ function setupGalleryEvents() {
         
         console.log('✅ Eventos da galeria configurados com sucesso');
     } else {
-        console.error('❌ Elementos do upload não encontrados:', {
-            uploadBtn: uploadBtn,
-            galleryUpload: galleryUpload
-        });
+        console.error('❌ Elementos do upload não encontrados');
     }
 }
 
@@ -1502,7 +1496,7 @@ async function handleGalleryUpload(event) {
     
     if (files.length === 0) return;
     
-    // ✅ CORREÇÃO: Obter usuário atual
+    // Obter usuário atual
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
         showNotification('❌ Usuário não autenticado', 'error');
@@ -1511,14 +1505,14 @@ async function handleGalleryUpload(event) {
     
     // Verificar espaço disponível
     const storageUsed = await getStorageUsage();
-    const availableSpace = 10 * 1024 * 1024 - storageUsed; // 10MB em bytes
+    const availableSpace = 10 * 1024 * 1024 - storageUsed;
     
     let totalNewSize = 0;
     const validFiles = [];
     
     // Validar arquivos
     for (const file of files) {
-        if (file.size > 10 * 1024 * 1024) { // 10MB
+        if (file.size > 10 * 1024 * 1024) {
             showNotification(`❌ A imagem ${file.name} excede 10MB`, 'error');
             continue;
         }
@@ -1577,81 +1571,93 @@ async function uploadGalleryImages(files) {
         
     } catch (error) {
         console.error('❌ Erro ao fazer upload das imagens:', error);
-        showNotification('❌ Erro ao enviar imagens', 'error');
+        showNotification('❌ ' + error.message, 'error');
     } finally {
         uploadLoading.remove();
     }
 }
 
-// Upload de uma única imagem - ✅ CORREÇÃO COMPLETA
+// Upload de uma única imagem - ✅ CORREÇÃO DEFINITIVA
 async function uploadGalleryImage(file) {
     try {
-        // ✅ CORREÇÃO: Obter usuário atual a cada upload
+        console.log('🔄 Iniciando upload da imagem:', file.name, file.size, 'bytes');
+        
+        // Obter usuário atual
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
             throw new Error('Usuário não autenticado');
         }
 
+        console.log('👤 Usuário:', user.id);
+
+        // Verificar status premium ANTES do upload
+        const isPremium = await PremiumManager.checkPremiumStatus();
+        console.log('⭐ Status Premium:', isPremium);
+        
+        if (!isPremium) {
+            throw new Error('Apenas usuários premium podem fazer upload na galeria');
+        }
+
+        // Gerar nome único para o arquivo
         const fileExt = file.name.split('.').pop().toLowerCase();
         const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-        const filePath = `${user.id}/${fileName}`; // ✅ CORREÇÃO: Remover 'gallery/' do caminho
+        const filePath = `${user.id}/${fileName}`;
         
         console.log('📤 Fazendo upload para:', filePath);
-        console.log('👤 Usuário ID:', user.id);
 
-        // 1. Fazer upload para o storage
+        // ✅ CORREÇÃO: Upload SIMPLES sem options complexas
         const { data: uploadData, error: uploadError } = await supabase.storage
             .from('gallery')
-            .upload(filePath, file, {
-                cacheControl: '3600',
-                upsert: false
-            });
+            .upload(filePath, file);
 
         if (uploadError) {
             console.error('❌ Erro no upload storage:', uploadError);
             
-            // Se for erro de política, verificar status premium
-            if (uploadError.message.includes('policy') || uploadError.message.includes('premium')) {
-                const isPremium = await PremiumManager.checkPremiumStatus();
-                if (!isPremium) {
-                    throw new Error('Apenas usuários premium podem fazer upload');
-                }
+            // Se for erro de política
+            if (uploadError.message?.includes('policy') || uploadError.message?.includes('row-level security')) {
+                throw new Error('Permissão negada. Verifique se você é usuário premium.');
             }
             
             // Se o bucket não existir
-            if (uploadError.message.includes('bucket') || uploadError.message.includes('not found')) {
-                await createGalleryBucket();
-                // Tentar upload novamente
-                return await uploadGalleryImage(file);
+            if (uploadError.message?.includes('bucket') || uploadError.message?.includes('not found')) {
+                throw new Error('Erro no servidor. Bucket não encontrado.');
             }
-            throw uploadError;
+            
+            throw new Error('Erro ao fazer upload: ' + uploadError.message);
         }
 
-        // 2. Obter URL pública
+        console.log('✅ Upload no storage realizado com sucesso');
+
+        // Obter URL pública
         const { data: urlData } = await supabase.storage
             .from('gallery')
             .getPublicUrl(filePath);
 
-        // 3. Salvar metadados no banco
+        console.log('🔗 URL pública gerada');
+
+        // Salvar metadados no banco
         const { error: dbError } = await supabase
             .from('user_gallery')
             .insert({
                 user_id: user.id,
                 image_name: fileName,
-                image_url: filePath, // ✅ CORREÇÃO: Usar filePath sem 'gallery/'
+                image_url: filePath,
                 file_size_bytes: file.size,
                 mime_type: file.type,
-                public_url: urlData.publicUrl
+                public_url: urlData.publicUrl,
+                created_at: new Date().toISOString()
             });
 
         if (dbError) {
             console.error('❌ Erro ao salvar no banco:', dbError);
+            
             // Reverter upload se falhar no banco
             await supabase.storage.from('gallery').remove([filePath]);
-            throw dbError;
+            
+            throw new Error('Erro ao salvar metadados da imagem');
         }
 
-        console.log('✅ Upload realizado com sucesso');
+        console.log('✅ Metadados salvos no banco com sucesso');
         return uploadData;
 
     } catch (error) {
@@ -1660,16 +1666,10 @@ async function uploadGalleryImage(file) {
     }
 }
 
-// Criar bucket da galeria se não existir
-async function createGalleryBucket() {
-    console.log('🔄 Verificando bucket da galeria...');
-    // O bucket deve ser criado manualmente via SQL acima
-}
-
-// Carregar galeria do usuário - ✅ CORRIGIDO
+// Carregar galeria do usuário
 async function loadUserGallery() {
     try {
-        // ✅ CORREÇÃO: Obter usuário atual
+        // Obter usuário atual
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
             console.error('❌ Usuário não autenticado');
@@ -1741,7 +1741,7 @@ function loadGalleryImagesLazy() {
     images.forEach(img => imageObserver.observe(img));
 }
 
-// Carregar uma imagem específica - ✅ CORRIGIDO
+// Carregar uma imagem específica
 async function loadGalleryImage(imgElement) {
     const imageUrl = imgElement.getAttribute('data-src');
     
@@ -1763,21 +1763,18 @@ async function loadGalleryImage(imgElement) {
         if (data && data.publicUrl) {
             imgElement.src = data.publicUrl;
             imgElement.removeAttribute('data-src');
-            console.log('✅ Imagem carregada:', data.publicUrl);
-        } else {
-            console.error('❌ URL pública não retornada');
         }
     } catch (error) {
         console.error('❌ Erro ao carregar imagem:', error);
     }
 }
 
-// Excluir imagem da galeria - ✅ CORRIGIDO
+// Excluir imagem da galeria
 async function deleteGalleryImage(imageId) {
     if (!confirm('Tem certeza que deseja excluir esta imagem?')) return;
     
     try {
-        // ✅ CORREÇÃO: Obter usuário atual
+        // Obter usuário atual
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
             throw new Error('Usuário não autenticado');
@@ -1788,7 +1785,7 @@ async function deleteGalleryImage(imageId) {
             .from('user_gallery')
             .select('*')
             .eq('id', imageId)
-            .eq('user_id', user.id) // ✅ CORREÇÃO: Garantir que é do usuário
+            .eq('user_id', user.id)
             .single();
         
         if (fetchError) throw fetchError;
@@ -1805,7 +1802,7 @@ async function deleteGalleryImage(imageId) {
             .from('user_gallery')
             .delete()
             .eq('id', imageId)
-            .eq('user_id', user.id); // ✅ CORREÇÃO: Garantir que é do usuário
+            .eq('user_id', user.id);
         
         if (dbError) throw dbError;
         
@@ -1818,10 +1815,10 @@ async function deleteGalleryImage(imageId) {
     }
 }
 
-// Obter uso de storage - ✅ CORRIGIDO
+// Obter uso de storage
 async function getStorageUsage() {
     try {
-        // ✅ CORREÇÃO: Obter usuário atual
+        // Obter usuário atual
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return 0;
 
