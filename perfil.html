@@ -1049,22 +1049,44 @@ async function createGallerySection(profileId, currentUser) {
         const galleryImages = images || [];
         console.log('🔍 Imagens processadas:', galleryImages.length);
 
-        // MESMO SE VAZIA, MOSTRA A SEÇÃO COM INFO
+        // ✅ CORREÇÃO CRÍTICA: ATRIBUIR À VARIÁVEL GLOBAL DO MODAL
+        currentProfileGallery = galleryImages;
+        console.log('🔄 Galeria atribuída ao modal:', currentProfileGallery.length, 'imagens');
+
+        // MESMO SE VAZIA, MOSTRA A SEÇÃO COM INFO BONITA
         if (galleryImages.length === 0) {
             console.log('🔍 GALERIA VAZIA PARA ESTE USUÁRIO');
-            return `
-                <div class="gallery-section">
-                    <h3><i class="fas fa-images"></i> Galeria de Fotos</h3>
-                    <div class="empty-gallery">
-                        <i class="fas fa-images"></i>
-                        <p>Nenhuma foto na galeria (0 imagens encontradas)</p>
-                        <p style="font-size: 12px; color: #666;">
-                            User ID: ${profileId}<br>
-                            Total na tabela: ${allImages?.length || 0} imagens
-                        </p>
+            
+            const isOwner = currentUser && currentUser.id === profileId;
+            
+            if (isOwner) {
+                // Dono do perfil vê mensagem de convite para adicionar fotos
+                return `
+                    <div class="gallery-section">
+                        <h3><i class="fas fa-images"></i> Galeria de Fotos</h3>
+                        <div class="empty-gallery" style="text-align: center; padding: 2rem;">
+                            <i class="fas fa-camera" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;"></i>
+                            <h4>Sua galeria está vazia</h4>
+                            <p>Adicione fotos para mostrar mais sobre você!</p>
+                            <button class="btn btn-primary" onclick="window.location.href='painel.html'">
+                                📸 Adicionar Fotos
+                            </button>
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
+            } else {
+                // Visitante vê mensagem genérica
+                return `
+                    <div class="gallery-section">
+                        <h3><i class="fas fa-images"></i> Galeria de Fotos</h3>
+                        <div class="empty-gallery" style="text-align: center; padding: 2rem;">
+                            <i class="fas fa-images" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;"></i>
+                            <h4>Este usuário ainda não adicionou fotos</h4>
+                            <p>Volte mais tarde para conferir a galeria.</p>
+                        </div>
+                    </div>
+                `;
+            }
         }
 
         // Verificar status do usuário
@@ -1125,7 +1147,6 @@ async function createGallerySection(profileId, currentUser) {
         `;
     }
 }
-
 // ✅ CRIAR GRID DA GALERIA
 async function createGalleryGrid(images) {
     if (!images || images.length === 0) {
