@@ -1121,28 +1121,27 @@ async function createGallerySection(profileId, currentUser) {
             `;
         } 
         // Usuário free: mostra preview bloqueado
-        else {
-            console.log('🔒 MOSTRANDO PREVIEW BLOQUEADO -', galleryImages.length, 'imagens');
-            return `
-                <div class="gallery-section">
-                    <h3><i class="fas fa-images"></i> Galeria de Fotos (${galleryImages.length})</h3>
-                    <div class="free-gallery-preview">
-                        <div class="preview-overlay">
-                            <i class="fas fa-lock"></i>
-                            <h4>Conteúdo Exclusivo Premium</h4>
-                            <p>Faça upgrade para visualizar ${galleryImages.length} foto(s)</p>
-                            <button class="btn btn-primary" onclick="goPremium()">
-                                🔓 Tornar-se Premium
-                            </button>
-                        </div>
-                        <div class="blurred-gallery">
-                            ${createBlurredPreview(galleryImages)}
-                        </div>
-                    </div>
+else {
+    console.log('🔒 MOSTRANDO PREVIEW BLOQUEADO -', galleryImages.length, 'imagens');
+    return `
+        <div class="gallery-section">
+            <h3><i class="fas fa-images"></i> Galeria de Fotos (${galleryImages.length})</h3>
+            <div class="free-gallery-preview">
+                <div class="preview-overlay">
+                    <i class="fas fa-lock"></i>
+                    <h4>Conteúdo Exclusivo Premium</h4>
+                    <p>Faça upgrade para visualizar ${galleryImages.length} foto(s)</p>
+                    <button class="btn btn-primary" onclick="window.location.href='princing.html'">
+                        🔓 Tornar-se Premium
+                    </button>
                 </div>
-            `;
-        }
-
+                <div class="blurred-gallery">
+                    ${createBlurredPreview(galleryImages)}
+                </div>
+            </div>
+        </div>
+    `;
+}
     } catch (error) {
         console.error('❌ Erro crítico na galeria:', error);
         return `
