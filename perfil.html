@@ -1120,7 +1120,7 @@ async function createGallerySection(profileId, currentUser) {
                 </div>
             `;
         } 
-       // Usuário free: mostra preview bloqueado
+   // Usuário free: mostra preview bloqueado
 else {
     console.log('🔒 MOSTRANDO PREVIEW BLOQUEADO -', galleryImages.length, 'imagens');
     return `
@@ -1131,9 +1131,9 @@ else {
                     <i class="fas fa-lock"></i>
                     <h4>Conteúdo Exclusivo Premium</h4>
                     <p>Faça upgrade para visualizar ${galleryImages.length} foto(s) na galeria</p>
-                    <button class="btn btn-primary" onclick="window.location.href='princing.html'">
+                    <a href="princing.html" class="btn btn-primary" style="text-decoration: none; display: inline-block;">
                         🔓 Tornar-se Premium
-                    </button>
+                    </a>
                 </div>
                 <div class="blurred-gallery">
                     ${createBlurredPreview(galleryImages)}
@@ -1186,7 +1186,6 @@ async function createGalleryGrid(images) {
 
     return gridHTML;
 }
-
 // ✅ CRIAR PREVIEW COM BLUR
 function createBlurredPreview(images) {
     const previewCount = Math.min(images.length, 6);
