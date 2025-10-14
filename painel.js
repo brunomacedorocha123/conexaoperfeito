@@ -1486,8 +1486,8 @@ async function handleGalleryUpload(event) {
     
     // Validar arquivos
     for (const file of files) {
-        if (file.size > 10 * 1024 * 1024) { // ✅ CORRIGIDO: 10MB (ERA 2MB)
-            showNotification(`❌ A imagem ${file.name} excede 10MB`, 'error'); // ✅ CORRIGIDO: 10MB
+        if (file.size > 10 * 1024 * 1024) { // 10MB
+            showNotification(`❌ A imagem ${file.name} excede 10MB`, 'error');
             continue;
         }
         
@@ -1513,6 +1513,7 @@ async function handleGalleryUpload(event) {
     // Limpar input
     event.target.value = '';
 }
+
 // Fazer upload das imagens para a galeria
 async function uploadGalleryImages(files) {
     const uploadLoading = document.createElement('div');
@@ -1660,18 +1661,32 @@ function loadGalleryImagesLazy() {
     images.forEach(img => imageObserver.observe(img));
 }
 
-// Carregar uma imagem específica
+// Carregar uma imagem específica - ✅ CORRIGIDO
 async function loadGalleryImage(imgElement) {
     const imageUrl = imgElement.getAttribute('data-src');
     
     try {
-        const { data } = supabase.storage
+        // ✅ CORREÇÃO: Adicionar await e verificar se imageUrl existe
+        if (!imageUrl) {
+            console.error('❌ URL da imagem não encontrada');
+            return;
+        }
+        
+        const { data, error } = await supabase.storage
             .from('gallery')
             .getPublicUrl(imageUrl);
+        
+        if (error) {
+            console.error('❌ Erro ao obter URL pública:', error);
+            return;
+        }
         
         if (data && data.publicUrl) {
             imgElement.src = data.publicUrl;
             imgElement.removeAttribute('data-src');
+            console.log('✅ Imagem carregada:', data.publicUrl);
+        } else {
+            console.error('❌ URL pública não retornada');
         }
     } catch (error) {
         console.error('❌ Erro ao carregar imagem:', error);
