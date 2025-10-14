@@ -2144,7 +2144,7 @@ function getTimeAgo(dateString) {
 
 // ==================== FUNÇÕES DE INTERAÇÃO CORRIGIDAS ====================
 
-// ✅✅✅ FUNÇÃO SENDMESSAGE CORRIGIDA
+// ✅✅✅ FUNÇÃO SENDMESSAGE CORRIGIDA - NÃO BLOQUEANTE
 async function sendMessage(userId, event) {
     if (event) event.stopPropagation();
     
@@ -2156,34 +2156,33 @@ async function sendMessage(userId, event) {
         return;
     }
     
-    try {
-        // Criar mensagem REAL no banco
-        console.log('🔄 Criando conversa REAL com usuário:', userId);
-        
-        const { error: messageError } = await supabase
-            .from('messages')
-            .insert({
-                sender_id: currentUser.id,
-                receiver_id: userId,
-                content: '👋 Iniciou uma conversa',
-                is_read: false
-            });
+    // ✅✅✅ REDIRECIONAR IMEDIATAMENTE
+    localStorage.setItem('openChatWithUserId', userId);
+    window.location.href = 'mensagens.html';
+    
+    // ✅✅✅ CRIAR MENSAGEM EM BACKGROUND (NÃO BLOQUEIA)
+    setTimeout(async () => {
+        try {
+            console.log('🔄 Criando conversa REAL em background:', userId);
+            
+            const { error: messageError } = await supabase
+                .from('messages')
+                .insert({
+                    sender_id: currentUser.id,
+                    receiver_id: userId,
+                    content: '👋 Iniciou uma conversa',
+                    is_read: false
+                });
 
-        if (messageError) {
-            console.error('❌ Erro ao criar conversa:', messageError);
-        } else {
-            console.log('✅ Conversa criada com sucesso');
+            if (messageError) {
+                console.error('❌ Erro ao criar conversa:', messageError);
+            } else {
+                console.log('✅ Conversa criada com sucesso em background');
+            }
+        } catch (error) {
+            console.error('❌ Erro ao enviar mensagem em background:', error);
         }
-        
-        // REDIRECIONAR PARA MENSAGENS
-        localStorage.setItem('openChatWithUserId', userId);
-        window.location.href = 'mensagens.html';
-        
-    } catch (error) {
-        console.error('❌ Erro ao enviar mensagem:', error);
-        localStorage.setItem('openChatWithUserId', userId);
-        window.location.href = 'mensagens.html';
-    }
+    }, 100);
 }
 
 // ✅✅✅ FUNÇÃO VIEWPROFILE OTIMIZADA - REDIRECIONAMENTO INSTANTÂNEO
