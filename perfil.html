@@ -896,34 +896,73 @@
         return null;
     }
 
-    // ✅ ENVIAR MENSAGEM
-    function sendMessage(userId) {
-        const message = prompt('Digite sua mensagem para esta pessoa:');
-        if (message && message.trim()) {
-            alert('💌 Mensagem enviada com sucesso!');
-            // Aqui você pode implementar o envio real da mensagem
+   // ✅✅✅ FUNÇÃO SENDMESSAGE CORRIGIDA - IGUAL À HOME
+async function sendMessage(userId) {
+    console.log('💌 Iniciando conversa com usuário:', userId);
+    
+    // Verificar se perfil está completo (mesma lógica da home)
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('full_name, birth_date')
+        .eq('id', user.id)
+        .single();
+    
+    if (!userProfile || !userProfile.full_name || !userProfile.birth_date) {
+        alert('Complete seu perfil primeiro para enviar mensagens!');
+        window.location.href = 'painel.html';
+        return;
+    }
+    
+    try {
+        // Criar mensagem REAL no banco (igual home)
+        console.log('🔄 Criando conversa REAL com usuário:', userId);
+        
+        const { error: messageError } = await supabase
+            .from('messages')
+            .insert({
+                sender_id: user.id,
+                receiver_id: userId,
+                content: '👋 Iniciou uma conversa',
+                is_read: false
+            });
+
+        if (messageError) {
+            console.error('❌ Erro ao criar conversa:', messageError);
+        } else {
+            console.log('✅ Conversa criada com sucesso');
         }
+        
+        // REDIRECIONAR PARA MENSAGENS (igual home)
+        localStorage.setItem('openChatWithUserId', userId);
+        window.location.href = 'mensagens.html';
+        
+    } catch (error) {
+        console.error('❌ Erro ao enviar mensagem:', error);
+        localStorage.setItem('openChatWithUserId', userId);
+        window.location.href = 'mensagens.html';
     }
+}
 
-    // ✅ IR PARA PÁGINA PREMIUM
-    function goPremium() {
-        window.location.href = 'premium.html';
-    }
+// ✅ IR PARA PÁGINA PREMIUM
+function goPremium() {
+    window.location.href = 'premium.html';
+}
 
-    // ✅ MOSTRAR ERRO
-    function showError(message) {
-        const profileContent = document.getElementById('profileContent');
-        profileContent.innerHTML = `
-            <div class="error-state">
-                <div class="error-icon">😕</div>
-                <h3>${message}</h3>
-                <p>Volte para a página inicial e tente novamente.</p>
-                <button class="btn btn-primary" onclick="window.location.href='home.html'" style="margin-top: 1rem;">
-                    ← Voltar para Home
-                </button>
-            </div>
-        `;
-    }
+// ✅ MOSTRAR ERRO
+function showError(message) {
+    const profileContent = document.getElementById('profileContent');
+    profileContent.innerHTML = `
+        <div class="error-state">
+            <div class="error-icon">😕</div>
+            <h3>${message}</h3>
+            <p>Volte para a página inicial e tente novamente.</p>
+            <button class="btn btn-primary" onclick="window.location.href='home.html'" style="margin-top: 1rem;">
+                ← Voltar para Home
+            </button>
+        </div>
+    `;
+}
 </script>
 </body>
 </html>
