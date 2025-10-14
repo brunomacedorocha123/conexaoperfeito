@@ -1059,68 +1059,68 @@ async function createGallerySection(profileId, currentUser) {
 
         console.log('🔍 Status - Dono:', isOwner, 'Premium:', isPremium);
 
-       // SE GALERIA ESTÁ VAZIA (NENHUMA FOTO MESMO)
-        if (galleryImages.length === 0) {
-            console.log('🔍 GALERIA VAZIA PARA ESTE USUÁRIO');
-            
-            if (isOwner) {
-                // Dono do perfil vê mensagem para adicionar fotos
-                return `
-                    <div class="gallery-section">
-                        <h3><i class="fas fa-images"></i> Galeria de Fotos</h3>
-                        <div class="empty-gallery" style="text-align: center; padding: 2rem;">
-                            <i class="fas fa-camera" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;"></i>
-                            <h4>Sua galeria está vazia</h4>
-                            <p>Adicione fotos para mostrar mais sobre você!</p>
-                            <button class="btn btn-primary" onclick="window.location.href='painel.html'">
-                                📸 Adicionar Fotos
-                            </button>
-                        </div>
+     // SE GALERIA ESTÁ VAZIA (NENHUMA FOTO MESMO)
+if (galleryImages.length === 0) {
+    console.log('🔍 GALERIA VAZIA PARA ESTE USUÁRIO');
+    
+    if (isOwner) {
+        // Dono do perfil vê mensagem para adicionar fotos
+        return `
+            <div class="gallery-section">
+                <h3><i class="fas fa-images"></i> Galeria de Fotos</h3>
+                <div class="empty-gallery" style="text-align: center; padding: 2rem;">
+                    <i class="fas fa-camera" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;"></i>
+                    <h4>Sua galeria está vazia</h4>
+                    <p>Adicione fotos para mostrar mais sobre você!</p>
+                    <button class="btn btn-primary" onclick="window.location.href='painel.html'">
+                        📸 Adicionar Fotos
+                    </button>
+                </div>
+            </div>
+        `;
+    } else {
+        // Visitante free vê mensagem de upgrade MESMO quando galeria está vazia
+        return `
+            <div class="gallery-section">
+                <h3><i class="fas fa-images"></i> Galeria de Fotos</h3>
+                <div class="free-gallery-preview">
+                    <div class="preview-overlay">
+                        <i class="fas fa-lock"></i>
+                        <h4>Conteúdo Exclusivo Premium</h4>
+                        <p>Torne-se Premium para visualizar galerias de outros usuários</p>
+                        <a href="princing.html" class="btn btn-primary" style="text-decoration: none; display: inline-block;">
+                            🔓 Tornar-se Premium
+                        </a>
                     </div>
-                `;
-            } else {
-                // Visitante free vê mensagem de upgrade MESMO quando galeria está vazia
-                return `
-                    <div class="gallery-section">
-                        <h3><i class="fas fa-images"></i> Galeria de Fotos</h3>
-                        <div class="free-gallery-preview">
-                            <div class="preview-overlay">
-                                <i class="fas fa-lock"></i>
-                                <h4>Conteúdo Exclusivo Premium</h4>
-                                <p>Torne-se Premium para visualizar galerias de outros usuários</p>
-                                <button class="btn btn-primary" onclick="goPremium()">
-                                    🔓 Tornar-se Premium
-                                </button>
-                            </div>
-                            <div class="blurred-gallery">
-                                <div class="blurred-image"></div>
-                                <div class="blurred-image"></div>
-                                <div class="blurred-image"></div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-
-        console.log('=== 🎯 DEBUG GALERIA FINALIZADO ===');
-
-        // Usuário premium ou dono: mostra galeria completa
-        if (isPremium || isOwner) {
-            console.log('⭐ MOSTRANDO GALERIA COMPLETA -', galleryImages.length, 'imagens');
-            const galleryGrid = await createGalleryGrid(galleryImages);
-            return `
-                <div class="gallery-section">
-                    <h3><i class="fas fa-images"></i> Galeria de Fotos (${galleryImages.length})</h3>
-                    <div class="premium-gallery-view">
-                        <div class="gallery-grid">
-                            ${galleryGrid}
-                        </div>
+                    <div class="blurred-gallery">
+                        <div class="blurred-image"></div>
+                        <div class="blurred-image"></div>
+                        <div class="blurred-image"></div>
                     </div>
                 </div>
-            `;
-        } 
-   // Usuário free: mostra preview bloqueado
+            </div>
+        `;
+    }
+}
+
+console.log('=== 🎯 DEBUG GALERIA FINALIZADO ===');
+
+// Usuário premium ou dono: mostra galeria completa
+if (isPremium || isOwner) {
+    console.log('⭐ MOSTRANDO GALERIA COMPLETA -', galleryImages.length, 'imagens');
+    const galleryGrid = await createGalleryGrid(galleryImages);
+    return `
+        <div class="gallery-section">
+            <h3><i class="fas fa-images"></i> Galeria de Fotos (${galleryImages.length})</h3>
+            <div class="premium-gallery-view">
+                <div class="gallery-grid">
+                    ${galleryGrid}
+                </div>
+            </div>
+        </div>
+    `;
+} 
+// Usuário free: mostra preview bloqueado
 else {
     console.log('🔒 MOSTRANDO PREVIEW BLOQUEADO -', galleryImages.length, 'imagens');
     return `
