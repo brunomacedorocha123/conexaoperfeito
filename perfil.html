@@ -231,6 +231,7 @@
         /* Galeria Section */
         .gallery-section {
             margin: 2rem 0;
+            display: block !important;
         }
 
         .gallery-section h3 {
@@ -259,6 +260,7 @@
             box-shadow: var(--shadow);
             transition: var(--transition);
             cursor: pointer;
+            background: var(--lilas);
         }
 
         .gallery-item:hover {
@@ -274,7 +276,7 @@
         }
 
         .premium-gallery-view {
-            display: none;
+            display: block !important;
         }
 
         .free-gallery-preview {
@@ -602,7 +604,7 @@
             </div>
         </div>
     </div>
-    <script>
+   <script>
     // Configuração do Supabase
     const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
@@ -1004,15 +1006,16 @@
         `;
     }
 
-    // ✅ CRIAR SEÇÃO DA GALERIA NO PERFIL
+    // ✅ CRIAR SEÇÃO DA GALERIA NO PERFIL - CORRIGIDA
     async function createGallerySection(profileId, currentUser) {
         try {
+            console.log('🔄 Carregando galeria do perfil:', profileId);
+            
             // Buscar imagens da galeria do perfil
             const { data: images, error } = await supabase
                 .from('user_gallery')
                 .select('*')
                 .eq('user_id', profileId)
-                .eq('is_public', true)
                 .order('created_at', { ascending: false });
 
             if (error) {
@@ -1021,36 +1024,44 @@
             }
 
             currentProfileGallery = images || [];
+            console.log(`✅ ${currentProfileGallery.length} imagens encontradas na galeria`);
 
             if (currentProfileGallery.length === 0) {
+                console.log('ℹ️ Galeria vazia - não mostrando seção');
                 return ''; // Não mostra seção se não tiver imagens
             }
 
             const isOwner = currentUser && currentUser.id === profileId;
             const isPremium = currentUser ? await PremiumManager.verifyPremiumStatus(currentUser.id) : false;
 
+            console.log(`👤 Status: Dono=${isOwner}, Premium=${isPremium}`);
+
             // Se é o dono ou usuário premium, mostra galeria completa
             if (isOwner || isPremium) {
+                console.log('⭐ Mostrando galeria completa para usuário premium/dono');
+                const galleryGrid = await createGalleryGrid(currentProfileGallery);
+                
                 return `
                     <div class="gallery-section">
-                        <h3><i class="fas fa-images"></i> Galeria de Fotos</h3>
-                        <div class="premium-gallery-view">
+                        <h3><i class="fas fa-images"></i> Galeria de Fotos (${currentProfileGallery.length})</h3>
+                        <div class="premium-gallery-view" style="display: block;">
                             <div class="gallery-grid" id="profileGalleryGrid">
-                                ${await createGalleryGrid(currentProfileGallery)}
+                                ${galleryGrid}
                             </div>
                         </div>
                     </div>
                 `;
             } else {
                 // Usuário free - mostra preview bloqueado
+                console.log('🔒 Mostrando preview bloqueado para usuário free');
                 return `
                     <div class="gallery-section">
-                        <h3><i class="fas fa-images"></i> Galeria de Fotos</h3>
+                        <h3><i class="fas fa-images"></i> Galeria de Fotos (${currentProfileGallery.length})</h3>
                         <div class="free-gallery-preview">
                             <div class="preview-overlay">
                                 <i class="fas fa-lock"></i>
                                 <h4>Conteúdo Exclusivo Premium</h4>
-                                <p>Faça upgrade para visualizar esta galeria</p>
+                                <p>Faça upgrade para visualizar ${currentProfileGallery.length} foto(s) desta galeria</p>
                                 <button class="btn btn-primary" onclick="goPremium()">
                                     🔓 Tornar-se Premium
                                 </button>
@@ -1069,7 +1080,7 @@
         }
     }
 
-    // ✅ CRIAR GRID DA GALERIA
+    // ✅ CRIAR GRID DA GALERIA - CORRIGIDA
     async function createGalleryGrid(images) {
         if (!images || images.length === 0) {
             return `
@@ -1204,7 +1215,7 @@
         });
     }
 
-    // ✅ FUNÇÕES DE FORMATAÇÃO (mantidas do código original)
+    // ✅ FUNÇÕES DE FORMATAÇÃO
     function calculateAge(birthDate) {
         const today = new Date();
         const birth = new Date(birthDate);
@@ -1326,7 +1337,7 @@
         return null;
     }
 
-    // ✅✅✅ FUNÇÃO SENDMESSAGE CORRIGIDA - IGUAL À HOME
+    // ✅✅✅ FUNÇÃO SENDMESSAGE CORRIGIDA
     async function sendMessage(userId) {
         console.log('💌 Iniciando conversa com usuário:', userId);
         
