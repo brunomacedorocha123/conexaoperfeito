@@ -1580,7 +1580,7 @@ function isUserOnline(userProfile, currentUserId) {
     return isActuallyOnline;
 }
 
-// ✅ NOVO: SISTEMA DE SINCRONIZAÇÃO DO MODO INVISÍVEL NA HOME
+/// ✅ NOVO: SISTEMA DE SINCRONIZAÇÃO DO MODO INVISÍVEL NA HOME
 function setupInvisibleModeSyncListener() {
     try {
         console.log('👂 Configurando ouvinte de sincronização do modo invisível na HOME...');
@@ -1659,6 +1659,51 @@ function startOnlineStatusUpdater() {
     ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => {
         document.addEventListener(event, updateOnlineStatus, { passive: true });
     });
+}
+
+// ✅✅✅ FUNÇÃO ATUALIZAR STATUS ONLINE CORRIGIDA
+async function updateOnlineStatus() {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { error } = await supabase
+            .from('profiles')
+            .update({ 
+                last_online_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', user.id);
+
+        if (error) {
+            console.error('Erro ao atualizar status online:', error);
+        }
+        
+    } catch (error) {
+        console.error('Erro no sistema de status online:', error);
+    }
+}
+
+// ✅✅✅ FUNÇÃO VERIFICAR USUÁRIO ONLINE CORRIGIDA
+function isUserOnline(userProfile, currentUserId) {
+    if (!userProfile || !userProfile.last_online_at) return false;
+    
+    const lastOnline = new Date(userProfile.last_online_at);
+    const now = new Date();
+    const minutesDiff = (now - lastOnline) / (1000 * 60);
+    
+    // Considera online se esteve ativo nos últimos 5 minutos
+    const isActuallyOnline = minutesDiff <= 5;
+    
+    // Se é o próprio usuário, sempre mostra online
+    if (userProfile.id === currentUserId) return true;
+    
+    // Se o usuário está invisível, mostra como offline para outros
+    if (userProfile.is_invisible && userProfile.id !== currentUserId) {
+        return false;
+    }
+    
+    return isActuallyOnline;
 }
 
 // CARREGAR FOTO DO USUÁRIO
@@ -1775,6 +1820,7 @@ async function loadRealUsers() {
         const usersGrid = document.getElementById('usersGrid');
         
         if (error) {
+            console.error('Erro ao carregar usuários:', error);
             showEmptyState('Erro ao carregar usuários. Tente novamente.');
             return;
         }
@@ -1787,6 +1833,7 @@ async function loadRealUsers() {
         await displayUsersWithPhotos(users);
 
     } catch (error) {
+        console.error('Erro ao carregar usuários:', error);
         showEmptyState('Erro ao carregar usuários. Tente novamente.');
     }
 }
@@ -1880,33 +1927,38 @@ async function createUserCardWithPhoto(user) {
 async function registerProfileVisit(visitedUserId) {
     try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        if (!user) return false;
 
-        if (user.id === visitedUserId) return;
+        if (user.id === visitedUserId) return false;
 
         // ✅✅✅ USAR A NOVA FUNÇÃO DO BANCO
-        const { data, error } = await supabase.rpc('register_profile_visit_simple', {
+        const { data, error } = await supabase.rpc('register_visit_simple', {
             p_visitor_id: user.id,
             p_visited_id: visitedUserId
         });
 
         if (error) {
             console.error('Erro ao registrar visita:', error);
+            return false;
         }
+
+        console.log('✅ Visita registrada com sucesso:', data);
+        return data.success;
 
     } catch (error) {
         console.error('Erro no registro de visita:', error);
+        return false;
     }
 }
 
-// ✅ CORRIGIDO: CARREGAR VISITANTES E STATUS PREMIUM (SEM TOGGLE)
+// ✅ CORRIGIDO: CARREGAR VISITANTES E STATUS PREMIUM
 async function loadVisitorsSystem() {
     try {
         const isPremium = await checkPremiumStatus();
         
         if (isPremium) {
             await loadPremiumVisitors();
-            await checkInvisibleStatusHome(); // ✅ NOVO: Verificar status invisível
+            await checkInvisibleStatusHome();
         } else {
             await loadFreeVisitorsStats();
         }
@@ -1961,7 +2013,7 @@ async function checkPremiumStatus() {
     }
 }
 
-// ✅✅✅ FUNÇÃO COMPLETAMENTE CORRIGIDA - CARREGAR VISITANTES PARA O QUADRO "QUEM TE VISITOU"
+// ✅✅✅ FUNÇÃO COMPLETAMENTE CORRIGIDA - CARREGAR VISITANTES
 async function loadPremiumVisitors() {
     try {
         console.log('🔄 Carregando visitantes para o quadro grande...');
@@ -1970,20 +2022,17 @@ async function loadPremiumVisitors() {
         document.getElementById('premiumVisitors').style.display = 'block';
         document.getElementById('freeVisitors').style.display = 'none';
         
-        // ✅✅✅ QUERY SIMPLIFICADA E CORRIGIDA
-        // Primeiro: buscar apenas as visitas básicas
-        const { data: visits, error } = await supabase
-            .from('profile_visits')
-            .select('visitor_id, visited_at')
-            .eq('visited_id', currentUser.id)
-            .order('visited_at', { ascending: false })
-            .limit(8);
+        // ✅✅✅ USAR A NOVA FUNÇÃO DO BANCO
+        const { data: visitors, error } = await supabase.rpc('get_recent_visitors', {
+            p_user_id: currentUser.id,
+            p_limit: 8
+        });
 
         const visitorsGrid = document.getElementById('visitorsGrid');
         const visitorsCount = document.getElementById('visitorsCount');
         
         if (error) {
-            console.error('❌ Erro ao buscar visitas:', error);
+            console.error('❌ Erro ao buscar visitantes:', error);
             visitorsGrid.innerHTML = `
                 <div class="visitors-empty">
                     <div class="icon">❌</div>
@@ -1994,55 +2043,48 @@ async function loadPremiumVisitors() {
             return;
         }
 
-        console.log('✅ Visitas encontradas:', visits);
+        console.log('✅ Visitantes encontrados:', visitors);
 
-        // ✅✅✅ ATUALIZAR CONTADOR - AGORA DEVE MOSTRAR O NÚMERO CORRETO
-        const visitCount = visits?.length || 0;
+        // ✅✅✅ ATUALIZAR CONTADOR
+        const visitCount = visitors?.length || 0;
         visitorsCount.textContent = `${visitCount} visita${visitCount !== 1 ? 's' : ''}`;
         
         console.log(`📊 Contador atualizado: ${visitCount} visitas`);
 
-        if (!visits || visits.length === 0) {
+        if (!visitors || visitors.length === 0) {
             visitorsGrid.innerHTML = `
                 <div class="visitors-empty">
                     <div class="icon">👀</div>
                     <h3>Nenhuma visita ainda</h3>
                     <p>Seu perfil ainda não foi visitado por outros usuários</p>
+                    <p style="margin-top: 1rem; font-size: 0.8rem; color: #666;">
+                        Complete seu perfil para atrair mais visitas!
+                    </p>
                 </div>
             `;
             return;
         }
         
-        // ✅✅✅ CARREGAR INFORMAÇÕES DOS PERFIS SEPARADAMENTE
+        // ✅✅✅ CRIAR CARDS DOS VISITANTES
         let visitorsHTML = '';
         
-        for (const visit of visits) {
+        for (const visitor of visitors) {
             try {
-                // Buscar perfil do visitante
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('nickname, avatar_url, full_name, city, last_online_at, is_invisible')
-                    .eq('id', visit.visitor_id)
-                    .single();
-
-                const nickname = profile?.nickname || 
-                                profile?.full_name?.split(' ')[0] || 
-                                'Usuário';
-                
-                const city = profile?.city || 'Cidade não informada';
-                const timeAgo = getTimeAgo(visit.visited_at);
+                const nickname = visitor.visitor_nickname || 'Usuário';
+                const city = visitor.visitor_city || 'Cidade não informada';
+                const timeAgo = getTimeAgo(visitor.visited_at);
                 const initial = nickname.charAt(0).toUpperCase();
 
-                // ✅ NOVO: Verificar status online do visitante
-                const isOnline = isUserOnline(profile, currentUser.id);
+                // ✅ Status online
+                const isOnline = visitor.is_online;
                 const onlineBadge = isOnline ? 
                     '<div class="online-badge" title="Online"></div>' : 
                     '<div class="offline-badge" title="Offline"></div>';
 
                 // Carregar foto
                 let avatarContent = '';
-                if (profile?.avatar_url) {
-                    const photoUrl = await loadUserPhoto(profile.avatar_url);
+                if (visitor.visitor_avatar_url) {
+                    const photoUrl = await loadUserPhoto(visitor.visitor_avatar_url);
                     if (photoUrl) {
                         avatarContent = `
                             <img class="visitor-avatar-img" src="${photoUrl}" alt="${nickname}" style="display: block;">
@@ -2062,7 +2104,7 @@ async function loadPremiumVisitors() {
                 }
 
                 visitorsHTML += `
-                    <div class="visitor-card" onclick="viewProfile('${visit.visitor_id}')">
+                    <div class="visitor-card" onclick="viewProfile('${visitor.visitor_id}')">
                         <div class="visitor-avatar">
                             ${avatarContent}
                         </div>
@@ -2073,24 +2115,12 @@ async function loadPremiumVisitors() {
                 `;
                 
             } catch (error) {
-                console.error('Erro ao criar card para visita:', visit, error);
-                // Card básico em caso de erro
-                visitorsHTML += `
-                    <div class="visitor-card" onclick="viewProfile('${visit.visitor_id}')">
-                        <div class="visitor-avatar">
-                            👤
-                            <div class="offline-badge" title="Offline"></div>
-                        </div>
-                        <div class="visitor-name">Usuário</div>
-                        <div class="visitor-location">---</div>
-                        <div class="visitor-time">${getTimeAgo(visit.visited_at)}</div>
-                    </div>
-                `;
+                console.error('Erro ao criar card para visitante:', visitor, error);
             }
         }
         
         visitorsGrid.innerHTML = visitorsHTML;
-        console.log(`✅ ${visits.length} cards de visitantes carregados com sucesso`);
+        console.log(`✅ ${visitors.length} cards de visitantes carregados com sucesso`);
 
     } catch (error) {
         console.error('❌ Erro geral ao carregar visitantes:', error);
@@ -2111,19 +2141,20 @@ async function loadFreeVisitorsStats() {
         document.getElementById('premiumVisitors').style.display = 'none';
         document.getElementById('freeVisitors').style.display = 'block';
         
-        const { count } = await supabase
-            .from('profile_visits')
-            .select('*', { count: 'exact', head: true })
-            .eq('visited_id', currentUser.id)
-            .gte('visited_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+        // ✅✅✅ USAR A NOVA FUNÇÃO DO BANCO
+        const { data: visitCount, error } = await supabase.rpc('count_user_visits', {
+            p_user_id: currentUser.id,
+            p_days: 7
+        });
         
-        const visitCount = count || 0;
-        const countText = visitCount === 1 ? '1 pessoa' : `${visitCount} pessoas`;
+        const count = visitCount || 0;
+        const countText = count === 1 ? '1 pessoa' : `${count} pessoas`;
         
         document.getElementById('freeVisitorsCount').textContent = countText;
-        document.getElementById('visitorsCount').textContent = `${visitCount} visita${visitCount !== 1 ? 's' : ''}`;
+        document.getElementById('visitorsCount').textContent = `${count} visita${count !== 1 ? 's' : ''}`;
         
     } catch (error) {
+        console.error('Erro ao carregar estatísticas free:', error);
         document.getElementById('freeVisitorsCount').textContent = '0 pessoas';
         document.getElementById('visitorsCount').textContent = '0 visitas';
     }
@@ -2145,8 +2176,9 @@ function getTimeAgo(dateString) {
     return `${Math.floor(diffDays / 7)}sem`;
 }
 
-// ==================== FUNÇÕES DE INTERAÇÃO ====================
-// ==================== FUNÇÕES DE INTERAÇÃO ====================
+// ==================== FUNÇÕES DE INTERAÇÃO CORRIGIDAS ====================
+
+// ✅✅✅ FUNÇÃO SENDMESSAGE CORRIGIDA
 async function sendMessage(userId, event) {
     if (event) event.stopPropagation();
     
@@ -2159,7 +2191,7 @@ async function sendMessage(userId, event) {
     }
     
     try {
-        // ✅ SIMPLES: Criar mensagem REAL no banco (igual ao busca.html)
+        // Criar mensagem REAL no banco
         console.log('🔄 Criando conversa REAL com usuário:', userId);
         
         const { error: messageError } = await supabase
@@ -2177,7 +2209,7 @@ async function sendMessage(userId, event) {
             console.log('✅ Conversa criada com sucesso');
         }
         
-        // ✅ REDIRECIONAR PARA MENSAGENS
+        // REDIRECIONAR PARA MENSAGENS
         localStorage.setItem('openChatWithUserId', userId);
         window.location.href = 'mensagens.html';
         
@@ -2188,7 +2220,8 @@ async function sendMessage(userId, event) {
     }
 }
 
-function viewProfile(userId, event) {
+// ✅✅✅ FUNÇÃO VIEWPROFILE CORRIGIDA - AGORA É ASSÍNCRONA
+async function viewProfile(userId, event) {
     if (event) event.stopPropagation();
     
     if (!isProfileComplete()) {
@@ -2197,9 +2230,21 @@ function viewProfile(userId, event) {
         return;
     }
     
-    registerProfileVisit(userId);
-    localStorage.setItem('viewingProfileId', userId);
-    window.location.href = 'perfil.html';
+    try {
+        // ✅✅✅ REGISTRAR VISITA PRIMEIRO
+        const visitRegistered = await registerProfileVisit(userId);
+        console.log('👀 Visitando perfil:', userId, 'Visita registrada:', visitRegistered);
+        
+        // ✅✅✅ REDIRECIONAR PARA PERFIL
+        localStorage.setItem('viewingProfileId', userId);
+        window.location.href = 'perfil.html';
+        
+    } catch (error) {
+        console.error('❌ Erro ao visualizar perfil:', error);
+        // Redirecionar mesmo com erro
+        localStorage.setItem('viewingProfileId', userId);
+        window.location.href = 'perfil.html';
+    }
 }
 
 function isProfileComplete() {
@@ -2209,7 +2254,7 @@ function isProfileComplete() {
            userProfile.birth_date;
 }
 
-// ✅ CORRIGIDO: ATUALIZAR ESTATÍSTICAS REAIS COM CONTADOR ONLINE CORRETO
+// ✅ CORRIGIDO: ATUALIZAR ESTATÍSTICAS REAIS
 async function updateStats() {
     try {
         const { count: totalUsers } = await supabase
@@ -2222,11 +2267,11 @@ async function updateStats() {
             .eq('receiver_id', currentUser.id)
             .eq('is_read', false);
 
-        const { count: profileViews } = await supabase
-            .from('profile_visits')
-            .select('*', { count: 'exact', head: true })
-            .eq('visited_id', currentUser.id)
-            .gte('visited_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+        // ✅✅✅ USAR A NOVA FUNÇÃO PARA CONTAR VISITAS
+        const { data: profileViews, error: viewsError } = await supabase.rpc('count_user_visits', {
+            p_user_id: currentUser.id,
+            p_days: 7
+        });
 
         // ✅ NOVO: Contar usuários realmente online (ignorando invisíveis)
         const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
@@ -2243,6 +2288,7 @@ async function updateStats() {
         document.getElementById('profileViews').textContent = profileViews || 0;
 
     } catch (error) {
+        console.error('Erro ao atualizar estatísticas:', error);
         document.getElementById('totalUsers').textContent = '1';
         document.getElementById('newMatches').textContent = '0';
         document.getElementById('usersOnline').textContent = '0';
@@ -2336,7 +2382,7 @@ window.sendMessage = sendMessage;
 window.viewProfile = viewProfile;
 window.registerProfileVisit = registerProfileVisit;
 
-console.log('Home.js carregado e pronto! Botões funcionando! 🎉');
+console.log('✅ Home.js carregado e corrigido! Sistema de visitantes funcionando! 🎉');
 </script>
 </body>
 </html>
