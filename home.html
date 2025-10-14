@@ -1580,7 +1580,7 @@ function isUserOnline(userProfile, currentUserId) {
     return isActuallyOnline;
 }
 
-/// ✅ NOVO: SISTEMA DE SINCRONIZAÇÃO DO MODO INVISÍVEL NA HOME
+// ✅ NOVO: SISTEMA DE SINCRONIZAÇÃO DO MODO INVISÍVEL NA HOME
 function setupInvisibleModeSyncListener() {
     try {
         console.log('👂 Configurando ouvinte de sincronização do modo invisível na HOME...');
@@ -1659,51 +1659,6 @@ function startOnlineStatusUpdater() {
     ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => {
         document.addEventListener(event, updateOnlineStatus, { passive: true });
     });
-}
-
-// ✅✅✅ FUNÇÃO ATUALIZAR STATUS ONLINE CORRIGIDA
-async function updateOnlineStatus() {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { error } = await supabase
-            .from('profiles')
-            .update({ 
-                last_online_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-            })
-            .eq('id', user.id);
-
-        if (error) {
-            console.error('Erro ao atualizar status online:', error);
-        }
-        
-    } catch (error) {
-        console.error('Erro no sistema de status online:', error);
-    }
-}
-
-// ✅✅✅ FUNÇÃO VERIFICAR USUÁRIO ONLINE CORRIGIDA
-function isUserOnline(userProfile, currentUserId) {
-    if (!userProfile || !userProfile.last_online_at) return false;
-    
-    const lastOnline = new Date(userProfile.last_online_at);
-    const now = new Date();
-    const minutesDiff = (now - lastOnline) / (1000 * 60);
-    
-    // Considera online se esteve ativo nos últimos 5 minutos
-    const isActuallyOnline = minutesDiff <= 5;
-    
-    // Se é o próprio usuário, sempre mostra online
-    if (userProfile.id === currentUserId) return true;
-    
-    // Se o usuário está invisível, mostra como offline para outros
-    if (userProfile.is_invisible && userProfile.id !== currentUserId) {
-        return false;
-    }
-    
-    return isActuallyOnline;
 }
 
 // CARREGAR FOTO DO USUÁRIO
@@ -1927,18 +1882,29 @@ async function createUserCardWithPhoto(user) {
 async function registerProfileVisit(visitedUserId) {
     try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return false;
+        if (!user) {
+            console.error('❌ Usuário não autenticado');
+            return false;
+        }
 
-        if (user.id === visitedUserId) return false;
+        if (user.id === visitedUserId) {
+            console.log('⚠️ Não pode visitar próprio perfil');
+            return false;
+        }
 
-        // ✅✅✅ USAR A NOVA FUNÇÃO DO BANCO
+        console.log('🔄 Registrando visita:', {
+            visitor: user.id,
+            visited: visitedUserId
+        });
+
+        // ✅✅✅ USAR A NOVA FUNÇÃO register_visit_simple
         const { data, error } = await supabase.rpc('register_visit_simple', {
             p_visitor_id: user.id,
             p_visited_id: visitedUserId
         });
 
         if (error) {
-            console.error('Erro ao registrar visita:', error);
+            console.error('❌ Erro ao registrar visita:', error);
             return false;
         }
 
@@ -1946,7 +1912,7 @@ async function registerProfileVisit(visitedUserId) {
         return data.success;
 
     } catch (error) {
-        console.error('Erro no registro de visita:', error);
+        console.error('❌ Erro no registro de visita:', error);
         return false;
     }
 }
