@@ -28,7 +28,6 @@ const PremiumManager = {
                 .single();
 
             if (!subError && subscription) {
-                // Garantir que o perfil está sincronizado
                 await this.syncProfileWithSubscription(user.id, subscription);
                 return true;
             }
@@ -73,6 +72,25 @@ const PremiumManager = {
         } catch (error) {
             console.error('Erro na sincronização:', error);
         }
+    },
+
+    async fixPremiumStatus(userId, shouldBePremium) {
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .update({ 
+                    is_premium: shouldBePremium,
+                    premium_expires_at: shouldBePremium ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : null,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', userId);
+
+            if (!error) {
+                console.log('✅ Status premium corrigido para:', shouldBePremium);
+            }
+        } catch (error) {
+            console.error('Erro na correção:', error);
+        }
     }
 };
 
@@ -84,27 +102,39 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Verifica se usuário está logado
 async function checkAuth() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error || !user) {
+            console.log('❌ Usuário não autenticado, redirecionando...');
+            window.location.href = 'login.html';
+            return;
+        }
+        currentUser = user;
+        console.log('✅ Usuário autenticado:', user.email);
+        
+        setupEventListeners();
+        await loadUserData();
+        await loadProfileData();
+        await updatePremiumStatus();
+        await updateProfileCompletion();
+        await updatePlanStatus();
+        await loadInvisibleModeStatus();
+        
+    } catch (error) {
+        console.error('❌ Erro na autenticação:', error);
         window.location.href = 'login.html';
-        return;
     }
-    currentUser = user;
-    setupEventListeners();
-    await loadUserData();
-    await loadProfileData();
-    await updatePremiumStatus();
-    await updateProfileCompletion();
-    await updatePlanStatus();
-    await loadInvisibleModeStatus();
 }
 
 // Configura eventos
 function setupEventListeners() {
+    console.log('⚙️ Configurando event listeners...');
+    
     // Form submission
     const profileForm = document.getElementById('profileForm');
     if (profileForm) {
         profileForm.addEventListener('submit', saveProfile);
+        console.log('✅ Formulário configurado');
     }
 
     // Avatar upload
@@ -114,12 +144,15 @@ function setupEventListeners() {
     if (avatarButton && avatarInput) {
         avatarButton.addEventListener('click', function(e) {
             e.preventDefault();
+            console.log('📷 Clicou no botão de avatar');
             avatarInput.click();
         });
+        console.log('✅ Botão de avatar configurado');
     }
 
     if (avatarInput) {
         avatarInput.addEventListener('change', handleAvatarSelect);
+        console.log('✅ Input de arquivo configurado');
     }
 
     // Máscaras para CPF, Telefone e CEP
@@ -127,14 +160,24 @@ function setupEventListeners() {
     const phoneInput = document.getElementById('phone');
     const zipCodeInput = document.getElementById('zipCode');
 
-    if (cpfInput) cpfInput.addEventListener('input', maskCPF);
-    if (phoneInput) phoneInput.addEventListener('input', maskPhone);
-    if (zipCodeInput) zipCodeInput.addEventListener('input', maskCEP);
+    if (cpfInput) {
+        cpfInput.addEventListener('input', maskCPF);
+        console.log('✅ Máscara CPF configurada');
+    }
+    if (phoneInput) {
+        phoneInput.addEventListener('input', maskPhone);
+        console.log('✅ Máscara telefone configurada');
+    }
+    if (zipCodeInput) {
+        zipCodeInput.addEventListener('input', maskCEP);
+        console.log('✅ Máscara CEP configurada');
+    }
 
     // Character count
     const description = document.getElementById('description');
     if (description) {
         description.addEventListener('input', updateCharCount);
+        console.log('✅ Contador de caracteres configurado');
     }
 
     // Menu mobile
@@ -145,12 +188,14 @@ function setupEventListeners() {
     if (hamburgerBtn) {
         hamburgerBtn.addEventListener('click', function() {
             if (mobileMenu) mobileMenu.style.display = 'flex';
+            console.log('📱 Menu mobile aberto');
         });
     }
 
     if (closeMobileMenu) {
         closeMobileMenu.addEventListener('click', function() {
             if (mobileMenu) mobileMenu.style.display = 'none';
+            console.log('📱 Menu mobile fechado');
         });
     }
 
@@ -158,13 +203,20 @@ function setupEventListeners() {
     const logoutBtn = document.getElementById('logoutBtn');
     const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
 
-    if (logoutBtn) logoutBtn.addEventListener('click', logout);
-    if (mobileLogoutBtn) mobileLogoutBtn.addEventListener('click', logout);
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', logout);
+        console.log('✅ Logout desktop configurado');
+    }
+    if (mobileLogoutBtn) {
+        mobileLogoutBtn.addEventListener('click', logout);
+        console.log('✅ Logout mobile configurado');
+    }
 
     // Fechar menu ao clicar em links
     document.querySelectorAll('.mobile-nav a').forEach(link => {
         link.addEventListener('click', () => {
             if (mobileMenu) mobileMenu.style.display = 'none';
+            console.log('📱 Menu mobile fechado via link');
         });
     });
 
@@ -172,8 +224,11 @@ function setupEventListeners() {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && mobileMenu) {
             mobileMenu.style.display = 'none';
+            console.log('📱 Menu mobile fechado com ESC');
         }
     });
+
+    console.log('🎯 Todos os event listeners configurados');
 }
 
 // Máscaras de formulário
@@ -214,6 +269,7 @@ async function updatePlanStatus() {
         const planActions = document.getElementById('planActions');
 
         if (isPremium) {
+            console.log('🎉 Atualizando interface para PREMIUM');
             planCard.classList.add('premium');
             planBadge.textContent = 'PREMIUM';
             planBadge.className = 'plan-badge premium';
@@ -223,7 +279,30 @@ async function updatePlanStatus() {
                     🚀 Ir para Mensagens
                 </button>
             `;
+            
+            const planFeatures = document.querySelector('.plan-features');
+            if (planFeatures) {
+                planFeatures.innerHTML = `
+                    <div class="feature-item">
+                        <span class="feature-icon">💬</span>
+                        <span class="feature-text">Mensagens ilimitadas</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">🕒</span>
+                        <span class="feature-text">Histórico permanente</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">👻</span>
+                        <span class="feature-text">Modo invisível</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">👀</span>
+                        <span class="feature-text">Ver visitantes</span>
+                    </div>
+                `;
+            }
         } else {
+            console.log('ℹ️ Mantendo interface GRATUITA');
             planCard.classList.remove('premium');
             planBadge.textContent = 'GRATUITO';
             planBadge.className = 'plan-badge gratuito';
@@ -232,8 +311,10 @@ async function updatePlanStatus() {
                 <a href="princing.html" class="btn btn-primary">⭐ Fazer Upgrade</a>
             `;
         }
+
+        console.log(`✅ Status do plano: ${isPremium ? 'PREMIUM' : 'GRATUITO'}`);
     } catch (error) {
-        console.error('Erro ao atualizar status do plano:', error);
+        console.error('❌ Erro ao atualizar status do plano:', error);
     }
 }
 
@@ -243,6 +324,8 @@ async function updatePremiumStatus() {
         const isPremium = await PremiumManager.checkPremiumStatus();
         
         if (isPremium) {
+            console.log('✅ Usuário é Premium - adicionando badges');
+            
             const userInfo = document.querySelector('.user-info');
             if (userInfo && !userInfo.querySelector('.premium-badge')) {
                 const badge = document.createElement('span');
@@ -257,9 +340,27 @@ async function updatePremiumStatus() {
                 badge.style.fontWeight = 'bold';
                 userInfo.appendChild(badge);
             }
+
+            const mobileUserInfo = document.querySelector('.mobile-user-info');
+            if (mobileUserInfo && !mobileUserInfo.querySelector('.premium-badge')) {
+                const mobileBadge = document.createElement('span');
+                mobileBadge.className = 'premium-badge';
+                mobileBadge.textContent = '⭐ PREMIUM';
+                mobileBadge.style.background = 'var(--vermelho-rosado)';
+                mobileBadge.style.color = 'white';
+                mobileBadge.style.padding = '4px 12px';
+                mobileBadge.style.borderRadius = '10px';
+                mobileBadge.style.fontSize = '0.8rem';
+                mobileBadge.style.marginTop = '8px';
+                mobileBadge.style.fontWeight = 'bold';
+                mobileBadge.style.display = 'block';
+                mobileUserInfo.appendChild(mobileBadge);
+            }
+        } else {
+            console.log('ℹ️ Usuário é Gratuito');
         }
     } catch (error) {
-        console.error('Erro ao verificar status premium:', error);
+        console.error('❌ Erro ao verificar status premium:', error);
     }
 }
 
@@ -269,7 +370,10 @@ async function updateProfileCompletion() {
         const { data: completion, error } = await supabase
             .rpc('calculate_profile_completion', { user_uuid: currentUser.id });
         
-        if (error) return;
+        if (error) {
+            console.error('❌ Erro ao calcular completude:', error);
+            return;
+        }
 
         const percentage = completion || 0;
         const progressFill = document.getElementById('progressFill');
@@ -290,14 +394,18 @@ async function updateProfileCompletion() {
                 progressText.textContent = '🎉 Perfil 100% completo!';
             }
         }
+
+        console.log(`📊 Progresso do perfil: ${percentage}%`);
     } catch (error) {
-        console.error('Erro ao atualizar progresso:', error);
+        console.error('❌ Erro ao atualizar progresso:', error);
     }
 }
 
 // Carrega dados básicos do usuário
 async function loadUserData() {
     try {
+        console.log('👤 Carregando dados do usuário...');
+        
         const { data: profile, error } = await supabase
             .from('profiles')
             .select('nickname, avatar_url')
@@ -305,6 +413,7 @@ async function loadUserData() {
             .single();
         
         if (error && error.code === 'PGRST116') {
+            console.log('🆕 Criando perfil novo...');
             await createUserProfile();
             return;
         }
@@ -315,22 +424,35 @@ async function loadUserData() {
             document.getElementById('userNickname').textContent = displayName;
             document.getElementById('mobileUserNickname').textContent = displayName;
             
+            console.log('✅ Nickname no header:', displayName);
+            
             if (profile.avatar_url) {
+                console.log('🖼️ Carregando avatar existente...');
                 await loadAvatar(profile.avatar_url);
             } else {
+                console.log('❌ Nenhum avatar encontrado');
                 showFallbackAvatars();
             }
+        } else {
+            const fallbackName = currentUser.email.split('@')[0];
+            document.getElementById('userNickname').textContent = fallbackName;
+            document.getElementById('mobileUserNickname').textContent = fallbackName;
         }
     } catch (error) {
-        console.error('Erro ao carregar dados do usuário:', error);
+        console.error('❌ Erro ao carregar dados do usuário:', error);
+        
+        const fallbackName = currentUser?.email?.split('@')[0] || 'Usuário';
+        document.getElementById('userNickname').textContent = fallbackName;
+        document.getElementById('mobileUserNickname').textContent = fallbackName;
+        
         showNotification('❌ Erro ao carregar dados do perfil', 'error');
     }
 }
 
-// Cria perfil do usuário se não existir
+// CRIA PERFIL DO USUÁRIO SE NÃO EXISTIR
 async function createUserProfile() {
     try {
-        await supabase
+        const { error: profileError } = await supabase
             .from('profiles')
             .insert({
                 id: currentUser.id,
@@ -339,49 +461,62 @@ async function createUserProfile() {
                 updated_at: new Date().toISOString()
             });
 
-        await supabase
+        if (profileError) throw profileError;
+
+        const { error: detailsError } = await supabase
             .from('user_details')
             .insert({
                 user_id: currentUser.id,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             });
+
+        if (detailsError) throw detailsError;
         
+        console.log('✅ Perfil criado com sucesso!');
         await loadUserData();
         
     } catch (error) {
-        console.error('Erro ao criar perfil:', error);
+        console.error('❌ Erro ao criar perfil:', error);
         showNotification('❌ Erro ao criar perfil.', 'error');
     }
 }
 
-// Carrega avatar
+// CARREGA AVATAR
 async function loadAvatar(avatarPath) {
     try {
+        console.log('🔄 Carregando avatar:', avatarPath);
+        
         const { data } = supabase.storage
             .from('avatars')
             .getPublicUrl(avatarPath);
 
         if (data && data.publicUrl) {
+            console.log('✅ URL pública do avatar:', data.publicUrl);
             updateAvatarImages(data.publicUrl);
         } else {
+            console.log('❌ Não foi possível obter URL pública');
             showFallbackAvatars();
         }
     } catch (error) {
+        console.log('❌ Erro ao carregar avatar:', error);
         showFallbackAvatars();
     }
 }
 
-// Atualiza imagens de avatar
+// ATUALIZA IMAGENS DE AVATAR
 function updateAvatarImages(imageUrl) {
     const avatarImgs = document.querySelectorAll('.user-avatar-img');
     const previewImg = document.getElementById('avatarPreviewImg');
     const fallbacks = document.querySelectorAll('.user-avatar-fallback, .avatar-fallback');
     
+    console.log('✅ Atualizando avatares com URL:', imageUrl);
+    
     avatarImgs.forEach(img => {
         img.src = imageUrl;
         img.style.display = 'block';
         img.onerror = () => {
+            console.log('❌ Erro ao carregar imagem do avatar');
             img.style.display = 'none';
         };
     });
@@ -390,6 +525,7 @@ function updateAvatarImages(imageUrl) {
         previewImg.src = imageUrl;
         previewImg.style.display = 'block';
         previewImg.onerror = () => {
+            console.log('❌ Erro ao carregar preview do avatar');
             previewImg.style.display = 'none';
             document.getElementById('avatarFallback').style.display = 'flex';
         };
@@ -400,16 +536,18 @@ function updateAvatarImages(imageUrl) {
     });
 }
 
-// Mostra fallback
+// MOSTRA FALLBACK
 function showFallbackAvatars() {
     document.querySelectorAll('.user-avatar-fallback, .avatar-fallback').forEach(fb => {
         fb.style.display = 'flex';
     });
 }
 
-// Carrega dados do perfil
+// CARREGA DADOS DO PERFIL
 async function loadProfileData() {
     try {
+        console.log('📋 Carregando dados do perfil...');
+        
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
@@ -441,6 +579,7 @@ async function loadProfileData() {
         const emailInput = document.getElementById('email');
         if (emailInput) {
             emailInput.value = currentUser.email || '';
+            console.log('✅ E-mail preenchido:', currentUser.email);
         }
 
         if (profile) {
@@ -488,17 +627,22 @@ async function loadProfileData() {
         }
 
         updateCharCount();
+        console.log('✅ Dados do perfil carregados');
 
     } catch (error) {
-        console.error('Erro ao carregar perfil:', error);
+        console.error('❌ Erro ao carregar perfil:', error);
         showNotification('❌ Erro ao carregar dados do perfil', 'error');
     }
 }
 
-// Handle avatar select
+// HANDLE AVATAR SELECT
 function handleAvatarSelect(event) {
+    console.log('📁 Arquivo selecionado:', event.target.files[0]);
     const file = event.target.files[0];
-    if (!file) return;
+    if (!file) {
+        console.log('❌ Nenhum arquivo selecionado');
+        return;
+    }
 
     if (file.size > 256000) {
         showNotification('❌ A imagem deve ter no máximo 250KB!', 'error');
@@ -511,9 +655,12 @@ function handleAvatarSelect(event) {
     }
 
     selectedAvatarFile = file;
+    console.log('✅ Arquivo validado:', file.name, file.size, 'bytes');
 
     const reader = new FileReader();
     reader.onload = function(e) {
+        console.log('🖼️ Criando preview da imagem...');
+        
         const previewImg = document.getElementById('avatarPreviewImg');
         const fallback = document.getElementById('avatarFallback');
         const avatarImgs = document.querySelectorAll('.user-avatar-img');
@@ -534,48 +681,72 @@ function handleAvatarSelect(event) {
         
         showNotification('✅ Imagem selecionada! Clique em Salvar Perfil para confirmar.', 'success');
     };
+    reader.onerror = function() {
+        console.error('❌ Erro ao ler arquivo');
+        showNotification('❌ Erro ao carregar imagem', 'error');
+    };
     reader.readAsDataURL(file);
 }
 
-// Upload de avatar
+// UPLOAD DE AVATAR - CORRIGIDO
 async function uploadAvatar(file) {
     try {
+        console.log('📤 Iniciando upload do avatar...');
+        
         const fileExt = file.name.split('.').pop();
         const fileName = `${Date.now()}_avatar.${fileExt}`;
         const filePath = `${currentUser.id}/${fileName}`;
 
-        const { data, error } = await supabase.storage
+        console.log('📁 Fazendo upload para:', filePath);
+
+        // Upload com timeout
+        const uploadPromise = supabase.storage
             .from('avatars')
             .upload(filePath, file, {
                 cacheControl: '3600',
                 upsert: true
             });
 
+        // Timeout de 10 segundos
+        const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Timeout no upload')), 10000);
+        });
+
+        const { data, error } = await Promise.race([uploadPromise, timeoutPromise]);
+
         if (error) {
+            console.error('❌ Erro no upload:', error);
+            
             // Tentativa alternativa sem options
             const { data: retryData, error: retryError } = await supabase.storage
                 .from('avatars')
                 .upload(filePath, file);
                 
             if (retryError) {
+                console.error('❌ Erro na segunda tentativa:', retryError);
                 throw new Error(`Falha no upload: ${retryError.message}`);
             }
             
+            console.log('✅ Upload realizado na segunda tentativa:', retryData);
             return filePath;
         }
 
+        console.log('✅ Upload realizado com sucesso:', data);
         return filePath;
 
     } catch (error) {
-        console.error('Erro no upload:', error);
+        console.error('❌ Erro completo no upload:', error);
+        
+        // Fallback: Continuar sem avatar
         showNotification('⚠️ Imagem não pôde ser enviada, mas o perfil será salvo.', 'warning');
         return null;
     }
 }
 
-// SALVA PERFIL - FUNÇÃO PRINCIPAL CORRIGIDA
+// SALVA PERFIL - FUNÇÃO PRINCIPAL CORRIGIDA (ORIGINAL)
 async function saveProfile(event) {
     event.preventDefault();
+    console.log('💾 Salvando perfil...');
     
     const saveButton = document.getElementById('saveButton');
     const originalText = saveButton.innerHTML;
@@ -586,8 +757,9 @@ async function saveProfile(event) {
 
         let avatarPath = null;
 
-        // Upload da imagem se foi selecionada
+        // Upload da imagem se foi selecionada (não bloqueia se falhar)
         if (selectedAvatarFile) {
+            console.log('📤 Fazendo upload da imagem...');
             showNotification('📤 Enviando imagem...', 'info');
             try {
                 avatarPath = await uploadAvatar(selectedAvatarFile);
@@ -595,7 +767,7 @@ async function saveProfile(event) {
                     showNotification('✅ Imagem enviada com sucesso!', 'success');
                 }
             } catch (uploadError) {
-                console.error('Upload falhou:', uploadError);
+                console.error('❌ Upload falhou, continuando sem imagem:', uploadError);
                 showNotification('⚠️ Imagem não enviada, mas perfil será salvo', 'warning');
             }
         }
@@ -693,6 +865,7 @@ async function saveProfile(event) {
         }
 
         // Salva no banco
+        console.log('💾 Salvando no banco de dados...');
         showNotification('💾 Salvando dados do perfil...', 'info');
 
         // Atualiza perfil principal
@@ -703,7 +876,10 @@ async function saveProfile(event) {
                 ...profileData
             }, { onConflict: 'id' });
 
-        if (profileError) throw profileError;
+        if (profileError) {
+            console.error('❌ Erro ao salvar perfil:', profileError);
+            throw profileError;
+        }
 
         // Atualiza detalhes do usuário
         const { error: detailsError } = await supabase
@@ -713,7 +889,10 @@ async function saveProfile(event) {
                 ...userDetailsData
             }, { onConflict: 'user_id' });
 
-        if (detailsError) throw detailsError;
+        if (detailsError) {
+            console.error('❌ Erro ao salvar detalhes:', detailsError);
+            throw detailsError;
+        }
 
         // Atualiza interface
         document.getElementById('userNickname').textContent = profileData.nickname;
@@ -723,9 +902,10 @@ async function saveProfile(event) {
         selectedAvatarFile = null;
         document.getElementById('avatarInput').value = '';
         
+        console.log('✅ Perfil salvo com sucesso!');
         showNotification('✅ Perfil salvo com sucesso!', 'success');
         
-        // Atualiza progresso após salvar
+        // ATUALIZA PROGRESSO APÓS SALVAR
         await updateProfileCompletion();
         await updatePremiumStatus();
         await updatePlanStatus();
@@ -738,7 +918,7 @@ async function saveProfile(event) {
         }
 
     } catch (error) {
-        console.error('Erro ao salvar perfil:', error);
+        console.error('❌ Erro ao salvar perfil:', error);
         showNotification('❌ Erro ao salvar perfil: ' + error.message, 'error');
     } finally {
         saveButton.innerHTML = originalText;
@@ -746,35 +926,47 @@ async function saveProfile(event) {
     }
 }
 
-// Sistema de Modo Invisível (SIMPLIFICADO E FUNCIONAL)
+// SISTEMA DE MODO INVISÍVEL SIMPLES E FUNCIONAL
 async function loadInvisibleModeStatus() {
     try {
+        console.log('👻 Carregando status do modo invisível...');
+        
         const { data: profile, error } = await supabase
             .from('profiles')
             .select('is_invisible, is_premium')
             .eq('id', currentUser.id)
             .single();
             
-        if (error) return;
+        if (error) {
+            console.error('❌ Erro ao carregar modo invisível:', error);
+            return;
+        }
         
-        const isPremium = await PremiumManager.checkPremiumStatus();
         const toggle = document.getElementById('invisibleModeToggle');
         const statusText = document.getElementById('invisibleStatus');
         const freeMessage = document.getElementById('invisibleFreeMessage');
         
+        // Verificar se é premium
+        const isPremium = await PremiumManager.checkPremiumStatus();
+        
         if (!isPremium) {
+            // Usuário free - mostrar mensagem e desabilitar toggle
+            console.log('ℹ️ Usuário free - modo invisível não disponível');
             if (toggle) toggle.disabled = true;
             if (statusText) statusText.textContent = 'Apenas Premium';
             if (freeMessage) freeMessage.style.display = 'flex';
             return;
         }
         
+        // Usuário premium - configurar toggle
         const isInvisible = profile.is_invisible || false;
+        console.log(`✅ Status do modo invisível: ${isInvisible ? 'ATIVO' : 'INATIVO'}`);
         
         if (toggle) {
             toggle.checked = isInvisible;
             toggle.disabled = false;
             
+            // Adicionar event listener
             toggle.addEventListener('change', function() {
                 toggleInvisibleMode(this.checked);
             });
@@ -790,13 +982,16 @@ async function loadInvisibleModeStatus() {
         }
         
     } catch (error) {
-        console.error('Erro ao carregar modo invisível:', error);
+        console.error('❌ Erro ao carregar modo invisível:', error);
     }
 }
 
-// Alternar modo invisível
+// ALTERNAR MODO INVISÍVEL - VERSÃO CORRIGIDA (SEM CONFLITOS)
 async function toggleInvisibleMode(isInvisible) {
     try {
+        console.log(`👻 Alternando modo invisível para: ${isInvisible}`);
+        
+        // Verificar se é premium
         const isPremium = await PremiumManager.checkPremiumStatus();
         if (!isPremium) {
             showNotification('❌ Apenas usuários Premium podem usar o modo invisível!', 'error');
@@ -804,42 +999,37 @@ async function toggleInvisibleMode(isInvisible) {
             return;
         }
         
+        // ✅ CORREÇÃO: Atualiza APENAS o campo is_invisible (SEM updated_at)
         const { error } = await supabase
             .from('profiles')
             .update({ 
-                is_invisible: isInvisible,
-                updated_at: new Date().toISOString()
+                is_invisible: isInvisible
+                // ❌ REMOVIDO: updated_at que causava conflito com salvamento
             })
             .eq('id', currentUser.id);
             
         if (error) throw error;
         
+        // Atualizar interface
         const statusText = document.getElementById('invisibleStatus');
         if (statusText) {
             statusText.textContent = isInvisible ? 'Ativado' : 'Desativado';
             statusText.className = isInvisible ? 'toggle-status active' : 'toggle-status inactive';
         }
         
+        console.log(`✅ Modo invisível ${isInvisible ? 'ativado' : 'desativado'}`);
         showNotification(`👻 Modo invisível ${isInvisible ? 'ativado' : 'desativado'}!`, 'success');
         
     } catch (error) {
-        console.error('Erro ao alterar modo invisível:', error);
+        console.error('❌ Erro ao alterar modo invisível:', error);
         showNotification('❌ Erro ao alterar modo invisível', 'error');
+        
+        // Reverter toggle em caso de erro
         document.getElementById('invisibleModeToggle').checked = !isInvisible;
     }
 }
 
-// Funções auxiliares
-function updateCharCount() {
-    const textarea = document.getElementById('description');
-    const charCount = document.getElementById('charCount');
-    if (textarea && charCount) {
-        const count = textarea.value.length;
-        charCount.textContent = count;
-        charCount.style.color = count > 90 ? '#f56565' : count > 80 ? '#ed8936' : 'var(--text-light)';
-    }
-}
-
+// NOTIFICAÇÕES
 function showNotification(message, type = 'info') {
     const existingNotification = document.querySelector('.notification');
     if (existingNotification) {
@@ -875,6 +1065,18 @@ function showNotification(message, type = 'info') {
     setTimeout(() => notification.remove(), 5000);
 }
 
+// CONTADOR DE CARACTERES
+function updateCharCount() {
+    const textarea = document.getElementById('description');
+    const charCount = document.getElementById('charCount');
+    if (textarea && charCount) {
+        const count = textarea.value.length;
+        charCount.textContent = count;
+        charCount.style.color = count > 90 ? '#f56565' : count > 80 ? '#ed8936' : 'var(--text-light)';
+    }
+}
+
+// LOGOUT
 async function logout() {
     try {
         await supabase.auth.signOut();
@@ -913,22 +1115,17 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Continuação do painel.js
-
-// Sistema de Status Online
+// SISTEMA DE STATUS ONLINE SIMPLES
 function startOnlineStatusUpdater() {
-    // Atualizar status online periodicamente
     updateOnlineStatus();
     setInterval(updateOnlineStatus, 60000);
     
-    // Atualizar quando a página ganha foco
     document.addEventListener('visibilitychange', function() {
         if (!document.hidden) {
             updateOnlineStatus();
         }
     });
     
-    // Atualizar em interações do usuário
     ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => {
         document.addEventListener(event, updateOnlineStatus, { passive: true });
     });
@@ -936,18 +1133,15 @@ function startOnlineStatusUpdater() {
     console.log('🟢 Sistema de status online iniciado');
 }
 
-// Atualizar status online do usuário
 async function updateOnlineStatus() {
     try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        // Atualizar último seen no banco
         const { error } = await supabase
             .from('profiles')
             .update({ 
-                last_online_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
+                last_online_at: new Date().toISOString()
             })
             .eq('id', user.id);
 
@@ -960,132 +1154,7 @@ async function updateOnlineStatus() {
     }
 }
 
-// Verificar se usuário está online (considerando modo invisível)
-function isUserOnline(userProfile, currentUserId) {
-    if (!userProfile.last_online_at) return false;
-    
-    const lastOnline = new Date(userProfile.last_online_at);
-    const now = new Date();
-    const minutesDiff = (now - lastOnline) / (1000 * 60);
-    
-    // Considera online se esteve ativo nos últimos 5 minutos
-    const isActuallyOnline = minutesDiff <= 5;
-    
-    // Se é o próprio usuário, sempre mostra online
-    if (userProfile.id === currentUserId) return true;
-    
-    // Se o usuário está invisível, mostra como offline para outros
-    if (userProfile.is_invisible && userProfile.id !== currentUserId) {
-        return false;
-    }
-    
-    return isActuallyOnline;
-}
-
-// Sincronização entre abas (versão simplificada)
-function setupInvisibleModeSyncListener() {
-    try {
-        // Escutar mudanças no localStorage (para abas diferentes)
-        window.addEventListener('storage', function(event) {
-            if (event.key === 'invisibleModeChanged') {
-                const isInvisible = localStorage.getItem('invisibleModeStatus') === 'true';
-                handleInvisibleModeChange(isInvisible);
-            }
-        });
-        
-        console.log('👂 Ouvinte de sincronização configurado');
-        
-    } catch (error) {
-        console.error('Erro ao configurar sincronização:', error);
-    }
-}
-
-// Processar mudança do modo invisível
-function handleInvisibleModeChange(isInvisible) {
-    try {
-        console.log(`🔄 Processando mudança do modo invisível para: ${isInvisible}`);
-        
-        // Atualizar toggle visualmente
-        const toggle = document.getElementById('invisibleModeToggle');
-        if (toggle && toggle.checked !== isInvisible) {
-            toggle.checked = isInvisible;
-        }
-        
-        // Atualizar texto de status
-        const statusText = document.getElementById('invisibleStatus');
-        if (statusText) {
-            statusText.textContent = isInvisible ? 'Ativado' : 'Desativado';
-            statusText.className = isInvisible ? 'toggle-status active' : 'toggle-status inactive';
-        }
-        
-        console.log(`✅ Interface atualizada para modo invisível: ${isInvisible}`);
-        
-    } catch (error) {
-        console.error('Erro ao processar mudança do modo invisível:', error);
-    }
-}
-
-// Sincronizar modo invisível com outras abas
-function syncInvisibleModeToOtherTabs(isInvisible) {
-    try {
-        // Atualizar localStorage como gatilho
-        localStorage.setItem('invisibleModeChanged', Date.now().toString());
-        localStorage.setItem('invisibleModeStatus', isInvisible.toString());
-        
-        console.log(`🔄 Modo invisível sincronizado para outras abas: ${isInvisible}`);
-        
-    } catch (error) {
-        console.error('Erro ao sincronizar modo invisível:', error);
-    }
-}
-
-// Atualizar função toggleInvisibleMode para incluir sincronização
-async function toggleInvisibleMode(isInvisible) {
-    try {
-        const isPremium = await PremiumManager.checkPremiumStatus();
-        if (!isPremium) {
-            showNotification('❌ Apenas usuários Premium podem usar o modo invisível!', 'error');
-            document.getElementById('invisibleModeToggle').checked = false;
-            return;
-        }
-        
-        const { error } = await supabase
-            .from('profiles')
-            .update({ 
-                is_invisible: isInvisible,
-                last_online_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-            })
-            .eq('id', currentUser.id);
-            
-        if (error) throw error;
-        
-        // Atualizar interface
-        const statusText = document.getElementById('invisibleStatus');
-        if (statusText) {
-            statusText.textContent = isInvisible ? 'Ativado' : 'Desativado';
-            statusText.className = isInvisible ? 'toggle-status active' : 'toggle-status inactive';
-        }
-        
-        console.log(`✅ Modo invisível ${isInvisible ? 'ativado' : 'desativado'}`);
-        showNotification(`👻 Modo invisível ${isInvisible ? 'ativado' : 'desativado'}!`, 'success');
-        
-        // Sincronizar com outras abas
-        syncInvisibleModeToOtherTabs(isInvisible);
-        
-        // Atualizar status online também
-        updateOnlineStatus();
-        
-    } catch (error) {
-        console.error('Erro ao alterar modo invisível:', error);
-        showNotification('❌ Erro ao alterar modo invisível', 'error');
-        
-        // Reverter toggle em caso de erro
-        document.getElementById('invisibleModeToggle').checked = !isInvisible;
-    }
-}
-
-// Funções de debug e utilitárias
+// FUNÇÃO DE DEBUG PARA TESTAR MANUALMENTE
 window.debugPremium = async function() {
     console.log('=== 🎯 DEBUG PREMIUM MANUAL ===');
     const result = await PremiumManager.checkPremiumStatus();
@@ -1093,7 +1162,7 @@ window.debugPremium = async function() {
     return result;
 };
 
-// Verificação automática quando volta de outras páginas
+// ATUALIZAÇÃO AUTOMÁTICA QUANDO VOLTA DE OUTRAS PÁGINAS
 window.addEventListener('pageshow', function(event) {
     if (event.persisted) {
         console.log('🔄 Página restaurada do cache - verificando premium...');
@@ -1103,7 +1172,7 @@ window.addEventListener('pageshow', function(event) {
     }
 });
 
-// Verificação quando a página fica visível
+// VERIFICAÇÃO QUANDO A PÁGINA FICA VISÍVEL
 document.addEventListener('visibilitychange', function() {
     if (!document.hidden) {
         console.log('🔄 Página visível - verificando premium...');
@@ -1113,17 +1182,7 @@ document.addEventListener('visibilitychange', function() {
     }
 });
 
-// Inicializar sistemas quando o DOM estiver pronto
-document.addEventListener('DOMContentLoaded', function() {
-    // Iniciar sistema de status online
-    startOnlineStatusUpdater();
-    
-    // Configurar sincronização entre abas
-    setupInvisibleModeSyncListener();
-});
+// INICIAR SISTEMA DE STATUS ONLINE
+startOnlineStatusUpdater();
 
-// Exportar funções globais para debug
-window.PremiumManager = PremiumManager;
-window.supabaseClient = supabase;
-
-console.log('✅ painel.js carregado completamente');
+console.log('✅ painel.js carregado completamente - SISTEMA CORRIGIDO E FUNCIONAL');
