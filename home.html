@@ -2146,42 +2146,20 @@ function getTimeAgo(dateString) {
 }
 
 // ==================== FUNÇÕES DE INTERAÇÃO ====================
-async function sendMessage(userId) {
+// ==================== FUNÇÕES DE INTERAÇÃO ====================
+async function sendMessage(userId, event) {
+    if (event) event.stopPropagation();
+    
     console.log('💌 Iniciando conversa com usuário:', userId);
     
     if (!isProfileComplete()) {
-        alert('📝 Complete seu perfil primeiro para enviar mensagens!');
+        alert('Complete seu perfil primeiro para enviar mensagens!');
         window.location.href = 'painel.html';
         return;
     }
     
     try {
-        // ✅ VERIFICAR STATUS PREMIUM PRIMEIRO
-        await forcePremiumCheck();
-        
-        console.log('🔍 Status Premium:', isPremiumUser);
-        console.log('📊 Contador atual:', currentMessageCount);
-        
-        // ✅ VERIFICAÇÃO DE LIMITE PARA USUÁRIOS FREE
-        if (!isPremiumUser && currentMessageCount >= 5) {
-            console.log('🚫 LIMITE ATINGIDO! Bloqueando envio...');
-            showNotification('❌ Limite de 5 mensagens por dia atingido! Faça upgrade para Premium.', 'error');
-            
-            // ✅ ATUALIZAR CONTADOR VISUAL
-            await loadMessageCount();
-            
-            setTimeout(() => {
-                if (confirm('💎 Deseja fazer upgrade para Premium e ter mensagens ilimitadas?')) {
-                    window.location.href = 'princing.html';
-                }
-            }, 1000);
-            
-            return;
-        }
-
-        console.log('✅ Pode enviar mensagem', currentMessageCount + 1, '/5');
-        
-        // ✅ 1. ENVIAR MENSAGEM REAL NO BANCO (IGUAL AO busca.html)
+        // ✅ SIMPLES: Criar mensagem REAL no banco (igual ao busca.html)
         console.log('🔄 Criando conversa REAL com usuário:', userId);
         
         const { error: messageError } = await supabase
@@ -2195,54 +2173,24 @@ async function sendMessage(userId) {
 
         if (messageError) {
             console.error('❌ Erro ao criar conversa:', messageError);
-            throw messageError;
-        }
-
-        // ✅ 2. ATUALIZAR CONTADOR APENAS SE NÃO FOR PREMIUM
-        if (!isPremiumUser) {
-            console.log('📈 Atualizando contador free...');
-            
-            const today = new Date().toISOString().split('T')[0];
-            const newCount = currentMessageCount + 1;
-            
-            // ✅ MÉTODO DIRETO: UPSERT na tabela
-            const { error: updateError } = await supabase
-                .from('daily_message_count')
-                .upsert({
-                    user_id: currentUser.id,
-                    date: today,
-                    message_count: newCount
-                }, {
-                    onConflict: 'user_id,date'
-                });
-
-            if (updateError) {
-                console.error('❌ Erro ao atualizar contador:', updateError);
-                // Fallback: incrementar localmente
-                currentMessageCount = newCount;
-            } else {
-                console.log('✅ Contador free atualizado no banco para:', newCount);
-                currentMessageCount = newCount;
-            }
-            
-            updateMessageCounter(currentMessageCount);
         } else {
-            console.log('⭐ Premium - não atualiza contador');
+            console.log('✅ Conversa criada com sucesso');
         }
-
-        console.log('✅ Conversa criada com sucesso - redirecionando...');
         
-        // ✅ 3. REDIRECIONAR PARA MENSAGENS COM O USUÁRIO SELECIONADO
+        // ✅ REDIRECIONAR PARA MENSAGENS
         localStorage.setItem('openChatWithUserId', userId);
         window.location.href = 'mensagens.html';
         
     } catch (error) {
         console.error('❌ Erro ao enviar mensagem:', error);
-        showNotification('❌ Erro ao iniciar conversa. Tente novamente.', 'error');
+        localStorage.setItem('openChatWithUserId', userId);
+        window.location.href = 'mensagens.html';
     }
 }
 
-function viewProfile(userId) {
+function viewProfile(userId, event) {
+    if (event) event.stopPropagation();
+    
     if (!isProfileComplete()) {
         alert('Complete seu perfil primeiro para ver outros perfis!');
         window.location.href = 'painel.html';
@@ -2250,7 +2198,6 @@ function viewProfile(userId) {
     }
     
     registerProfileVisit(userId);
-    
     localStorage.setItem('viewingProfileId', userId);
     window.location.href = 'perfil.html';
 }
@@ -2262,189 +2209,34 @@ function isProfileComplete() {
            userProfile.birth_date;
 }
 
-// ✅ FUNÇÃO PARA VERIFICAR STATUS PREMIUM
-async function forcePremiumCheck() {
-    try {
-        console.log('🔍 VERIFICAÇÃO FORÇADA DE PREMIUM...');
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return false;
-
-        // ✅ VERIFICAÇÃO DIRETA NA TABELA DE ASSINATURAS
-        const { data: subscription, error } = await supabase
-            .from('user_subscriptions')
-            .select('status, expires_at')
-            .eq('user_id', user.id)
-            .eq('status', 'active')
-            .gt('expires_at', new Date().toISOString())
-            .single();
-
-        if (subscription && !error) {
-            console.log('🎉 USUÁRIO É PREMIUM (via tabela)');
-            isPremiumUser = true;
-            return true;
-        }
-
-        console.log('ℹ️ Usuário NÃO é premium');
-        isPremiumUser = false;
-        return false;
-
-    } catch (error) {
-        console.error('❌ Erro na verificação premium:', error);
-        isPremiumUser = false;
-        return false;
-    }
-}
-
-// ✅ FUNÇÃO PARA CARREGAR CONTADOR DE MENSAGENS
-async function loadMessageCount() {
-    try {
-        console.log('🔄 Carregando contador de mensagens...');
-        
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        // ✅ SE FOR PREMIUM, IGNORAR CONTADOR
-        if (isPremiumUser) {
-            console.log('⭐ Usuário Premium - ignorando contador');
-            updateMessageCounter('∞');
-            return;
-        }
-
-        // ✅ BUSCAR DIRETO DA TABELA
-        const today = new Date().toISOString().split('T')[0];
-        const { data, error } = await supabase
-            .from('daily_message_count')
-            .select('message_count')
-            .eq('user_id', user.id)
-            .eq('date', today)
-            .single();
-
-        if (error) {
-            if (error.code === 'PGRST116') {
-                // Não existe registro para hoje - criar com 0
-                currentMessageCount = 0;
-                const { error: insertError } = await supabase
-                    .from('daily_message_count')
-                    .insert({
-                        user_id: user.id,
-                        date: today,
-                        message_count: 0
-                    });
-                
-                if (insertError) {
-                    console.error('❌ Erro ao criar registro:', insertError);
-                } else {
-                    console.log('✅ Registro criado com contador 0');
-                }
-            } else {
-                console.error('❌ Erro ao buscar contador:', error);
-                currentMessageCount = 0;
-            }
-        } else {
-            currentMessageCount = data.message_count || 0;
-            console.log('✅ Contador carregado do banco:', currentMessageCount);
-        }
-        
-        updateMessageCounter(currentMessageCount);
-
-    } catch (error) {
-        console.error('Erro ao carregar contador:', error);
-        currentMessageCount = 0;
-        updateMessageCounter(0);
-    }
-}
-
-// ✅ FUNÇÃO PARA ATUALIZAR DISPLAY DO CONTADOR
-function updateMessageCounter(count) {
-    let counterElement = document.getElementById('messageCounter');
+// ✅ CORREÇÃO NO HTML DOS BOTÕES - Mude esta parte:
+// NO userCard-actions, altere para:
+function createUserCardWithPhoto(user) {
+    // ... código anterior ...
     
-    if (!counterElement) {
-        const userInfo = document.querySelector('.user-info');
-        if (userInfo) {
-            counterElement = document.createElement('div');
-            counterElement.id = 'messageCounter';
-            counterElement.className = 'message-counter';
-            counterElement.style.cssText = `
-                background: #d1656d;
-                color: white;
-                border-radius: 12px;
-                padding: 2px 8px;
-                font-size: 0.75rem;
-                font-weight: bold;
-                margin-left: 8px;
-            `;
-            userInfo.appendChild(counterElement);
-        }
-    }
-
-    if (counterElement) {
-        if (isPremiumUser) {
-            counterElement.textContent = '∞ ILIMITADO';
-            counterElement.style.background = '#48bb78';
-            counterElement.title = 'Mensagens ilimitadas - Premium';
-            counterElement.style.fontSize = '0.7rem';
-        } else {
-            const displayCount = Math.max(0, count);
-            counterElement.textContent = `${displayCount}/5`;
-            if (displayCount >= 5) {
-                counterElement.style.background = '#f56565';
-                counterElement.title = 'Limite atingido! Faça upgrade.';
-            } else {
-                counterElement.style.background = '#d1656d';
-                counterElement.title = `${displayCount} de 5 mensagens hoje`;
-            }
-        }
-    }
-}
-
-// ✅ FUNÇÃO DE NOTIFICAÇÃO
-function showNotification(message, type = 'info') {
-    const existingNotification = document.querySelector('.notification');
-    if (existingNotification) {
-        existingNotification.remove();
-    }
-
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    
-    let backgroundColor, textColor;
-    switch(type) {
-        case 'error':
-            backgroundColor = '#f56565';
-            textColor = 'white';
-            break;
-        case 'success':
-            backgroundColor = '#48bb78';
-            textColor = 'white';
-            break;
-        default:
-            backgroundColor = '#4299e1';
-            textColor = 'white';
-    }
-
-    notification.style.cssText = `
-        position: fixed;
-        top: 100px;
-        right: 20px;
-        background: ${backgroundColor};
-        color: ${textColor};
-        padding: 12px 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 10000;
-        max-width: 300px;
-        animation: slideIn 0.3s ease;
-        font-weight: 500;
+    return `
+        <div class="user-card" onclick="viewProfile('${user.id}')">
+            ${avatarHtml}
+            <div class="user-card-name">${nickname}${age ? `, ${age}` : ''}</div>
+            
+            <div class="user-card-info">
+                ${zodiac ? `<div class="user-card-detail">${zodiac}</div>` : ''}
+                ${profession ? `<div class="user-card-detail">💼 ${profession}</div>` : ''}
+                ${lookingFor ? `<div class="user-card-detail">🎯 ${lookingFor}</div>` : ''}
+            </div>
+            
+            <div class="user-card-bio">${bio}</div>
+            
+            <div class="user-card-actions">
+                <button class="btn btn-primary btn-sm" onclick="sendMessage('${user.id}', event)">
+                    💌 Mensagem
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="viewProfile('${user.id}', event)">
+                    👀 Ver Perfil
+                </button>
+            </div>
+        </div>
     `;
-
-    notification.textContent = message;
-    document.body.appendChild(notification);
-
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.parentNode.removeChild(notification);
-        }
-    }, 5000);
 }
 
 // ✅ CORRIGIDO: ATUALIZAR ESTATÍSTICAS REAIS COM CONTADOR ONLINE CORRETO
@@ -2477,13 +2269,13 @@ async function updateStats() {
 
         document.getElementById('totalUsers').textContent = totalUsers || 0;
         document.getElementById('newMatches').textContent = newMessages || 0;
-        document.getElementById('usersOnline').textContent = onlineUsers || 0; // ✅ AGORA MOSTRA NÚMERO REAL
+        document.getElementById('usersOnline').textContent = onlineUsers || 0;
         document.getElementById('profileViews').textContent = profileViews || 0;
 
     } catch (error) {
         document.getElementById('totalUsers').textContent = '1';
         document.getElementById('newMatches').textContent = '0';
-        document.getElementById('usersOnline').textContent = '0'; // ✅ CORRIGIDO
+        document.getElementById('usersOnline').textContent = '0';
         document.getElementById('profileViews').textContent = '0';
     }
 }
@@ -2569,77 +2361,12 @@ async function logout() {
     }
 }
 
-// ✅ ADICIONE ESTAS VARIÁVEIS GLOBAIS NO INÍCIO DO SCRIPT (se ainda não existirem)
-let isPremiumUser = false;
-let currentMessageCount = 0;
-
-// ✅ INICIALIZAÇÃO DO SISTEMA DE MENSAGENS - ADICIONE NA FUNÇÃO checkAuth
-async function initializeMessageSystem() {
-    try {
-        console.log('💌 Inicializando sistema de mensagens...');
-        
-        // ✅ VERIFICAR STATUS PREMIUM
-        await forcePremiumCheck();
-        
-        // ✅ CARREGAR CONTADOR DE MENSAGENS
-        await loadMessageCount();
-        
-        console.log('✅ Sistema de mensagens inicializado - Premium:', isPremiumUser, 'Contador:', currentMessageCount);
-        
-    } catch (error) {
-        console.error('❌ Erro ao inicializar sistema de mensagens:', error);
-    }
-}
-
-// ✅ ESTILOS ADICIONAIS - ADICIONE NO <style> DO home.html
-const messageSystemStyles = `
-    /* Estilos para o contador de mensagens */
-    .message-counter {
-        background: #d1656d;
-        color: white;
-        border-radius: 12px;
-        padding: 2px 8px;
-        font-size: 0.75rem;
-        font-weight: bold;
-        margin-left: 8px;
-    }
-    
-    /* Notificações */
-    .notification {
-        position: fixed;
-        top: 100px;
-        right: 20px;
-        padding: 12px 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 10000;
-        max-width: 300px;
-        animation: slideIn 0.3s ease;
-        font-weight: 500;
-        color: white;
-    }
-    
-    .notification-success { background: #48bb78; }
-    .notification-error { background: #f56565; }
-    .notification-info { background: #4299e1; }
-    
-    @keyframes slideIn {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-    }
-`;
-
-// ✅ INJETE OS ESTILOS NO DOCUMENTO
-const styleElement = document.createElement('style');
-styleElement.textContent = messageSystemStyles;
-document.head.appendChild(styleElement);
-
 // EXPORTAR FUNÇÕES PARA O HTML
 window.sendMessage = sendMessage;
 window.viewProfile = viewProfile;
 window.registerProfileVisit = registerProfileVisit;
 
-console.log('Home.js carregado e pronto! Sistema de mensagens corrigido! 🎉');
+console.log('Home.js carregado e pronto! Botões funcionando! 🎉');
 </script>
 </body>
 </html>
