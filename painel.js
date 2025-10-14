@@ -1457,23 +1457,49 @@ async function toggleGallerySection() {
     }
 }
 
-// Configurar eventos da galeria
+// Configurar eventos da galeria - ✅ CORRIGIDO
 function setupGalleryEvents() {
+    console.log('🔄 Configurando eventos da galeria...');
+    
     const uploadBtn = document.getElementById('uploadGalleryBtn');
     const galleryUpload = document.getElementById('galleryUpload');
     
+    console.log('📌 Botão de upload:', uploadBtn);
+    console.log('📌 Input file:', galleryUpload);
+    
     if (uploadBtn && galleryUpload) {
-        uploadBtn.addEventListener('click', function() {
-            galleryUpload.click();
+        // ✅ CORREÇÃO: Remover event listeners antigos primeiro
+        uploadBtn.replaceWith(uploadBtn.cloneNode(true));
+        galleryUpload.replaceWith(galleryUpload.cloneNode(true));
+        
+        // ✅ CORREÇÃO: Recuperar os elementos novos
+        const newUploadBtn = document.getElementById('uploadGalleryBtn');
+        const newGalleryUpload = document.getElementById('galleryUpload');
+        
+        newUploadBtn.addEventListener('click', function() {
+            console.log('🎯 Clicou no botão de upload da galeria');
+            newGalleryUpload.click();
         });
         
-        galleryUpload.addEventListener('change', handleGalleryUpload);
+        newGalleryUpload.addEventListener('change', function(event) {
+            console.log('📁 Arquivos selecionados:', event.target.files);
+            handleGalleryUpload(event);
+        });
+        
+        console.log('✅ Eventos da galeria configurados com sucesso');
+    } else {
+        console.error('❌ Elementos do upload não encontrados:', {
+            uploadBtn: uploadBtn,
+            galleryUpload: galleryUpload
+        });
     }
 }
 
 // Manipular upload de imagens
 async function handleGalleryUpload(event) {
     const files = Array.from(event.target.files);
+    
+    console.log('🔄 Iniciando upload de:', files.length, 'arquivos');
     
     if (files.length === 0) return;
     
@@ -1557,11 +1583,14 @@ async function uploadGalleryImage(file) {
     const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
     const filePath = `gallery/${currentUser.id}/${fileName}`;
     
+    console.log('📤 Fazendo upload para:', filePath);
+    
     const { data, error } = await supabase.storage
         .from('gallery')
         .upload(filePath, file);
     
     if (error) {
+        console.error('❌ Erro no upload:', error);
         if (error.message.includes('bucket not found')) {
             // Criar bucket automaticamente
             await createGalleryBucket();
@@ -1582,8 +1611,12 @@ async function uploadGalleryImage(file) {
             mime_type: file.type
         });
     
-    if (dbError) throw dbError;
+    if (dbError) {
+        console.error('❌ Erro ao salvar no banco:', dbError);
+        throw dbError;
+    }
     
+    console.log('✅ Upload realizado com sucesso');
     return data;
 }
 
