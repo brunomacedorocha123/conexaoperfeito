@@ -134,6 +134,7 @@ async function checkAuth() {
         await updateProfileCompletion();
         await updatePlanStatus();
         await loadInvisibleModeStatus();
+        await initGallery(); // ✅ LINHA ADICIONADA PARA A GALERIA
         
     } catch (error) {
         console.error('❌ Erro na autenticação:', error);
@@ -273,7 +274,6 @@ function maskCEP(e) {
     }
     e.target.value = value;
 }
-
 // Atualizar status do plano
 async function updatePlanStatus() {
     try {
@@ -328,11 +328,14 @@ async function updatePlanStatus() {
         }
 
         console.log(`✅ Status do plano: ${isPremium ? 'PREMIUM' : 'GRATUITO'}`);
+        
+        // ✅ LINHA ADICIONADA: Atualizar galeria quando o status mudar
+        await toggleGallerySection();
+        
     } catch (error) {
         console.error('❌ Erro ao atualizar status do plano:', error);
     }
 }
-
 // Atualizar status premium
 async function updatePremiumStatus() {
     try {
@@ -1422,3 +1425,320 @@ setTimeout(() => {
         updatePremiumStatus();
     }
 }, 2000);
+
+// ==================== SISTEMA DE GALERIA PREMIUM ====================
+
+let currentGalleryImages = [];
+let selectedGalleryFiles = [];
+
+// Inicializar galeria
+async function initGallery() {
+    await toggleGallerySection();
+    await loadUserGallery();
+}
+
+// Mostrar/ocultar seção da galeria baseado no status premium
+async function toggleGallerySection() {
+    try {
+        const isPremium = await PremiumManager.checkPremiumStatus();
+        const galleryManager = document.getElementById('galleryManager');
+        const galleryUpgradeCTA = document.getElementById('galleryUpgradeCTA');
+        
+        if (isPremium) {
+            galleryManager.style.display = 'block';
+            galleryUpgradeCTA.style.display = 'none';
+            setupGalleryEvents();
+        } else {
+            galleryManager.style.display = 'none';
+            galleryUpgradeCTA.style.display = 'flex';
+        }
+    } catch (error) {
+        console.error('❌ Erro ao verificar status da galeria:', error);
+    }
+}
+
+// Configurar eventos da galeria
+function setupGalleryEvents() {
+    const uploadBtn = document.getElementById('uploadGalleryBtn');
+    const galleryUpload = document.getElementById('galleryUpload');
+    
+    if (uploadBtn && galleryUpload) {
+        uploadBtn.addEventListener('click', function() {
+            galleryUpload.click();
+        });
+        
+        galleryUpload.addEventListener('change', handleGalleryUpload);
+    }
+}
+
+// Manipular upload de imagens
+async function handleGalleryUpload(event) {
+    const files = Array.from(event.target.files);
+    
+    if (files.length === 0) return;
+    
+    // Verificar espaço disponível
+    const storageUsed = await getStorageUsage();
+    const availableSpace = 10 * 1024 * 1024 - storageUsed; // 10MB em bytes
+    
+    let totalNewSize = 0;
+    const validFiles = [];
+    
+    // Validar arquivos
+    for (const file of files) {
+        if (file.size > 10 * 1024 * 1024) { // ✅ CORRIGIDO: 10MB (ERA 2MB)
+            showNotification(`❌ A imagem ${file.name} excede 10MB`, 'error'); // ✅ CORRIGIDO: 10MB
+            continue;
+        }
+        
+        if (!file.type.startsWith('image/')) {
+            showNotification(`❌ ${file.name} não é uma imagem válida`, 'error');
+            continue;
+        }
+        
+        totalNewSize += file.size;
+        validFiles.push(file);
+    }
+    
+    if (validFiles.length === 0) return;
+    
+    if (totalNewSize > availableSpace) {
+        showNotification('❌ Espaço insuficiente na galeria', 'error');
+        return;
+    }
+    
+    // Fazer upload das imagens
+    await uploadGalleryImages(validFiles);
+    
+    // Limpar input
+    event.target.value = '';
+}
+// Fazer upload das imagens para a galeria
+async function uploadGalleryImages(files) {
+    const uploadLoading = document.createElement('div');
+    uploadLoading.className = 'upload-loading';
+    uploadLoading.innerHTML = `
+        <div class="spinner" style="width: 30px; height: 30px;"></div>
+        <p>Enviando ${files.length} imagem(ns)...</p>
+        <div class="upload-progress">
+            <div class="upload-progress-bar" style="width: 0%"></div>
+        </div>
+    `;
+    
+    const galleryUpload = document.getElementById('galleryUpload');
+    galleryUpload.parentNode.appendChild(uploadLoading);
+    uploadLoading.style.display = 'block';
+    
+    try {
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const progress = ((i + 1) / files.length) * 100;
+            uploadLoading.querySelector('.upload-progress-bar').style.width = `${progress}%`;
+            
+            await uploadGalleryImage(file);
+        }
+        
+        showNotification(`✅ ${files.length} imagem(ns) adicionada(s) com sucesso!`, 'success');
+        await loadUserGallery();
+        await updateStorageDisplay();
+        
+    } catch (error) {
+        console.error('❌ Erro ao fazer upload das imagens:', error);
+        showNotification('❌ Erro ao enviar imagens', 'error');
+    } finally {
+        uploadLoading.remove();
+    }
+}
+
+// Upload de uma única imagem
+async function uploadGalleryImage(file) {
+    const fileExt = file.name.split('.').pop().toLowerCase();
+    const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+    const filePath = `gallery/${currentUser.id}/${fileName}`;
+    
+    const { data, error } = await supabase.storage
+        .from('gallery')
+        .upload(filePath, file);
+    
+    if (error) {
+        if (error.message.includes('bucket not found')) {
+            // Criar bucket automaticamente
+            await createGalleryBucket();
+            // Tentar upload novamente
+            return await uploadGalleryImage(file);
+        }
+        throw error;
+    }
+    
+    // Salvar metadados no banco
+    const { error: dbError } = await supabase
+        .from('user_gallery')
+        .insert({
+            user_id: currentUser.id,
+            image_name: fileName,
+            image_url: filePath,
+            file_size_bytes: file.size,
+            mime_type: file.type
+        });
+    
+    if (dbError) throw dbError;
+    
+    return data;
+}
+
+// Criar bucket da galeria se não existir
+async function createGalleryBucket() {
+    console.log('🔄 Criando bucket da galeria...');
+    // O bucket será criado automaticamente no primeiro upload
+}
+
+// Carregar galeria do usuário
+async function loadUserGallery() {
+    try {
+        const { data: images, error } = await supabase
+            .from('user_gallery')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        currentGalleryImages = images || [];
+        displayGallery(images || []);
+        await updateStorageDisplay();
+        
+    } catch (error) {
+        console.error('❌ Erro ao carregar galeria:', error);
+        showNotification('❌ Erro ao carregar galeria', 'error');
+    }
+}
+
+// Exibir galeria na tela
+function displayGallery(images) {
+    const galleryGrid = document.getElementById('galleryGrid');
+    
+    if (!images || images.length === 0) {
+        galleryGrid.innerHTML = `
+            <div class="empty-gallery">
+                <i class="fas fa-images" style="font-size: 3rem; color: var(--lilas); margin-bottom: 1rem;"></i>
+                <p>Sua galeria está vazia</p>
+                <p style="font-size: 0.9rem; color: var(--text-light);">Adicione fotos para compartilhar momentos especiais</p>
+            </div>
+        `;
+        return;
+    }
+    
+    galleryGrid.innerHTML = images.map((image, index) => `
+        <div class="gallery-item" data-index="${index}">
+            <img src="" data-src="${image.image_url}" alt="Imagem da galeria" class="gallery-image" loading="lazy">
+            <div class="gallery-actions">
+                <button class="gallery-btn" onclick="deleteGalleryImage('${image.id}')" title="Excluir">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+    
+    // Carregar imagens lazy
+    loadGalleryImagesLazy();
+}
+
+// Carregar imagens com lazy loading
+function loadGalleryImagesLazy() {
+    const images = document.querySelectorAll('.gallery-image[data-src]');
+    
+    const imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const img = entry.target;
+                loadGalleryImage(img);
+                observer.unobserve(img);
+            }
+        });
+    });
+    
+    images.forEach(img => imageObserver.observe(img));
+}
+
+// Carregar uma imagem específica
+async function loadGalleryImage(imgElement) {
+    const imageUrl = imgElement.getAttribute('data-src');
+    
+    try {
+        const { data } = supabase.storage
+            .from('gallery')
+            .getPublicUrl(imageUrl);
+        
+        if (data && data.publicUrl) {
+            imgElement.src = data.publicUrl;
+            imgElement.removeAttribute('data-src');
+        }
+    } catch (error) {
+        console.error('❌ Erro ao carregar imagem:', error);
+    }
+}
+
+// Excluir imagem da galeria
+async function deleteGalleryImage(imageId) {
+    if (!confirm('Tem certeza que deseja excluir esta imagem?')) return;
+    
+    try {
+        // Buscar informações da imagem
+        const { data: image, error: fetchError } = await supabase
+            .from('user_gallery')
+            .select('*')
+            .eq('id', imageId)
+            .single();
+        
+        if (fetchError) throw fetchError;
+        
+        // Excluir do storage
+        const { error: storageError } = await supabase.storage
+            .from('gallery')
+            .remove([image.image_url]);
+        
+        if (storageError) throw storageError;
+        
+        // Excluir do banco
+        const { error: dbError } = await supabase
+            .from('user_gallery')
+            .delete()
+            .eq('id', imageId);
+        
+        if (dbError) throw dbError;
+        
+        showNotification('✅ Imagem excluída com sucesso', 'success');
+        await loadUserGallery();
+        
+    } catch (error) {
+        console.error('❌ Erro ao excluir imagem:', error);
+        showNotification('❌ Erro ao excluir imagem', 'error');
+    }
+}
+
+// Obter uso de storage
+async function getStorageUsage() {
+    try {
+        const { data: usage, error } = await supabase
+            .from('user_gallery')
+            .select('file_size_bytes')
+            .eq('user_id', currentUser.id);
+        
+        if (error) throw error;
+        
+        return usage.reduce((total, img) => total + (img.file_size_bytes || 0), 0);
+    } catch (error) {
+        console.error('❌ Erro ao calcular uso de storage:', error);
+        return 0;
+    }
+}
+
+// Atualizar display do storage
+async function updateStorageDisplay() {
+    const storageUsed = await getStorageUsage();
+    const storageUsedMB = (storageUsed / (1024 * 1024)).toFixed(1);
+    const storagePercentage = (storageUsed / (10 * 1024 * 1024)) * 100;
+    
+    document.getElementById('storageUsed').textContent = `${storageUsedMB}MB`;
+    document.getElementById('storageFill').style.width = `${storagePercentage}%`;
+}

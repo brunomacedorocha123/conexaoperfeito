@@ -534,6 +534,58 @@
             </div>
           </div>
 
+          <!-- SEÇÃO: Galeria Premium -->
+          <div class="form-section section-public" id="gallerySection">
+            <h3><i class="fas fa-images"></i> Minha Galeria Premium
+              <span class="section-badge badge-premium">Premium</span>
+            </h3>
+            
+            <!-- Gestão da Galeria (aparece apenas para Premium) -->
+            <div id="galleryManager" style="display: none;">
+              <!-- Status do Espaço -->
+              <div class="storage-status">
+                <div class="storage-info">
+                  <span>Espaço usado: <strong id="storageUsed">0MB</strong> de <strong>10MB</strong></span>
+                  <div class="storage-bar">
+                    <div class="storage-fill" id="storageFill"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Upload -->
+              <div class="gallery-upload">
+                <input type="file" id="galleryUpload" multiple accept="image/*" style="display: none;">
+                <button type="button" class="btn btn-primary" id="uploadGalleryBtn">
+                  <i class="fas fa-plus"></i> Adicionar Fotos
+                </button>
+                <small style="display: block; margin-top: 0.5rem; color: var(--text-light);">
+                  Formatos: JPG, PNG • Máximo 2MB por imagem
+                </small>
+              </div>
+
+              <!-- Grid de Imagens -->
+              <div class="gallery-grid" id="galleryGrid">
+                <div class="empty-gallery">
+                  <i class="fas fa-images" style="font-size: 3rem; color: var(--lilas); margin-bottom: 1rem;"></i>
+                  <p>Sua galeria está vazia</p>
+                  <p style="font-size: 0.9rem; color: var(--text-light);">Adicione fotos para compartilhar momentos especiais</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mensagem para usuários free -->
+            <div class="free-message" id="galleryUpgradeCTA">
+              <div class="message-icon">🖼️</div>
+              <div class="message-content">
+                <p><strong>Galeria Premium Bloqueada</strong></p>
+                <p>Desbloqueie sua galeria exclusiva para compartilhar fotos especiais!</p>
+                <a href="princing.html" class="btn btn-premium">
+                  <i class="fas fa-crown"></i> Tornar-se Premium
+                </a>
+              </div>
+            </div>
+          </div>
+
           <!-- Form Actions -->
           <div class="form-actions">
             <button type="submit" class="btn btn-primary" id="saveButton">
