@@ -1006,10 +1006,10 @@
         `;
     }
 
-    // ✅ CRIAR SEÇÃO DA GALERIA NO PERFIL - VERSÃO DEFINITIVA
+   // ✅ CRIAR SEÇÃO DA GALERIA - VERSÃO QUE SEMPRE MOSTRA
 async function createGallerySection(profileId, currentUser) {
     try {
-        console.log('🔄 Buscando galeria para perfil:', profileId);
+        console.log('🔍 INICIANDO GALERIA - Perfil:', profileId, 'Usuário:', currentUser?.id);
         
         // Buscar imagens da galeria
         const { data: images, error } = await supabase
@@ -1020,29 +1020,47 @@ async function createGallerySection(profileId, currentUser) {
 
         if (error) {
             console.error('❌ Erro ao buscar galeria:', error);
-            return '';
-        }
-
-        const galleryImages = images || [];
-        console.log(`✅ Encontradas ${galleryImages.length} imagens`);
-
-        // Se não tem imagens, não mostra seção
-        if (galleryImages.length === 0) {
-            return '';
-        }
-
-        // Verificar status do usuário atual
-        const isOwner = currentUser && currentUser.id === profileId;
-        const isPremium = currentUser ? await PremiumManager.verifyPremiumStatus(currentUser.id) : false;
-
-        console.log(`👤 Status: Dono=${isOwner}, Premium=${isPremium}`);
-
-        // Usuário premium ou dono: mostra galeria completa
-        if (isPremium || isOwner) {
-            const galleryGrid = await createGalleryGrid(galleryImages);
+            // MESMO COM ERRO, MOSTRA A SEÇÃO
             return `
                 <div class="gallery-section">
                     <h3><i class="fas fa-images"></i> Galeria de Fotos</h3>
+                    <div class="empty-gallery">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Erro ao carregar galeria</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        const galleryImages = images || [];
+        console.log('🔍 Imagens encontradas:', galleryImages.length);
+
+        // MESMO SE VAZIA, MOSTRA A SEÇÃO
+        if (galleryImages.length === 0) {
+            return `
+                <div class="gallery-section">
+                    <h3><i class="fas fa-images"></i> Galeria de Fotos</h3>
+                    <div class="empty-gallery">
+                        <i class="fas fa-images"></i>
+                        <p>Nenhuma foto na galeria</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Verificar status do usuário
+        const isOwner = currentUser && currentUser.id === profileId;
+        const isPremium = currentUser ? await PremiumManager.verifyPremiumStatus(currentUser.id) : false;
+
+        console.log('🔍 Status - Dono:', isOwner, 'Premium:', isPremium);
+
+        // Usuário premium ou dono: mostra galeria completa
+        if (isPremium || isOwner) {
+            console.log('⭐ MOSTRANDO GALERIA COMPLETA');
+            const galleryGrid = await createGalleryGrid(galleryImages);
+            return `
+                <div class="gallery-section">
+                    <h3><i class="fas fa-images"></i> Galeria de Fotos (${galleryImages.length})</h3>
                     <div class="premium-gallery-view">
                         <div class="gallery-grid">
                             ${galleryGrid}
@@ -1053,14 +1071,15 @@ async function createGallerySection(profileId, currentUser) {
         } 
         // Usuário free: mostra preview bloqueado
         else {
+            console.log('🔒 MOSTRANDO PREVIEW BLOQUEADO');
             return `
                 <div class="gallery-section">
-                    <h3><i class="fas fa-images"></i> Galeria de Fotos</h3>
+                    <h3><i class="fas fa-images"></i> Galeria de Fotos (${galleryImages.length})</h3>
                     <div class="free-gallery-preview">
                         <div class="preview-overlay">
                             <i class="fas fa-lock"></i>
                             <h4>Conteúdo Exclusivo Premium</h4>
-                            <p>Faça upgrade para visualizar esta galeria</p>
+                            <p>Faça upgrade para visualizar ${galleryImages.length} foto(s)</p>
                             <button class="btn btn-primary" onclick="goPremium()">
                                 🔓 Tornar-se Premium
                             </button>
@@ -1074,8 +1093,17 @@ async function createGallerySection(profileId, currentUser) {
         }
 
     } catch (error) {
-        console.error('❌ Erro na galeria:', error);
-        return '';
+        console.error('❌ Erro crítico na galeria:', error);
+        // MESMO COM ERRO CRÍTICO, MOSTRA A SEÇÃO
+        return `
+            <div class="gallery-section">
+                <h3><i class="fas fa-images"></i> Galeria de Fotos</h3>
+                <div class="empty-gallery">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>Erro ao carregar galeria</p>
+                </div>
+            </div>
+        `;
     }
 }
 
