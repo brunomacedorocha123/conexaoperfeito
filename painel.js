@@ -1065,11 +1065,11 @@ async function loadInvisibleModeStatus() {
 }
 
 // ✅ CORREÇÃO CRÍTICA: Função toggleInvisibleMode SEM conflitos
+// 🎯 SOLUÇÃO ROBUSTA: Usar RPC para evitar conflitos
 async function toggleInvisibleMode(isInvisible) {
     try {
         console.log(`👻 Alternando modo invisível para: ${isInvisible}`);
         
-        // Verificar se é premium
         const isPremium = await PremiumManager.checkPremiumStatus();
         if (!isPremium) {
             showNotification('❌ Apenas usuários Premium podem usar o modo invisível!', 'error');
@@ -1077,14 +1077,11 @@ async function toggleInvisibleMode(isInvisible) {
             return;
         }
         
-        // ✅ CORREÇÃO: Atualiza APENAS o campo is_invisible (SEM updated_at)
-        const { error } = await supabase
-            .from('profiles')
-            .update({ 
-                is_invisible: isInvisible
-                // ❌ REMOVIDO: updated_at que causava conflito com salvamento
-            })
-            .eq('id', currentUser.id);
+        // ✅ USAR RPC para atualização específica
+        const { error } = await supabase.rpc('update_invisible_mode', {
+            user_id: currentUser.id,
+            is_invisible: isInvisible
+        });
             
         if (error) throw error;
         
@@ -1102,12 +1099,12 @@ async function toggleInvisibleMode(isInvisible) {
         console.error('❌ Erro ao alterar modo invisível:', error);
         showNotification('❌ Erro ao alterar modo invisível', 'error');
         
-        // Reverter toggle em caso de erro
         const toggle = document.getElementById('invisibleModeToggle');
         if (toggle) toggle.checked = !isInvisible;
     }
 }
-
+        
+       
 // NOTIFICAÇÕES
 function showNotification(message, type = 'info') {
     const existingNotification = document.querySelector('.notification');
