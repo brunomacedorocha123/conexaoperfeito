@@ -2209,36 +2209,6 @@ function isProfileComplete() {
            userProfile.birth_date;
 }
 
-// ✅ CORREÇÃO NO HTML DOS BOTÕES - Mude esta parte:
-// NO userCard-actions, altere para:
-function createUserCardWithPhoto(user) {
-    // ... código anterior ...
-    
-    return `
-        <div class="user-card" onclick="viewProfile('${user.id}')">
-            ${avatarHtml}
-            <div class="user-card-name">${nickname}${age ? `, ${age}` : ''}</div>
-            
-            <div class="user-card-info">
-                ${zodiac ? `<div class="user-card-detail">${zodiac}</div>` : ''}
-                ${profession ? `<div class="user-card-detail">💼 ${profession}</div>` : ''}
-                ${lookingFor ? `<div class="user-card-detail">🎯 ${lookingFor}</div>` : ''}
-            </div>
-            
-            <div class="user-card-bio">${bio}</div>
-            
-            <div class="user-card-actions">
-                <button class="btn btn-primary btn-sm" onclick="sendMessage('${user.id}', event)">
-                    💌 Mensagem
-                </button>
-                <button class="btn btn-secondary btn-sm" onclick="viewProfile('${user.id}', event)">
-                    👀 Ver Perfil
-                </button>
-            </div>
-        </div>
-    `;
-}
-
 // ✅ CORRIGIDO: ATUALIZAR ESTATÍSTICAS REAIS COM CONTADOR ONLINE CORRETO
 async function updateStats() {
     try {
