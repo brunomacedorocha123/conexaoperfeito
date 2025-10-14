@@ -1426,7 +1426,7 @@ setTimeout(() => {
     }
 }, 2000);
 
-// ==================== SISTEMA DE GALERIA PREMIUM CORRIGIDO ====================
+/// ==================== SISTEMA DE GALERIA PREMIUM CORRIGIDO ====================
 
 let currentGalleryImages = [];
 let selectedGalleryFiles = [];
@@ -1577,7 +1577,7 @@ async function uploadGalleryImages(files) {
     }
 }
 
-// Upload de uma única imagem - ✅ CORREÇÃO DEFINITIVA
+// Upload de uma única imagem - ✅ CORREÇÃO DEFINITIVA DOS METADADOS
 async function uploadGalleryImage(file) {
     try {
         console.log('🔄 Iniciando upload da imagem:', file.name, file.size, 'bytes');
@@ -1605,7 +1605,7 @@ async function uploadGalleryImage(file) {
         
         console.log('📤 Fazendo upload para:', filePath);
 
-        // ✅ CORREÇÃO: Upload SIMPLES sem options complexas
+        // 1. Primeiro fazer upload para o storage
         const { data: uploadData, error: uploadError } = await supabase.storage
             .from('gallery')
             .upload(filePath, file);
@@ -1613,12 +1613,10 @@ async function uploadGalleryImage(file) {
         if (uploadError) {
             console.error('❌ Erro no upload storage:', uploadError);
             
-            // Se for erro de política
             if (uploadError.message?.includes('policy') || uploadError.message?.includes('row-level security')) {
                 throw new Error('Permissão negada. Verifique se você é usuário premium.');
             }
             
-            // Se o bucket não existir
             if (uploadError.message?.includes('bucket') || uploadError.message?.includes('not found')) {
                 throw new Error('Erro no servidor. Bucket não encontrado.');
             }
@@ -1628,36 +1626,55 @@ async function uploadGalleryImage(file) {
 
         console.log('✅ Upload no storage realizado com sucesso');
 
-        // Obter URL pública
+        // 2. Obter URL pública
         const { data: urlData } = await supabase.storage
             .from('gallery')
             .getPublicUrl(filePath);
 
-        console.log('🔗 URL pública gerada');
+        console.log('🔗 URL pública gerada:', urlData.publicUrl);
 
-        // Salvar metadados no banco
-        const { error: dbError } = await supabase
+        // 3. ✅ CORREÇÃO CRÍTICA: Salvar metadados no banco com tratamento de erro detalhado
+        const galleryData = {
+            user_id: user.id,
+            image_name: fileName,
+            image_url: filePath,
+            file_size_bytes: file.size,
+            mime_type: file.type,
+            public_url: urlData.publicUrl,
+            created_at: new Date().toISOString()
+        };
+
+        console.log('💾 Tentando salvar metadados:', galleryData);
+
+        const { data: dbData, error: dbError } = await supabase
             .from('user_gallery')
-            .insert({
-                user_id: user.id,
-                image_name: fileName,
-                image_url: filePath,
-                file_size_bytes: file.size,
-                mime_type: file.type,
-                public_url: urlData.publicUrl,
-                created_at: new Date().toISOString()
-            });
+            .insert([galleryData])
+            .select();
 
         if (dbError) {
-            console.error('❌ Erro ao salvar no banco:', dbError);
+            console.error('❌ Erro detalhado ao salvar no banco:', dbError);
+            console.error('❌ Código do erro:', dbError.code);
+            console.error('❌ Mensagem do erro:', dbError.message);
+            console.error('❌ Detalhes do erro:', dbError.details);
+            console.error('❌ Hint do erro:', dbError.hint);
             
-            // Reverter upload se falhar no banco
+            // Reverter upload do storage se falhar no banco
+            console.log('🔄 Revertendo upload do storage...');
             await supabase.storage.from('gallery').remove([filePath]);
             
-            throw new Error('Erro ao salvar metadados da imagem');
+            // Mensagens específicas baseadas no tipo de erro
+            if (dbError.code === '42501') {
+                throw new Error('Permissão negada para salvar metadados.');
+            } else if (dbError.code === '23503') {
+                throw new Error('Erro de referência. Tabela user_gallery não existe.');
+            } else if (dbError.code === '42P01') {
+                throw new Error('Tabela user_gallery não existe. Execute o SQL de criação.');
+            } else {
+                throw new Error('Erro ao salvar metadados: ' + dbError.message);
+            }
         }
 
-        console.log('✅ Metadados salvos no banco com sucesso');
+        console.log('✅ Metadados salvos no banco com sucesso:', dbData);
         return uploadData;
 
     } catch (error) {
@@ -1682,7 +1699,17 @@ async function loadUserGallery() {
             .eq('user_id', user.id)
             .order('created_at', { ascending: false });
         
-        if (error) throw error;
+        if (error) {
+            console.error('❌ Erro ao carregar galeria:', error);
+            // Se a tabela não existir, mostrar galeria vazia
+            if (error.code === '42P01') {
+                console.log('ℹ️ Tabela user_gallery não existe ainda');
+                currentGalleryImages = [];
+                displayGallery([]);
+                return;
+            }
+            throw error;
+        }
         
         currentGalleryImages = images || [];
         displayGallery(images || []);
@@ -1788,7 +1815,13 @@ async function deleteGalleryImage(imageId) {
             .eq('user_id', user.id)
             .single();
         
-        if (fetchError) throw fetchError;
+        if (fetchError) {
+            if (fetchError.code === 'PGRST116') {
+                showNotification('❌ Imagem não encontrada', 'error');
+                return;
+            }
+            throw fetchError;
+        }
         
         // Excluir do storage
         const { error: storageError } = await supabase.storage
@@ -1827,7 +1860,11 @@ async function getStorageUsage() {
             .select('file_size_bytes')
             .eq('user_id', user.id);
         
-        if (error) throw error;
+        if (error) {
+            // Se a tabela não existir, retorna 0
+            if (error.code === '42P01') return 0;
+            throw error;
+        }
         
         return usage.reduce((total, img) => total + (img.file_size_bytes || 0), 0);
     } catch (error) {
