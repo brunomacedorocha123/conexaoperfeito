@@ -1884,7 +1884,7 @@ async function updateStorageDisplay() {
 
 }
 
-// ==================== EXCLUSÃO DE CONTA ====================
+/// ==================== EXCLUSÃO DE CONTA ====================
 
 // Elementos do modal de exclusão
 const deleteAccountBtn = document.getElementById('deleteAccountBtn');
@@ -1900,72 +1900,90 @@ const passwordFeedback = document.getElementById('passwordFeedback');
 let deleteFlowStep = 1; // 1 = aviso, 2 = confirmação com senha
 
 // Abrir modal de exclusão
-deleteAccountBtn.addEventListener('click', () => {
-    deleteFlowStep = 1;
-    confirmationStep.style.display = 'none';
-    confirmDelete.disabled = true;
-    confirmDelete.textContent = 'Sim, Excluir Minha Conta';
-    confirmPassword.value = '';
-    passwordFeedback.textContent = '';
-    deleteAccountModal.style.display = 'flex';
-});
+if (deleteAccountBtn) {
+    deleteAccountBtn.addEventListener('click', () => {
+        console.log('✅ Botão excluir clicado - Abrindo modal');
+        deleteFlowStep = 1;
+        confirmationStep.style.display = 'none';
+        confirmDelete.disabled = true;
+        confirmDelete.textContent = 'Sim, Excluir Minha Conta';
+        confirmPassword.value = '';
+        passwordFeedback.textContent = '';
+        deleteAccountModal.style.display = 'flex';
+    });
+}
 
 // Fechar modal
-closeDeleteModal.addEventListener('click', closeDeleteModalFunc);
-cancelDelete.addEventListener('click', closeDeleteModalFunc);
+if (closeDeleteModal) {
+    closeDeleteModal.addEventListener('click', closeDeleteModalFunc);
+}
+if (cancelDelete) {
+    cancelDelete.addEventListener('click', closeDeleteModalFunc);
+}
 
 function closeDeleteModalFunc() {
     deleteAccountModal.style.display = 'none';
 }
 
 // Primeira confirmação - mostrar campo de senha
-confirmDelete.addEventListener('click', () => {
-    if (deleteFlowStep === 1) {
-        // Primeiro clique - mostrar campo de senha
-        deleteFlowStep = 2;
-        confirmationStep.style.display = 'block';
-        confirmDelete.disabled = true;
-        confirmDelete.textContent = 'Confirmar Exclusão';
-    } else {
-        // Segundo clique - executar exclusão
-        executeAccountDeletion();
-    }
-});
+if (confirmDelete) {
+    confirmDelete.addEventListener('click', () => {
+        console.log('✅ Botão confirmar clicado - Etapa:', deleteFlowStep);
+        
+        if (deleteFlowStep === 1) {
+            // Primeiro clique - mostrar campo de senha
+            deleteFlowStep = 2;
+            confirmationStep.style.display = 'block';
+            confirmDelete.disabled = true;
+            confirmDelete.textContent = 'Confirmar Exclusão';
+            console.log('✅ Mostrando campo de senha');
+        } else {
+            // Segundo clique - executar exclusão
+            console.log('✅ Iniciando exclusão da conta');
+            executeAccountDeletion();
+        }
+    });
+}
 
 // Validar senha em tempo real
-confirmPassword.addEventListener('input', async () => {
-    const password = confirmPassword.value.trim();
-    
-    if (password.length === 0) {
-        passwordFeedback.textContent = '';
-        confirmDelete.disabled = true;
-        return;
-    }
+if (confirmPassword) {
+    confirmPassword.addEventListener('input', async () => {
+        const password = confirmPassword.value.trim();
+        
+        if (password.length === 0) {
+            passwordFeedback.textContent = '';
+            confirmDelete.disabled = true;
+            return;
+        }
 
-    try {
-        // Verificar se a senha está correta
-        const { data, error } = await supabase.rpc('verify_user_password', {
-            password: password
-        });
+        try {
+            console.log('✅ Verificando senha...');
+            // Verificar se a senha está correta
+            const { data, error } = await supabase.rpc('verify_user_password', {
+                password: password
+            });
 
-        if (error) throw error;
+            if (error) throw error;
 
-        if (data) {
-            passwordFeedback.textContent = '✓ Senha correta';
-            passwordFeedback.className = 'password-feedback success';
-            confirmDelete.disabled = false;
-        } else {
-            passwordFeedback.textContent = '✗ Senha incorreta';
+            if (data) {
+                passwordFeedback.textContent = '✓ Senha correta';
+                passwordFeedback.className = 'password-feedback success';
+                confirmDelete.disabled = false;
+                console.log('✅ Senha correta - Botão habilitado');
+            } else {
+                passwordFeedback.textContent = '✗ Senha incorreta';
+                passwordFeedback.className = 'password-feedback error';
+                confirmDelete.disabled = true;
+                console.log('❌ Senha incorreta');
+            }
+        } catch (error) {
+            console.error('Erro ao verificar senha:', error);
+            passwordFeedback.textContent = 'Erro ao verificar senha';
             passwordFeedback.className = 'password-feedback error';
             confirmDelete.disabled = true;
         }
-    } catch (error) {
-        console.error('Erro ao verificar senha:', error);
-        passwordFeedback.textContent = 'Erro ao verificar senha';
-        passwordFeedback.className = 'password-feedback error';
-        confirmDelete.disabled = true;
-    }
-});
+    });
+}
 
 // Função principal de exclusão
 async function executeAccountDeletion() {
@@ -1981,6 +1999,7 @@ async function executeAccountDeletion() {
     confirmDelete.disabled = true;
 
     try {
+        console.log('✅ Chamando função de exclusão no Supabase...');
         // Chamar a função SQL que você criou
         const { data, error } = await supabase.rpc('delete_user_completely', {
             user_password: password
@@ -1991,6 +2010,7 @@ async function executeAccountDeletion() {
         if (data) {
             // Sucesso - fazer logout e redirecionar
             showNotification('Conta excluída com sucesso', 'success');
+            console.log('✅ Conta excluída com sucesso!');
             
             // Logout e redirecionar após 2 segundos
             setTimeout(async () => {
@@ -2013,8 +2033,19 @@ async function executeAccountDeletion() {
 }
 
 // Fechar modal clicando fora
-deleteAccountModal.addEventListener('click', (e) => {
-    if (e.target === deleteAccountModal) {
-        closeDeleteModalFunc();
-    }
-});
+if (deleteAccountModal) {
+    deleteAccountModal.addEventListener('click', (e) => {
+        if (e.target === deleteAccountModal) {
+            closeDeleteModalFunc();
+        }
+    });
+}
+
+// DEBUG - Verificar se tudo carregou
+console.log('=== EXCLUSÃO DE CONTA CARREGADA ===');
+console.log('deleteAccountBtn:', deleteAccountBtn);
+console.log('deleteAccountModal:', deleteAccountModal);
+console.log('confirmDelete:', confirmDelete);
+console.log('confirmationStep:', confirmationStep);
+console.log('confirmPassword:', confirmPassword);
+console.log('=== FIM DEBUG ===');
