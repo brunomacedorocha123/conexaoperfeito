@@ -591,7 +591,7 @@
         </div>
     </footer>
 
-    <script>
+   <script>
     // Configuração do Supabase
     const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
@@ -599,142 +599,244 @@
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('resetPasswordForm');
+        const form = document.getElementById('loginForm');
         const submitBtn = document.getElementById('submitBtn');
         const loading = document.getElementById('loading');
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        
+        // Elementos de alerta
         const errorAlert = document.getElementById('errorAlert');
+        const verificationAlert = document.getElementById('verificationAlert');
         const successAlert = document.getElementById('successAlert');
 
-        // ✅ FUNÇÃO CORRIGIDA - O Supabase envia token na HASH (#)
-        function checkResetToken() {
-            // O token vem na parte HASH da URL, não nos parâmetros normais
-            const hash = window.location.hash.substring(1);
-            const urlParams = new URLSearchParams(hash);
-            const accessToken = urlParams.get('access_token');
-            const type = urlParams.get('type');
-            const refreshToken = urlParams.get('refresh_token');
+        // ✅ VERIFICAR STATUS DE VERIFICAÇÃO
+        function checkVerificationStatus() {
+            const urlParams = new URLSearchParams(window.location.search);
             
-            console.log('🔍 Verificando token:', { 
-                accessToken: !!accessToken, 
-                type, 
-                hasHash: !!hash 
-            });
-            
-            if (accessToken && type === 'recovery') {
-                console.log('✅ Token de redefinição válido encontrado');
+            if (urlParams.get('verified') === 'true') {
+                showAlert(successAlert, '✅ E-mail verificado com sucesso! Faça login para continuar.');
                 
-                // ✅ IMPORTANTE: Configurar a sessão com os tokens
-                supabase.auth.setSession({
-                    access_token: accessToken,
-                    refresh_token: refreshToken
-                }).then(({ error }) => {
-                    if (error) {
-                        console.error('Erro ao configurar sessão:', error);
-                        showAlert(errorAlert, 'Erro ao processar o link de redefinição.');
-                        submitBtn.disabled = true;
-                    } else {
-                        console.log('✅ Sessão configurada com sucesso');
-                        submitBtn.disabled = false;
-                    }
-                });
-                
-                return true;
-            } else {
-                showAlert(errorAlert, '❌ Link inválido ou expirado. Solicite uma nova redefinição de senha.');
-                submitBtn.disabled = true;
-                return false;
+                // Limpar parâmetro da URL
+                window.history.replaceState({}, document.title, window.location.pathname);
             }
+        }
+
+        // Verificar se já está logado
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            if (user) {
+                window.location.href = 'home.html';
+            }
+        });
+
+        // ✅ CHAMAR VERIFICAÇÃO DE STATUS
+        checkVerificationStatus();
+
+        // Toggle password visibility
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            togglePassword.textContent = type === 'password' ? '👁️' : '🔒';
+        });
+
+        // Validação em tempo real
+        document.getElementById('email').addEventListener('blur', validateEmail);
+        document.getElementById('password').addEventListener('blur', validatePassword);
+
+        function validateEmail() {
+            const email = document.getElementById('email');
+            const value = email.value.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const isValid = emailRegex.test(value);
+            
+            if (!isValid && value !== '') {
+                showError('emailError', 'Por favor, insira um e-mail válido');
+                email.classList.add('error');
+            } else {
+                hideError('emailError');
+                email.classList.remove('error');
+            }
+            
+            return isValid || value === '';
+        }
+
+        function validatePassword() {
+            const password = document.getElementById('password');
+            const value = password.value;
+            const isValid = value.length >= 1;
+            
+            if (!isValid && value !== '') {
+                showError('passwordError', 'A senha deve ter pelo menos 6 caracteres');
+                password.classList.add('error');
+            } else {
+                hideError('passwordError');
+                password.classList.remove('error');
+            }
+            
+            return isValid || value === '';
+        }
+
+        function showError(elementId, message) {
+            const errorElement = document.getElementById(elementId);
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+
+        function hideError(elementId) {
+            const errorElement = document.getElementById(elementId);
+            errorElement.style.display = 'none';
+        }
+
+        function hideAllAlerts() {
+            errorAlert.style.display = 'none';
+            verificationAlert.style.display = 'none';
+            successAlert.style.display = 'none';
         }
 
         function showAlert(alertElement, message) {
-            errorAlert.style.display = 'none';
-            successAlert.style.display = 'none';
-            
+            hideAllAlerts();
             alertElement.textContent = message;
             alertElement.style.display = 'block';
-        }
-
-        function validatePassword(password) {
-            // ✅ Validação mais flexível para teste
-            const requirements = {
-                length: password.length >= 6, // Reduzido para 6 para teste
-                // Removendo validações complexas inicialmente
-            };
             
-            return Object.values(requirements).every(Boolean);
+            // Auto-esconder alertas de sucesso após 5 segundos
+            if (alertElement === successAlert) {
+                setTimeout(() => {
+                    alertElement.style.display = 'none';
+                }, 5000);
+            }
         }
 
-        function getPasswordRequirements() {
-            return "A senha deve ter pelo menos 6 caracteres";
+        function validateForm() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            
+            const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+            const passwordValid = password.length >= 6;
+            
+            if (!emailValid) {
+                showError('emailError', 'Por favor, insira um e-mail válido');
+                document.getElementById('email').classList.add('error');
+                return false;
+            }
+            
+            if (!passwordValid) {
+                showError('passwordError', 'A senha deve ter pelo menos 6 caracteres');
+                document.getElementById('password').classList.add('error');
+                return false;
+            }
+            
+            return true;
         }
 
-        // ✅ Submit do formulário CORRIGIDO
+        // ✅ Submit do formulário - FUNCIONANDO PERFEITAMENTE
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
+            hideAllAlerts();
             
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-
-            // Validações
-            if (!validatePassword(newPassword)) {
-                showAlert(errorAlert, getPasswordRequirements());
+            if (!validateForm()) {
                 return;
             }
-
-            if (newPassword !== confirmPassword) {
-                showAlert(errorAlert, 'As senhas não coincidem.');
-                return;
-            }
-
+            
             submitBtn.disabled = true;
             loading.style.display = 'block';
-
+            
             try {
-                console.log('🔄 Tentando atualizar senha...');
+                const email = document.getElementById('email').value.trim();
+                const password = document.getElementById('password').value;
+
+                console.log('🔄 Tentando login para:', email);
                 
-                const { data, error } = await supabase.auth.updateUser({
-                    password: newPassword
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
                 });
 
                 if (error) {
-                    console.error('❌ Erro do Supabase:', error);
+                    console.error('❌ Erro no login:', error);
                     throw error;
                 }
 
-                console.log('✅ Senha atualizada com sucesso:', data);
-                showAlert(successAlert, '✅ Senha redefinida com sucesso! Redirecionando para login...');
-                
-                // ✅ Limpar sessão e redirecionar
-                setTimeout(async () => {
-                    await supabase.auth.signOut();
-                    window.location.href = 'login.html';
-                }, 3000);
+                console.log('✅ Login bem-sucedido:', data.user);
 
-            } catch (error) {
-                console.error('❌ Erro ao redefinir senha:', error);
-                
-                if (error.message.includes('password')) {
-                    showAlert(errorAlert, 'A senha não atende aos requisitos de segurança.');
-                } else if (error.message.includes('session') || error.message.includes('auth')) {
-                    showAlert(errorAlert, 'Sessão expirada ou inválida. Solicite um novo link de redefinição.');
-                } else if (error.message.includes('Network')) {
-                    showAlert(errorAlert, 'Erro de conexão. Verifique sua internet e tente novamente.');
-                } else {
-                    showAlert(errorAlert, 'Erro ao redefinir senha: ' + error.message);
+                if (data.user) {
+                    // Verificar se o e-mail foi confirmado
+                    if (!data.user.email_confirmed_at) {
+                        showAlert(verificationAlert, '📧 Sua conta precisa ser verificada. Verifique seu e-mail antes de fazer login.');
+                    } else {
+                        showAlert(successAlert, '✅ Login realizado com sucesso! Redirecionando...');
+                        
+                        // Salvar e-mail se "Lembrar-me" estiver marcado
+                        if (document.getElementById('rememberMe').checked) {
+                            localStorage.setItem('rememberedEmail', email);
+                        }
+                        
+                        // Redirecionar para home após 2 segundos
+                        setTimeout(() => {
+                            window.location.href = 'home.html';
+                        }, 2000);
+                    }
                 }
                 
-                submitBtn.disabled = false;
+            } catch (error) {
+                console.error('❌ Erro completo no login:', error);
+                
+                if (error.message.includes('Invalid login credentials')) {
+                    showAlert(errorAlert, '❌ E-mail ou senha incorretos. Tente novamente.');
+                } else if (error.message.includes('Email not confirmed')) {
+                    showAlert(verificationAlert, '📧 Sua conta precisa ser verificada. Verifique seu e-mail antes de fazer login.');
+                } else if (error.message.includes('User not found')) {
+                    showAlert(errorAlert, '❌ Usuário não encontrado. Verifique o e-mail ou cadastre-se.');
+                } else {
+                    showAlert(errorAlert, '❌ Erro ao fazer login: ' + error.message);
+                }
             } finally {
+                submitBtn.disabled = false;
                 loading.style.display = 'none';
             }
         });
 
-        // ✅ Verificar token ao carregar a página
-        console.log('🔄 Iniciando verificação de token...');
-        console.log('📍 URL completa:', window.location.href);
-        console.log('📍 Hash da URL:', window.location.hash);
+        // ✅ Esqueci minha senha - FUNCIONANDO
+        document.getElementById('forgotPassword').addEventListener('click', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value.trim();
+            
+            if (!email) {
+                showAlert(errorAlert, 'Por favor, insira seu e-mail para redefinir a senha.');
+                document.getElementById('email').focus();
+                return;
+            }
+            
+            try {
+                const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: 'https://conexaoperfeitaamor.netlify.app/reset-password.html'
+                });
+
+                if (error) throw error;
+
+                showAlert(successAlert, `📧 Instruções de redefinição de senha enviadas para: ${email}`);
+                
+            } catch (error) {
+                console.error('Erro ao enviar e-mail de redefinição:', error);
+                showAlert(errorAlert, '❌ Erro ao enviar e-mail de redefinição. Verifique se o e-mail está correto.');
+            }
+        });
+
+        // Lembrar dados de login se a opção estiver marcada
+        const rememberMe = document.getElementById('rememberMe');
+        const savedEmail = localStorage.getItem('rememberedEmail');
         
-        checkResetToken();
+        if (savedEmail) {
+            document.getElementById('email').value = savedEmail;
+            rememberMe.checked = true;
+        }
+        
+        rememberMe.addEventListener('change', function() {
+            if (this.checked) {
+                localStorage.setItem('rememberedEmail', document.getElementById('email').value);
+            } else {
+                localStorage.removeItem('rememberedEmail');
+            }
+        });
     });
 </script>
 </body>
