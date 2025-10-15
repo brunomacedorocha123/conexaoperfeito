@@ -2651,23 +2651,40 @@ function removeBlockedUserFromUI(userId) {
 }
 
 // Função para mostrar alerta
-function showAlert(message, type = 'info') {
-    // Criar alerta temporário
+// ✅ FUNÇÃO AUXILIAR - ALERTAS VISÍVEIS (VERDE VIBRANTE)
+function showAlert(message, type = 'success') {
+    // Remove alertas anteriores
+    const existing = document.querySelectorAll('.custom-alert');
+    existing.forEach(alert => alert.remove());
+    
     const alert = document.createElement('div');
-    alert.className = `alert alert-${type}`;
+    alert.className = `custom-alert ${type}`;
     alert.textContent = message;
-    alert.style.position = 'fixed';
-    alert.style.top = '20px';
-    alert.style.right = '20px';
-    alert.style.zIndex = '1001';
-    alert.style.minWidth = '300px';
+    alert.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1001;
+        padding: 1rem 2rem;
+        border-radius: 10px;
+        color: white;
+        font-weight: 600;
+        background: ${type === 'success' ? '#38a169' : type === 'error' ? '#e53e3e' : type === 'warning' ? '#d69e2e' : '#3182ce'};
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        animation: slideInDown 0.3s ease;
+        text-align: center;
+        min-width: 300px;
+        max-width: 90%;
+        border: 2px solid ${type === 'success' ? '#2f855a' : type === 'error' ? '#c53030' : type === 'warning' ? '#b7791f' : '#2c5aa0'};
+    `;
     
     document.body.appendChild(alert);
     
-    // Remover após 5 segundos
     setTimeout(() => {
-        alert.remove();
-    }, 5000);
+        alert.style.animation = 'slideOutUp 0.3s ease';
+        setTimeout(() => alert.remove(), 300);
+    }, 3000);
 }
 
 // Funções auxiliares dos modais
