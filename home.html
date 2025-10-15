@@ -1554,6 +1554,8 @@ footer {
           <a href="mensagens.html" class="btn btn-outline">Mensagens</a>
           <a href="busca.html" class="btn btn-outline">Buscar</a>
           <a href="painel.html" class="btn btn-outline">Perfil</a>
+          <!-- NOVO: Link para usuários bloqueados -->
+          <a href="blocks.html" class="btn btn-outline">🚫 Bloqueados</a>
           <button class="btn btn-outline" id="logoutBtn">Sair</button>
         </div>
       </div>
@@ -1579,6 +1581,8 @@ footer {
       <a href="busca.html" class="btn btn-outline">Buscar</a>
       <a href="painel.html" class="btn btn-outline">Perfil</a>
       <a href="mensagens.html" class="btn btn-outline">Mensagens</a>
+      <!-- NOVO: Link para usuários bloqueados no mobile -->
+      <a href="blocks.html" class="btn btn-outline">🚫 Bloqueados</a>
       <button class="btn btn-outline" id="mobileLogoutBtn">Sair</button>
     </div>
   </div>
@@ -1689,6 +1693,12 @@ footer {
             <h3>Minhas Mensagens</h3>
             <p>Ver e responder mensagens</p>
           </a>
+          <!-- NOVO: Card para usuários bloqueados -->
+          <a href="blocks.html" class="action-card" style="background: linear-gradient(135deg, #fed7d7, #feb2b2); border: 2px solid #e53e3e;">
+            <div class="action-icon">🚫</div>
+            <h3>Usuários Bloqueados</h3>
+            <p>Gerencie usuários que você bloqueou</p>
+          </a>
           <a href="princing.html" class="action-card" style="background: linear-gradient(135deg, #fff9c4, #ffecb3); border: 2px solid #ffd700;">
             <div class="action-icon">⭐</div>
             <h3>Plano Premium</h3>
@@ -1772,6 +1782,7 @@ footer {
           <li>Não aparecerá mais nos seus resultados de busca</li>
           <li>Não poderá ver seu perfil</li>
           <li>Esta ação pode ser revertida a qualquer momento</li>
+          <li>Para gerenciar bloqueios, acesse <strong>"🚫 Bloqueados"</strong> no menu</li>
         </ul>
       </div>
       
