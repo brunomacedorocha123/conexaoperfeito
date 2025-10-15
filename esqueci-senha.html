@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recuperar Senha - Amor Conect</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    :root {
+        --bege: #f6ecc5;
+        --vermelho-rosado: #d1656d;
+        --lilas: #dfc9ed;
+        --branco: #ffffff;
+        --text: #444;
+        --text-light: #666;
+        --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        --transition: all 0.3s ease;
+        --error: #e53e3e;
+        --success: #38a169;
+    }
+
+    body {
+        background-color: var(--bege);
+        color: var(--text);
+        line-height: 1.6;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .container {
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    /* Header */
+    header {
+        background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+        color: var(--branco);
+        padding: 0.5rem 0;
+        box-shadow: var(--shadow);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 70px;
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-shrink: 0;
+    }
+
+    .logo img {
+        height: 150px;
+        width: auto;
+        object-fit: contain;
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+
+    .logo h1 {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--branco);
+        white-space: nowrap;
+    }
+
+    .auth-buttons {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .btn {
+        padding: 0.6rem 1.2rem;
+        border-radius: 30px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+        font-size: 0.9rem;
+    }
+
+    .btn-outline {
+        background: transparent;
+        border: 2px solid var(--branco);
+        color: var(--branco);
+    }
+
+    .btn-primary {
+        background: var(--branco);
+        color: var(--vermelho-rosado);
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Main Content */
+    .main-content {
+        flex: 1;
+        padding: 2rem 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .auth-container {
+        width: 90%;
+        max-width: 450px;
+        background: var(--branco);
+        border-radius: 20px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        border: 1px solid var(--lilas);
+        margin: 0 auto;
+    }
+
+    .auth-header {
+        background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+        color: var(--branco);
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .auth-header h1 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .auth-header p {
+        opacity: 0.9;
+    }
+
+    .auth-body {
+        padding: 2rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--text);
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid var(--lilas);
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: var(--transition);
+        background: var(--branco);
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--vermelho-rosado);
+        box-shadow: 0 0 0 3px rgba(209, 101, 109, 0.1);
+    }
+
+    .btn-block {
+        width: 100%;
+        padding: 1rem;
+        font-size: 1.1rem;
+        background: var(--vermelho-rosado);
+        color: var(--branco);
+        border: none;
+        border-radius: 30px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        margin-bottom: 1rem;
+    }
+
+    .btn-block:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-secondary {
+        width: 100%;
+        padding: 1rem;
+        background: var(--lilas);
+        color: var(--branco);
+        border: none;
+        border-radius: 30px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        text-decoration: none;
+        display: block;
+        text-align: center;
+    }
+
+    .alert {
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+        display: none;
+        border: 1px solid;
+    }
+
+    .alert-error {
+        background-color: #fed7d7;
+        border-color: #feb2b2;
+        color: #c53030;
+    }
+
+    .alert-success {
+        background-color: #f0fff4;
+        border-color: #9ae6b4;
+        color: #276749;
+    }
+
+    .loading {
+        display: none;
+        text-align: center;
+        margin-top: 1rem;
+    }
+
+    .spinner {
+        width: 30px;
+        height: 30px;
+        border: 3px solid var(--bege);
+        border-top: 3px solid var(--vermelho-rosado);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .auth-footer {
+        text-align: center;
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--lilas);
+    }
+
+    .auth-footer a {
+        color: var(--vermelho-rosado);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    /* Footer */
+    footer {
+        background-color: var(--bege);
+        color: var(--text);
+        padding: 2rem 0 1rem;
+        border-top: 1px solid var(--lilas);
+    }
+
+    .footer-content {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .footer-column h3 {
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        color: var(--vermelho-rosado);
+    }
+
+    .footer-column ul {
+        list-style: none;
+    }
+
+    .footer-column ul li {
+        margin-bottom: 0.5rem;
+    }
+
+    .footer-column a {
+        color: var(--text);
+        text-decoration: none;
+        transition: var(--transition);
+        font-size: 0.9rem;
+    }
+
+    .footer-column a:hover {
+        color: var(--vermelho-rosado);
+    }
+
+    .copyright {
+        text-align: center;
+        padding-top: 1rem;
+        border-top: 1px solid var(--lilas);
+        font-size: 0.8rem;
+        color: var(--text-light);
+    }
+
+    /* Responsividade */
+    @media (max-width: 768px) {
+        .header-content {
+            flex-direction: row;
+            justify-content: space-between;
+            height: 70px;
+            padding: 0;
+        }
+
+        .logo h1 {
+            display: none;
+        }
+
+        .logo img {
+            height: 120px;
+            margin-top: 8px;
+            margin-bottom: 8px;
+        }
+
+        .auth-buttons {
+            gap: 0.8rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        .auth-container {
+            margin: 1rem auto;
+            width: 95%;
+        }
+
+        .auth-header {
+            padding: 1.5rem;
+        }
+
+        .auth-body {
+            padding: 1.5rem;
+        }
+    }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="logoamorconect.png" alt="Amor Conect">
+                    <h1>Amor Conect</h1>
+                </div>
+                <div class="auth-buttons">
+                    <a href="login.html" class="btn btn-outline">Entrar</a>
+                    <a href="cadastro.html" class="btn btn-primary">Cadastre-se</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="auth-container">
+                <div class="auth-header">
+                    <h1>Recuperar Senha</h1>
+                    <p>Digite seu e-mail para receber instruções</p>
+                </div>
+                <div class="auth-body">
+                    <!-- Alert Messages -->
+                    <div class="alert alert-error" id="errorAlert" style="display: none;"></div>
+                    <div class="alert alert-success" id="successAlert" style="display: none;"></div>
+
+                    <form id="forgotPasswordForm">
+                        <div class="form-group">
+                            <label for="email">E-mail</label>
+                            <input type="email" id="email" class="form-control" placeholder="seu@email.com" required>
+                        </div>
+
+                        <button type="submit" class="btn-block" id="submitBtn">
+                            Enviar Instruções
+                        </button>
+
+                        <a href="login.html" class="btn-secondary">
+                            ← Voltar para Login
+                        </a>
+
+                        <div class="loading" id="loading">
+                            <div class="spinner"></div>
+                            <p>Enviando e-mail...</p>
+                        </div>
+                    </form>
+
+                    <div class="auth-footer">
+                        <p>Lembrou sua senha? <a href="login.html">Fazer login</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Amor Conect</h3>
+                    <p>Uma plataforma segura e discreta para conectar corações e construir relacionamentos genuínos.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Links Rápidos</h3>
+                    <ul>
+                        <li><a href="index.html">Página Inicial</a></li>
+                        <li><a href="#como-funciona">Como Funciona</a></li>
+                        <li><a href="#depoimentos">Depoimentos</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Suporte</h3>
+                    <ul>
+                        <li><a href="#">Central de Ajuda</a></li>
+                        <li><a href="#">Política de Privacidade</a></li>
+                        <li><a href="#">Termos de Uso</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2023 Amor Conect. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Configuração do Supabase
+        const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('forgotPasswordForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const loading = document.getElementById('loading');
+            const errorAlert = document.getElementById('errorAlert');
+            const successAlert = document.getElementById('successAlert');
+
+            function showAlert(alertElement, message) {
+                errorAlert.style.display = 'none';
+                successAlert.style.display = 'none';
+                alertElement.textContent = message;
+                alertElement.style.display = 'block';
+            }
+
+            function hideAlerts() {
+                errorAlert.style.display = 'none';
+                successAlert.style.display = 'none';
+            }
+
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const email = document.getElementById('email').value.trim();
+                
+                if (!email || !email.includes('@')) {
+                    showAlert(errorAlert, 'Por favor, insira um e-mail válido.');
+                    return;
+                }
+                
+                submitBtn.disabled = true;
+                loading.style.display = 'block';
+                hideAlerts();
+
+                try {
+                    console.log('Enviando solicitação de reset para:', email);
+                    
+                    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                        redirectTo: 'https://conexaoperfeitaamor.netlify.app/reset-password.html'
+                    });
+
+                    if (error) {
+                        console.error('Erro:', error);
+                        if (error.message.includes('user not found')) {
+                            showAlert(errorAlert, 'E-mail não encontrado. Verifique o endereço.');
+                        } else if (error.message.includes('rate limit')) {
+                            showAlert(errorAlert, 'Muitas tentativas. Aguarde alguns minutos.');
+                        } else {
+                            showAlert(errorAlert, 'Erro ao enviar e-mail: ' + error.message);
+                        }
+                        return;
+                    }
+
+                    console.log('E-mail enviado com sucesso!');
+                    showAlert(successAlert, '📧 Instruções enviadas para: ' + email);
+                    
+                } catch (error) {
+                    console.error('Erro inesperado:', error);
+                    showAlert(errorAlert, 'Erro inesperado. Tente novamente.');
+                } finally {
+                    submitBtn.disabled = false;
+                    loading.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
