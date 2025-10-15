@@ -1886,7 +1886,7 @@ async function updateStorageDisplay() {
 
 /// ==================== EXCLUSÃO DE CONTA ====================
 
-// ==================== EXCLUSÃO DE CONTA ====================
+// ==================== EXCLUSÃO DE CONTA - VERSÃO DEFINITIVA ====================
 
 // Aguardar o DOM carregar completamente
 document.addEventListener('DOMContentLoaded', function() {
@@ -1903,15 +1903,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Estado do fluxo de exclusão
     let deleteFlowStep = 1; // 1 = aviso, 2 = confirmação com senha
+    let isExcluding = false; // ✅ EVITAR CLICKS DUPLOS
 
     // Abrir modal de exclusão
     if (deleteAccountBtn && deleteAccountModal) {
         deleteAccountBtn.addEventListener('click', function() {
+            if (isExcluding) return; // ✅ BLOQUEAR DURANTE EXCLUSÃO
+            
             deleteFlowStep = 1;
             if (confirmationStep) confirmationStep.style.display = 'none';
             if (confirmDelete) {
                 confirmDelete.disabled = false;
                 confirmDelete.textContent = 'Sim, Excluir Minha Conta';
+                confirmDelete.innerHTML = '<i class="fas fa-trash-alt"></i> Sim, Excluir Minha Conta';
             }
             if (confirmPassword) confirmPassword.value = '';
             if (passwordFeedback) {
@@ -1939,6 +1943,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Primeira confirmação - mostrar campo de senha
     if (confirmDelete) {
         confirmDelete.addEventListener('click', function() {
+            if (isExcluding) return; // ✅ BLOQUEAR DURANTE EXCLUSÃO
+            
             if (deleteFlowStep === 1) {
                 // Primeiro clique - mostrar campo de senha
                 deleteFlowStep = 2;
@@ -1948,6 +1954,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (confirmDelete) {
                     confirmDelete.disabled = true;
                     confirmDelete.textContent = 'Confirmar Exclusão';
+                    confirmDelete.innerHTML = '<i class="fas fa-trash-alt"></i> Confirmar Exclusão';
                 }
             } else {
                 // Segundo clique - executar exclusão
@@ -1959,13 +1966,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Validar senha em tempo real
     if (confirmPassword) {
         confirmPassword.addEventListener('input', async function() {
+            if (isExcluding) return; // ✅ BLOQUEAR DURANTE EXCLUSÃO
             await validatePassword();
         });
     }
 
     // Função para validar senha
     async function validatePassword() {
-        if (!confirmPassword) return false;
+        if (!confirmPassword || isExcluding) return false;
         
         const password = confirmPassword.value.trim();
         
@@ -2019,6 +2027,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Permitir enviar com Enter
     if (confirmPassword) {
         confirmPassword.addEventListener('keypress', async function(e) {
+            if (isExcluding) return; // ✅ BLOQUEAR DURANTE EXCLUSÃO
+            
             if (e.key === 'Enter') {
                 const isValid = await validatePassword();
                 if (isValid && confirmDelete) {
@@ -2028,10 +2038,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Função principal de exclusão CORRIGIDA
+    // ✅✅✅ FUNÇÃO PRINCIPAL DE EXCLUSÃO - CORRIGIDA DEFINITIVAMENTE
     async function executeAccountDeletion() {
-        if (!confirmPassword || !confirmDelete) {
-            console.error('Elementos não encontrados');
+        if (!confirmPassword || !confirmDelete || isExcluding) {
+            console.error('Elementos não encontrados ou exclusão em andamento');
             return;
         }
 
@@ -2042,11 +2052,16 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        // ✅ BLOQUEAR NOVAS TENTATIVAS
+        isExcluding = true;
+        
         // Mostrar loading
         confirmDelete.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Excluindo...';
         confirmDelete.disabled = true;
 
         try {
+            console.log('🔄 Iniciando exclusão da conta...');
+            
             // Chamar a função SQL que exclui tudo
             const { data, error } = await supabase.rpc('delete_user_completely', {
                 user_password: password
@@ -2055,48 +2070,70 @@ document.addEventListener('DOMContentLoaded', function() {
             if (error) throw error;
 
             if (data) {
-                // ✅ CORREÇÃO: Fechar modal primeiro
+                console.log('✅ Conta excluída com sucesso no banco');
+                
+                // ✅ 1. FECHAR MODAL PRIMEIRO (ANTES DE QUALQUER COISA)
                 closeDeleteModalFunc();
                 
-                // ✅ CORREÇÃO: Notificação rápida
+                // ✅ 2. NOTIFICAÇÃO RÁPIDA
                 showNotification('Conta excluída com sucesso', 'success');
                 
-                // ✅ CORREÇÃO: Limpar storage e redirecionar IMEDIATAMENTE
+                // ✅ 3. REDIRECIONAMENTO ULTRA-RÁPIDO E SEGURO
                 setTimeout(() => {
-                    // Limpar tudo antes de redirecionar
-                    localStorage.clear();
-                    sessionStorage.clear();
+                    console.log('🔄 Iniciando limpeza e redirecionamento...');
                     
-                    // Fazer logout silencioso (não esperar resposta)
+                    // ✅ PARAR TODOS OS EVENT LISTENERS E TIMERS
+                    window.removeAllListeners?.();
+                    
+                    // ✅ LIMPAR STORAGE SILENCIOSAMENTE
+                    try {
+                        localStorage.clear();
+                        sessionStorage.clear();
+                    } catch (e) {
+                        console.log('⚠️ Erro ao limpar storage:', e);
+                    }
+                    
+                    // ✅ LOGOUT SILENCIOSO (NÃO ESPERAR)
                     supabase.auth.signOut().catch(() => {});
                     
-                    // Redirecionamento DIRETO
-                    window.location.href = 'index.html';
-                }, 1000); // Reduzido para 1 segundo
+                    // ✅ REDIRECIONAMENTO FORÇADO - EVITA HISTORY
+                    window.location.replace('index.html');
+                    
+                }, 800); // ✅ TEMPO OTIMIZADO: 800ms
                 
             } else {
                 throw new Error('Senha incorreta');
             }
 
         } catch (error) {
-            console.error('Erro ao excluir conta:', error);
+            console.error('❌ Erro ao excluir conta:', error);
             showNotification('Erro ao excluir conta: ' + error.message, 'error');
             
-            // Resetar botão
+            // ✅ REABILITAR BOTÃO EM CASO DE ERRO
             if (confirmDelete) {
                 confirmDelete.innerHTML = '<i class="fas fa-trash-alt"></i> Confirmar Exclusão';
                 confirmDelete.disabled = false;
             }
+            
+            // ✅ LIBERAR PARA NOVAS TENTATIVAS
+            isExcluding = false;
         }
     }
 
     // Fechar modal clicando fora
     if (deleteAccountModal) {
         deleteAccountModal.addEventListener('click', function(e) {
+            if (isExcluding) return; // ✅ BLOQUEAR DURANTE EXCLUSÃO
+            
             if (e.target === this) {
                 closeDeleteModalFunc();
             }
         });
     }
+
+    // ✅ PREVENÇÃO EXTRA: BLOQUEAR EVENTOS DURANTE REDIRECIONAMENTO
+    window.addEventListener('beforeunload', function() {
+        isExcluding = true; // ✅ BLOQUEAR TUDO DURANTE DESCARREGAMENTO
+    });
 
 });
