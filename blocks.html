@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuários Bloqueados - Amor Conect</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* COLAR AQUI TODO O MESMO CSS DA HOME.HTML */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --bege: #f6ecc5;
+            --vermelho-rosado: #d1656d;
+            --lilas: #dfc9ed;
+            --branco: #ffffff;
+            --text: #444;
+            --text-light: #666;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            background-color: var(--bege);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header igual ao da home */
+        header {
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            color: var(--branco);
+            padding: 0.8rem 0;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+            justify-content: center;
+            flex: 1;
+        }
+
+        .logo img {
+            height: 220px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .btn {
+            padding: 0.6rem 1rem;
+            border-radius: 30px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--branco);
+            color: var(--branco);
+        }
+
+        .btn-primary {
+            background: var(--branco);
+            color: var(--vermelho-rosado);
+        }
+
+        .btn-danger {
+            background: #e53e3e;
+            color: var(--branco);
+            border: none;
+        }
+
+        .btn-danger:hover {
+            background: #c53030;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem 0;
+            min-height: 70vh;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--branco);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--lilas);
+        }
+
+        .page-header h1 {
+            font-size: 2rem;
+            color: var(--vermelho-rosado);
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            color: var(--text-light);
+            font-size: 1rem;
+        }
+
+        /* Users Grid */
+        .users-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .user-card {
+            background: var(--branco);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            text-align: center;
+            border: 1px solid var(--lilas);
+        }
+
+        .user-card.blocked-card {
+            border: 2px solid #e53e3e;
+            background: #fff5f5;
+        }
+
+        .user-card-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            color: var(--branco);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0 auto 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .user-card-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--vermelho-rosado);
+            margin-bottom: 0.5rem;
+        }
+
+        .blocked-badge {
+            background: #e53e3e;
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+        }
+
+        .user-card-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            background: var(--branco);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--lilas);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--bege);
+            border-top: 4px solid var(--vermelho-rosado);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="logoamorconect.png" alt="Amor Conect">
+                </div>
+                <div class="user-menu">
+                    <a href="home.html" class="btn btn-outline">🏠 Home</a>
+                    <a href="mensagens.html" class="btn btn-outline">💌 Mensagens</a>
+                    <button class="btn btn-outline" id="logoutBtn">Sair</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Page Header -->
+            <section class="page-header">
+                <h1>🚫 Usuários Bloqueados</h1>
+                <p>Gerencie os usuários que você bloqueou</p>
+            </section>
+
+            <!-- Loading State -->
+            <div class="loading" id="loadingBlocked">
+                <div class="spinner"></div>
+                <p>Carregando usuários bloqueados...</p>
+            </div>
+
+            <!-- Blocked Users Grid -->
+            <div class="users-grid" id="blockedUsersGrid">
+                <!-- Os cards dos usuários bloqueados aparecerão aqui -->
+            </div>
+
+            <!-- No Blocked Users -->
+            <div class="empty-state hidden" id="noBlockedUsers">
+                <div class="empty-state-icon">😊</div>
+                <h3>Nenhum usuário bloqueado</h3>
+                <p>Você não bloqueou nenhum usuário ainda.</p>
+                <a href="home.html" class="btn btn-primary" style="margin-top: 1rem;">
+                    Voltar para Home
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Configuração do Supabase (igual da home)
+        const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let currentUser = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+        });
+
+        // Verificar autenticação
+        async function checkAuth() {
+            try {
+                const { data: { user }, error } = await supabase.auth.getUser();
+                
+                if (error) throw error;
+                
+                if (!user) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                currentUser = user;
+                await loadBlockedUsers();
+                
+            } catch (error) {
+                console.error('Erro na autenticação:', error);
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Carregar usuários bloqueados
+        async function loadBlockedUsers() {
+            try {
+                console.log('🔄 Carregando usuários bloqueados...');
+                
+                const { data: blocks, error } = await supabase
+                    .from('user_blocks')
+                    .select(`
+                        id,
+                        created_at,
+                        profiles:blocked_user_id (
+                            id,
+                            nickname,
+                            full_name,
+                            avatar_url,
+                            birth_date,
+                            user_details (
+                                gender,
+                                zodiac,
+                                profession,
+                                description
+                            )
+                        )
+                    `)
+                    .eq('blocker_id', currentUser.id)
+                    .order('created_at', { ascending: false });
+
+                const loadingElement = document.getElementById('loadingBlocked');
+                const blockedUsersGrid = document.getElementById('blockedUsersGrid');
+                const noBlockedUsers = document.getElementById('noBlockedUsers');
+
+                if (error) {
+                    console.error('❌ Erro ao carregar bloqueados:', error);
+                    blockedUsersGrid.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">❌</div>
+                            <h3>Erro ao carregar usuários bloqueados</h3>
+                            <p>Tente recarregar a página</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Esconder loading
+                loadingElement.classList.add('hidden');
+
+                if (!blocks || blocks.length === 0) {
+                    noBlockedUsers.classList.remove('hidden');
+                    return;
+                }
+
+                console.log('✅ Usuários bloqueados encontrados:', blocks.length);
+
+                // Criar cards dos usuários bloqueados
+                let html = '';
+                
+                for (const block of blocks) {
+                    const user = block.profiles;
+                    if (!user) continue;
+
+                    const nickname = user.nickname || user.full_name?.split(' ')[0] || 'Usuário';
+                    const age = user.birth_date ? calculateAge(user.birth_date) : null;
+                    const details = user.user_details || {};
+                    const bio = details.description || 'Sem descrição';
+
+                    // Avatar
+                    let avatarHtml = '';
+                    if (user.avatar_url) {
+                        const photoUrl = await loadUserPhoto(user.avatar_url);
+                        if (photoUrl) {
+                            avatarHtml = `
+                                <div class="user-card-avatar" style="background-image: url('${photoUrl}'); background-size: cover; background-position: center;">
+                                    <div class="user-card-avatar-fallback" style="display: none;">${nickname.charAt(0).toUpperCase()}</div>
+                                </div>
+                            `;
+                        } else {
+                            avatarHtml = `
+                                <div class="user-card-avatar">
+                                    <div class="user-card-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
+                                </div>
+                            `;
+                        }
+                    } else {
+                        avatarHtml = `
+                            <div class="user-card-avatar">
+                                <div class="user-card-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
+                            </div>
+                        `;
+                    }
+
+                    html += `
+                        <div class="user-card blocked-card">
+                            ${avatarHtml}
+                            <div class="blocked-badge">🚫 Bloqueado</div>
+                            <div class="user-card-name">${nickname}${age ? `, ${age}` : ''}</div>
+                            <div class="user-card-bio" style="margin-bottom: 1rem; font-size: 0.9rem; color: #666;">
+                                ${bio}
+                            </div>
+                            <div class="user-card-actions">
+                                <button class="btn btn-primary btn-sm" onclick="unblockUser('${user.id}', '${nickname}')">
+                                    🔓 Desbloquear
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                blockedUsersGrid.innerHTML = html;
+
+            } catch (error) {
+                console.error('❌ Erro ao carregar bloqueados:', error);
+                document.getElementById('loadingBlocked').classList.add('hidden');
+                document.getElementById('blockedUsersGrid').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">❌</div>
+                        <h3>Erro ao carregar usuários bloqueados</h3>
+                        <p>Tente recarregar a página</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Função para desbloquear usuário
+        async function unblockUser(userId, userName) {
+            if (!confirm(`Tem certeza que deseja desbloquear ${userName}?`)) {
+                return;
+            }
+
+            try {
+                console.log('🔄 Desbloqueando usuário:', userId);
+                
+                const { error } = await supabase
+                    .from('user_blocks')
+                    .delete()
+                    .eq('blocker_id', currentUser.id)
+                    .eq('blocked_user_id', userId);
+
+                if (error) {
+                    console.error('❌ Erro ao desbloquear:', error);
+                    alert('❌ Erro ao desbloquear usuário. Tente novamente.');
+                    return;
+                }
+
+                console.log('✅ Usuário desbloqueado com sucesso!');
+                alert(`✅ ${userName} foi desbloqueado com sucesso!`);
+                
+                // Recarregar a lista
+                await loadBlockedUsers();
+
+            } catch (error) {
+                console.error('❌ Erro ao desbloquear:', error);
+                alert('❌ Erro ao desbloquear usuário. Tente novamente.');
+            }
+        }
+
+        // Função auxiliar para carregar foto
+        async function loadUserPhoto(avatarUrl) {
+            try {
+                if (!avatarUrl) return null;
+                const { data } = supabase.storage.from('avatars').getPublicUrl(avatarUrl);
+                return data?.publicUrl || null;
+            } catch (error) {
+                console.error('Erro ao carregar foto:', error);
+                return null;
+            }
+        }
+
+        // Função para calcular idade
+        function calculateAge(birthDate) {
+            if (!birthDate) return null;
+            const today = new Date();
+            const birth = new Date(birthDate);
+            let age = today.getFullYear() - birth.getFullYear();
+            const monthDiff = today.getMonth() - birth.getMonth();
+            
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+                age--;
+            }
+            
+            return age;
+        }
+
+        // Logout
+        async function logout() {
+            try {
+                const { error } = await supabase.auth.signOut();
+                if (error) throw error;
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Erro ao fazer logout:', error);
+                alert('Erro ao fazer logout. Tente novamente.');
+            }
+        }
+
+        // Event Listeners
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+    </script>
+</body>
+</html>
