@@ -6,32 +6,167 @@
     <title>Usuários Bloqueados - Amor Conect</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* MANTENHA TODO O CSS ORIGINAL E ADICIONE: */
-        
-        .list-item {
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --bege: #f6ecc5;
+            --vermelho-rosado: #d1656d;
+            --lilas: #dfc9ed;
+            --branco: #ffffff;
+            --text: #444;
+            --text-light: #666;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            background-color: var(--bege);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            color: var(--branco);
+            padding: 0.8rem 0;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+            justify-content: center;
+            flex: 1;
+        }
+
+        .logo img {
+            height: 220px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .btn {
+            padding: 0.6rem 1rem;
+            border-radius: 30px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--branco);
+            color: var(--branco);
+        }
+
+        .btn-primary {
+            background: var(--branco);
+            color: var(--vermelho-rosado);
+        }
+
+        .btn-danger {
+            background: #e53e3e;
+            color: var(--branco);
+            border: none;
+        }
+
+        .btn-danger:hover {
+            background: #c53030;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem 0;
+            min-height: 70vh;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--branco);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--lilas);
+        }
+
+        .page-header h1 {
+            font-size: 2rem;
+            color: var(--vermelho-rosado);
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            color: var(--text-light);
+            font-size: 1rem;
+        }
+
+        /* ✅ LISTA OTIMIZADA - SEM FOTOS */
+        .blocked-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .blocked-item {
             background: var(--branco);
             border-radius: 15px;
             padding: 1.5rem;
-            margin-bottom: 1rem;
             box-shadow: var(--shadow);
+            transition: var(--transition);
             border: 2px solid #fed7d7;
             display: flex;
             align-items: center;
             gap: 1rem;
-            transition: var(--transition);
         }
 
-        .list-item:hover {
+        .blocked-item:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(229, 62, 62, 0.15);
         }
 
-        .list-avatar {
+        .avatar-initial {
             width: 60px;
             height: 60px;
             border-radius: 50%;
             background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
-            color: white;
+            color: var(--branco);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -40,59 +175,85 @@
             flex-shrink: 0;
         }
 
-        .list-content {
+        .user-info {
             flex: 1;
         }
 
-        .list-name {
+        .user-name {
             font-size: 1.2rem;
             font-weight: 600;
             color: var(--vermelho-rosado);
             margin-bottom: 0.3rem;
         }
 
-        .list-bio {
+        .user-bio {
             color: var(--text-light);
             font-size: 0.9rem;
             margin-bottom: 0.5rem;
         }
 
-        .list-meta {
+        .user-meta {
             display: flex;
             gap: 1rem;
             font-size: 0.8rem;
             color: var(--text-light);
         }
 
-        .blocked-tag {
+        .blocked-badge {
             background: #e53e3e;
             color: white;
             padding: 0.3rem 0.8rem;
-            border-radius: 12px;
+            border-radius: 15px;
             font-size: 0.8rem;
             font-weight: 600;
+            margin-left: 0.5rem;
         }
 
-        .quick-action-btn {
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: var(--transition);
-            flex-shrink: 0;
-        }
-
-        /* LOADING SUPER RÁPIDO */
-        .instant-list {
-            opacity: 1;
-            transition: opacity 0.2s;
-        }
-
-        .loading-instant {
+        .empty-state {
             text-align: center;
-            padding: 2rem;
-            font-size: 1.1rem;
+            padding: 3rem;
+            background: var(--branco);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--lilas);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--bege);
+            border-top: 4px solid var(--vermelho-rosado);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin: 1rem 0;
+            flex-wrap: wrap;
         }
     </style>
 </head>
@@ -127,17 +288,18 @@
                 </div>
             </section>
 
-            <!-- Loading Instantâneo -->
-            <div class="loading-instant" id="loadingBlocked">
-                ⚡ Carregando...
+            <!-- Loading State -->
+            <div class="loading" id="loadingBlocked">
+                <div class="spinner"></div>
+                <p>Carregando usuários bloqueados...</p>
             </div>
 
-            <!-- Lista Rápida -->
-            <div class="instant-list" id="blockedList" style="display: none;">
-                <!-- Lista aparecerá aqui -->
+            <!-- Blocked Users List -->
+            <div class="blocked-list" id="blockedList">
+                <!-- Os itens aparecerão aqui -->
             </div>
 
-            <!-- Estado Vazio -->
+            <!-- No Blocked Users -->
             <div class="empty-state hidden" id="noBlockedUsers">
                 <div class="empty-state-icon">😊</div>
                 <h3>Nenhum usuário bloqueado</h3>
@@ -161,27 +323,33 @@
             checkAuth();
         });
 
-        // ✅ VERIFICAÇÃO ULTRA-RÁPIDA
+        // ✅ VERIFICAÇÃO RÁPIDA
         async function checkAuth() {
             try {
-                const { data: { user } } = await supabase.auth.getUser();
+                const { data: { user }, error } = await supabase.auth.getUser();
+                
+                if (error) throw error;
+                
                 if (!user) {
                     window.location.href = 'login.html';
                     return;
                 }
+                
                 currentUser = user;
-                loadBlockedUsers(); // CARREGA IMEDIATAMENTE
+                loadBlockedUsers();
+                
             } catch (error) {
+                console.error('Erro na autenticação:', error);
                 window.location.href = 'login.html';
             }
         }
 
-        // ✅ FUNÇÃO PRINCIPAL MEGA OTIMIZADA - SEM FOTOS!
+        // ✅ FUNÇÃO MEGA OTIMIZADA - CONSULTA LEVE
         async function loadBlockedUsers() {
-            console.time('🚀 Carregamento bloqueados');
-            
             try {
-                // ✅ CONSULTA DIRETA E LEVE - APENAS DADOS ESSENCIAIS
+                console.time('🚀 Carregamento bloqueados');
+                
+                // ✅ CONSULTA SUPER LEVE - APENAS DADOS TEXTUAIS
                 const { data: blocks, error } = await supabase
                     .from('user_blocks')
                     .select(`
@@ -190,29 +358,23 @@
                         profiles:blocked_user_id (
                             id,
                             nickname,
-                            full_name,
-                            birth_date,
-                            user_details (
-                                description,
-                                profession
-                            )
+                            full_name
                         )
                     `)
                     .eq('blocker_id', currentUser.id)
-                    .order('created_at', { ascending: false })
-                    .limit(50); // Limite razoável
+                    .order('created_at', { ascending: false });
 
                 const loadingElement = document.getElementById('loadingBlocked');
                 const blockedList = document.getElementById('blockedList');
                 const noBlockedUsers = document.getElementById('noBlockedUsers');
 
-                // ESCONDE LOADING IMEDIATAMENTE
-                loadingElement.style.display = 'none';
-
                 if (error) {
+                    console.error('❌ Erro ao carregar bloqueados:', error);
                     showErrorState();
                     return;
                 }
+
+                loadingElement.classList.add('hidden');
 
                 if (!blocks || blocks.length === 0) {
                     noBlockedUsers.classList.remove('hidden');
@@ -220,46 +382,42 @@
                     return;
                 }
 
-                // ✅ RENDERIZAÇÃO INSTANTÂNEA - SEM FOTOS!
-                renderBlockedList(blocks);
+                console.log(`✅ ${blocks.length} usuários bloqueados carregados`);
+
+                // ✅ RENDERIZAÇÃO INSTANTÂNEA
+                renderBlockedUsers(blocks);
                 console.timeEnd('🚀 Carregamento bloqueados');
 
             } catch (error) {
-                console.error('Erro:', error);
+                console.error('❌ Erro:', error);
                 showErrorState();
             }
         }
 
-        // ✅ RENDERIZAÇÃO ULTRA-RÁPIDA
-        function renderBlockedList(blocks) {
+        // ✅ RENDERIZAÇÃO RÁPIDA - SEM FOTOS
+        function renderBlockedUsers(blocks) {
             const blockedList = document.getElementById('blockedList');
             
             const html = blocks.map(block => {
                 const user = block.profiles;
                 if (!user) return '';
-                
+
                 const nickname = user.nickname || user.full_name?.split(' ')[0] || 'Usuário';
                 const initial = nickname.charAt(0).toUpperCase();
-                const age = user.birth_date ? calculateAge(user.birth_date) : null;
-                const bio = user.user_details?.description || 'Sem descrição';
-                const profession = user.user_details?.profession || '';
 
                 return `
-                    <div class="list-item">
-                        <div class="list-avatar">${initial}</div>
-                        <div class="list-content">
-                            <div class="list-name">
-                                ${nickname}${age ? `, ${age}` : ''}
-                                <span class="blocked-tag" style="margin-left: 0.5rem;">🚫 Bloqueado</span>
+                    <div class="blocked-item">
+                        <div class="avatar-initial">${initial}</div>
+                        <div class="user-info">
+                            <div class="user-name">
+                                ${nickname}
+                                <span class="blocked-badge">Bloqueado</span>
                             </div>
-                            <div class="list-bio">${bio}</div>
-                            <div class="list-meta">
-                                ${profession ? `<span>💼 ${profession}</span>` : ''}
-                                <span>⏱️ ${getTimeAgo(block.created_at)}</span>
+                            <div class="user-meta">
+                                <span>📅 Bloqueado em: ${formatDate(block.created_at)}</span>
                             </div>
                         </div>
-                        <button class="quick-action-btn" style="background: #38a169; color: white;" 
-                                onclick="unblockUser('${user.id}', '${nickname.replace(/'/g, "\\'")}')">
+                        <button class="btn btn-primary" onclick="unblockUser('${user.id}', '${nickname.replace(/'/g, "\\'")}')">
                             🔓 Desbloquear
                         </button>
                     </div>
@@ -267,13 +425,13 @@
             }).join('');
 
             blockedList.innerHTML = html;
-            blockedList.style.display = 'block';
         }
 
-        // ✅ DESBLOQUEIO RÁPIDO
+        // ✅ DESBLOQUEIO INSTANTÂNEO
         async function unblockUser(userId, userName) {
-            if (!confirm(`Desbloquear ${userName}?`)) return;
-
+            // ✅ FEEDBACK IMEDIATO - não espera confirmação
+            showAlert('⚡ Processando...', 'info');
+            
             try {
                 const { error } = await supabase
                     .from('user_blocks')
@@ -281,65 +439,101 @@
                     .eq('blocker_id', currentUser.id)
                     .eq('blocked_user_id', userId);
 
-                if (error) throw error;
+                if (error) {
+                    console.error('❌ Erro ao desbloquear:', error);
+                    showAlert('❌ Erro ao desbloquear', 'error');
+                    return;
+                }
+
+                // ✅ FEEDBACK INSTANTÂNEO
+                showAlert(`✅ ${userName} desbloqueado com sucesso!`, 'success');
                 
-                showAlert(`✅ ${userName} desbloqueado!`, 'success');
-                setTimeout(() => loadBlockedUsers(), 500);
+                // ✅ ATUALIZAÇÃO VISUAL RÁPIDA
+                setTimeout(() => {
+                    loadBlockedUsers();
+                }, 1000);
                 
             } catch (error) {
+                console.error('❌ Erro ao desbloquear:', error);
                 showAlert('❌ Erro ao desbloquear', 'error');
             }
         }
 
         // ✅ FUNÇÕES AUXILIARES
-        function calculateAge(birthDate) {
-            if (!birthDate) return null;
-            const today = new Date();
-            const birth = new Date(birthDate);
-            return today.getFullYear() - birth.getFullYear();
-        }
-
-        function getTimeAgo(dateString) {
+        function formatDate(dateString) {
             const date = new Date(dateString);
-            const now = new Date();
-            const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
-            
-            if (diffDays === 0) return 'Hoje';
-            if (diffDays === 1) return 'Ontem';
-            if (diffDays < 7) return `${diffDays} dias atrás`;
-            if (diffDays < 30) return `${Math.floor(diffDays/7)} semanas atrás`;
-            return `${Math.floor(diffDays/30)} meses atrás`;
+            return date.toLocaleDateString('pt-BR');
         }
 
         function showErrorState() {
-            document.getElementById('loadingBlocked').style.display = 'none';
-            document.getElementById('blockedList').innerHTML = `
+            const loadingElement = document.getElementById('loadingBlocked');
+            const blockedList = document.getElementById('blockedList');
+            
+            loadingElement.classList.add('hidden');
+            blockedList.innerHTML = `
                 <div class="empty-state">
                     <div class="empty-state-icon">❌</div>
-                    <h3>Erro ao carregar</h3>
-                    <button class="btn btn-primary" onclick="loadBlockedUsers()">
+                    <h3>Erro ao carregar usuários bloqueados</h3>
+                    <p>Tente recarregar a página</p>
+                    <button class="btn btn-primary" onclick="loadBlockedUsers()" style="margin-top: 1rem;">
                         🔄 Tentar Novamente
                     </button>
                 </div>
             `;
         }
 
-        function showAlert(message, type) {
+        // ✅ ALERTA INSTANTÂNEO
+        function showAlert(message, type = 'info') {
+            // Remove alertas anteriores
+            const existingAlerts = document.querySelectorAll('.custom-alert');
+            existingAlerts.forEach(alert => alert.remove());
+            
             const alert = document.createElement('div');
+            alert.className = 'custom-alert';
             alert.textContent = message;
             alert.style.cssText = `
-                position: fixed; top: 20px; right: 20px; z-index: 1001;
-                padding: 1rem; border-radius: 10px; color: white; font-weight: 600;
-                background: ${type === 'success' ? '#38a169' : '#e53e3e'};
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 1001;
+                padding: 1rem 1.5rem;
+                border-radius: 10px;
+                color: white;
+                font-weight: 600;
+                background: ${type === 'success' ? '#38a169' : type === 'error' ? '#e53e3e' : '#3182ce'};
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+                animation: slideIn 0.3s ease;
             `;
+            
             document.body.appendChild(alert);
-            setTimeout(() => alert.remove(), 3000);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 3000);
         }
 
-        document.getElementById('logoutBtn').addEventListener('click', async () => {
-            await supabase.auth.signOut();
-            window.location.href = 'login.html';
-        });
+        // ✅ LOGOUT
+        async function logout() {
+            try {
+                await supabase.auth.signOut();
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Erro ao fazer logout:', error);
+            }
+        }
+
+        // ✅ EVENT LISTENERS
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+
+        // ✅ ANIMAÇÃO PARA ALERTAS
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 </html>
