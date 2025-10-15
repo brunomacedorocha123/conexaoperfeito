@@ -2470,45 +2470,175 @@ function closeBlockModal() {
     currentBlockUserName = null;
 }
 
-// Função para confirmar bloqueio
+// Função para confirmar bloqueio - OTIMIZADA
 async function confirmBlock() {
+    const startTime = Date.now();
+    const confirmBtn = document.getElementById('confirmBlockBtn');
+    
     try {
-        console.log('🔄 Confirmando bloqueio para:', currentBlockUserId);
+        console.log('🔄 Confirmando bloqueio para:', currentBlockUserName);
         
-        // Enviar para o Supabase
-        const { data, error } = await supabase
+        // ✅ FEEDBACK VISUAL IMEDIATO (0ms)
+        if (confirmBtn) {
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = '⏳ Bloqueando...';
+            confirmBtn.style.opacity = '0.7';
+        }
+        
+        showAlert('⚡ Bloqueando usuário...', 'warning');
+
+        // ✅ TIMEOUT AGGRESSIVO - 2 SEGUNDOS
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout')), 2000)
+        );
+
+        // ✅ BLOQUEIO NO BANCO
+        const blockPromise = supabase
             .from('user_blocks')
             .insert({
                 blocker_id: currentUser.id,
                 blocked_user_id: currentBlockUserId
             });
-            
-        if (error) {
-            console.error('❌ Erro ao bloquear usuário:', error);
-            
-            // Se for erro de duplicata, usuário já está bloqueado
-            if (error.code === '23505') {
+
+        const result = await Promise.race([blockPromise, timeoutPromise]);
+        
+        const responseTime = Date.now() - startTime;
+        console.log(`✅ Bloqueio realizado em ${responseTime}ms`);
+
+        if (responseTime > 1500) {
+            updateConnectionStatus('slow');
+        }
+
+        if (result.error) {
+            // ✅ ERRO DE DUPLICATA - Usuário já bloqueado
+            if (result.error.code === '23505') {
+                console.log('ℹ️ Usuário já estava bloqueado');
                 showAlert('ℹ️ Este usuário já está bloqueado.', 'info');
             } else {
-                showAlert('❌ Erro ao bloquear usuário. Tente novamente.', 'error');
+                throw result.error;
             }
-            return;
+        } else {
+            // ✅ SUCESSO
+            console.log('✅ Usuário bloqueado com sucesso!');
+            showAlert(`✅ ${currentBlockUserName} bloqueado com sucesso!`, 'success');
+            
+            // ✅ REMOVER CARD DA UI IMEDIATAMENTE
+            removeBlockedUserFromUI(currentBlockUserId);
         }
         
-        console.log('✅ Usuário bloqueado com sucesso!');
-        showAlert('✅ Usuário bloqueado com sucesso!', 'success');
-        
-        // Remover card do usuário bloqueado da interface
-        removeBlockedUserFromUI(currentBlockUserId);
-        
+        // ✅ FECHAR MODAL
         closeBlockModal();
-        
+
     } catch (error) {
         console.error('❌ Erro ao bloquear usuário:', error);
-        showAlert('❌ Erro ao bloquear usuário. Tente novamente.', 'error');
+        
+        // ✅ RESTAURAR BOTÃO
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = 'Confirmar Bloqueio';
+            confirmBtn.style.opacity = '1';
+        }
+        
+        if (error.message === 'Timeout') {
+            showAlert('⚠️ Bloqueado localmente (rede lenta)', 'warning');
+            // ✅ FALLBACK: Remover mesmo com timeout
+            removeBlockedUserFromUI(currentBlockUserId);
+        } else {
+            showAlert('❌ Erro ao bloquear. Tente novamente.', 'error');
+        }
+        
+        updateConnectionStatus('slow');
     }
 }
 
+// ✅ FUNÇÃO AUXILIAR - ATUALIZAR STATUS CONEXÃO
+function updateConnectionStatus(status) {
+    // Buscar ou criar elemento de status
+    let statusElement = document.getElementById('connectionStatus');
+    if (!statusElement) {
+        statusElement = document.createElement('div');
+        statusElement.id = 'connectionStatus';
+        statusElement.className = 'connection-status';
+        document.body.appendChild(statusElement);
+    }
+    
+    if (status === 'good') {
+        statusElement.textContent = '✅ Conexão OK';
+        statusElement.className = 'connection-status connection-good';
+    } else {
+        statusElement.textContent = '⚠️ Conexão Lenta';
+        statusElement.className = 'connection-status connection-slow';
+    }
+}
+
+// ✅ FUNÇÃO AUXILIAR - ALERTAS VISÍVEIS (igual blocks.html)
+function showAlert(message, type = 'success') {
+    // Remove alertas anteriores
+    const existing = document.querySelectorAll('.custom-alert');
+    existing.forEach(alert => alert.remove());
+    
+    const alert = document.createElement('div');
+    alert.className = `custom-alert ${type}`;
+    alert.textContent = message;
+    alert.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1001;
+        padding: 1rem 2rem;
+        border-radius: 10px;
+        color: white;
+        font-weight: 600;
+        background: ${type === 'success' ? '#38a169' : type === 'error' ? '#e53e3e' : type === 'warning' ? '#d69e2e' : '#3182ce'};
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        animation: slideInDown 0.3s ease;
+        text-align: center;
+        min-width: 300px;
+        max-width: 90%;
+        border: 2px solid ${type === 'success' ? '#2f855a' : type === 'error' ? '#c53030' : type === 'warning' ? '#b7791f' : '#2c5aa0'};
+    `;
+    
+    document.body.appendChild(alert);
+    
+    setTimeout(() => {
+        alert.style.animation = 'slideOutUp 0.3s ease';
+        setTimeout(() => alert.remove(), 300);
+    }, 3000);
+}
+
+// ✅ ADICIONAR CSS PARA ANIMAÇÕES (se não existir)
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideInDown {
+        from { transform: translate(-50%, -100%); opacity: 0; }
+        to { transform: translate(-50%, 0); opacity: 1; }
+    }
+    @keyframes slideOutUp {
+        from { transform: translate(-50%, 0); opacity: 1; }
+        to { transform: translate(-50%, -100%); opacity: 0; }
+    }
+    .connection-status {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        z-index: 1000;
+        transition: all 0.3s ease;
+    }
+    .connection-good { background: #38a169; color: white; }
+    .connection-slow { background: #d69e2e; color: white; }
+    .custom-alert { 
+        /* Estilos base já aplicados inline */
+    }
+`;
+if (!document.querySelector('#alert-animations')) {
+    style.id = 'alert-animations';
+    document.head.appendChild(style);
+}
 // Função para remover usuário bloqueado da UI
 function removeBlockedUserFromUI(userId) {
     const userCards = document.querySelectorAll('.user-card');
