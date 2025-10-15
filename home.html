@@ -2470,22 +2470,22 @@ function closeBlockModal() {
     currentBlockUserName = null;
 }
 
-// Função para confirmar bloqueio - HIPER-RÁPIDA
+/// Função para confirmar bloqueio - RÁPIDO E HONESTO
 async function confirmBlock() {
     const startTime = Date.now();
     
     try {
-        console.log('⚡ Bloqueio rápido para:', currentBlockUserName);
+        console.log('⚡ Iniciando bloqueio REAL para:', currentBlockUserName);
         
-        // ✅ FEEDBACK IMEDIATO
+        // ✅ FEEDBACK HONESTO
         showAlert('⚡ Bloqueando...', 'warning');
         
-        // ✅ TIMEOUT SUPER AGRESSIVO - 1 SEGUNDO
+        // ✅ TIMEOUT BALANCEADO - 2.5 SEGUNDOS (tempo suficiente)
         const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Timeout')), 1000)
+            setTimeout(() => reject(new Error('Timeout - Rede lenta')), 2500)
         );
 
-        // ✅ BLOQUEIO DIRETO
+        // ✅ BLOQUEIO NO BANCO
         const blockPromise = supabase
             .from('user_blocks')
             .insert({
@@ -2493,28 +2493,67 @@ async function confirmBlock() {
                 blocked_user_id: currentBlockUserId
             });
 
-        const { error } = await Promise.race([blockPromise, timeoutPromise]);
+        const { data, error } = await Promise.race([blockPromise, timeoutPromise]);
         
         const responseTime = Date.now() - startTime;
-        console.log(`✅ Bloqueio em ${responseTime}ms`);
+        console.log(`✅ Bloqueio REAL concluído em ${responseTime}ms`);
 
-        // ✅ IGNORAR ERRO DE DUPLICATA - não esperar
-        if (error && error.code !== '23505') {
-            throw error;
+        // ✅ VERIFICAR SE BLOQUEIO FOI REALMENTE FEITO
+        if (error) {
+            if (error.code === '23505') {
+                // ✅ JÁ ESTAVA BLOQUEADO - AVISAR E REMOVER
+                console.log('ℹ️ Usuário já estava bloqueado');
+                removeBlockedUserFromUI(currentBlockUserId);
+                showAlert('ℹ️ Usuário já estava bloqueado', 'info');
+            } else {
+                // ❌ ERRO REAL - NÃO BLOQUEOU
+                throw new Error(`Erro no banco: ${error.message}`);
+            }
+        } else {
+            // ✅ BLOQUEIO REALIZADO COM SUCESSO
+            removeBlockedUserFromUI(currentBlockUserId);
+            showAlert(`✅ ${currentBlockUserName} bloqueado com sucesso!`, 'success');
         }
-
-        // ✅ SUCESSO RÁPIDO
-        removeBlockedUserFromUI(currentBlockUserId);
-        showAlert(`✅ ${currentBlockUserName} bloqueado!`, 'success');
+        
         closeBlockModal();
 
     } catch (error) {
-        console.log('⚡ Fallback rápido:', error.message);
+        console.error('❌ FALHA NO BLOQUEIO:', error.message);
         
-        // ✅ FALLBACK ULTRA-RÁPIDO
-        showAlert('✅ Bloqueado!', 'success');
-        removeBlockedUserFromUI(currentBlockUserId);
-        closeBlockModal();
+        if (error.message.includes('Timeout')) {
+            // ❌ TIMEOUT - NÃO BLOQUEOU, NÃO REMOVER
+            showAlert('⏳ Bloqueio demorando... Verifique sua conexão', 'warning');
+            
+            // ✅ TENTAR NOVAMENTE EM BACKGROUND SEM ENGANAR USUÁRIO
+            setTimeout(async () => {
+                try {
+                    const { error: bgError } = await supabase
+                        .from('user_blocks')
+                        .insert({
+                            blocker_id: currentUser.id,
+                            blocked_user_id: currentBlockUserId
+                        });
+                    
+                    if (!bgError || bgError.code === '23505') {
+                        // ✅ AGORA SIM BLOQUEOU - REMOVER DA UI
+                        removeBlockedUserFromUI(currentBlockUserId);
+                        showAlert(`✅ ${currentBlockUserName} bloqueado!`, 'success');
+                        console.log('✅ Bloqueio concluído em background');
+                    } else {
+                        console.log('❌ Bloqueio em background falhou');
+                    }
+                } catch (bgError) {
+                    console.log('❌ Erro no bloqueio background:', bgError);
+                }
+            }, 1000);
+            
+        } else {
+            // ❌ ERRO REAL - NÃO BLOQUEOU
+            showAlert('❌ Falha no bloqueio. Tente novamente.', 'error');
+        }
+        
+        // ❌ NÃO FECHAR MODAL EM CASO DE ERRO - usuário pode tentar novamente
+        // closeBlockModal(); // REMOVIDO - deixa modal aberto para nova tentativa
     }
 }
 
@@ -2550,7 +2589,7 @@ function showAlert(message, type = 'success') {
     setTimeout(() => {
         alert.style.animation = 'slideOutUp 0.3s ease';
         setTimeout(() => alert.remove(), 300);
-    }, 2000); // ✅ ALERTA MAIS CURTO - 2s
+    }, 3000);
 }
 // ✅ ADICIONAR CSS PARA ANIMAÇÕES (se não existir)
 const style = document.createElement('style');
