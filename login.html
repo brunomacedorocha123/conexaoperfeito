@@ -795,91 +795,95 @@
             }
         });
 
-        // ✅ Esqueci minha senha - FUNCIONANDO PERFEITAMENTE
-        document.getElementById('forgotPassword').addEventListener('click', async function(e) {
-            e.preventDefault();
-            const emailInput = document.getElementById('email');
-            const email = emailInput.value.trim();
-            
-            console.log('🔄 Iniciando solicitação de reset para:', email);
-            
-            if (!email) {
-                showAlert(errorAlert, 'Por favor, insira seu e-mail para redefinir a senha.');
-                emailInput.focus();
-                return;
-            }
-            
-            // ✅ Validação básica de email
-            if (!email.includes('@')) {
-                showAlert(errorAlert, 'Por favor, insira um e-mail válido.');
-                emailInput.focus();
-                return;
-            }
-            
-            try {
-                // ✅ Mostrar loading
-                submitBtn.disabled = true;
-                loading.style.display = 'block';
-                hideAllAlerts();
-                
-                console.log('📤 Enviando solicitação para Supabase...');
-                
-                const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: 'https://conexaoperfeitaamor.netlify.app/reset-password.html'
-                });
-
-                if (error) {
-                    console.error('❌ Erro do Supabase:', error);
-                    
-                    // ✅ Tratamento específico de erros
-                    if (error.message.includes('user not found')) {
-                        showAlert(errorAlert, '❌ E-mail não encontrado. Verifique o endereço digitado.');
-                    } else if (error.message.includes('rate limit')) {
-                        showAlert(errorAlert, '❌ Muitas tentativas. Aguarde alguns minutos.');
-                    } else {
-                        showAlert(errorAlert, '❌ Erro ao enviar e-mail: ' + error.message);
-                    }
-                    return;
-                }
-
-                console.log('✅ E-mail de reset enviado com sucesso!');
-                showAlert(successAlert, `📧 Instruções de redefinição enviadas para: ${email}`);
-                
-                // ✅ Auto-limpar mensagem após 10 segundos
-                setTimeout(() => {
-                    successAlert.style.display = 'none';
-                }, 10000);
-                
-            } catch (error) {
-                console.error('❌ Erro inesperado:', error);
-                showAlert(errorAlert, '❌ Erro inesperado. Tente novamente.');
-            } finally {
-                submitBtn.disabled = false;
-                loading.style.display = 'none';
-            }
+       // ✅ Esqueci minha senha - CORRIGIDO (não usa loading do login)
+document.getElementById('forgotPassword').addEventListener('click', async function(e) {
+    e.preventDefault();
+    const emailInput = document.getElementById('email');
+    const email = emailInput.value.trim();
+    
+    console.log('🔄 Iniciando solicitação de reset para:', email);
+    
+    if (!email) {
+        showAlert(errorAlert, 'Por favor, insira seu e-mail para redefinir a senha.');
+        emailInput.focus();
+        return;
+    }
+    
+    // ✅ Validação básica de email
+    if (!email.includes('@')) {
+        showAlert(errorAlert, 'Por favor, insira um e-mail válido.');
+        emailInput.focus();
+        return;
+    }
+    
+    try {
+        // ✅ DESABILITAR o botão de "Esqueci minha senha" temporariamente
+        const forgotPasswordBtn = document.getElementById('forgotPassword');
+        forgotPasswordBtn.style.opacity = '0.6';
+        forgotPasswordBtn.style.pointerEvents = 'none';
+        
+        hideAllAlerts();
+        
+        console.log('📤 Enviando solicitação para Supabase...');
+        
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: 'https://conexaoperfeitaamor.netlify.app/reset-password.html'
         });
 
-        // ✅ Lembrar dados de login - FUNCIONANDO PERFEITAMENTE
-        const rememberMe = document.getElementById('rememberMe');
-        const savedEmail = localStorage.getItem('rememberedEmail');
-
-        if (savedEmail) {
-            document.getElementById('email').value = savedEmail;
-            rememberMe.checked = true;
+        if (error) {
+            console.error('❌ Erro do Supabase:', error);
+            
+            // ✅ Tratamento específico de erros
+            if (error.message.includes('user not found')) {
+                showAlert(errorAlert, '❌ E-mail não encontrado. Verifique o endereço digitado.');
+            } else if (error.message.includes('rate limit')) {
+                showAlert(errorAlert, '❌ Muitas tentativas. Aguarde alguns minutos.');
+            } else {
+                showAlert(errorAlert, '❌ Erro ao enviar e-mail: ' + error.message);
+            }
+            return;
         }
 
-        rememberMe.addEventListener('change', function() {
-            const email = document.getElementById('email').value;
-            
-            if (this.checked && email) {
-                localStorage.setItem('rememberedEmail', email);
-                console.log('💾 E-mail salvo:', email);
-            } else {
-                localStorage.removeItem('rememberedEmail');
-                console.log('💾 E-mail removido do storage');
-            }
-        });
-    }); // ← FECHAMENTO do DOMContentLoaded
+        console.log('✅ E-mail de reset enviado com sucesso!');
+        showAlert(successAlert, `📧 Instruções de redefinição enviadas para: ${email}`);
+        
+        // ✅ Auto-limpar mensagem após 10 segundos
+        setTimeout(() => {
+            successAlert.style.display = 'none';
+        }, 10000);
+        
+    } catch (error) {
+        console.error('❌ Erro inesperado:', error);
+        showAlert(errorAlert, '❌ Erro inesperado. Tente novamente.');
+    } finally {
+        // ✅ REABILITAR o botão de "Esqueci minha senha"
+        const forgotPasswordBtn = document.getElementById('forgotPassword');
+        forgotPasswordBtn.style.opacity = '1';
+        forgotPasswordBtn.style.pointerEvents = 'auto';
+    }
+});
+
+// ✅ Lembrar dados de login - FUNCIONANDO PERFEITAMENTE
+const rememberMe = document.getElementById('rememberMe');
+const savedEmail = localStorage.getItem('rememberedEmail');
+
+if (savedEmail) {
+    document.getElementById('email').value = savedEmail;
+    rememberMe.checked = true;
+}
+
+rememberMe.addEventListener('change', function() {
+    const email = document.getElementById('email').value;
+    
+    if (this.checked && email) {
+        localStorage.setItem('rememberedEmail', email);
+        console.log('💾 E-mail salvo:', email);
+    } else {
+        localStorage.removeItem('rememberedEmail');
+        console.log('💾 E-mail removido do storage');
+    }
+});
+}); // ← ESTA É A CHAVE QUE FALTAVA!
 </script>
 </body>
 </html>
