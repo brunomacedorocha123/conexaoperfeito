@@ -1940,12 +1940,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Validar senha em tempo real
     confirmPassword.addEventListener('input', async function() {
-        const password = this.value.trim();
+        await validatePassword();
+    });
+
+    // Função para validar senha
+    async function validatePassword() {
+        const password = confirmPassword.value.trim();
         
         if (password.length === 0) {
             passwordFeedback.textContent = '';
             confirmDelete.disabled = true;
-            return;
+            return false;
         }
 
         try {
@@ -1960,16 +1965,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 passwordFeedback.textContent = '✓ Senha correta';
                 passwordFeedback.className = 'password-feedback success';
                 confirmDelete.disabled = false;
+                return true;
             } else {
                 passwordFeedback.textContent = '✗ Senha incorreta';
                 passwordFeedback.className = 'password-feedback error';
                 confirmDelete.disabled = true;
+                return false;
             }
         } catch (error) {
             console.error('Erro ao verificar senha:', error);
             passwordFeedback.textContent = 'Erro ao verificar senha';
             passwordFeedback.className = 'password-feedback error';
             confirmDelete.disabled = true;
+            return false;
+        }
+    }
+
+    // Permitir enviar com Enter
+    confirmPassword.addEventListener('keypress', async function(e) {
+        if (e.key === 'Enter') {
+            const isValid = await validatePassword();
+            if (isValid) {
+                executeAccountDeletion();
+            }
         }
     });
 
