@@ -1886,7 +1886,7 @@ async function updateStorageDisplay() {
 
 /// ==================== EXCLUSÃO DE CONTA ====================
 
-// ==================== EXCLUSÃO DE CONTA - VERSÃO DEFINITIVA ====================
+// ==================== EXCLUSÃO DE CONTA - VERSÃO DEFINITIVA CORRIGIDA ====================
 
 // Aguardar o DOM carregar completamente
 document.addEventListener('DOMContentLoaded', function() {
@@ -2038,7 +2038,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ✅✅✅ FUNÇÃO PRINCIPAL DE EXCLUSÃO - CORRIGIDA DEFINITIVAMENTE
+    // ✅✅✅ FUNÇÃO PRINCIPAL DE EXCLUSÃO - COMPLETAMENTE CORRIGIDA
     async function executeAccountDeletion() {
         if (!confirmPassword || !confirmDelete || isExcluding) {
             console.error('Elementos não encontrados ou exclusão em andamento');
@@ -2081,9 +2081,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 // ✅ 3. REDIRECIONAMENTO ULTRA-RÁPIDO E SEGURO
                 setTimeout(() => {
                     console.log('🔄 Iniciando limpeza e redirecionamento...');
-                    
-                    // ✅ PARAR TODOS OS EVENT LISTENERS E TIMERS
-                    window.removeAllListeners?.();
                     
                     // ✅ LIMPAR STORAGE SILENCIOSAMENTE
                     try {
