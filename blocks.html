@@ -6,6 +6,7 @@
     <title>Usuários Bloqueados - Amor Conect</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        /* CSS IDÊNTICO AO DA HOME - COPIE DA HOME.HTML */
         * {
             margin: 0;
             padding: 0;
@@ -106,10 +107,6 @@
             border: none;
         }
 
-        .btn-danger:hover {
-            background: #c53030;
-        }
-
         /* Main Content */
         .main-content {
             padding: 2rem 0;
@@ -132,12 +129,7 @@
             margin-bottom: 0.5rem;
         }
 
-        .page-header p {
-            color: var(--text-light);
-            font-size: 1rem;
-        }
-
-        /* ✅ LISTA OTIMIZADA - SEM FOTOS */
+        /* LISTA ULTRA-RÁPIDA */
         .blocked-list {
             display: flex;
             flex-direction: column;
@@ -154,11 +146,6 @@
             display: flex;
             align-items: center;
             gap: 1rem;
-        }
-
-        .blocked-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(229, 62, 62, 0.15);
         }
 
         .avatar-initial {
@@ -186,19 +173,6 @@
             margin-bottom: 0.3rem;
         }
 
-        .user-bio {
-            color: var(--text-light);
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .user-meta {
-            display: flex;
-            gap: 1rem;
-            font-size: 0.8rem;
-            color: var(--text-light);
-        }
-
         .blocked-badge {
             background: #e53e3e;
             color: white;
@@ -209,7 +183,7 @@
             margin-left: 0.5rem;
         }
 
-        .empty-state {
+        .empty-state, .loading {
             text-align: center;
             padding: 3rem;
             background: var(--branco);
@@ -218,42 +192,18 @@
             border: 1px solid var(--lilas);
         }
 
-        .empty-state-icon {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-            opacity: 0.5;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 3rem;
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid var(--bege);
-            border-top: 4px solid var(--vermelho-rosado);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 1rem;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
         .hidden {
             display: none;
         }
 
-        .quick-actions {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
+        /* DIAGNÓSTICO DE PERFORMANCE */
+        .performance-info {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 10px;
             margin: 1rem 0;
-            flex-wrap: wrap;
+            font-size: 0.9rem;
+            color: #666;
         }
     </style>
 </head>
@@ -277,132 +227,129 @@
     <!-- Main Content -->
     <main class="main-content">
         <div class="container">
-            <!-- Page Header -->
             <section class="page-header">
                 <h1>🚫 Usuários Bloqueados</h1>
                 <p>Gerencie os usuários que você bloqueou</p>
-                
-                <div class="quick-actions">
-                    <a href="home.html" class="btn btn-primary">← Voltar para Home</a>
-                    <button class="btn btn-outline" onclick="loadBlockedUsers()">🔄 Atualizar</button>
-                </div>
+                <a href="home.html" class="btn btn-primary">← Voltar para Home</a>
             </section>
 
-            <!-- Loading State -->
+            <!-- Diagnóstico -->
+            <div class="performance-info" id="performanceInfo">
+                ⚡ Iniciando carregamento...
+            </div>
+
+            <!-- Loading -->
             <div class="loading" id="loadingBlocked">
-                <div class="spinner"></div>
-                <p>Carregando usuários bloqueados...</p>
+                <p>🔄 Carregando lista de bloqueados...</p>
             </div>
 
-            <!-- Blocked Users List -->
-            <div class="blocked-list" id="blockedList">
-                <!-- Os itens aparecerão aqui -->
-            </div>
+            <!-- Lista -->
+            <div class="blocked-list" id="blockedList"></div>
 
-            <!-- No Blocked Users -->
+            <!-- Vazio -->
             <div class="empty-state hidden" id="noBlockedUsers">
-                <div class="empty-state-icon">😊</div>
-                <h3>Nenhum usuário bloqueado</h3>
+                <h3>😊 Nenhum usuário bloqueado</h3>
                 <p>Você não bloqueou nenhum usuário ainda.</p>
-                <a href="home.html" class="btn btn-primary" style="margin-top: 1rem;">
-                    Voltar para Home
-                </a>
             </div>
         </div>
     </main>
 
     <script>
-        // Configuração do Supabase
+        // ✅ CONFIGURAÇÃO SUPABASE
         const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
-
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
         let currentUser = null;
+        const startTime = Date.now();
 
-        document.addEventListener('DOMContentLoaded', function() {
-            checkAuth();
-        });
-
-        // ✅ VERIFICAÇÃO RÁPIDA
-        async function checkAuth() {
+        // ✅ INICIALIZAÇÃO ULTRA-RÁPIDA
+        document.addEventListener('DOMContentLoaded', async () => {
+            updatePerformance('DOM carregado');
+            
             try {
+                // ✅ VERIFICAÇÃO DE AUTENTICAÇÃO DIRETA
                 const { data: { user }, error } = await supabase.auth.getUser();
+                updatePerformance('Autenticação verificada');
                 
-                if (error) throw error;
-                
-                if (!user) {
+                if (error || !user) {
                     window.location.href = 'login.html';
                     return;
                 }
                 
                 currentUser = user;
-                loadBlockedUsers();
+                updatePerformance('Usuário definido');
+                
+                // ✅ CARREGAMENTO IMEDIATO
+                await loadBlockedUsersUltraFast();
                 
             } catch (error) {
-                console.error('Erro na autenticação:', error);
-                window.location.href = 'login.html';
+                console.error('Erro crítico:', error);
+                showError('Erro de autenticação');
             }
-        }
+        });
 
-        // ✅ FUNÇÃO MEGA OTIMIZADA - CONSULTA LEVE
-        async function loadBlockedUsers() {
+        // ✅ FUNÇÃO PRINCIPAL MEGA OTIMIZADA
+        async function loadBlockedUsersUltraFast() {
+            const performanceInfo = document.getElementById('performanceInfo');
+            
             try {
-                console.time('🚀 Carregamento bloqueados');
+                updatePerformance('Iniciando consulta ao banco...');
                 
-                // ✅ CONSULTA SUPER LEVE - APENAS DADOS TEXTUAIS
+                // ✅ CONSULTA DIRETA E MINIMALISTA
+                const queryStart = Date.now();
                 const { data: blocks, error } = await supabase
                     .from('user_blocks')
-                    .select(`
-                        id,
-                        created_at,
-                        profiles:blocked_user_id (
-                            id,
-                            nickname,
-                            full_name
-                        )
-                    `)
+                    .select('blocked_user_id, created_at')
                     .eq('blocker_id', currentUser.id)
-                    .order('created_at', { ascending: false });
-
-                const loadingElement = document.getElementById('loadingBlocked');
-                const blockedList = document.getElementById('blockedList');
-                const noBlockedUsers = document.getElementById('noBlockedUsers');
+                    .limit(20); // Limite conservador
+                
+                const queryTime = Date.now() - queryStart;
+                updatePerformance(`Consulta banco: ${queryTime}ms`);
 
                 if (error) {
-                    console.error('❌ Erro ao carregar bloqueados:', error);
-                    showErrorState();
-                    return;
+                    throw new Error(`Erro banco: ${error.message}`);
                 }
 
-                loadingElement.classList.add('hidden');
+                updatePerformance(`✅ ${blocks?.length || 0} registros encontrados`);
 
-                if (!blocks || blocks.length === 0) {
-                    noBlockedUsers.classList.remove('hidden');
-                    console.timeEnd('🚀 Carregamento bloqueados');
-                    return;
-                }
-
-                console.log(`✅ ${blocks.length} usuários bloqueados carregados`);
-
-                // ✅ RENDERIZAÇÃO INSTANTÂNEA
-                renderBlockedUsers(blocks);
-                console.timeEnd('🚀 Carregamento bloqueados');
-
+                // ✅ PROCESSAMENTO IMEDIATO
+                processBlockedUsers(blocks);
+                
             } catch (error) {
-                console.error('❌ Erro:', error);
-                showErrorState();
+                updatePerformance(`❌ ERRO: ${error.message}`);
+                showError('Falha ao carregar bloqueados');
             }
         }
 
-        // ✅ RENDERIZAÇÃO RÁPIDA - SEM FOTOS
-        function renderBlockedUsers(blocks) {
-            const blockedList = document.getElementById('blockedList');
+        // ✅ PROCESSAMENTO ULTRA-RÁPIDO
+        async function processBlockedUsers(blocks) {
+            const processingStart = Date.now();
             
-            const html = blocks.map(block => {
-                const user = block.profiles;
-                if (!user) return '';
+            if (!blocks || blocks.length === 0) {
+                showNoUsers();
+                return;
+            }
 
-                const nickname = user.nickname || user.full_name?.split(' ')[0] || 'Usuário';
+            updatePerformance(`Processando ${blocks.length} usuários...`);
+
+            // ✅ BUSCA EM LOTE DOS NOMES
+            const userIds = blocks.map(b => b.blocked_user_id);
+            const { data: users, error } = await supabase
+                .from('profiles')
+                .select('id, nickname, full_name')
+                .in('id', userIds);
+
+            if (error) {
+                throw new Error('Erro ao buscar nomes');
+            }
+
+            updatePerformance(`Nomes carregados: ${users?.length || 0}`);
+
+            // ✅ CRIAÇÃO DO HTML
+            const html = blocks.map(block => {
+                const user = users?.find(u => u.id === block.blocked_user_id);
+                const nickname = user?.nickname || user?.full_name?.split(' ')[0] || 'Usuário';
                 const initial = nickname.charAt(0).toUpperCase();
 
                 return `
@@ -413,24 +360,26 @@
                                 ${nickname}
                                 <span class="blocked-badge">Bloqueado</span>
                             </div>
-                            <div class="user-meta">
-                                <span>📅 Bloqueado em: ${formatDate(block.created_at)}</span>
-                            </div>
                         </div>
-                        <button class="btn btn-primary" onclick="unblockUser('${user.id}', '${nickname.replace(/'/g, "\\'")}')">
+                        <button class="btn btn-primary" onclick="unblockUserFast('${block.blocked_user_id}', '${nickname}')">
                             🔓 Desbloquear
                         </button>
                     </div>
                 `;
             }).join('');
 
-            blockedList.innerHTML = html;
+            // ✅ RENDERIZAÇÃO FINAL
+            document.getElementById('loadingBlocked').classList.add('hidden');
+            document.getElementById('blockedList').innerHTML = html;
+            
+            const totalTime = Date.now() - startTime;
+            updatePerformance(`✅ Página carregada em: ${totalTime}ms`);
         }
 
-        // ✅ DESBLOQUEIO INSTANTÂNEO
-        async function unblockUser(userId, userName) {
-            // ✅ FEEDBACK IMEDIATO - não espera confirmação
-            showAlert('⚡ Processando...', 'info');
+        // ✅ DESBLOQUEIO ULTRA-RÁPIDO
+        async function unblockUserFast(userId, userName) {
+            // ✅ FEEDBACK IMEDIATO
+            showAlert('⚡ Desbloqueando...');
             
             try {
                 const { error } = await supabase
@@ -439,101 +388,69 @@
                     .eq('blocker_id', currentUser.id)
                     .eq('blocked_user_id', userId);
 
-                if (error) {
-                    console.error('❌ Erro ao desbloquear:', error);
-                    showAlert('❌ Erro ao desbloquear', 'error');
-                    return;
-                }
+                if (error) throw error;
 
                 // ✅ FEEDBACK INSTANTÂNEO
-                showAlert(`✅ ${userName} desbloqueado com sucesso!`, 'success');
+                showAlert(`✅ ${userName} desbloqueado!`);
                 
-                // ✅ ATUALIZAÇÃO VISUAL RÁPIDA
-                setTimeout(() => {
-                    loadBlockedUsers();
-                }, 1000);
-                
+                // ✅ REMOÇÃO VISUAL IMEDIATA
+                const items = document.querySelectorAll('.blocked-item');
+                items.forEach(item => {
+                    if (item.querySelector(`[onclick*="${userId}"]`)) {
+                        item.style.opacity = '0.5';
+                        setTimeout(() => item.remove(), 300);
+                    }
+                });
+
             } catch (error) {
-                console.error('❌ Erro ao desbloquear:', error);
-                showAlert('❌ Erro ao desbloquear', 'error');
+                showAlert('❌ Erro ao desbloquear');
             }
         }
 
-        // ✅ FUNÇÕES AUXILIARES
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('pt-BR');
+        // ✅ FUNÇÕES AUXILIARES ULTRA-RÁPIDAS
+        function updatePerformance(message) {
+            const perf = document.getElementById('performanceInfo');
+            if (perf) {
+                perf.innerHTML += `<br>${Date.now() - startTime}ms: ${message}`;
+                perf.scrollTop = perf.scrollHeight;
+            }
+            console.log(`⏱️ ${Date.now() - startTime}ms: ${message}`);
         }
 
-        function showErrorState() {
-            const loadingElement = document.getElementById('loadingBlocked');
-            const blockedList = document.getElementById('blockedList');
-            
-            loadingElement.classList.add('hidden');
-            blockedList.innerHTML = `
+        function showNoUsers() {
+            document.getElementById('loadingBlocked').classList.add('hidden');
+            document.getElementById('noBlockedUsers').classList.remove('hidden');
+            updatePerformance('✅ Nenhum usuário bloqueado');
+        }
+
+        function showError(message) {
+            document.getElementById('loadingBlocked').classList.add('hidden');
+            document.getElementById('blockedList').innerHTML = `
                 <div class="empty-state">
-                    <div class="empty-state-icon">❌</div>
-                    <h3>Erro ao carregar usuários bloqueados</h3>
-                    <p>Tente recarregar a página</p>
-                    <button class="btn btn-primary" onclick="loadBlockedUsers()" style="margin-top: 1rem;">
-                        🔄 Tentar Novamente
-                    </button>
+                    <h3>❌ ${message}</h3>
+                    <button class="btn btn-primary" onclick="location.reload()">🔄 Recarregar</button>
                 </div>
             `;
         }
 
-        // ✅ ALERTA INSTANTÂNEO
-        function showAlert(message, type = 'info') {
-            // Remove alertas anteriores
-            const existingAlerts = document.querySelectorAll('.custom-alert');
-            existingAlerts.forEach(alert => alert.remove());
-            
+        function showAlert(message) {
             const alert = document.createElement('div');
-            alert.className = 'custom-alert';
             alert.textContent = message;
             alert.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                z-index: 1001;
-                padding: 1rem 1.5rem;
-                border-radius: 10px;
-                color: white;
-                font-weight: 600;
-                background: ${type === 'success' ? '#38a169' : type === 'error' ? '#e53e3e' : '#3182ce'};
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-                animation: slideIn 0.3s ease;
+                position: fixed; top: 20px; right: 20px; z-index: 1001;
+                padding: 1rem 1.5rem; border-radius: 10px; color: white;
+                background: #38a169; font-weight: 600; box-shadow: 0 4px 20px rgba(0,0,0,0.15);
             `;
-            
             document.body.appendChild(alert);
-            
-            setTimeout(() => {
-                alert.remove();
-            }, 3000);
+            setTimeout(() => alert.remove(), 2000);
         }
 
-        // ✅ LOGOUT
-        async function logout() {
-            try {
-                await supabase.auth.signOut();
+        // ✅ LOGOUT RÁPIDO
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            supabase.auth.signOut().then(() => {
                 window.location.href = 'login.html';
-            } catch (error) {
-                console.error('Erro ao fazer logout:', error);
-            }
-        }
-
-        // ✅ EVENT LISTENERS
-        document.getElementById('logoutBtn').addEventListener('click', logout);
-
-        // ✅ ANIMAÇÃO PARA ALERTAS
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideIn {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-        `;
-        document.head.appendChild(style);
+            });
+        });
     </script>
 </body>
 </html>
