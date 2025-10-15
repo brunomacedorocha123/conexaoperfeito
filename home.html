@@ -155,7 +155,6 @@ header {
   font-weight: 700;
   box-shadow: 0 4px 15px rgba(255, 107, 0, 0.3);
 }
-
 /* ==================== BADGE FREE ==================== */
 .free-badge {
   background: linear-gradient(135deg, #c0c0c0, #a0a0a0);
@@ -289,6 +288,7 @@ header {
   text-align: center;
   cursor: pointer;
   border: 1px solid var(--lilas);
+  position: relative;
 }
 
 .user-card:hover {
@@ -358,17 +358,252 @@ header {
   -webkit-box-orient: vertical;
   overflow: hidden;
   min-height: 4.5rem;
+  line-height: 1.4;
 }
 
+/* ==================== SISTEMA DE REPORTE E BLOQUEIO - CARDS GRANDES ==================== */
 .user-card-actions {
   display: flex;
   gap: 0.5rem;
   justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.user-card-menu {
+  position: relative;
+  display: inline-block;
+}
+
+.btn-more {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: var(--transition);
+  color: var(--text-light);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-more:hover {
+  background: var(--lilas);
+  color: var(--branco);
+  transform: translateY(-2px);
+}
+
+.menu-options {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--branco);
+  border: 1px solid var(--lilas);
+  border-radius: 10px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  padding: 0.5rem;
+  z-index: 100;
+  display: none;
+  min-width: 160px;
+  animation: fadeIn 0.2s ease;
+}
+
+.menu-options.show {
+  display: block;
+}
+
+.menu-options button {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: var(--transition);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text);
+}
+
+.menu-options button:hover {
+  background: var(--bege);
+}
+
+.menu-options .report-btn {
+  color: #e53e3e;
+}
+
+.menu-options .report-btn:hover {
+  background: #fed7d7;
+}
+
+.menu-options .block-btn {
+  color: #d1656d;
+}
+
+.menu-options .block-btn:hover {
+  background: #fbd5d5;
 }
 
 .btn-sm {
   padding: 0.5rem 1rem;
   font-size: 0.9rem;
+}
+
+/* ==================== MODAIS DE REPORTE E BLOQUEIO ==================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.modal-overlay.show {
+  display: flex;
+}
+
+.modal-content {
+  background: var(--branco);
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: var(--shadow);
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--bege);
+}
+
+.modal-header h3 {
+  color: var(--vermelho-rosado);
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.close-modal {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--text-light);
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: var(--transition);
+}
+
+.close-modal:hover {
+  background: var(--bege);
+  color: var(--vermelho-rosado);
+}
+
+.report-categories {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.report-category {
+  padding: 1rem;
+  border: 2px solid var(--bege);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.report-category:hover {
+  border-color: var(--lilas);
+  background: var(--bege);
+}
+
+.report-category.selected {
+  border-color: var(--vermelho-rosado);
+  background: var(--bege);
+}
+
+.report-category input[type="radio"] {
+  margin: 0;
+}
+
+.report-details {
+  margin-bottom: 1.5rem;
+}
+
+.report-details textarea {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid var(--lilas);
+  border-radius: 10px;
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+.report-details textarea:focus {
+  outline: none;
+  border-color: var(--vermelho-rosado);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.modal-body {
+  margin-bottom: 1.5rem;
+}
+
+.modal-body p {
+  color: var(--text);
+  line-height: 1.5;
 }
 
 /* Quick Actions */
@@ -736,6 +971,20 @@ footer {
     align-items: flex-start;
   }
 
+  /* Ajustes para modais mobile */
+  .modal-content {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .modal-actions .btn {
+    width: 100%;
+  }
+
   /* Ajustes específicos para mobile menu em telas pequenas */
   @media (max-height: 700px) {
     #mobileMenu {
@@ -803,6 +1052,17 @@ footer {
   }
   
   .mobile-user-info #mobileUserNickname {
+    font-size: 1rem;
+  }
+
+  /* Ajustes para cards em mobile muito pequeno */
+  .user-card-actions {
+    gap: 0.3rem;
+  }
+
+  .btn-more {
+    width: 35px;
+    height: 35px;
     font-size: 1rem;
   }
 }
@@ -892,6 +1152,7 @@ footer {
     cursor: pointer;
     transition: var(--transition);
     border: 2px solid transparent;
+    position: relative;
 }
 
 .visitor-card:hover {
@@ -1437,6 +1698,109 @@ footer {
       </section>
     </div>
   </main>
+
+  <!-- ==================== MODAIS DE REPORTE E BLOQUEIO ==================== -->
+  <!-- Modal de Reporte -->
+  <div class="modal-overlay" id="reportModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>🚨 Reportar Usuário</h3>
+        <button class="close-modal" onclick="closeReportModal()">×</button>
+      </div>
+      
+      <div id="reportModalContent">
+        <div class="modal-body">
+          <p>Você está reportando: <strong id="reportUserName">Usuário</strong></p>
+        </div>
+        
+        <div class="report-categories">
+          <label class="report-category">
+            <input type="radio" name="reportReason" value="spam" onchange="selectReportCategory(this)">
+            <span>📧 Spam ou conteúdo comercial</span>
+          </label>
+          <label class="report-category">
+            <input type="radio" name="reportReason" value="harassment" onchange="selectReportCategory(this)">
+            <span>🚫 Assédio ou bullying</span>
+          </label>
+          <label class="report-category">
+            <input type="radio" name="reportReason" value="inappropriate" onchange="selectReportCategory(this)">
+            <span>🔞 Conteúdo inadequado</span>
+          </label>
+          <label class="report-category">
+            <input type="radio" name="reportReason" value="fake" onchange="selectReportCategory(this)">
+            <span>🤥 Perfil falso</span>
+          </label>
+          <label class="report-category">
+            <input type="radio" name="reportReason" value="other" onchange="selectReportCategory(this)">
+            <span>❌ Outro motivo</span>
+          </label>
+        </div>
+        
+        <div class="report-details">
+          <label for="reportDescription">Detalhes adicionais (opcional):</label>
+          <textarea 
+            id="reportDescription" 
+            placeholder="Descreva o motivo do reporte com mais detalhes..."
+          ></textarea>
+        </div>
+        
+        <div class="modal-actions">
+          <button class="btn btn-secondary" onclick="closeReportModal()">Cancelar</button>
+          <button class="btn btn-primary" onclick="submitReport()" id="submitReportBtn" disabled>
+            Enviar Reporte
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmação de Bloqueio -->
+  <div class="modal-overlay" id="blockModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>🚫 Bloquear Usuário</h3>
+        <button class="close-modal" onclick="closeBlockModal()">×</button>
+      </div>
+      
+      <div class="modal-body">
+        <p>Você está bloqueando: <strong id="blockUserName">Usuário</strong></p>
+        <p style="color: var(--text-light); font-size: 0.9rem; margin-top: 1rem;">
+          ⚠️ Ao bloquear este usuário:
+        </p>
+        <ul style="color: var(--text-light); font-size: 0.9rem; margin: 0.5rem 0 0 1.5rem;">
+          <li>Ele não poderá mais enviar mensagens para você</li>
+          <li>Não aparecerá mais nos seus resultados de busca</li>
+          <li>Não poderá ver seu perfil</li>
+          <li>Esta ação pode ser revertida a qualquer momento</li>
+        </ul>
+      </div>
+      
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeBlockModal()">Cancelar</button>
+        <button class="btn btn-primary" onclick="confirmBlock()" id="confirmBlockBtn">
+          Confirmar Bloqueio
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmação Geral -->
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="confirmModalTitle">Confirmação</h3>
+        <button class="close-modal" onclick="closeConfirmModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <p id="confirmModalMessage">Tem certeza que deseja realizar esta ação?</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeConfirmModal()">Cancelar</button>
+        <button class="btn btn-primary" id="confirmModalAction">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Footer -->
   <footer>
     <div class="container">
@@ -1460,6 +1824,7 @@ footer {
             <li><a href="#">Central de Ajuda</a></li>
             <li><a href="#">Política de Privacidade</a></li>
             <li><a href="#">Termos de Uso</a></li>
+            <li><a href="#" onclick="openSupportModal()">🚨 Reportar Problema</a></li>
           </ul>
         </div>
       </div>
@@ -1926,9 +2291,251 @@ async function createUserCardWithPhoto(user) {
                 <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewProfile('${user.id}')">
                     👀 Ver Perfil
                 </button>
+                <!-- NOVO: Menu de ações -->
+                <div class="user-card-menu">
+                    <button class="btn-more" onclick="event.stopPropagation(); toggleMenu(this)">
+                        ⋯
+                    </button>
+                    <div class="menu-options">
+                        <button class="report-btn" onclick="event.stopPropagation(); openReportModal('${user.id}', '${nickname}')">
+                            🚨 Reportar
+                        </button>
+                        <button class="block-btn" onclick="event.stopPropagation(); openBlockModal('${user.id}', '${nickname}')">
+                            🚫 Bloquear
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     `;
+}
+
+// ==================== SISTEMA DE REPORTE E BLOQUEIO ====================
+
+// Variáveis globais
+let currentReportUserId = null;
+let currentBlockUserId = null;
+let currentReportUserName = null;
+let currentBlockUserName = null;
+
+// Função para toggle do menu de ações
+function toggleMenu(button) {
+    const menu = button.nextElementSibling;
+    const isShowing = menu.classList.contains('show');
+    
+    // Fechar todos os menus abertos
+    document.querySelectorAll('.menu-options').forEach(m => {
+        m.classList.remove('show');
+    });
+    
+    // Abrir/fechar o menu clicado
+    if (!isShowing) {
+        menu.classList.add('show');
+        
+        // Fechar menu ao clicar fora
+        setTimeout(() => {
+            document.addEventListener('click', closeAllMenus);
+        }, 100);
+    }
+}
+
+// Função para fechar todos os menus
+function closeAllMenus(event) {
+    if (!event || !event.target.closest('.user-card-menu')) {
+        document.querySelectorAll('.menu-options').forEach(menu => {
+            menu.classList.remove('show');
+        });
+        document.removeEventListener('click', closeAllMenus);
+    }
+}
+
+// Função para abrir modal de reporte
+function openReportModal(userId, userName) {
+    console.log('📝 Abrindo modal de reporte para:', userId, userName);
+    
+    currentReportUserId = userId;
+    currentReportUserName = userName;
+    
+    // Atualizar conteúdo do modal
+    document.getElementById('reportUserName').textContent = userName;
+    
+    // Resetar formulário
+    document.querySelectorAll('input[name="reportReason"]').forEach(radio => {
+        radio.checked = false;
+        radio.parentElement.classList.remove('selected');
+    });
+    document.getElementById('reportDescription').value = '';
+    document.getElementById('submitReportBtn').disabled = true;
+    
+    // Mostrar modal
+    document.getElementById('reportModal').classList.add('show');
+}
+
+// Função para fechar modal de reporte
+function closeReportModal() {
+    document.getElementById('reportModal').classList.remove('show');
+    currentReportUserId = null;
+    currentReportUserName = null;
+}
+
+// Função para selecionar categoria de reporte
+function selectReportCategory(radio) {
+    // Remover seleção de todas as categorias
+    document.querySelectorAll('.report-category').forEach(category => {
+        category.classList.remove('selected');
+    });
+    
+    // Adicionar seleção à categoria clicada
+    radio.parentElement.classList.add('selected');
+    
+    // Habilitar botão de enviar
+    document.getElementById('submitReportBtn').disabled = false;
+}
+
+// Função para enviar reporte
+async function submitReport() {
+    try {
+        const reason = document.querySelector('input[name="reportReason"]:checked')?.value;
+        const description = document.getElementById('reportDescription').value;
+        
+        if (!reason) {
+            alert('⚠️ Selecione um motivo para o reporte.');
+            return;
+        }
+        
+        console.log('🔄 Enviando reporte:', {
+            userId: currentReportUserId,
+            userName: currentReportUserName,
+            reason: reason,
+            description: description
+        });
+        
+        // Enviar para o Supabase
+        const { data, error } = await supabase
+            .from('user_reports')
+            .insert({
+                reporter_id: currentUser.id,
+                reported_user_id: currentReportUserId,
+                reason: reason,
+                category: reason,
+                evidence: description || null,
+                status: 'pending'
+            });
+            
+        if (error) {
+            console.error('❌ Erro ao enviar reporte:', error);
+            showAlert('❌ Erro ao enviar reporte. Tente novamente.', 'error');
+            return;
+        }
+        
+        console.log('✅ Reporte enviado com sucesso!');
+        showAlert('✅ Reporte enviado com sucesso! Nossa equipe irá analisar.', 'success');
+        closeReportModal();
+        
+    } catch (error) {
+        console.error('❌ Erro ao enviar reporte:', error);
+        showAlert('❌ Erro ao enviar reporte. Tente novamente.', 'error');
+    }
+}
+
+// Função para abrir modal de bloqueio
+function openBlockModal(userId, userName) {
+    console.log('🚫 Abrindo modal de bloqueio para:', userId, userName);
+    
+    currentBlockUserId = userId;
+    currentBlockUserName = userName;
+    
+    // Atualizar conteúdo do modal
+    document.getElementById('blockUserName').textContent = userName;
+    
+    // Mostrar modal
+    document.getElementById('blockModal').classList.add('show');
+}
+
+// Função para fechar modal de bloqueio
+function closeBlockModal() {
+    document.getElementById('blockModal').classList.remove('show');
+    currentBlockUserId = null;
+    currentBlockUserName = null;
+}
+
+// Função para confirmar bloqueio
+async function confirmBlock() {
+    try {
+        console.log('🔄 Confirmando bloqueio para:', currentBlockUserId);
+        
+        // Enviar para o Supabase
+        const { data, error } = await supabase
+            .from('user_blocks')
+            .insert({
+                blocker_id: currentUser.id,
+                blocked_user_id: currentBlockUserId
+            });
+            
+        if (error) {
+            console.error('❌ Erro ao bloquear usuário:', error);
+            
+            // Se for erro de duplicata, usuário já está bloqueado
+            if (error.code === '23505') {
+                showAlert('ℹ️ Este usuário já está bloqueado.', 'info');
+            } else {
+                showAlert('❌ Erro ao bloquear usuário. Tente novamente.', 'error');
+            }
+            return;
+        }
+        
+        console.log('✅ Usuário bloqueado com sucesso!');
+        showAlert('✅ Usuário bloqueado com sucesso!', 'success');
+        
+        // Remover card do usuário bloqueado da interface
+        removeBlockedUserFromUI(currentBlockUserId);
+        
+        closeBlockModal();
+        
+    } catch (error) {
+        console.error('❌ Erro ao bloquear usuário:', error);
+        showAlert('❌ Erro ao bloquear usuário. Tente novamente.', 'error');
+    }
+}
+
+// Função para remover usuário bloqueado da UI
+function removeBlockedUserFromUI(userId) {
+    const userCards = document.querySelectorAll('.user-card');
+    userCards.forEach(card => {
+        if (card.querySelector(`[onclick*="${userId}"]`)) {
+            card.style.display = 'none';
+            console.log('👤 Usuário removido da UI:', userId);
+        }
+    });
+}
+
+// Função para mostrar alerta
+function showAlert(message, type = 'info') {
+    // Criar alerta temporário
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type}`;
+    alert.textContent = message;
+    alert.style.position = 'fixed';
+    alert.style.top = '20px';
+    alert.style.right = '20px';
+    alert.style.zIndex = '1001';
+    alert.style.minWidth = '300px';
+    
+    document.body.appendChild(alert);
+    
+    // Remover após 5 segundos
+    setTimeout(() => {
+        alert.remove();
+    }, 5000);
+}
+
+// Funções auxiliares dos modais
+function closeConfirmModal() {
+    document.getElementById('confirmModal').classList.remove('show');
+}
+
+function openSupportModal() {
+    alert('📞 Entre em contato com nosso suporte: suporte@amorconect.com');
 }
 
 // ==================== SISTEMA DE VISITANTES CORRIGIDO ====================
@@ -2401,8 +3008,18 @@ async function logout() {
 window.sendMessage = sendMessage;
 window.viewProfile = viewProfile;
 window.registerProfileVisit = registerProfileVisit;
+window.toggleMenu = toggleMenu;
+window.openReportModal = openReportModal;
+window.closeReportModal = closeReportModal;
+window.selectReportCategory = selectReportCategory;
+window.submitReport = submitReport;
+window.openBlockModal = openBlockModal;
+window.closeBlockModal = closeBlockModal;
+window.confirmBlock = confirmBlock;
+window.closeConfirmModal = closeConfirmModal;
+window.openSupportModal = openSupportModal;
 
-console.log('✅ Home.js carregado e corrigido! Sistema de visitantes funcionando! 🎉');
+console.log('✅ Home.js carregado e corrigido! Sistema de reporte/bloqueio funcionando! 🎉');
 </script>
 </body>
 </html>
