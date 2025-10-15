@@ -1905,51 +1905,76 @@ document.addEventListener('DOMContentLoaded', function() {
     let deleteFlowStep = 1; // 1 = aviso, 2 = confirmação com senha
 
     // Abrir modal de exclusão
-    deleteAccountBtn.addEventListener('click', function() {
-        deleteFlowStep = 1;
-        confirmationStep.style.display = 'none';
-        confirmDelete.disabled = false;
-        confirmDelete.textContent = 'Sim, Excluir Minha Conta';
-        confirmPassword.value = '';
-        passwordFeedback.textContent = '';
-        passwordFeedback.className = 'password-feedback';
-        deleteAccountModal.style.display = 'flex';
-    });
+    if (deleteAccountBtn && deleteAccountModal) {
+        deleteAccountBtn.addEventListener('click', function() {
+            deleteFlowStep = 1;
+            if (confirmationStep) confirmationStep.style.display = 'none';
+            if (confirmDelete) {
+                confirmDelete.disabled = false;
+                confirmDelete.textContent = 'Sim, Excluir Minha Conta';
+            }
+            if (confirmPassword) confirmPassword.value = '';
+            if (passwordFeedback) {
+                passwordFeedback.textContent = '';
+                passwordFeedback.className = 'password-feedback';
+            }
+            deleteAccountModal.style.display = 'flex';
+        });
+    }
 
     // Fechar modal
-    closeDeleteModal.addEventListener('click', closeDeleteModalFunc);
-    cancelDelete.addEventListener('click', closeDeleteModalFunc);
+    if (closeDeleteModal) {
+        closeDeleteModal.addEventListener('click', closeDeleteModalFunc);
+    }
+    if (cancelDelete) {
+        cancelDelete.addEventListener('click', closeDeleteModalFunc);
+    }
 
     function closeDeleteModalFunc() {
-        deleteAccountModal.style.display = 'none';
+        if (deleteAccountModal) {
+            deleteAccountModal.style.display = 'none';
+        }
     }
 
     // Primeira confirmação - mostrar campo de senha
-    confirmDelete.addEventListener('click', function() {
-        if (deleteFlowStep === 1) {
-            // Primeiro clique - mostrar campo de senha
-            deleteFlowStep = 2;
-            confirmationStep.style.display = 'block';
-            confirmDelete.disabled = true;
-            confirmDelete.textContent = 'Confirmar Exclusão';
-        } else {
-            // Segundo clique - executar exclusão
-            executeAccountDeletion();
-        }
-    });
+    if (confirmDelete) {
+        confirmDelete.addEventListener('click', function() {
+            if (deleteFlowStep === 1) {
+                // Primeiro clique - mostrar campo de senha
+                deleteFlowStep = 2;
+                if (confirmationStep) {
+                    confirmationStep.style.display = 'block';
+                }
+                if (confirmDelete) {
+                    confirmDelete.disabled = true;
+                    confirmDelete.textContent = 'Confirmar Exclusão';
+                }
+            } else {
+                // Segundo clique - executar exclusão
+                executeAccountDeletion();
+            }
+        });
+    }
 
     // Validar senha em tempo real
-    confirmPassword.addEventListener('input', async function() {
-        await validatePassword();
-    });
+    if (confirmPassword) {
+        confirmPassword.addEventListener('input', async function() {
+            await validatePassword();
+        });
+    }
 
     // Função para validar senha
     async function validatePassword() {
+        if (!confirmPassword) return false;
+        
         const password = confirmPassword.value.trim();
         
         if (password.length === 0) {
-            passwordFeedback.textContent = '';
-            confirmDelete.disabled = true;
+            if (passwordFeedback) {
+                passwordFeedback.textContent = '';
+                passwordFeedback.className = 'password-feedback';
+            }
+            if (confirmDelete) confirmDelete.disabled = true;
             return false;
         }
 
@@ -1962,37 +1987,54 @@ document.addEventListener('DOMContentLoaded', function() {
             if (error) throw error;
 
             if (data) {
-                passwordFeedback.textContent = '✓ Senha correta';
-                passwordFeedback.className = 'password-feedback success';
-                confirmDelete.disabled = false;
+                if (passwordFeedback) {
+                    passwordFeedback.textContent = '✓ Senha correta';
+                    passwordFeedback.className = 'password-feedback success';
+                }
+                if (confirmDelete) {
+                    confirmDelete.disabled = false;
+                }
                 return true;
             } else {
-                passwordFeedback.textContent = '✗ Senha incorreta';
-                passwordFeedback.className = 'password-feedback error';
-                confirmDelete.disabled = true;
+                if (passwordFeedback) {
+                    passwordFeedback.textContent = '✗ Senha incorreta';
+                    passwordFeedback.className = 'password-feedback error';
+                }
+                if (confirmDelete) {
+                    confirmDelete.disabled = true;
+                }
                 return false;
             }
         } catch (error) {
             console.error('Erro ao verificar senha:', error);
-            passwordFeedback.textContent = 'Erro ao verificar senha';
-            passwordFeedback.className = 'password-feedback error';
-            confirmDelete.disabled = true;
+            if (passwordFeedback) {
+                passwordFeedback.textContent = 'Erro ao verificar senha';
+                passwordFeedback.className = 'password-feedback error';
+            }
+            if (confirmDelete) confirmDelete.disabled = true;
             return false;
         }
     }
 
     // Permitir enviar com Enter
-    confirmPassword.addEventListener('keypress', async function(e) {
-        if (e.key === 'Enter') {
-            const isValid = await validatePassword();
-            if (isValid) {
-                executeAccountDeletion();
+    if (confirmPassword) {
+        confirmPassword.addEventListener('keypress', async function(e) {
+            if (e.key === 'Enter') {
+                const isValid = await validatePassword();
+                if (isValid && confirmDelete) {
+                    executeAccountDeletion();
+                }
             }
-        }
-    });
+        });
+    }
 
-    // Função principal de exclusão
+    // Função principal de exclusão CORRIGIDA
     async function executeAccountDeletion() {
+        if (!confirmPassword || !confirmDelete) {
+            console.error('Elementos não encontrados');
+            return;
+        }
+
         const password = confirmPassword.value.trim();
         
         if (!password) {
@@ -2013,14 +2055,24 @@ document.addEventListener('DOMContentLoaded', function() {
             if (error) throw error;
 
             if (data) {
-                // Sucesso - fazer logout e redirecionar
+                // ✅ CORREÇÃO: Fechar modal primeiro
+                closeDeleteModalFunc();
+                
+                // ✅ CORREÇÃO: Notificação rápida
                 showNotification('Conta excluída com sucesso', 'success');
                 
-                // Logout e redirecionar após 2 segundos
-                setTimeout(async () => {
-                    await supabase.auth.signOut();
+                // ✅ CORREÇÃO: Limpar storage e redirecionar IMEDIATAMENTE
+                setTimeout(() => {
+                    // Limpar tudo antes de redirecionar
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    
+                    // Fazer logout silencioso (não esperar resposta)
+                    supabase.auth.signOut().catch(() => {});
+                    
+                    // Redirecionamento DIRETO
                     window.location.href = 'index.html';
-                }, 2000);
+                }, 1000); // Reduzido para 1 segundo
                 
             } else {
                 throw new Error('Senha incorreta');
@@ -2031,16 +2083,20 @@ document.addEventListener('DOMContentLoaded', function() {
             showNotification('Erro ao excluir conta: ' + error.message, 'error');
             
             // Resetar botão
-            confirmDelete.innerHTML = '<i class="fas fa-trash-alt"></i> Confirmar Exclusão';
-            confirmDelete.disabled = false;
+            if (confirmDelete) {
+                confirmDelete.innerHTML = '<i class="fas fa-trash-alt"></i> Confirmar Exclusão';
+                confirmDelete.disabled = false;
+            }
         }
     }
 
     // Fechar modal clicando fora
-    deleteAccountModal.addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeDeleteModalFunc();
-        }
-    });
+    if (deleteAccountModal) {
+        deleteAccountModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDeleteModalFunc();
+            }
+        });
+    }
 
 });
