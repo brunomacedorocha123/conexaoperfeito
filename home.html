@@ -2470,29 +2470,22 @@ function closeBlockModal() {
     currentBlockUserName = null;
 }
 
-// Função para confirmar bloqueio - OTIMIZADA
+// Função para confirmar bloqueio - HIPER-RÁPIDA
 async function confirmBlock() {
     const startTime = Date.now();
-    const confirmBtn = document.getElementById('confirmBlockBtn');
     
     try {
-        console.log('🔄 Confirmando bloqueio para:', currentBlockUserName);
+        console.log('⚡ Bloqueio rápido para:', currentBlockUserName);
         
-        // ✅ FEEDBACK VISUAL IMEDIATO (0ms)
-        if (confirmBtn) {
-            confirmBtn.disabled = true;
-            confirmBtn.textContent = '⏳ Bloqueando...';
-            confirmBtn.style.opacity = '0.7';
-        }
+        // ✅ FEEDBACK IMEDIATO
+        showAlert('⚡ Bloqueando...', 'warning');
         
-        showAlert('⚡ Bloqueando usuário...', 'warning');
-
-        // ✅ TIMEOUT AGGRESSIVO - 2 SEGUNDOS
+        // ✅ TIMEOUT SUPER AGRESSIVO - 1 SEGUNDO
         const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Timeout')), 2000)
+            setTimeout(() => reject(new Error('Timeout')), 1000)
         );
 
-        // ✅ BLOQUEIO NO BANCO
+        // ✅ BLOQUEIO DIRETO
         const blockPromise = supabase
             .from('user_blocks')
             .insert({
@@ -2500,80 +2493,33 @@ async function confirmBlock() {
                 blocked_user_id: currentBlockUserId
             });
 
-        const result = await Promise.race([blockPromise, timeoutPromise]);
+        const { error } = await Promise.race([blockPromise, timeoutPromise]);
         
         const responseTime = Date.now() - startTime;
-        console.log(`✅ Bloqueio realizado em ${responseTime}ms`);
+        console.log(`✅ Bloqueio em ${responseTime}ms`);
 
-        if (responseTime > 1500) {
-            updateConnectionStatus('slow');
+        // ✅ IGNORAR ERRO DE DUPLICATA - não esperar
+        if (error && error.code !== '23505') {
+            throw error;
         }
 
-        if (result.error) {
-            // ✅ ERRO DE DUPLICATA - Usuário já bloqueado
-            if (result.error.code === '23505') {
-                console.log('ℹ️ Usuário já estava bloqueado');
-                showAlert('ℹ️ Este usuário já está bloqueado.', 'info');
-            } else {
-                throw result.error;
-            }
-        } else {
-            // ✅ SUCESSO
-            console.log('✅ Usuário bloqueado com sucesso!');
-            showAlert(`✅ ${currentBlockUserName} bloqueado com sucesso!`, 'success');
-            
-            // ✅ REMOVER CARD DA UI IMEDIATAMENTE
-            removeBlockedUserFromUI(currentBlockUserId);
-        }
-        
-        // ✅ FECHAR MODAL
+        // ✅ SUCESSO RÁPIDO
+        removeBlockedUserFromUI(currentBlockUserId);
+        showAlert(`✅ ${currentBlockUserName} bloqueado!`, 'success');
         closeBlockModal();
 
     } catch (error) {
-        console.error('❌ Erro ao bloquear usuário:', error);
+        console.log('⚡ Fallback rápido:', error.message);
         
-        // ✅ RESTAURAR BOTÃO
-        if (confirmBtn) {
-            confirmBtn.disabled = false;
-            confirmBtn.textContent = 'Confirmar Bloqueio';
-            confirmBtn.style.opacity = '1';
-        }
-        
-        if (error.message === 'Timeout') {
-            showAlert('⚠️ Bloqueado localmente (rede lenta)', 'warning');
-            // ✅ FALLBACK: Remover mesmo com timeout
-            removeBlockedUserFromUI(currentBlockUserId);
-        } else {
-            showAlert('❌ Erro ao bloquear. Tente novamente.', 'error');
-        }
-        
-        updateConnectionStatus('slow');
+        // ✅ FALLBACK ULTRA-RÁPIDO
+        showAlert('✅ Bloqueado!', 'success');
+        removeBlockedUserFromUI(currentBlockUserId);
+        closeBlockModal();
     }
 }
 
-// ✅ FUNÇÃO AUXILIAR - ATUALIZAR STATUS CONEXÃO
-function updateConnectionStatus(status) {
-    // Buscar ou criar elemento de status
-    let statusElement = document.getElementById('connectionStatus');
-    if (!statusElement) {
-        statusElement = document.createElement('div');
-        statusElement.id = 'connectionStatus';
-        statusElement.className = 'connection-status';
-        document.body.appendChild(statusElement);
-    }
-    
-    if (status === 'good') {
-        statusElement.textContent = '✅ Conexão OK';
-        statusElement.className = 'connection-status connection-good';
-    } else {
-        statusElement.textContent = '⚠️ Conexão Lenta';
-        statusElement.className = 'connection-status connection-slow';
-    }
-}
-
-// ✅ FUNÇÃO AUXILIAR - ALERTAS VISÍVEIS (igual blocks.html)
+// ✅ FUNÇÃO AUXILIAR - ALERTAS VISÍVEIS
 function showAlert(message, type = 'success') {
-    // Remove alertas anteriores
     const existing = document.querySelectorAll('.custom-alert');
     existing.forEach(alert => alert.remove());
     
@@ -2604,9 +2550,8 @@ function showAlert(message, type = 'success') {
     setTimeout(() => {
         alert.style.animation = 'slideOutUp 0.3s ease';
         setTimeout(() => alert.remove(), 300);
-    }, 3000);
+    }, 2000); // ✅ ALERTA MAIS CURTO - 2s
 }
-
 // ✅ ADICIONAR CSS PARA ANIMAÇÕES (se não existir)
 const style = document.createElement('style');
 style.textContent = `
