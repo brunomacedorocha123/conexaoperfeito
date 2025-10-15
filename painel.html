@@ -629,11 +629,62 @@
           </ul>
         </div>
       </div>
+      
+      <!-- BOTÃO DE EXCLUIR CONTA NO RODAPÉ -->
+      <div class="footer-actions">
+        <button class="btn btn-danger" id="deleteAccountBtn">
+          <i class="fas fa-trash-alt"></i> Excluir Minha Conta Permanentemente
+        </button>
+        <p class="footer-warning">
+          <i class="fas fa-exclamation-circle"></i> 
+          Esta ação não pode ser desfeita - todos os seus dados serão perdidos
+        </p>
+      </div>
+      
       <div class="copyright">
         <p>&copy; 2023 Amor Conect. Todos os direitos reservados.</p>
       </div>
     </div>
   </footer>
+
+  <!-- Modal de Exclusão de Conta -->
+  <div id="deleteAccountModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fas fa-exclamation-triangle"></i> Excluir Conta</h3>
+        <button class="modal-close" id="closeDeleteModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="warning-message">
+          <i class="fas fa-skull-crossbones"></i>
+          <h4>Esta ação é irreversível!</h4>
+          <p>Todos os seus dados serão permanentemente excluídos:</p>
+          <ul>
+            <li>✅ Perfil completo</li>
+            <li>✅ Todas as mensagens</li>
+            <li>✅ Matches e conexões</li>
+            <li>✅ Fotos e galeria</li>
+            <li>✅ Histórico completo</li>
+          </ul>
+          <p><strong>Você tem certeza absoluta que deseja continuar?</strong></p>
+        </div>
+        
+        <div class="confirmation-step" id="confirmationStep" style="display: none;">
+          <div class="password-verification">
+            <label for="confirmPassword">Digite sua senha para confirmar:</label>
+            <input type="password" id="confirmPassword" class="form-control" placeholder="Sua senha atual">
+            <div class="password-feedback" id="passwordFeedback"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="cancelDelete">Cancelar</button>
+        <button class="btn btn-danger" id="confirmDelete" disabled>
+          <i class="fas fa-trash-alt"></i> Sim, Excluir Minha Conta
+        </button>
+      </div>
+    </div>
+  </div>
 
   <script src="painel.js"></script>
 </body>
