@@ -1844,7 +1844,7 @@ footer {
       </div>
     </div>
   </footer>
-  
+
 <script>
 // Configuração do Supabase
 const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
@@ -1856,21 +1856,271 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let currentUser = null;
 let userProfile = null;
 
-// ==================== SISTEMA DE REPORTE E BLOQUEIO ULTRA-RÁPIDO ====================
-
-// Variáveis globais
+// Sistema de bloqueio
+let blockedUserIdsSet = new Set();
 let currentReportUserId = null;
 let currentBlockUserId = null;
 let currentReportUserName = null;
 let currentBlockUserName = null;
-// ✅ VARIÁVEL GLOBAL PARA BLOQUEIOS LOCAIS (MEMÓRIA)
-let blockedUserIdsSet = new Set();
 
-// ✅ PRÉ-CARREGAR BLOQUEIOS AO INICIAR A APLICAÇÃO
-async function initializeBlockSystem() {
-    await loadBlockedIdsForHome();
-    console.log(`✅ Sistema de bloqueio inicializado: ${blockedUserIdsSet.size} usuários bloqueados`);
+// Cache de bloqueios
+const blockCache = {
+    get: () => {
+        const cached = localStorage.getItem(`blocked_cache_${currentUser?.id}`);
+        return cached ? new Set(JSON.parse(cached)) : new Set();
+    },
+    set: (blockedIds) => {
+        localStorage.setItem(`blocked_cache_${currentUser?.id}`, JSON.stringify([...blockedIds]));
+    }
+};
+
+// ==================== INICIALIZAÇÃO DA APLICAÇÃO ====================
+
+document.addEventListener('DOMContentLoaded', function() {
+    checkAuth();
+    setupEventListeners();
+    setupMobileMenu();
+});
+
+// Verificar autenticação
+async function checkAuth() {
+    try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error) throw error;
+        
+        if (!user) {
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        currentUser = user;
+        
+        // Carregamento paralelo para máxima velocidade
+        await Promise.all([
+            loadUserData(),
+            loadRealUsers(), 
+            loadVisitorsSystem(),
+            initializeBlockSystem()
+        ]);
+        
+        updateStats();
+        startStatsAutoUpdate();
+        startOnlineStatusUpdater();
+        setupInvisibleModeSyncListener();
+        
+    } catch (error) {
+        console.error('Erro na autenticação:', error);
+        window.location.href = 'login.html';
+    }
 }
+
+// Configurar event listeners
+function setupEventListeners() {
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', logout);
+    }
+    
+    document.addEventListener('touchstart', function() {}, { passive: true });
+}
+
+// Logout
+async function logout() {
+    try {
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+        
+        window.location.href = 'index.html';
+    } catch (error) {
+        console.error('Erro ao fazer logout:', error);
+        alert('Erro ao fazer logout. Tente novamente.');
+    }
+}
+
+// ==================== SISTEMA DE BLOQUEIO ULTRA-RÁPIDO ====================
+
+// ✅ INICIALIZAÇÃO DO SISTEMA DE BLOQUEIO
+async function initializeBlockSystem() {
+    try {
+        console.log('⚡ Inicializando sistema de bloqueio ULTRA-RÁPIDO...');
+        
+        // 1. Carrega do cache local (INSTANTÂNEO)
+        const cached = blockCache.get();
+        if (cached.size > 0) {
+            blockedUserIdsSet = cached;
+            console.log(`⚡ Cache carregado: ${blockedUserIdsSet.size} usuários bloqueados`);
+        }
+        
+        // 2. Atualiza do banco em background
+        await loadBlockedIdsForHome();
+        console.log(`✅ Sistema de bloqueio pronto: ${blockedUserIdsSet.size} usuários bloqueados`);
+        
+    } catch (error) {
+        console.error('❌ Erro ao inicializar bloqueio:', error);
+    }
+}
+
+// ✅ CARREGAR IDs BLOQUEADOS DO BANCO
+async function loadBlockedIdsForHome() {
+    try {
+        if (!currentUser) return;
+        
+        const { data: blocks, error } = await supabase
+            .from('user_blocks')
+            .select('blocked_user_id')
+            .eq('blocker_id', currentUser.id);
+
+        if (error) throw error;
+
+        blockedUserIdsSet = new Set(blocks.map(b => b.blocked_user_id));
+        blockCache.set(blockedUserIdsSet);
+        
+    } catch (error) {
+        console.error('❌ Erro ao carregar IDs bloqueados:', error);
+    }
+}
+
+// ✅ VERIFICAR SE USUÁRIO ESTÁ BLOQUEADO
+function isUserBlocked(userId) {
+    return blockedUserIdsSet.has(userId);
+}
+
+// ✅ BLOQUEIO ULTRA-RÁPIDO - FUNÇÃO PRINCIPAL
+async function confirmBlock() {
+    if (!currentBlockUserId) return;
+    
+    const userId = currentBlockUserId;
+    const userName = currentBlockUserName;
+    const startTime = Date.now();
+    
+    console.log('⚡ BLOQUEIO ULTRA-RÁPIDO iniciado:', userName);
+    
+    // 1. FEEDBACK VISUAL IMEDIATO (0ms)
+    showAlert('⚡ Bloqueando...', 'warning');
+    
+    // 2. REMOVE DA UI INSTANTANEAMENTE (0ms)
+    removeUserCardImmediately(userId);
+    
+    // 3. ATUALIZA CACHE LOCAL (0ms)
+    blockedUserIdsSet.add(userId);
+    blockCache.set(blockedUserIdsSet);
+    
+    try {
+        // 4. TENTA BLOQUEIO NO BANCO (em background)
+        const { data, error } = await supabase.rpc('block_user_instant', {
+            p_blocker_id: currentUser.id,
+            p_blocked_id: userId
+        });
+        
+        const responseTime = Date.now() - startTime;
+        console.log(`✅ Bloqueio concluído em ${responseTime}ms`);
+
+        if (error) {
+            if (error.code === '23505') {
+                console.log('ℹ️ Usuário já estava bloqueado');
+                showAlert('ℹ️ Usuário já estava bloqueado', 'info');
+            } else {
+                throw error;
+            }
+        } else if (data && data.success) {
+            showAlert(`✅ ${userName} bloqueado com sucesso!`, 'success');
+        } else {
+            throw new Error(data?.error || 'Erro desconhecido');
+        }
+
+    } catch (error) {
+        console.error('❌ Falha no bloqueio:', error);
+        
+        if (error.message?.includes('Timeout') || error.message?.includes('Network')) {
+            // ✅ BLOQUEIO OFFLINE - usuário fica bloqueado localmente
+            showAlert('⚠️ Bloqueado localmente (sem internet)', 'warning');
+            
+            // Tenta novamente em background silenciosamente
+            setTimeout(async () => {
+                try {
+                    await supabase.rpc('block_user_instant', {
+                        p_blocker_id: currentUser.id,
+                        p_blocked_id: userId
+                    });
+                    console.log('✅ Bloqueio concluído em background');
+                } catch (bgError) {
+                    console.log('❌ Bloqueio em background falhou:', bgError);
+                }
+            }, 1000);
+        } else {
+            showAlert('❌ Falha no bloqueio. Tente novamente.', 'error');
+        }
+    } finally {
+        closeBlockModal();
+    }
+}
+
+// ✅ REMOÇÃO IMEDIATA DA UI
+function removeUserCardImmediately(userId) {
+    console.log('🗑️ Removendo card imediatamente:', userId);
+    
+    let removed = false;
+    
+    // Método 1: Busca por data-user-id (MAIS RÁPIDO)
+    const cardsWithData = document.querySelectorAll(`[data-user-id="${userId}"]`);
+    cardsWithData.forEach(card => {
+        animateCardRemoval(card);
+        removed = true;
+    });
+    
+    // Método 2: Busca por onclick (fallback)
+    if (!removed) {
+        document.querySelectorAll('.user-card').forEach(card => {
+            const buttons = card.querySelectorAll('[onclick*="openBlockModal"]');
+            buttons.forEach(button => {
+                if (button.getAttribute('onclick').includes(userId)) {
+                    animateCardRemoval(card);
+                    removed = true;
+                }
+            });
+        });
+    }
+    
+    if (!removed) {
+        console.log('⚠️ Card não encontrado para remoção:', userId);
+    }
+}
+
+// ✅ ANIMAÇÃO DE REMOÇÃO
+function animateCardRemoval(card) {
+    if (card.classList.contains('removing')) return;
+    
+    card.classList.add('removing');
+    card.style.transition = 'all 0.3s ease';
+    card.style.opacity = '0.5';
+    card.style.transform = 'scale(0.95)';
+    card.style.pointerEvents = 'none';
+    
+    setTimeout(() => {
+        card.style.opacity = '0';
+        card.style.height = '0';
+        card.style.margin = '0';
+        card.style.padding = '0';
+        card.style.overflow = 'hidden';
+        card.style.border = 'none';
+        
+        setTimeout(() => {
+            if (card.parentNode) {
+                card.remove();
+                console.log('✅ Card removido da UI');
+                
+                // Verifica se ficou vazio
+                const remainingCards = document.querySelectorAll('.user-card:not(.removing)').length;
+                if (remainingCards === 0) {
+                    showEmptyState('Todos os usuários foram carregados ou bloqueados.');
+                }
+            }
+        }, 300);
+    }, 150);
+}
+
+// ==================== SISTEMA DE REPORTE ====================
 
 // Função para toggle do menu de ações
 function toggleMenu(button) {
@@ -1893,7 +2143,7 @@ function toggleMenu(button) {
     }
 }
 
-// Função para fechar todos os menus
+// Fechar todos os menus
 function closeAllMenus(event) {
     if (!event || !event.target.closest('.user-card-menu')) {
         document.querySelectorAll('.menu-options').forEach(menu => {
@@ -1903,14 +2153,13 @@ function closeAllMenus(event) {
     }
 }
 
-// Função para abrir modal de reporte
+// Abrir modal de reporte
 function openReportModal(userId, userName) {
     console.log('📝 Abrindo modal de reporte para:', userId, userName);
     
     currentReportUserId = userId;
     currentReportUserName = userName;
     
-    // Atualizar conteúdo do modal
     document.getElementById('reportUserName').textContent = userName;
     
     // Resetar formulário
@@ -1921,32 +2170,27 @@ function openReportModal(userId, userName) {
     document.getElementById('reportDescription').value = '';
     document.getElementById('submitReportBtn').disabled = true;
     
-    // Mostrar modal
     document.getElementById('reportModal').classList.add('show');
 }
 
-// Função para fechar modal de reporte
+// Fechar modal de reporte
 function closeReportModal() {
     document.getElementById('reportModal').classList.remove('show');
     currentReportUserId = null;
     currentReportUserName = null;
 }
 
-// Função para selecionar categoria de reporte
+// Selecionar categoria de reporte
 function selectReportCategory(radio) {
-    // Remover seleção de todas as categorias
     document.querySelectorAll('.report-category').forEach(category => {
         category.classList.remove('selected');
     });
     
-    // Adicionar seleção à categoria clicada
     radio.parentElement.classList.add('selected');
-    
-    // Habilitar botão de enviar
     document.getElementById('submitReportBtn').disabled = false;
 }
 
-// Função para enviar reporte
+// Enviar reporte
 async function submitReport() {
     try {
         const reason = document.querySelector('input[name="reportReason"]:checked')?.value;
@@ -1964,7 +2208,6 @@ async function submitReport() {
             description: description
         });
         
-        // Enviar para o Supabase
         const { data, error } = await supabase
             .from('user_reports')
             .insert({
@@ -1976,11 +2219,7 @@ async function submitReport() {
                 status: 'pending'
             });
             
-        if (error) {
-            console.error('❌ Erro ao enviar reporte:', error);
-            showAlert('❌ Erro ao enviar reporte. Tente novamente.', 'error');
-            return;
-        }
+        if (error) throw error;
         
         console.log('✅ Reporte enviado com sucesso!');
         showAlert('✅ Reporte enviado com sucesso! Nossa equipe irá analisar.', 'success');
@@ -1992,218 +2231,22 @@ async function submitReport() {
     }
 }
 
-// Função para abrir modal de bloqueio
+// Abrir modal de bloqueio
 function openBlockModal(userId, userName) {
     console.log('🚫 Abrindo modal de bloqueio para:', userId, userName);
     
     currentBlockUserId = userId;
     currentBlockUserName = userName;
     
-    // Atualizar conteúdo do modal
     document.getElementById('blockUserName').textContent = userName;
-    
-    // Mostrar modal
     document.getElementById('blockModal').classList.add('show');
 }
 
-// Função para fechar modal de bloqueio
+// Fechar modal de bloqueio
 function closeBlockModal() {
     document.getElementById('blockModal').classList.remove('show');
     currentBlockUserId = null;
     currentBlockUserName = null;
-}
-
-// ✅ FUNÇÃO OTIMIZADA DE BLOQUEIO - MÁXIMA VELOCIDADE
-async function confirmBlock() {
-    if (!currentBlockUserId) return;
-    
-    const userId = currentBlockUserId;
-    const userName = currentBlockUserName;
-    
-    console.log('⚡ BLOQUEIO ULTRA-RÁPIDO iniciado:', userName);
-    
-    // FEEDBACK VISUAL IMEDIATO (antes mesmo da requisição)
-    showAlert('⚡ Bloqueando...', 'warning');
-    removeUserCardImmediately(userId); // Remove da UI INSTANTANEAMENTE
-    
-    try {
-        // ✅ USAR SUA NOVA FUNÇÃO SQL block_user_instant
-        const { data, error } = await supabase.rpc('block_user_instant', {
-            p_blocker_id: currentUser.id,
-            p_blocked_id: userId
-        });
-
-        if (error) {
-            console.error('❌ Erro no bloqueio:', error);
-            showAlert('❌ Erro ao bloquear usuário', 'error');
-            return;
-        }
-
-        // ✅ RESPOSTA DA SUA FUNÇÃO SQL
-        if (data.success) {
-            if (data.already_blocked) {
-                console.log('ℹ️ Usuário já estava bloqueado:', userName);
-                showAlert('ℹ️ Usuário já estava bloqueado', 'info');
-            } else {
-                console.log('✅ Bloqueio REAL realizado com sucesso:', userName);
-                showAlert(`✅ ${userName} bloqueado com sucesso!`, 'success');
-            }
-            
-            // ✅ ATUALIZAR MEMÓRIA LOCAL
-            blockedUserIdsSet.add(userId);
-            
-        } else {
-            throw new Error(data.error || 'Erro desconhecido');
-        }
-
-    } catch (error) {
-        console.error('❌ Falha no bloqueio:', error);
-        showAlert('❌ Falha no bloqueio. Tente novamente.', 'error');
-    } finally {
-        closeBlockModal();
-    }
-}
-
-// ✅ REMOÇÃO IMEDIATA DA UI (ANTES MESMO DA RESPOSTA DO SERVIDOR)
-function removeUserCardImmediately(userId) {
-    console.log('🗑️ Removendo card imediatamente:', userId);
-    
-    const userCards = document.querySelectorAll('.user-card');
-    let removed = false;
-    
-    userCards.forEach(card => {
-        // Verificar por data attribute ou conteúdo do card
-        const cardUserId = card.getAttribute('data-user-id') || 
-                          card.querySelector('[onclick*="viewProfile"]')?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
-        
-        if (cardUserId === userId) {
-            card.style.opacity = '0.5';
-            card.style.transform = 'scale(0.95)';
-            
-            // Animar saída
-            setTimeout(() => {
-                card.style.transition = 'all 0.3s ease';
-                card.style.opacity = '0';
-                card.style.height = '0';
-                card.style.margin = '0';
-                card.style.padding = '0';
-                card.style.overflow = 'hidden';
-                
-                setTimeout(() => {
-                    card.remove();
-                    console.log('✅ Card removido da UI:', userId);
-                }, 300);
-            }, 100);
-            
-            removed = true;
-        }
-    });
-    
-    if (!removed) {
-        console.log('⚠️ Card não encontrado para remoção imediata:', userId);
-        // Fallback: esconder qualquer elemento que contenha o userId
-        document.querySelectorAll(`[onclick*="${userId}"]`).forEach(el => {
-            const card = el.closest('.user-card');
-            if (card) {
-                card.style.display = 'none';
-                console.log('✅ Card removido via fallback:', userId);
-            }
-        });
-    }
-}
-
-// ✅ FUNÇÃO PARA CARREGAR IDs BLOQUEADOS
-async function loadBlockedIdsForHome() {
-    try {
-        if (!currentUser) return;
-        
-        console.log('🔄 Carregando IDs de usuários bloqueados...');
-        const { data: blocks, error } = await supabase
-            .from('user_blocks')
-            .select('blocked_user_id')
-            .eq('blocker_id', currentUser.id);
-
-        if (error) throw error;
-
-        blockedUserIdsSet = new Set(blocks.map(b => b.blocked_user_id));
-        console.log(`✅ ${blockedUserIdsSet.size} IDs de bloqueados carregados`);
-        
-    } catch (error) {
-        console.error('❌ Erro ao carregar IDs de bloqueados:', error);
-    }
-}
-
-// ✅ FUNÇÃO AUXILIAR: VERIFICAR SE USUÁRIO ESTÁ BLOQUEADO
-function isUserBlocked(userId) {
-    return blockedUserIdsSet.has(userId);
-}
-
-// FUNÇÃO AUXILIAR - ALERTAS VISÍVEIS
-function showAlert(message, type = 'success') {
-    const existing = document.querySelectorAll('.custom-alert');
-    existing.forEach(alert => alert.remove());
-    
-    const alert = document.createElement('div');
-    alert.className = `custom-alert ${type}`;
-    alert.textContent = message;
-    alert.style.cssText = `
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 1001;
-        padding: 1rem 2rem;
-        border-radius: 10px;
-        color: white;
-        font-weight: 600;
-        background: ${type === 'success' ? '#38a169' : type === 'error' ? '#e53e3e' : type === 'warning' ? '#d69e2e' : '#3182ce'};
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        animation: slideInDown 0.3s ease;
-        text-align: center;
-        min-width: 300px;
-        max-width: 90%;
-        border: 2px solid ${type === 'success' ? '#2f855a' : type === 'error' ? '#c53030' : type === 'warning' ? '#b7791f' : '#2c5aa0'};
-    `;
-    
-    document.body.appendChild(alert);
-    
-    setTimeout(() => {
-        alert.style.animation = 'slideOutUp 0.3s ease';
-        setTimeout(() => alert.remove(), 300);
-    }, 3000);
-}
-
-// ADICIONAR CSS PARA ANIMAÇÕES (se não existir)
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideInDown {
-        from { transform: translate(-50%, -100%); opacity: 0; }
-        to { transform: translate(-50%, 0); opacity: 1; }
-    }
-    @keyframes slideOutUp {
-        from { transform: translate(-50%, 0); opacity: 1; }
-        to { transform: translate(-50%, -100%); opacity: 0; }
-    }
-    .connection-status {
-        position: fixed;
-        top: 10px;
-        right: 10px;
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        z-index: 1000;
-        transition: all 0.3s ease;
-    }
-    .connection-good { background: #38a169; color: white; }
-    .connection-slow { background: #d69e2e; color: white; }
-    .custom-alert { 
-        /* Estilos base já aplicados inline */
-    }
-`;
-if (!document.querySelector('#alert-animations')) {
-    style.id = 'alert-animations';
-    document.head.appendChild(style);
 }
 
 // Funções auxiliares dos modais
@@ -2215,244 +2258,7 @@ function openSupportModal() {
     alert('📞 Entre em contato com nosso suporte: suporte@amorconect.com');
 }
 
-// ==================== INICIALIZAÇÃO DA APLICAÇÃO ====================
-
-document.addEventListener('DOMContentLoaded', function() {
-    checkAuth();
-    setupEventListeners();
-    setupMobileMenu();
-});
-
-// Configurar menu mobile
-function setupMobileMenu() {
-    const hamburgerBtn = document.getElementById('hamburgerBtn');
-    const mobileMenu = document.getElementById('mobileMenu');
-    const closeMobileMenu = document.getElementById('closeMobileMenu');
-    const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
-
-    if (!hamburgerBtn || !mobileMenu) return;
-
-    hamburgerBtn.addEventListener('click', () => {
-        mobileMenu.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-    });
-
-    closeMobileMenu.addEventListener('click', () => {
-        mobileMenu.style.display = 'none';
-        document.body.style.overflow = 'auto';
-    });
-
-    if (mobileLogoutBtn) {
-        mobileLogoutBtn.addEventListener('click', logout);
-    }
-
-    mobileMenu.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', () => {
-            mobileMenu.style.display = 'none';
-            document.body.style.overflow = 'auto';
-        });
-    });
-
-    function checkScreenSize() {
-        if (window.innerWidth <= 768) {
-            document.querySelector('.user-menu').style.display = 'none';
-            hamburgerBtn.style.display = 'flex';
-        } else {
-            document.querySelector('.user-menu').style.display = 'flex';
-            hamburgerBtn.style.display = 'none';
-            mobileMenu.style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-    }
-
-    window.addEventListener('resize', checkScreenSize);
-    checkScreenSize();
-}
-
-// Verificar autenticação
-async function checkAuth() {
-    try {
-        const { data: { user }, error } = await supabase.auth.getUser();
-        
-        if (error) throw error;
-        
-        if (!user) {
-            window.location.href = 'login.html';
-            return;
-        }
-        
-        currentUser = user;
-        
-        // ✅✅✅ BLOCO OTIMIZADO - CARREGAMENTO PARALELO
-        await Promise.all([
-            loadUserData(),
-            loadRealUsers(), 
-            loadVisitorsSystem(),
-            initializeBlockSystem() // ✅ NOVO: Inicializar sistema de bloqueio
-        ]);
-        
-        updateStats();
-        startStatsAutoUpdate();
-        
-        // ✅ NOVO: Iniciar sistema de status online E sincronização
-        startOnlineStatusUpdater();
-        
-        // ✅ NOVO: Iniciar sistema de escuta do modo invisível
-        setupInvisibleModeSyncListener();
-        
-    } catch (error) {
-        console.error('Erro na autenticação:', error);
-        window.location.href = 'login.html';
-    }
-}
-
-// ATUALIZAÇÃO PERIÓDICA DAS ESTATÍSTICAS
-function startStatsAutoUpdate() {
-    setInterval(updateStats, 30000);
-}
-
-// ✅ NOVO: SISTEMA DE STATUS ONLINE PARA HOME
-async function updateOnlineStatus() {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { error } = await supabase
-            .from('profiles')
-            .update({ 
-                last_online_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-            })
-            .eq('id', user.id);
-
-        if (error) {
-            console.error('Erro ao atualizar status online:', error);
-        }
-        
-    } catch (error) {
-        console.error('Erro no sistema de status online:', error);
-    }
-}
-
-// ✅ NOVO: Verificar se usuário está online
-function isUserOnline(userProfile, currentUserId) {
-    if (!userProfile.last_online_at) return false;
-    
-    const lastOnline = new Date(userProfile.last_online_at);
-    const now = new Date();
-    const minutesDiff = (now - lastOnline) / (1000 * 60);
-    
-    // Considera online se esteve ativo nos últimos 5 minutos
-    const isActuallyOnline = minutesDiff <= 5;
-    
-    // Se é o próprio usuário, sempre mostra online
-    if (userProfile.id === currentUserId) return true;
-    
-    // Se o usuário está invisível, mostra como offline para outros
-    if (userProfile.is_invisible && userProfile.id !== currentUserId) {
-        return false;
-    }
-    
-    return isActuallyOnline;
-}
-
-// ✅ NOVO: SISTEMA DE SINCRONIZAÇÃO DO MODO INVISÍVEL NA HOME
-function setupInvisibleModeSyncListener() {
-    try {
-        console.log('👂 Configurando ouvinte de sincronização do modo invisível na HOME...');
-        
-        // 1. Escutar evento customizado do painel
-        window.addEventListener('invisibleModeUpdated', function(event) {
-            console.log('🔄 Evento de modo invisível recebido na HOME:', event.detail);
-            handleInvisibleModeChangeInHome(event.detail.isInvisible);
-        });
-        
-        // 2. Escutar mudanças no localStorage (para abas diferentes)
-        window.addEventListener('storage', function(event) {
-            if (event.key === 'invisibleModeChanged') {
-                console.log('🔄 Storage change detectado na HOME para modo invisível');
-                const isInvisible = localStorage.getItem('invisibleModeStatus') === 'true';
-                handleInvisibleModeChangeInHome(isInvisible);
-            }
-        });
-        
-        // 3. Verificar status atual ao carregar
-        setTimeout(() => {
-            const savedStatus = localStorage.getItem('invisibleModeStatus');
-            if (savedStatus) {
-                const isInvisible = savedStatus === 'true';
-                console.log(`📝 Status salvo encontrado: ${isInvisible}`);
-                handleInvisibleModeChangeInHome(isInvisible);
-            }
-        }, 1000);
-        
-        console.log('✅ Ouvinte de sincronização configurado na HOME');
-        
-    } catch (error) {
-        console.error('❌ Erro ao configurar sincronização na HOME:', error);
-    }
-}
-
-// ✅ NOVO: PROCESSAR MUDANÇA DO MODO INVISÍVEL NA HOME
-async function handleInvisibleModeChangeInHome(isInvisible) {
-    try {
-        console.log(`🔄 HOME: Processando mudança do modo invisível para: ${isInvisible}`);
-        
-        // Atualizar o badge na seção de visitantes
-        const statusElement = document.getElementById('invisibleStatusHome');
-        if (statusElement) {
-            if (isInvisible) {
-                statusElement.style.display = 'flex';
-                statusElement.querySelector('strong').textContent = 'Ativo';
-            } else {
-                statusElement.style.display = 'none';
-            }
-        }
-        
-        console.log(`✅ HOME: Badge atualizado para modo invisível: ${isInvisible ? 'ATIVO' : 'INATIVO'}`);
-        
-    } catch (error) {
-        console.error('❌ Erro ao processar mudança do modo invisível na HOME:', error);
-    }
-}
-
-// ✅ NOVO: Iniciar atualização periódica do status
-function startOnlineStatusUpdater() {
-    // Atualizar imediamente
-    updateOnlineStatus();
-    
-    // Atualizar a cada 1 minuto
-    setInterval(updateOnlineStatus, 60000);
-    
-    // Atualizar também quando a página ganha foco
-    document.addEventListener('visibilitychange', function() {
-        if (!document.hidden) {
-            updateOnlineStatus();
-        }
-    });
-    
-    // Atualizar em interações do usuário
-    ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => {
-        document.addEventListener(event, updateOnlineStatus, { passive: true });
-    });
-}
-
-// CARREGAR FOTO DO USUÁRIO
-async function loadUserPhoto(avatarUrl) {
-    try {
-        if (!avatarUrl) return null;
-
-        const { data } = supabase.storage
-            .from('avatars')
-            .getPublicUrl(avatarUrl);
-
-        return data?.publicUrl || null;
-
-    } catch (error) {
-        console.error('Erro ao carregar foto:', error);
-        return null;
-    }
-}
+// ==================== SISTEMA DE USUÁRIOS E PERFIS ====================
 
 // Carregar dados do usuário atual
 async function loadUserData() {
@@ -2483,7 +2289,7 @@ async function loadUserData() {
         document.getElementById('mobileUserNickname').textContent = displayName;
         document.getElementById('welcomeNickname').textContent = displayName;
 
-        // ✅ NOVO: Mostrar Free ou Premium no header
+        // Mostrar Free ou Premium no header
         const isPremium = profile?.is_premium || false;
         const freeBadge = document.getElementById('freeBadge');
         const premiumBtn = document.getElementById('premiumBtn');
@@ -2507,7 +2313,7 @@ async function loadUserData() {
     }
 }
 
-// FUNÇÃO AUXILIAR PARA ATUALIZAR AVATAR
+// Atualizar avatar do usuário
 async function updateUserAvatar(displayName, profile) {
     const avatarElements = [
         document.getElementById('userAvatar'),
@@ -2538,12 +2344,28 @@ async function updateUserAvatar(displayName, profile) {
     }
 }
 
-// CARREGAR USUÁRIOS REAIS DO BANCO COM FOTOS
+// Carregar foto do usuário
+async function loadUserPhoto(avatarUrl) {
+    try {
+        if (!avatarUrl) return null;
+
+        const { data } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(avatarUrl);
+
+        return data?.publicUrl || null;
+
+    } catch (error) {
+        console.error('Erro ao carregar foto:', error);
+        return null;
+    }
+}
+
+// Carregar usuários reais do banco
 async function loadRealUsers() {
     try {
         const limit = window.innerWidth <= 768 ? 4 : 8;
         
-        // ✅ CORRIGIDO: Agora busca também last_online_at e is_invisible
         const { data: users, error } = await supabase
             .from('profiles')
             .select(`
@@ -2588,20 +2410,27 @@ async function loadRealUsers() {
     }
 }
 
-// EXIBIR USUÁRIOS COM FOTOS - ASSÍNCRONO
+// Exibir usuários com fotos
 async function displayUsersWithPhotos(users) {
     const usersGrid = document.getElementById('usersGrid');
     
     const userCards = [];
     for (const user of users) {
-        const card = await createUserCardWithPhoto(user);
-        userCards.push(card);
+        // ✅ VERIFICA SE USUÁRIO NÃO ESTÁ BLOQUEADO ANTES DE CRIAR CARD
+        if (!isUserBlocked(user.id)) {
+            const card = await createUserCardWithPhoto(user);
+            userCards.push(card);
+        }
     }
     
     usersGrid.innerHTML = userCards.join('');
+    
+    if (userCards.length === 0) {
+        showEmptyState('Todos os usuários disponíveis foram bloqueados ou não há usuários para mostrar.');
+    }
 }
 
-// CRIAR CARD DE USUÁRIO COM FOTO - ASSÍNCRONO
+// Criar card de usuário com foto
 async function createUserCardWithPhoto(user) {
     if (!user.user_details || !user.nickname) {
         return '';
@@ -2611,7 +2440,7 @@ async function createUserCardWithPhoto(user) {
     const age = user.birth_date ? calculateAge(user.birth_date) : null;
     const details = user.user_details || {};
     
-    // ✅ NOVO: Verificar status online
+    // Status online
     const isOnline = isUserOnline(user, currentUser.id);
     const onlineBadge = isOnline ? 
         '<div class="online-badge" title="Online"></div>' : 
@@ -2647,7 +2476,7 @@ async function createUserCardWithPhoto(user) {
     const bio = details.description || 'Este usuário ainda não adicionou uma descrição.';
 
     return `
-        <div class="user-card" onclick="viewProfile('${user.id}')">
+        <div class="user-card" data-user-id="${user.id}" onclick="viewProfile('${user.id}')">
             ${avatarHtml}
             <div class="user-card-name">${nickname}${age ? `, ${age}` : ''}</div>
             
@@ -2666,7 +2495,7 @@ async function createUserCardWithPhoto(user) {
                 <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewProfile('${user.id}')">
                     👀 Ver Perfil
                 </button>
-                <!-- NOVO: Menu de ações -->
+                <!-- Menu de ações -->
                 <div class="user-card-menu">
                     <button class="btn-more" onclick="event.stopPropagation(); toggleMenu(this)">
                         ⋯
@@ -2685,55 +2514,9 @@ async function createUserCardWithPhoto(user) {
     `;
 }
 
-// ==================== SISTEMA DE VISITANTES CORRIGIDO ====================
+// ==================== SISTEMA DE VISITANTES ====================
 
-// FUNÇÃO CORRIGIDA PARA REGISTRAR VISITA
-async function registerProfileVisit(visitedUserId) {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            console.error('❌ Usuário não autenticado');
-            return false;
-        }
-
-        if (user.id === visitedUserId) {
-            console.log('⚠️ Não pode visitar próprio perfil');
-            return false;
-        }
-        
-        // ✅ CORREÇÃO: Verifica se o usuário a ser visitado está bloqueado
-        if (blockedUserIdsSet.has(visitedUserId)) {
-            console.log('🚫 Não é possível visitar perfil: Usuário bloqueado pelo usuário atual.');
-            showAlert('🚫 Você bloqueou este usuário e não pode visitá-lo.', 'error');
-            return false;
-        }
-
-        console.log('🔄 Registrando visita:', {
-            visitor: user.id,
-            visited: visitedUserId
-        });
-
-        // USAR A NOVA FUNÇÃO register_visit_simple
-        const { data, error } = await supabase.rpc('register_visit_simple', {
-            p_visitor_id: user.id,
-            p_visited_id: visitedUserId
-        });
-
-        if (error) {
-            console.error('❌ Erro ao registrar visita:', error);
-            return false;
-        }
-
-        console.log('✅ Visita registrada com sucesso:', data);
-        return data.success;
-
-    } catch (error) {
-        console.error('❌ Erro no registro de visita:', error);
-        return false;
-    }
-}
-
-// CORRIGIDO: CARREGAR VISITANTES E STATUS PREMIUM
+// Carregar sistema de visitantes
 async function loadVisitorsSystem() {
     try {
         const isPremium = await checkPremiumStatus();
@@ -2750,33 +2533,7 @@ async function loadVisitorsSystem() {
     }
 }
 
-// NOVO: Verificar status do modo invisível para mostrar badge
-async function checkInvisibleStatusHome() {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-        
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('is_invisible')
-            .eq('id', user.id)
-            .single();
-            
-        const statusElement = document.getElementById('invisibleStatusHome');
-        if (statusElement && profile) {
-            if (profile.is_invisible) {
-                statusElement.style.display = 'flex';
-                statusElement.querySelector('strong').textContent = 'Ativo';
-            } else {
-                statusElement.style.display = 'none';
-            }
-        }
-    } catch (error) {
-        console.error('Erro ao verificar modo invisível:', error);
-    }
-}
-
-// VERIFICAR STATUS PREMIUM
+// Verificar status premium
 async function checkPremiumStatus() {
     try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -2795,7 +2552,7 @@ async function checkPremiumStatus() {
     }
 }
 
-// FUNÇÃO COMPLETAMENTE CORRIGIDA - CARREGAR VISITANTES
+// Carregar visitantes premium
 async function loadPremiumVisitors() {
     try {
         console.log('🔄 Carregando visitantes para o quadro grande...');
@@ -2804,7 +2561,6 @@ async function loadPremiumVisitors() {
         document.getElementById('premiumVisitors').style.display = 'block';
         document.getElementById('freeVisitors').style.display = 'none';
         
-        // USAR A NOVA FUNÇÃO DO BANCO
         const { data: visitors, error } = await supabase.rpc('get_recent_visitors', {
             p_user_id: currentUser.id,
             p_limit: 8
@@ -2827,7 +2583,7 @@ async function loadPremiumVisitors() {
 
         console.log('✅ Visitantes encontrados:', visitors);
 
-        // ATUALIZAR CONTADOR
+        // Atualizar contador
         const visitCount = visitors?.length || 0;
         visitorsCount.textContent = `${visitCount} visita${visitCount !== 1 ? 's' : ''}`;
         
@@ -2847,11 +2603,17 @@ async function loadPremiumVisitors() {
             return;
         }
         
-        // CRIAR CARDS DOS VISITANTES
+        // Criar cards dos visitantes
         let visitorsHTML = '';
         
         for (const visitor of visitors) {
             try {
+                // ✅ VERIFICAR SE VISITANTE NÃO ESTÁ BLOQUEADO
+                if (isUserBlocked(visitor.visitor_id)) {
+                    console.log(`🚫 Visitante bloqueado ignorado: ${visitor.visitor_id}`);
+                    continue;
+                }
+                
                 const nickname = visitor.visitor_nickname || 'Usuário';
                 const city = visitor.visitor_city || 'Cidade não informada';
                 const timeAgo = getTimeAgo(visitor.visited_at);
@@ -2901,8 +2663,15 @@ async function loadPremiumVisitors() {
             }
         }
         
-        visitorsGrid.innerHTML = visitorsHTML;
-        console.log(`✅ ${visitors.length} cards de visitantes carregados com sucesso`);
+        visitorsGrid.innerHTML = visitorsHTML || `
+            <div class="visitors-empty">
+                <div class="icon">🚫</div>
+                <h3>Todos os visitantes estão bloqueados</h3>
+                <p>Desbloqueie usuários para ver visitantes aqui</p>
+            </div>
+        `;
+        
+        console.log(`✅ ${visitors.length} cards de visitantes processados`);
 
     } catch (error) {
         console.error('❌ Erro geral ao carregar visitantes:', error);
@@ -2917,13 +2686,12 @@ async function loadPremiumVisitors() {
     }
 }
 
-// CARREGAR ESTATÍSTICAS PARA FREE USERS
+// Carregar estatísticas para free users
 async function loadFreeVisitorsStats() {
     try {
         document.getElementById('premiumVisitors').style.display = 'none';
         document.getElementById('freeVisitors').style.display = 'block';
         
-        // USAR A NOVA FUNÇÃO DO BANCO
         const { data: visitCount, error } = await supabase.rpc('count_user_visits', {
             p_user_id: currentUser.id,
             p_days: 7
@@ -2942,32 +2710,61 @@ async function loadFreeVisitorsStats() {
     }
 }
 
-// FUNÇÃO AUXILIAR - TEMPO DECORRIDO
-function getTimeAgo(dateString) {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-    
-    if (diffMins < 1) return 'Agora';
-    if (diffMins < 60) return `${diffMins}min`;
-    if (diffHours < 24) return `${diffHours}h`;
-    if (diffDays < 7) return `${diffDays}d`;
-    return `${Math.floor(diffDays / 7)}sem`;
+// Registrar visita ao perfil
+async function registerProfileVisit(visitedUserId) {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            console.error('❌ Usuário não autenticado');
+            return false;
+        }
+
+        if (user.id === visitedUserId) {
+            console.log('⚠️ Não pode visitar próprio perfil');
+            return false;
+        }
+        
+        // ✅ VERIFICAR SE USUÁRIO ESTÁ BLOQUEADO
+        if (isUserBlocked(visitedUserId)) {
+            console.log('🚫 Não é possível visitar perfil: Usuário bloqueado');
+            showAlert('🚫 Você bloqueou este usuário e não pode visitá-lo.', 'error');
+            return false;
+        }
+
+        console.log('🔄 Registrando visita:', {
+            visitor: user.id,
+            visited: visitedUserId
+        });
+
+        const { data, error } = await supabase.rpc('register_visit_simple', {
+            p_visitor_id: user.id,
+            p_visited_id: visitedUserId
+        });
+
+        if (error) {
+            console.error('❌ Erro ao registrar visita:', error);
+            return false;
+        }
+
+        console.log('✅ Visita registrada com sucesso:', data);
+        return data.success;
+
+    } catch (error) {
+        console.error('❌ Erro no registro de visita:', error);
+        return false;
+    }
 }
 
-// ==================== FUNÇÕES DE INTERAÇÃO CORRIGIDAS ====================
+// ==================== FUNÇÕES DE INTERAÇÃO ====================
 
-// FUNÇÃO SENDMESSAGE CORRIGIDA - NÃO BLOQUEANTE
+// Enviar mensagem
 async function sendMessage(userId, event) {
     if (event) event.stopPropagation();
     
     console.log('💌 Iniciando conversa com usuário:', userId);
 
-    // ✅ CORREÇÃO: Verifica se o usuário a ser contactado está bloqueado
-    if (blockedUserIdsSet.has(userId)) {
+    // ✅ VERIFICAR SE USUÁRIO ESTÁ BLOQUEADO
+    if (isUserBlocked(userId)) {
         showAlert('🚫 Você bloqueou este usuário e não pode enviar mensagens.', 'error');
         return;
     }
@@ -3007,12 +2804,12 @@ async function sendMessage(userId, event) {
     }, 100);
 }
 
-// FUNÇÃO VIEWPROFILE OTIMIZADA - REDIRECIONAMENTO INSTANTÂNEO
+// Visualizar perfil
 async function viewProfile(userId, event) {
     if (event) event.stopPropagation();
 
-    // ✅ CORREÇÃO: Verifica se o usuário a ser visualizado está bloqueado
-    if (blockedUserIdsSet.has(userId)) {
+    // ✅ VERIFICAR SE USUÁRIO ESTÁ BLOQUEADO
+    if (isUserBlocked(userId)) {
         showAlert('🚫 Você bloqueou este usuário e não pode visualizar o perfil.', 'error');
         return;
     }
@@ -3039,6 +2836,7 @@ async function viewProfile(userId, event) {
     }, 100);
 }
 
+// Verificar se perfil está completo
 function isProfileComplete() {
     return userProfile &&
             userProfile.full_name &&
@@ -3046,20 +2844,157 @@ function isProfileComplete() {
             userProfile.birth_date;
 }
 
-// OTIMIZADO: ATUALIZAR ESTATÍSTICAS RÁPIDAS
+// Verificar se usuário está online
+function isUserOnline(userProfile, currentUserId) {
+    if (!userProfile.last_online_at) return false;
+    
+    const lastOnline = new Date(userProfile.last_online_at);
+    const now = new Date();
+    const minutesDiff = (now - lastOnline) / (1000 * 60);
+    
+    // Considera online se esteve ativo nos últimos 5 minutos
+    const isActuallyOnline = minutesDiff <= 5;
+    
+    // Se é o próprio usuário, sempre mostra online
+    if (userProfile.id === currentUserId) return true;
+    
+    // Se o usuário está invisível, mostra como offline para outros
+    if (userProfile.is_invisible && userProfile.id !== currentUserId) {
+        return false;
+    }
+    
+    return isActuallyOnline;
+}
+
+// ==================== SISTEMA DE STATUS ONLINE ====================
+
+// Atualizar status online
+async function updateOnlineStatus() {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { error } = await supabase
+            .from('profiles')
+            .update({ 
+                last_online_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', user.id);
+
+        if (error) {
+            console.error('Erro ao atualizar status online:', error);
+        }
+        
+    } catch (error) {
+        console.error('Erro no sistema de status online:', error);
+    }
+}
+
+// Iniciar atualização periódica do status
+function startOnlineStatusUpdater() {
+    // Atualizar imediatamente
+    updateOnlineStatus();
+    
+    // Atualizar a cada 1 minuto
+    setInterval(updateOnlineStatus, 60000);
+    
+    // Atualizar também quando a página ganha foco
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            updateOnlineStatus();
+        }
+    });
+    
+    // Atualizar em interações do usuário
+    ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => {
+        document.addEventListener(event, updateOnlineStatus, { passive: true });
+    });
+}
+
+// Sistema de sincronização do modo invisível
+function setupInvisibleModeSyncListener() {
+    try {
+        console.log('👂 Configurando ouvinte de sincronização do modo invisível...');
+        
+        window.addEventListener('invisibleModeUpdated', function(event) {
+            console.log('🔄 Evento de modo invisível recebido:', event.detail);
+            handleInvisibleModeChangeInHome(event.detail.isInvisible);
+        });
+        
+        window.addEventListener('storage', function(event) {
+            if (event.key === 'invisibleModeChanged') {
+                const isInvisible = localStorage.getItem('invisibleModeStatus') === 'true';
+                handleInvisibleModeChangeInHome(isInvisible);
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ Erro ao configurar sincronização:', error);
+    }
+}
+
+// Processar mudança do modo invisível
+async function handleInvisibleModeChangeInHome(isInvisible) {
+    try {
+        console.log(`🔄 Processando mudança do modo invisível para: ${isInvisible}`);
+        
+        const statusElement = document.getElementById('invisibleStatusHome');
+        if (statusElement) {
+            if (isInvisible) {
+                statusElement.style.display = 'flex';
+                statusElement.querySelector('strong').textContent = 'Ativo';
+            } else {
+                statusElement.style.display = 'none';
+            }
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro ao processar mudança do modo invisível:', error);
+    }
+}
+
+// Verificar status do modo invisível
+async function checkInvisibleStatusHome() {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_invisible')
+            .eq('id', user.id)
+            .single();
+            
+        const statusElement = document.getElementById('invisibleStatusHome');
+        if (statusElement && profile) {
+            if (profile.is_invisible) {
+                statusElement.style.display = 'flex';
+                statusElement.querySelector('strong').textContent = 'Ativo';
+            } else {
+                statusElement.style.display = 'none';
+            }
+        }
+    } catch (error) {
+        console.error('Erro ao verificar modo invisível:', error);
+    }
+}
+
+// ==================== ESTATÍSTICAS E UTILITÁRIOS ====================
+
+// Atualizar estatísticas
 async function updateStats() {
-    // MOSTRA VALORES INSTANTÂNEOS PRIMEIRO
+    // Mostra valores instantâneos primeiro
     document.getElementById('totalUsers').textContent = '...';
     document.getElementById('newMatches').textContent = '0';
     document.getElementById('usersOnline').textContent = '...';
     document.getElementById('profileViews').textContent = '...';
 
-    // CARREGA DADOS REAIS EM PARALELO
+    // Carrega dados reais em paralelo
     try {
         const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
         
         const [totalResult, messagesResult, viewsResult, onlineResult] = await Promise.all([
-            // Todas as consultas em paralelo
             supabase.from('profiles').select('*', { count: 'exact', head: true }),
             supabase.from('messages').select('*', { count: 'exact', head: true })
                 .eq('receiver_id', currentUser.id)
@@ -3074,7 +3009,7 @@ async function updateStats() {
                 .neq('id', currentUser.id)
         ]);
 
-        // ATUALIZA COM DADOS REAIS
+        // Atualiza com dados reais
         document.getElementById('totalUsers').textContent = totalResult.count || 1;
         document.getElementById('newMatches').textContent = messagesResult.count || 0;
         document.getElementById('usersOnline').textContent = onlineResult.count || 0;
@@ -3089,7 +3024,12 @@ async function updateStats() {
     }
 }
 
-// MOSTRAR ESTADO VAZIO
+// Iniciar atualização automática de estatísticas
+function startStatsAutoUpdate() {
+    setInterval(updateStats, 30000);
+}
+
+// Mostrar estado vazio
 function showEmptyState(message) {
     const usersGrid = document.getElementById('usersGrid');
     usersGrid.innerHTML = `
@@ -3104,7 +3044,43 @@ function showEmptyState(message) {
     `;
 }
 
-// FUNÇÕES AUXILIARES
+// Alertas visíveis
+function showAlert(message, type = 'success') {
+    const existing = document.querySelectorAll('.custom-alert');
+    existing.forEach(alert => alert.remove());
+    
+    const alert = document.createElement('div');
+    alert.className = `custom-alert ${type}`;
+    alert.textContent = message;
+    alert.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1001;
+        padding: 1rem 2rem;
+        border-radius: 10px;
+        color: white;
+        font-weight: 600;
+        background: ${type === 'success' ? '#38a169' : type === 'error' ? '#e53e3e' : type === 'warning' ? '#d69e2e' : '#3182ce'};
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        animation: slideInDown 0.3s ease;
+        text-align: center;
+        min-width: 300px;
+        max-width: 90%;
+        border: 2px solid ${type === 'success' ? '#2f855a' : type === 'error' ? '#c53030' : type === 'warning' ? '#b7791f' : '#2c5aa0'};
+    `;
+    
+    document.body.appendChild(alert);
+    
+    setTimeout(() => {
+        alert.style.animation = 'slideOutUp 0.3s ease';
+        setTimeout(() => alert.remove(), 300);
+    }, 3000);
+}
+
+// ==================== FUNÇÕES AUXILIARES ====================
+
 function calculateAge(birthDate) {
     if (!birthDate) return null;
     const today = new Date();
@@ -3147,30 +3123,70 @@ function formatLookingFor(lookingFor) {
     return options[lookingFor] || lookingFor;
 }
 
-// Configurar event listeners
-function setupEventListeners() {
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', logout);
-    }
+function getTimeAgo(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
     
-    document.addEventListener('touchstart', function() {}, { passive: true });
+    if (diffMins < 1) return 'Agora';
+    if (diffMins < 60) return `${diffMins}min`;
+    if (diffHours < 24) return `${diffHours}h`;
+    if (diffDays < 7) return `${diffDays}d`;
+    return `${Math.floor(diffDays / 7)}sem`;
 }
 
-// Logout
-async function logout() {
-    try {
-        const { error } = await supabase.auth.signOut();
-        if (error) throw error;
-        
-        window.location.href = 'index.html';
-    } catch (error) {
-        console.error('Erro ao fazer logout:', error);
-        alert('Erro ao fazer logout. Tente novamente.');
+// ==================== MENU MOBILE ====================
+
+function setupMobileMenu() {
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    const closeMobileMenu = document.getElementById('closeMobileMenu');
+    const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+
+    if (!hamburgerBtn || !mobileMenu) return;
+
+    hamburgerBtn.addEventListener('click', () => {
+        mobileMenu.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    });
+
+    closeMobileMenu.addEventListener('click', () => {
+        mobileMenu.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    });
+
+    if (mobileLogoutBtn) {
+        mobileLogoutBtn.addEventListener('click', logout);
     }
+
+    mobileMenu.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+            mobileMenu.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        });
+    });
+
+    function checkScreenSize() {
+        if (window.innerWidth <= 768) {
+            document.querySelector('.user-menu').style.display = 'none';
+            hamburgerBtn.style.display = 'flex';
+        } else {
+            document.querySelector('.user-menu').style.display = 'flex';
+            hamburgerBtn.style.display = 'none';
+            mobileMenu.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    }
+
+    window.addEventListener('resize', checkScreenSize);
+    checkScreenSize();
 }
 
-// EXPORTAR FUNÇÕES PARA O HTML
+// ==================== EXPORTAR FUNÇÕES GLOBAIS ====================
+
 window.sendMessage = sendMessage;
 window.viewProfile = viewProfile;
 window.registerProfileVisit = registerProfileVisit;
@@ -3185,7 +3201,41 @@ window.confirmBlock = confirmBlock;
 window.closeConfirmModal = closeConfirmModal;
 window.openSupportModal = openSupportModal;
 
-console.log('✅ Home.js carregado e corrigido! Sistema de bloqueio ULTRA-RÁPIDO funcionando! 🎉');
+// ==================== CSS PARA ANIMAÇÕES ====================
+
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideInDown {
+        from { transform: translate(-50%, -100%); opacity: 0; }
+        to { transform: translate(-50%, 0); opacity: 1; }
+    }
+    @keyframes slideOutUp {
+        from { transform: translate(-50%, 0); opacity: 1; }
+        to { transform: translate(-50%, -100%); opacity: 0; }
+    }
+    .connection-status {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        z-index: 1000;
+        transition: all 0.3s ease;
+    }
+    .connection-good { background: #38a169; color: white; }
+    .connection-slow { background: #d69e2e; color: white; }
+    .custom-alert { 
+        /* Estilos base já aplicados inline */
+    }
+`;
+if (!document.querySelector('#alert-animations')) {
+    style.id = 'alert-animations';
+    document.head.appendChild(style);
+}
+
+console.log('✅ Home.js CARREGADO E CORRIGIDO! Sistema de bloqueio ULTRA-RÁPIDO funcionando! 🎉');
 </script>
 </body>
 </html>
