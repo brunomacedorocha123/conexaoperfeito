@@ -2321,15 +2321,21 @@ async function createUserCardWithPhoto(user) {
     `;
 }
 
-// ==================== SISTEMA DE REPORTE E BLOQUEIO ====================
+/// ==================== SISTEMA DE REPORTE E BLOQUEIO ULTRA-RÁPIDO ====================
 
 // Variáveis globais
 let currentReportUserId = null;
 let currentBlockUserId = null;
 let currentReportUserName = null;
 let currentBlockUserName = null;
-// ✅ ADIÇÃO 1/4: Variável global para armazenar IDs de usuários bloqueados pelo usuário atual
-let blockedUserIdsSet = new Set(); 
+// ✅ VARIÁVEL GLOBAL PARA BLOQUEIOS LOCAIS (MEMÓRIA)
+let blockedUserIdsSet = new Set();
+
+// ✅ PRÉ-CARREGAR BLOQUEIOS AO INICIAR A APLICAÇÃO
+async function initializeBlockSystem() {
+    await loadBlockedIdsForHome();
+    console.log(`✅ Sistema de bloqueio inicializado: ${blockedUserIdsSet.size} usuários bloqueados`);
+}
 
 // Função para toggle do menu de ações
 function toggleMenu(button) {
@@ -2472,97 +2478,129 @@ function closeBlockModal() {
     currentBlockUserName = null;
 }
 
-/// Função para confirmar bloqueio - RÁPIDO E HONESTO
+// ✅ FUNÇÃO OTIMIZADA DE BLOQUEIO - MÁXIMA VELOCIDADE
 async function confirmBlock() {
-    const startTime = Date.now();
+    if (!currentBlockUserId) return;
+    
+    const userId = currentBlockUserId;
+    const userName = currentBlockUserName;
+    
+    console.log('⚡ BLOQUEIO ULTRA-RÁPIDO iniciado:', userName);
+    
+    // FEEDBACK VISUAL IMEDIATO (antes mesmo da requisição)
+    showAlert('⚡ Bloqueando...', 'warning');
+    removeUserCardImmediately(userId); // Remove da UI INSTANTANEAMENTE
     
     try {
-        console.log('⚡ Iniciando bloqueio REAL para:', currentBlockUserName);
-        
-        // FEEDBACK HONESTO
-        showAlert('⚡ Bloqueando...', 'warning');
-        
-        // TIMEOUT BALANCEADO - 2.5 SEGUNDOS (tempo suficiente)
-        const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Timeout - Rede lenta')), 2500)
-        );
+        // ✅ USAR SUA NOVA FUNÇÃO SQL block_user_instant
+        const { data, error } = await supabase.rpc('block_user_instant', {
+            p_blocker_id: currentUser.id,
+            p_blocked_id: userId
+        });
 
-        // BLOQUEIO NO BANCO
-        const blockPromise = supabase
-            .from('user_blocks')
-            .insert({
-                blocker_id: currentUser.id,
-                blocked_user_id: currentBlockUserId
-            });
-
-        const { data, error } = await Promise.race([blockPromise, timeoutPromise]);
-        
-        const responseTime = Date.now() - startTime;
-        console.log(`✅ Bloqueio REAL concluído em ${responseTime}ms`);
-
-        // VERIFICAR SE BLOQUEIO FOI REALMENTE FEITO
         if (error) {
-            if (error.code === '23505') {
-                // JÁ ESTAVA BLOQUEADO - AVISAR E REMOVER
-                console.log('ℹ️ Usuário já estava bloqueado');
-                removeBlockedUserFromUI(currentBlockUserId);
-                showAlert('ℹ️ Usuário já estava bloqueado', 'info');
-                // ✅ CORREÇÃO 2/4: Adiciona o ID ao Set global
-                blockedUserIdsSet.add(currentBlockUserId); 
-            } else {
-                // ERRO REAL - NÃO BLOQUEOU
-                throw new Error(`Erro no banco: ${error.message}`);
-            }
-        } else {
-            // BLOQUEIO REALIZADO COM SUCESSO
-            removeBlockedUserFromUI(currentBlockUserId);
-            showAlert(`✅ ${currentBlockUserName} bloqueado com sucesso!`, 'success');
-            // ✅ CORREÇÃO 2/4: Adiciona o ID ao Set global
-            blockedUserIdsSet.add(currentBlockUserId); 
+            console.error('❌ Erro no bloqueio:', error);
+            showAlert('❌ Erro ao bloquear usuário', 'error');
+            return;
         }
-        
-        closeBlockModal();
+
+        // ✅ RESPOSTA DA SUA FUNÇÃO SQL
+        if (data.success) {
+            if (data.already_blocked) {
+                console.log('ℹ️ Usuário já estava bloqueado:', userName);
+                showAlert('ℹ️ Usuário já estava bloqueado', 'info');
+            } else {
+                console.log('✅ Bloqueio REAL realizado com sucesso:', userName);
+                showAlert(`✅ ${userName} bloqueado com sucesso!`, 'success');
+            }
+            
+            // ✅ ATUALIZAR MEMÓRIA LOCAL
+            blockedUserIdsSet.add(userId);
+            
+        } else {
+            throw new Error(data.error || 'Erro desconhecido');
+        }
 
     } catch (error) {
-        console.error('❌ FALHA NO BLOQUEIO:', error.message);
-        
-        if (error.message.includes('Timeout')) {
-            // TIMEOUT - NÃO BLOQUEOU, NÃO REMOVER
-            showAlert('⏳ Bloqueio demorando... Verifique sua conexão', 'warning');
-            
-            // TENTAR NOVAMENTE EM BACKGROUND SEM ENGANAR USUÁRIO
-            setTimeout(async () => {
-                try {
-                    const { error: bgError } = await supabase
-                        .from('user_blocks')
-                        .insert({
-                            blocker_id: currentUser.id,
-                            blocked_user_id: currentBlockUserId
-                        });
-                    
-                    if (!bgError || bgError.code === '23505') {
-                        // AGORA SIM BLOQUEOU - REMOVER DA UI
-                        removeBlockedUserFromUI(currentBlockUserId);
-                        showAlert(`✅ ${currentBlockUserName} bloqueado!`, 'success');
-                        // ✅ CORREÇÃO 2/4: Adiciona o ID ao Set global no background retry
-                        blockedUserIdsSet.add(currentBlockUserId); 
-                        console.log('✅ Bloqueio concluído em background');
-                    } else {
-                        console.log('❌ Bloqueio em background falhou');
-                    }
-                } catch (bgError) {
-                    console.log('❌ Erro no bloqueio background:', bgError);
-                }
-            }, 1000);
-            
-        } else {
-            // ERRO REAL - NÃO BLOQUEOU
-            showAlert('❌ Falha no bloqueio. Tente novamente.', 'error');
-        }
-        
-        // NÃO FECHAR MODAL EM CASO DE ERRO - usuário pode tentar novamente
-        // closeBlockModal(); // REMOVIDO - deixa modal aberto para nova tentativa
+        console.error('❌ Falha no bloqueio:', error);
+        showAlert('❌ Falha no bloqueio. Tente novamente.', 'error');
+    } finally {
+        closeBlockModal();
     }
+}
+
+// ✅ REMOÇÃO IMEDIATA DA UI (ANTES MESMO DA RESPOSTA DO SERVIDOR)
+function removeUserCardImmediately(userId) {
+    console.log('🗑️ Removendo card imediamente:', userId);
+    
+    const userCards = document.querySelectorAll('.user-card');
+    let removed = false;
+    
+    userCards.forEach(card => {
+        // Verificar por data attribute ou conteúdo do card
+        const cardUserId = card.getAttribute('data-user-id') || 
+                          card.querySelector('[onclick*="viewProfile"]')?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+        
+        if (cardUserId === userId) {
+            card.style.opacity = '0.5';
+            card.style.transform = 'scale(0.95)';
+            
+            // Animar saída
+            setTimeout(() => {
+                card.style.transition = 'all 0.3s ease';
+                card.style.opacity = '0';
+                card.style.height = '0';
+                card.style.margin = '0';
+                card.style.padding = '0';
+                card.style.overflow = 'hidden';
+                
+                setTimeout(() => {
+                    card.remove();
+                    console.log('✅ Card removido da UI:', userId);
+                }, 300);
+            }, 100);
+            
+            removed = true;
+        }
+    });
+    
+    if (!removed) {
+        console.log('⚠️ Card não encontrado para remoção imediata:', userId);
+        // Fallback: esconder qualquer elemento que contenha o userId
+        document.querySelectorAll(`[onclick*="${userId}"]`).forEach(el => {
+            const card = el.closest('.user-card');
+            if (card) {
+                card.style.display = 'none';
+                console.log('✅ Card removido via fallback:', userId);
+            }
+        });
+    }
+}
+
+// ✅ FUNÇÃO PARA CARREGAR IDs BLOQUEADOS
+async function loadBlockedIdsForHome() {
+    try {
+        if (!currentUser) return;
+        
+        console.log('🔄 Carregando IDs de usuários bloqueados...');
+        const { data: blocks, error } = await supabase
+            .from('user_blocks')
+            .select('blocked_user_id')
+            .eq('blocker_id', currentUser.id);
+
+        if (error) throw error;
+
+        blockedUserIdsSet = new Set(blocks.map(b => b.blocked_user_id));
+        console.log(`✅ ${blockedUserIdsSet.size} IDs de bloqueados carregados`);
+        
+    } catch (error) {
+        console.error('❌ Erro ao carregar IDs de bloqueados:', error);
+    }
+}
+
+// ✅ FUNÇÃO AUXILIAR: VERIFICAR SE USUÁRIO ESTÁ BLOQUEADO
+function isUserBlocked(userId) {
+    return blockedUserIdsSet.has(userId);
 }
 
 // FUNÇÃO AUXILIAR - ALERTAS VISÍVEIS
@@ -2599,6 +2637,7 @@ function showAlert(message, type = 'success') {
         setTimeout(() => alert.remove(), 300);
     }, 3000);
 }
+
 // ADICIONAR CSS PARA ANIMAÇÕES (se não existir)
 const style = document.createElement('style');
 style.textContent = `
@@ -2631,59 +2670,6 @@ if (!document.querySelector('#alert-animations')) {
     style.id = 'alert-animations';
     document.head.appendChild(style);
 }
-// Função para remover usuário bloqueado da UI
-function removeBlockedUserFromUI(userId) {
-    const userCards = document.querySelectorAll('.user-card');
-    userCards.forEach(card => {
-        // CORREÇÃO: Encontrar o elemento do card usando o atributo data-user-id ou procurando o onclick
-        const menuButton = card.querySelector(`[onclick*="${userId}"]`);
-        if (menuButton) {
-            // A melhor forma de remover é encontrando o card pai
-            const targetCard = menuButton.closest('.user-card');
-            if (targetCard) {
-                targetCard.style.display = 'none';
-                console.log('👤 Usuário removido da UI:', userId);
-            }
-        }
-    });
-}
-
-// Função para mostrar alerta
-// FUNÇÃO AUXILIAR - ALERTAS VISÍVEIS (VERDE VIBRANTE)
-function showAlert(message, type = 'success') {
-    // Remove alertas anteriores
-    const existing = document.querySelectorAll('.custom-alert');
-    existing.forEach(alert => alert.remove());
-    
-    const alert = document.createElement('div');
-    alert.className = `custom-alert ${type}`;
-    alert.textContent = message;
-    alert.style.cssText = `
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 1001;
-        padding: 1rem 2rem;
-        border-radius: 10px;
-        color: white;
-        font-weight: 600;
-        background: ${type === 'success' ? '#38a169' : type === 'error' ? '#e53e3e' : type === 'warning' ? '#d69e2e' : '#3182ce'};
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        animation: slideInDown 0.3s ease;
-        text-align: center;
-        min-width: 300px;
-        max-width: 90%;
-        border: 2px solid ${type === 'success' ? '#2f855a' : type === 'error' ? '#c53030' : type === 'warning' ? '#b7791f' : '#2c5aa0'};
-    `;
-    
-    document.body.appendChild(alert);
-    
-    setTimeout(() => {
-        alert.style.animation = 'slideOutUp 0.3s ease';
-        setTimeout(() => alert.remove(), 300);
-    }, 3000);
-}
 
 // Funções auxiliares dos modais
 function closeConfirmModal() {
@@ -2694,391 +2680,10 @@ function openSupportModal() {
     alert('📞 Entre em contato com nosso suporte: suporte@amorconect.com');
 }
 
-// ✅ ADIÇÃO 3/4: Função para carregar os IDs dos usuários bloqueados
-async function loadBlockedIdsForHome() {
-    try {
-        if (!currentUser) return; // Garante que o usuário está autenticado
-        
-        console.log('🔄 Carregando IDs de usuários bloqueados para o frontend...');
-
-        // Busca apenas os IDs dos usuários que o usuário ATUAL bloqueou
-        const { data: blocks, error } = await supabase
-            .from('user_blocks')
-            .select('blocked_user_id')
-            .eq('blocker_id', currentUser.id);
-
-        if (error) throw error;
-
-        // Mapeia os IDs e armazena no Set global
-        blockedUserIdsSet = new Set(blocks.map(b => b.blocked_user_id));
-        
-        console.log(`✅ ${blockedUserIdsSet.size} IDs de bloqueados carregados para o frontend.`);
-    } catch (error) {
-        console.error('❌ Erro ao carregar IDs de bloqueados:', error);
-    }
-}
-
-
-// ==================== SISTEMA DE VISITANTES CORRIGIDO ====================
-
-// FUNÇÃO CORRIGIDA PARA REGISTRAR VISITA
-async function registerProfileVisit(visitedUserId) {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            console.error('❌ Usuário não autenticado');
-            return false;
-        }
-
-        if (user.id === visitedUserId) {
-            console.log('⚠️ Não pode visitar próprio perfil');
-            return false;
-        }
-        
-        // ✅ CORREÇÃO 4/4: Verifica se o usuário a ser visitado está bloqueado
-        if (blockedUserIdsSet.has(visitedUserId)) {
-            console.log('🚫 Não é possível visitar perfil: Usuário bloqueado pelo usuário atual.');
-            showAlert('🚫 Você bloqueou este usuário e não pode visitá-lo.', 'error');
-            return false;
-        }
-
-        console.log('🔄 Registrando visita:', {
-            visitor: user.id,
-            visited: visitedUserId
-        });
-
-        // USAR A NOVA FUNÇÃO register_visit_simple
-        const { data, error } = await supabase.rpc('register_visit_simple', {
-            p_visitor_id: user.id,
-            p_visited_id: visitedUserId
-        });
-
-        if (error) {
-            console.error('❌ Erro ao registrar visita:', error);
-            return false;
-        }
-
-        console.log('✅ Visita registrada com sucesso:', data);
-        return data.success;
-
-    } catch (error) {
-        console.error('❌ Erro no registro de visita:', error);
-        return false;
-    }
-}
-
-// CORRIGIDO: CARREGAR VISITANTES E STATUS PREMIUM
-async function loadVisitorsSystem() {
-    try {
-        const isPremium = await checkPremiumStatus();
-        
-        if (isPremium) {
-            await loadPremiumVisitors();
-            await checkInvisibleStatusHome();
-        } else {
-            await loadFreeVisitorsStats();
-        }
-        
-    } catch (error) {
-        console.error('Erro no sistema de visitantes:', error);
-    }
-}
-
-// NOVO: Verificar status do modo invisível para mostrar badge
-async function checkInvisibleStatusHome() {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-        
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('is_invisible')
-            .eq('id', user.id)
-            .single();
-            
-        const statusElement = document.getElementById('invisibleStatusHome');
-        if (statusElement && profile) {
-            if (profile.is_invisible) {
-                statusElement.style.display = 'flex';
-                statusElement.querySelector('strong').textContent = 'Ativo';
-            } else {
-                statusElement.style.display = 'none';
-            }
-        }
-    } catch (error) {
-        console.error('Erro ao verificar modo invisível:', error);
-    }
-}
-
-// VERIFICAR STATUS PREMIUM
-async function checkPremiumStatus() {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return false;
-        
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('is_premium')
-            .eq('id', user.id)
-            .single();
-            
-        return profile?.is_premium || false;
-    } catch (error) {
-        console.error('Erro ao verificar premium:', error);
-        return false;
-    }
-}
-
-// FUNÇÃO COMPLETAMENTE CORRIGIDA - CARREGAR VISITANTES
-async function loadPremiumVisitors() {
-    try {
-        console.log('🔄 Carregando visitantes para o quadro grande...');
-        
-        // Mostrar seção premium
-        document.getElementById('premiumVisitors').style.display = 'block';
-        document.getElementById('freeVisitors').style.display = 'none';
-        
-        // USAR A NOVA FUNÇÃO DO BANCO
-        const { data: visitors, error } = await supabase.rpc('get_recent_visitors', {
-            p_user_id: currentUser.id,
-            p_limit: 8
-        });
-
-        const visitorsGrid = document.getElementById('visitorsGrid');
-        const visitorsCount = document.getElementById('visitorsCount');
-        
-        if (error) {
-            console.error('❌ Erro ao buscar visitantes:', error);
-            visitorsGrid.innerHTML = `
-                <div class="visitors-empty">
-                    <div class="icon">❌</div>
-                    <h3>Erro ao carregar visitantes</h3>
-                    <p>${error.message}</p>
-                </div>
-            `;
-            return;
-        }
-
-        console.log('✅ Visitantes encontrados:', visitors);
-
-        // ATUALIZAR CONTADOR
-        const visitCount = visitors?.length || 0;
-        visitorsCount.textContent = `${visitCount} visita${visitCount !== 1 ? 's' : ''}`;
-        
-        console.log(`📊 Contador atualizado: ${visitCount} visitas`);
-
-        if (!visitors || visitors.length === 0) {
-            visitorsGrid.innerHTML = `
-                <div class="visitors-empty">
-                    <div class="icon">👀</div>
-                    <h3>Nenhuma visita ainda</h3>
-                    <p>Seu perfil ainda não foi visitado por outros usuários</p>
-                    <p style="margin-top: 1rem; font-size: 0.8rem; color: #666;">
-                        Complete seu perfil para atrair mais visitas!
-                    </p>
-                </div>
-            `;
-            return;
-        }
-        
-        // CRIAR CARDS DOS VISITANTES
-        let visitorsHTML = '';
-        
-        for (const visitor of visitors) {
-            try {
-                const nickname = visitor.visitor_nickname || 'Usuário';
-                const city = visitor.visitor_city || 'Cidade não informada';
-                const timeAgo = getTimeAgo(visitor.visited_at);
-                const initial = nickname.charAt(0).toUpperCase();
-
-                // Status online
-                const isOnline = visitor.is_online;
-                const onlineBadge = isOnline ? 
-                    '<div class="online-badge" title="Online"></div>' : 
-                    '<div class="offline-badge" title="Offline"></div>';
-
-                // Carregar foto
-                let avatarContent = '';
-                if (visitor.visitor_avatar_url) {
-                    const photoUrl = await loadUserPhoto(visitor.visitor_avatar_url);
-                    if (photoUrl) {
-                        avatarContent = `
-                            <img class="visitor-avatar-img" src="${photoUrl}" alt="${nickname}" style="display: block;">
-                            ${onlineBadge}
-                        `;
-                    } else {
-                        avatarContent = `
-                            <div class="visitor-avatar-fallback">${initial}</div>
-                            ${onlineBadge}
-                        `;
-                    }
-                } else {
-                    avatarContent = `
-                        <div class="visitor-avatar-fallback">${initial}</div>
-                        ${onlineBadge}
-                    `;
-                }
-
-                visitorsHTML += `
-                    <div class="visitor-card" onclick="viewProfile('${visitor.visitor_id}')">
-                        <div class="visitor-avatar">
-                            ${avatarContent}
-                        </div>
-                        <div class="visitor-name">${nickname}</div>
-                        <div class="visitor-location">${city}</div>
-                        <div class="visitor-time">${timeAgo}</div>
-                    </div>
-                `;
-                
-            } catch (error) {
-                console.error('Erro ao criar card para visitante:', visitor, error);
-            }
-        }
-        
-        visitorsGrid.innerHTML = visitorsHTML;
-        console.log(`✅ ${visitors.length} cards de visitantes carregados com sucesso`);
-
-    } catch (error) {
-        console.error('❌ Erro geral ao carregar visitantes:', error);
-        const visitorsGrid = document.getElementById('visitorsGrid');
-        visitorsGrid.innerHTML = `
-            <div class="visitors-empty">
-                <div class="icon">❌</div>
-                <h3>Erro ao carregar visitantes</h3>
-                <p>Tente recarregar a página</p>
-            </div>
-        `;
-    }
-}
-
-// CARREGAR ESTATÍSTICAS PARA FREE USERS
-async function loadFreeVisitorsStats() {
-    try {
-        document.getElementById('premiumVisitors').style.display = 'none';
-        document.getElementById('freeVisitors').style.display = 'block';
-        
-        // USAR A NOVA FUNÇÃO DO BANCO
-        const { data: visitCount, error } = await supabase.rpc('count_user_visits', {
-            p_user_id: currentUser.id,
-            p_days: 7
-        });
-        
-        const count = visitCount || 0;
-        const countText = count === 1 ? '1 pessoa' : `${count} pessoas`;
-        
-        document.getElementById('freeVisitorsCount').textContent = countText;
-        document.getElementById('visitorsCount').textContent = `${count} visita${count !== 1 ? 's' : ''}`;
-        
-    } catch (error) {
-        console.error('Erro ao carregar estatísticas free:', error);
-        document.getElementById('freeVisitorsCount').textContent = '0 pessoas';
-        document.getElementById('visitorsCount').textContent = '0 visitas';
-    }
-}
-
-// FUNÇÃO AUXILIAR - TEMPO DECORRIDO
-function getTimeAgo(dateString) {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-    
-    if (diffMins < 1) return 'Agora';
-    if (diffMins < 60) return `${diffMins}min`;
-    if (diffHours < 24) return `${diffHours}h`;
-    if (diffDays < 7) return `${diffDays}d`;
-    return `${Math.floor(diffDays / 7)}sem`;
-}
-
-// ==================== FUNÇÕES DE INTERAÇÃO CORRIGIDAS ====================
-
-// FUNÇÃO SENDMESSAGE CORRIGIDA - NÃO BLOQUEANTE
-async function sendMessage(userId, event) {
-    if (event) event.stopPropagation();
-    
-    console.log('💌 Iniciando conversa com usuário:', userId);
-
-    // ✅ CORREÇÃO 4/4: Verifica se o usuário a ser contactado está bloqueado
-    if (blockedUserIdsSet.has(userId)) {
-        showAlert('🚫 Você bloqueou este usuário e não pode enviar mensagens.', 'error');
-        return;
-    }
-    
-    if (!isProfileComplete()) {
-        alert('Complete seu perfil primeiro para enviar mensagens!');
-        window.location.href = 'painel.html';
-        return;
-    }
-    
-    // REDIRECIONAR IMEDIATAMENTE
-    localStorage.setItem('openChatWithUserId', userId);
-    window.location.href = 'mensagens.html';
-    
-    // CRIAR MENSAGEM EM BACKGROUND (NÃO BLOQUEIA)
-    setTimeout(async () => {
-        try {
-            console.log('🔄 Criando conversa REAL em background:', userId);
-            
-            const { error: messageError } = await supabase
-                .from('messages')
-                .insert({
-                    sender_id: currentUser.id,
-                    receiver_id: userId,
-                    content: '👋 Iniciou uma conversa',
-                    is_read: false
-                });
-
-            if (messageError) {
-                console.error('❌ Erro ao criar conversa:', messageError);
-            } else {
-                console.log('✅ Conversa criada com sucesso em background');
-            }
-        } catch (error) {
-            console.error('❌ Erro ao enviar mensagem em background:', error);
-        }
-    }, 100);
-}
-
-// FUNÇÃO VIEWPROFILE OTIMIZADA - REDIRECIONAMENTO INSTANTÂNEO
-async function viewProfile(userId, event) {
-    if (event) event.stopPropagation();
-
-    // ✅ CORREÇÃO 4/4: Verifica se o usuário a ser visualizado está bloqueado
-    if (blockedUserIdsSet.has(userId)) {
-        showAlert('🚫 Você bloqueou este usuário e não pode visualizar o perfil.', 'error');
-        return;
-    }
-    
-    if (!isProfileComplete()) {
-        alert('Complete seu perfil primeiro para ver outros perfis!');
-        window.location.href = 'painel.html';
-        return;
-    }
-    
-    // REDIRECIONAR IMEDIATAMENTE (SEM ESPERAR NADA)
-    localStorage.setItem('viewingProfileId', userId);
-    window.location.href = 'perfil.html';
-    
-    // REGISTRAR VISITA EM BACKGROUND (NÃO BLOQUEIA REDIRECIONAMENTO)
-    setTimeout(async () => {
-        try {
-            console.log('👀 Registrando visita em background para:', userId);
-            const visitRegistered = await registerProfileVisit(userId);
-            console.log('✅ Visita registrada em background:', visitRegistered);
-        } catch (visitError) {
-            console.log('⚠️ Visita não registrada (background):', visitError);
-        }
-    }, 100);
-}
-
-function isProfileComplete() {
-    return userProfile &&
-            userProfile.full_name &&
-            userProfile.full_name.trim() !== '' &&
-            userProfile.birth_date;
-}
+// ✅ INICIALIZAR SISTEMA DE BLOQUEIO QUANDO A PÁGINA CARREGAR
+document.addEventListener('DOMContentLoaded', function() {
+    initializeBlockSystem();
+});
 
 // OTIMIZADO: ATUALIZAR ESTATÍSTICAS RÁPIDAS
 async function updateStats() {
