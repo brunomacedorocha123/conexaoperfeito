@@ -4,587 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Amor Conect - Encontre seu par ideal</title>
-  <style>
-/* Reset e configurações gerais */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-:root {
-    --bege: #f6ecc5;
-    --vermelho-rosado: #d1656d;
-    --lilas: #dfc9ed;
-    --branco: #ffffff;
-    --text: #444;
-    --text-light: #666;
-    --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    --transition: all 0.3s ease;
-}
-
-body {
-    background-color: var(--bege);
-    color: var(--text);
-    line-height: 1.6;
-    overflow-x: hidden; /* IMPEDE SCROLL HORIZONTAL */
-}
-
-.container {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
-}
-
-/* Header */
-header {
-    background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
-    color: var(--branco);
-    padding: 0.8rem 0;
-    box-shadow: var(--shadow);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-}
-
-.header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    height: 70px;
-}
-
-.logo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-shrink: 0;
-}
-
-.logo img {
-    height: 180px;
-    width: auto;
-    object-fit: contain;
-}
-
-.logo h1 {
-    font-size: 1.6rem;
-    font-weight: 700;
-    color: var(--branco);
-    white-space: nowrap;
-}
-
-/* Menu Hamburguer */
-.menu-toggle {
-    display: none;
-    flex-direction: column;
-    cursor: pointer;
-    gap: 4px;
-    padding: 8px;
-}
-
-.menu-toggle span {
-    width: 25px;
-    height: 3px;
-    background: var(--branco);
-    transition: var(--transition);
-    border-radius: 2px;
-}
-
-.menu-toggle.active span:nth-child(1) {
-    transform: rotate(45deg) translate(6px, 6px);
-}
-
-.menu-toggle.active span:nth-child(2) {
-    opacity: 0;
-}
-
-.menu-toggle.active span:nth-child(3) {
-    transform: rotate(-45deg) translate(6px, -6px);
-}
-
-nav ul {
-    display: flex;
-    list-style: none;
-    gap: 2rem;
-}
-
-nav a {
-    color: var(--branco);
-    text-decoration: none;
-    font-weight: 500;
-    transition: var(--transition);
-    padding: 0.5rem 1rem;
-    border-radius: 30px;
-}
-
-nav a:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-}
-
-.auth-buttons {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-}
-
-.btn {
-    padding: 0.6rem 1.2rem;
-    border-radius: 30px;
-    border: none;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--transition);
-    text-decoration: none;
-    display: inline-block;
-    text-align: center;
-    font-size: 0.9rem;
-}
-
-.btn-outline {
-    background: transparent;
-    border: 2px solid var(--branco);
-    color: var(--branco);
-}
-
-.btn-primary {
-    background: var(--branco);
-    color: var(--vermelho-rosado);
-}
-
-.btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-}
-
-/* Hero Section */
-.hero {
-    padding: 5rem 0;
-    background: linear-gradient(rgba(246, 236, 197, 0.9), rgba(246, 236, 197, 0.9)), url('casal.jpg') center/cover no-repeat;
-    text-align: center;
-}
-
-.hero-content {
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-.hero h2 {
-    font-size: 3rem;
-    margin-bottom: 1.5rem;
-    color: var(--vermelho-rosado);
-    line-height: 1.2;
-}
-
-.hero p {
-    font-size: 1.2rem;
-    margin-bottom: 2rem;
-    color: var(--text-light);
-}
-
-.btn-large {
-    padding: 1rem 2.5rem;
-    font-size: 1.1rem;
-}
-
-/* Features Section */
-.features {
-    padding: 5rem 0;
-    background-color: var(--branco);
-}
-
-.section-title {
-    text-align: center;
-    margin-bottom: 3rem;
-}
-
-.section-title h2 {
-    font-size: 2.5rem;
-    color: var(--vermelho-rosado);
-    margin-bottom: 1rem;
-}
-
-.section-title p {
-    color: var(--text-light);
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-.features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-}
-
-.feature-card {
-    background: var(--branco);
-    border-radius: 15px;
-    padding: 2rem;
-    text-align: center;
-    box-shadow: var(--shadow);
-    transition: var(--transition);
-    border: 1px solid var(--lilas);
-}
-
-.feature-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 10px 25px rgba(209, 101, 109, 0.15);
-}
-
-.feature-icon {
-    font-size: 3rem;
-    margin-bottom: 1.5rem;
-    color: var(--vermelho-rosado);
-}
-
-.feature-card h3 {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-    color: var(--vermelho-rosado);
-}
-
-.feature-card p {
-    text-align: center;
-}
-
-/* How It Works */
-.how-it-works {
-    padding: 5rem 0;
-    background-color: var(--bege);
-}
-
-.steps {
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 2rem;
-    margin-top: 3rem;
-}
-
-.step {
-    flex: 1;
-    min-width: 250px;
-    text-align: center;
-    padding: 2rem 1rem;
-    background: var(--branco);
-    border-radius: 15px;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--lilas);
-}
-
-.step-number {
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
-    color: var(--branco);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin: 0 auto 1.5rem;
-}
-
-.step h3 {
-    margin-bottom: 1rem;
-    color: var(--vermelho-rosado);
-}
-
-.step p {
-    text-align: center;
-}
-
-/* Testimonials */
-.testimonials {
-    padding: 5rem 0;
-    background-color: var(--branco);
-}
-
-.testimonial-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-}
-
-.testimonial-card {
-    background: var(--bege);
-    border-radius: 15px;
-    padding: 2rem;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--lilas);
-}
-
-.testimonial-text {
-    font-style: italic;
-    margin-bottom: 1.5rem;
-    color: var(--text);
-    text-align: justify;
-    text-justify: inter-word;
-}
-
-.testimonial-author {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.author-avatar {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--branco);
-    font-weight: bold;
-}
-
-.author-info h4 {
-    color: var(--vermelho-rosado);
-}
-
-.author-info p {
-    color: var(--text-light);
-    font-size: 0.9rem;
-}
-
-/* CTA Section */
-.cta {
-    padding: 5rem 0;
-    background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
-    color: var(--branco);
-    text-align: center;
-}
-
-.cta h2 {
-    font-size: 2.5rem;
-    margin-bottom: 1.5rem;
-}
-
-.cta p {
-    font-size: 1.2rem;
-    margin-bottom: 2rem;
-    max-width: 700px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.btn-light {
-    background: var(--branco);
-    color: var(--vermelho-rosado);
-}
-
-/* Footer */
-footer {
-    background-color: var(--bege);
-    color: var(--text);
-    padding: 3rem 0 1.5rem;
-    border-top: 1px solid var(--lilas);
-}
-
-.footer-content {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 2rem;
-    margin-bottom: 2rem;
-}
-
-.footer-column h3 {
-    margin-bottom: 1.5rem;
-    font-size: 1.2rem;
-    color: var(--vermelho-rosado);
-}
-
-.footer-column ul {
-    list-style: none;
-}
-
-.footer-column ul li {
-    margin-bottom: 0.8rem;
-}
-
-.footer-column a {
-    color: var(--text);
-    text-decoration: none;
-    transition: var(--transition);
-}
-
-.footer-column a:hover {
-    color: var(--vermelho-rosado);
-}
-
-.social-links {
-    display: flex;
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.social-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background-color: var(--lilas);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: var(--transition);
-    color: var(--branco);
-    text-decoration: none;
-}
-
-.social-icon:hover {
-    background-color: var(--vermelho-rosado);
-    transform: translateY(-3px);
-}
-
-.copyright {
-    text-align: center;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--lilas);
-    font-size: 0.9rem;
-    color: var(--text-light);
-}
-
-/* ========== MOBILE - APENAS LOGO CORRIGIDA ========== */
-@media (max-width: 768px) {
-    .header-content {
-        flex-wrap: wrap;
-        height: auto;
-        padding: 10px 0;
-        gap: 10px;
-        align-items: center;
-    }
-
-    /* LOGO - TAMANHO NORMAL PARA MOBILE */
-    .logo {
-        order: 1;
-        flex: 0 0 auto;
-    }
-
-    .logo img {
-        height: 150px !important; /* TAMANHO PEQUENO E FIXO */
-        width: auto !important;
-        max-width: 150px !important;
-        object-fit: contain;
-        margin: 0 !important;
-        display: block;
-    }
-
-    .logo h1 {
-        display: none;
-    }
-
-    .menu-toggle {
-        display: flex;
-        order: 2;
-        margin-left: auto;
-    }
-
-    .auth-buttons {
-        order: 3;
-        gap: 0.5rem;
-    }
-
-    .auth-buttons .btn {
-        padding: 0.5rem 1rem;
-        font-size: 0.85rem;
-        white-space: nowrap;
-    }
-
-    nav {
-        display: none;
-        width: 100%;
-        order: 4;
-        margin-top: 1rem;
-    }
-
-    nav.active {
-        display: block;
-    }
-
-    nav ul {
-        flex-direction: column;
-        gap: 0;
-        width: 100%;
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        border-radius: 10px;
-        padding: 1rem 0;
-    }
-
-    nav ul li {
-        width: 100%;
-        text-align: center;
-    }
-
-    nav a {
-        display: block;
-        padding: 1rem;
-        border-radius: 0;
-        margin: 0.2rem 0;
-    }
-
-    .hero h2 {
-        font-size: 2.2rem;
-    }
-
-    .steps {
-        flex-direction: column;
-    }
-
-    .features-grid,
-    .testimonial-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .hero,
-    .features,
-    .how-it-works,
-    .testimonials,
-    .cta {
-        padding: 3rem 0;
-    }
-}
-
-@media (max-width: 480px) {
-    .logo img {
-        height: 90px !important; /* AINDA MENOR EM TELAS PEQUENAS */
-        max-width: 140px !important;
-    }
-
-    .auth-buttons .btn {
-        padding: 0.4rem 0.8rem;
-        font-size: 0.8rem;
-    }
-
-    .hero h2 {
-        font-size: 1.8rem;
-    }
-
-    .hero p {
-        font-size: 1rem;
-    }
-}
-
-@media (max-width: 360px) {
-    .logo img {
-        height: 80px !important; /* MÍNIMO PARA TELAS MUITO PEQUENAS */
-        max-width: 130px !important;
-    }
-
-    .auth-buttons .btn {
-        padding: 0.3rem 0.6rem;
-        font-size: 0.75rem;
-    }
-}
-</style>
+    
+    <!-- CSS GLOBAIS -->
+    <link rel="stylesheet" href="globals.css">
+    <link rel="stylesheet" href="components.css">
+    <link rel="stylesheet" href="hamburger.css">
+    
+    <!-- JS GLOBAL -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="globals.js"></script>
 </head>
 <body>
-    <!-- Header -->
+    <!-- Header ORIGINAL -->
     <header>
         <div class="container">
             <div class="header-content">
@@ -598,6 +29,7 @@ footer {
                     <a href="cadastro.html" class="btn btn-primary">Cadastre-se</a>
                 </div>
 
+                <!-- Menu toggle ORIGINAL -->
                 <div class="menu-toggle">
                     <span></span>
                     <span></span>
@@ -615,14 +47,13 @@ footer {
         </div>
     </header>
 
-    <!-- Resto do código permanece igual -->
     <!-- Hero Section -->
     <section class="hero">
         <div class="container">
             <div class="hero-content">
                 <h2>Encontre a conexão que seu coração procura</h2>
                 <p>Uma plataforma segura e discreta para conhecer pessoas especiais e construir relacionamentos genuínos.</p>
-                <a href="cadastro.html" class="btn btn-primary btn-large">Comece sua jornada</a>
+                <a href="cadastro.html" class="btn btn-primary btn-lg">Comece sua jornada</a>
             </div>
         </div>
     </section>
@@ -635,17 +66,17 @@ footer {
                 <p>Nossa plataforma foi desenvolvida pensando em sua segurança e privacidade, oferecendo uma experiência única de conexão.</p>
             </div>
             <div class="features-grid">
-                <div class="feature-card">
+                <div class="feature-card card">
                     <div class="feature-icon">🔒</div>
                     <h3>Segurança Total</h3>
                     <p>Perfis verificados e ambiente controlado para sua tranquilidade.</p>
                 </div>
-                <div class="feature-card">
+                <div class="feature-card card">
                     <div class="feature-icon">💌</div>
                     <h3>Conexões Autênticas</h3>
                     <p>Conheça pessoas reais com interesses compatíveis com os seus.</p>
                 </div>
-                <div class="feature-card">
+                <div class="feature-card card">
                     <div class="feature-icon">🌟</div>
                     <h3>Experiência Personalizada</h3>
                     <p>Encontre pessoas que compartilham seus valores e objetivos.</p>
@@ -662,22 +93,22 @@ footer {
                 <p>Em poucos passos, você estará conectado com pessoas incríveis.</p>
             </div>
             <div class="steps">
-                <div class="step">
+                <div class="step card">
                     <div class="step-number">1</div>
                     <h3>Crie seu Perfil</h3>
                     <p>Cadastre-se fornecendo informações básicas e crie um perfil autêntico.</p>
                 </div>
-                <div class="step">
+                <div class="step card">
                     <div class="step-number">2</div>
                     <h3>Complete seu Perfil</h3>
                     <p>Adicione informações complementares para aumentar suas conexões.</p>
                 </div>
-                <div class="step">
+                <div class="step card">
                     <div class="step-number">3</div>
                     <h3>Encontre Pessoas</h3>
                     <p>Explore perfis compatíveis com seus interesses e valores.</p>
                 </div>
-                <div class="step">
+                <div class="step card">
                     <div class="step-number">4</div>
                     <h3>Conecte-se</h3>
                     <p>Envie mensagens e construa relacionamentos significativos.</p>
@@ -694,7 +125,7 @@ footer {
                 <p>Conheça relatos reais de pessoas que encontraram sua conexão perfeita.</p>
             </div>
             <div class="testimonial-grid">
-                <div class="testimonial-card">
+                <div class="testimonial-card card">
                     <p class="testimonial-text">"Depois de anos tentando aplicativos tradicionais, finalmente encontrei alguém com valores compatíveis. Hoje estamos juntos há 6 meses!"</p>
                     <div class="testimonial-author">
                         <div class="author-avatar">M</div>
@@ -704,7 +135,7 @@ footer {
                         </div>
                     </div>
                 </div>
-                <div class="testimonial-card">
+                <div class="testimonial-card card">
                     <p class="testimonial-text">"A plataforma me permitiu conhecer pessoas genuínas. A conexão que fiz aqui foi diferente de qualquer outra experiência online."</p>
                     <div class="testimonial-author">
                         <div class="author-avatar">R</div>
@@ -714,7 +145,7 @@ footer {
                         </div>
                     </div>
                 </div>
-                <div class="testimonial-card">
+                <div class="testimonial-card card">
                     <p class="testimonial-text">"Adorei a privacidade e o respeito que encontrei na plataforma. Conheci alguém especial sem pressão e no meu tempo."</p>
                     <div class="testimonial-author">
                         <div class="author-avatar">C</div>
@@ -733,7 +164,7 @@ footer {
         <div class="container">
             <h2>Pronto para encontrar sua conexão perfeita?</h2>
             <p>Junte-se a milhares de pessoas que já descobriram relacionamentos significativos através da nossa plataforma.</p>
-            <a href="cadastro.html" class="btn btn-light btn-large">Comece Agora</a>
+            <a href="cadastro.html" class="btn btn-light btn-lg">Comece Agora</a>
         </div>
     </section>
 
@@ -753,7 +184,7 @@ footer {
                 <div class="footer-column">
                     <h3>Links Rápidos</h3>
                     <ul>
-                        <li><a href="index.html">Página Inicial</a></li>
+                        <li><a href="https://amorconect.netlify.app">Página Inicial</a></li>
                         <li><a href="#como-funciona">Como Funciona</a></li>
                         <li><a href="#depoimentos">Depoimentos</a></li>
                         <li><a href="#sobre">Sobre Nós</a></li>
@@ -775,9 +206,392 @@ footer {
         </div>
     </footer>
 
+    <style>
+        /* ==================== ESTILOS ESPECÍFICOS DA INDEX ==================== */
+        
+        /* Hero Section */
+        .hero {
+            padding: 5rem 0;
+            background: linear-gradient(rgba(246, 236, 197, 0.9), rgba(246, 236, 197, 0.9)), url('casal.jpg') center/cover no-repeat;
+            text-align: center;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h2 {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            color: var(--vermelho-rosado);
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            color: var(--text-light);
+        }
+
+        /* Features Section */
+        .features {
+            padding: 5rem 0;
+            background-color: var(--branco);
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-title h2 {
+            font-size: 2.5rem;
+            color: var(--vermelho-rosado);
+            margin-bottom: 1rem;
+        }
+
+        .section-title p {
+            color: var(--text-light);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        /* How It Works */
+        .how-it-works {
+            padding: 5rem 0;
+            background-color: var(--bege);
+        }
+
+        .steps {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .step {
+            flex: 1;
+            min-width: 250px;
+            text-align: center;
+            padding: 2rem 1rem;
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            color: var(--branco);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0 auto 1.5rem;
+        }
+
+        .step h3 {
+            margin-bottom: 1rem;
+            color: var(--vermelho-rosado);
+        }
+
+        .step p {
+            text-align: center;
+        }
+
+        /* Testimonials */
+        .testimonials {
+            padding: 5rem 0;
+            background-color: var(--branco);
+        }
+
+        .testimonial-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .testimonial-text {
+            font-style: italic;
+            margin-bottom: 1.5rem;
+            color: var(--text);
+            text-align: justify;
+            text-justify: inter-word;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .author-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--branco);
+            font-weight: bold;
+        }
+
+        .author-info h4 {
+            color: var(--vermelho-rosado);
+        }
+
+        .author-info p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        /* CTA Section */
+        .cta {
+            padding: 5rem 0;
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            color: var(--branco);
+            text-align: center;
+        }
+
+        .cta h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .cta p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .btn-light {
+            background: var(--branco);
+            color: var(--vermelho-rosado);
+        }
+
+        /* Navigation */
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        nav a {
+            color: var(--branco);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            padding: 0.5rem 1rem;
+            border-radius: 30px;
+        }
+
+        nav a:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Menu Hamburguer ORIGINAL */
+        .menu-toggle {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            gap: 4px;
+            padding: 8px;
+        }
+
+        .menu-toggle span {
+            width: 25px;
+            height: 3px;
+            background: var(--branco);
+            transition: var(--transition);
+            border-radius: 2px;
+        }
+
+        .menu-toggle.active span:nth-child(1) {
+            transform: rotate(45deg) translate(6px, 6px);
+        }
+
+        .menu-toggle.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .menu-toggle.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(6px, -6px);
+        }
+
+        /* Social Links */
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .social-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--lilas);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            color: var(--branco);
+            text-decoration: none;
+        }
+
+        .social-icon:hover {
+            background-color: var(--vermelho-rosado);
+            transform: translateY(-3px);
+        }
+
+        /* ==================== RESPONSIVIDADE ESPECÍFICA ==================== */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-wrap: wrap;
+                height: auto;
+                padding: 10px 0;
+                gap: 10px;
+                align-items: center;
+            }
+
+            /* LOGO - TAMANHO NORMAL PARA MOBILE */
+            .logo {
+                order: 1;
+                flex: 0 0 auto;
+            }
+
+            .logo img {
+                height: 150px !important;
+                width: auto !important;
+                max-width: 150px !important;
+                object-fit: contain;
+                margin: 0 !important;
+                display: block;
+            }
+
+            .logo h1 {
+                display: none;
+            }
+
+            .menu-toggle {
+                display: flex;
+                order: 2;
+                margin-left: auto;
+            }
+
+            .auth-buttons {
+                order: 3;
+                gap: 0.5rem;
+            }
+
+            .auth-buttons .btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.85rem;
+                white-space: nowrap;
+            }
+
+            nav {
+                display: none;
+                width: 100%;
+                order: 4;
+                margin-top: 1rem;
+            }
+
+            nav.active {
+                display: block;
+            }
+
+            nav ul {
+                flex-direction: column;
+                gap: 0;
+                width: 100%;
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(10px);
+                border-radius: 10px;
+                padding: 1rem 0;
+            }
+
+            nav ul li {
+                width: 100%;
+                text-align: center;
+            }
+
+            nav a {
+                display: block;
+                padding: 1rem;
+                border-radius: 0;
+                margin: 0.2rem 0;
+            }
+
+            .hero h2 {
+                font-size: 2.2rem;
+            }
+
+            .steps {
+                flex-direction: column;
+            }
+
+            .features-grid,
+            .testimonial-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero,
+            .features,
+            .how-it-works,
+            .testimonials,
+            .cta {
+                padding: 3rem 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo img {
+                height: 120px !important;
+                max-width: 140px !important;
+            }
+
+            .auth-buttons .btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+            }
+
+            .hero h2 {
+                font-size: 1.8rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .logo img {
+                height: 100px !important;
+                max-width: 130px !important;
+            }
+
+            .auth-buttons .btn {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+
     <script>
+        // ==================== JAVASCRIPT ESPECÍFICO DA INDEX ====================
         document.addEventListener('DOMContentLoaded', function() {
-            // Menu Hamburguer
+            // Menu Hamburguer ORIGINAL
             const menuToggle = document.querySelector('.menu-toggle');
             const nav = document.querySelector('nav');
             
@@ -822,6 +636,8 @@ footer {
                     nav.classList.remove('active');
                 }
             });
+
+            console.log('✅ Index.html carregada com sucesso!');
         });
     </script>
 </body>

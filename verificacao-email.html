@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificar E-mail - Amor Conect</title>
+    
+    <!-- CSS MODULAR -->
+    <link rel="stylesheet" href="css/globals.css">
+    <link rel="stylesheet" href="css/components.css">
+    
+    <style>
+        /* Estilos específicos da verificação */
+        body {
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .verification-container {
+            background: var(--branco);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            border: 1px solid var(--lilas);
+        }
+
+        .verification-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            color: var(--vermelho-rosado);
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin: 1rem 0;
+            text-decoration: none;
+            display: inline-block;
+            transition: var(--transition);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+        }
+
+        .alert-success {
+            background: #f0fff4;
+            border: 1px solid #9ae6b4;
+            color: #276749;
+        }
+
+        .alert-error {
+            background: #fed7d7;
+            border: 1px solid #feb2b2;
+            color: #c53030;
+        }
+
+        .token-input {
+            width: 100%;
+            padding: 1rem;
+            margin: 1rem 0;
+            border: 2px solid var(--lilas);
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        .token-input:focus {
+            outline: none;
+            border-color: var(--vermelho-rosado);
+        }
+
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid var(--bege);
+            border-top: 3px solid var(--vermelho-rosado);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 1rem auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .verification-container {
+                padding: 2rem;
+                margin: 1rem;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .verification-container {
+                padding: 1.5rem;
+            }
+
+            h1 {
+                font-size: 1.6rem;
+            }
+
+            .btn {
+                padding: 0.8rem 1.5rem;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="verification-container">
+        <h1>🔐 Verificação de E-mail</h1>
+        
+        <div id="autoVerification">
+            <p>Verificando automaticamente...</p>
+            <div class="spinner"></div>
+        </div>
+        
+        <div id="manualVerification" style="display: none;">
+            <p>⚠️ Verificação automática falhou.</p>
+            <p>Copie o token do e-mail e cole abaixo:</p>
+            <input type="text" id="tokenInput" placeholder="Cole o token aqui" class="token-input">
+            <button class="btn" onclick="verifyManual()">Verificar E-mail</button>
+        </div>
+        
+        <div id="successMessage" class="alert alert-success" style="display: none;">
+            ✅ E-mail verificado com sucesso! <a href="login.html" class="btn">Fazer Login</a>
+        </div>
+        
+        <div id="errorMessage" class="alert alert-error" style="display: none;">
+            ❌ Erro na verificação
+        </div>
+    </div>
+
+    <script src="js/globals.js"></script>
+    
+    <script>
+        // ==================== VERIFICAÇÃO DE E-MAIL ====================
+        
+        // Tentar verificação automática pela URL
+        async function attemptAutoVerification() {
+            const urlParams = new URLSearchParams(window.location.hash.substring(1));
+            const accessToken = urlParams.get('access_token');
+            const type = urlParams.get('type');
+            
+            if (accessToken && type === 'email') {
+                try {
+                    const { data, error } = await supabase.auth.verifyOtp({
+                        token_hash: accessToken,
+                        type: 'email'
+                    });
+                    
+                    if (error) throw error;
+                    
+                    document.getElementById('autoVerification').style.display = 'none';
+                    document.getElementById('successMessage').style.display = 'block';
+                    
+                } catch (error) {
+                    console.error('Erro verificação automática:', error);
+                    showManualVerification();
+                }
+            } else {
+                showManualVerification();
+            }
+        }
+
+        function showManualVerification() {
+            document.getElementById('autoVerification').style.display = 'none';
+            document.getElementById('manualVerification').style.display = 'block';
+        }
+
+        async function verifyManual() {
+            const token = document.getElementById('tokenInput').value.trim();
+            
+            if (!token) {
+                alert('Por favor, cole o token do e-mail');
+                return;
+            }
+            
+            try {
+                const { data, error } = await supabase.auth.verifyOtp({
+                    token_hash: token,
+                    type: 'email'
+                });
+                
+                if (error) throw error;
+                
+                document.getElementById('manualVerification').style.display = 'none';
+                document.getElementById('successMessage').style.display = 'block';
+                
+            } catch (error) {
+                document.getElementById('errorMessage').style.display = 'block';
+                document.getElementById('errorMessage').textContent = '❌ Erro: ' + error.message;
+            }
+        }
+
+        // Iniciar verificação quando página carregar
+        document.addEventListener('DOMContentLoaded', attemptAutoVerification);
+    </script>
+</body>
+</html>
