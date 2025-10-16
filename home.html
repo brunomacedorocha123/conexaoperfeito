@@ -1844,6 +1844,7 @@ footer {
       </div>
     </div>
   </footer>
+  
 <script>
 // Configuração do Supabase
 const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
@@ -1854,6 +1855,367 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // Estado da aplicação
 let currentUser = null;
 let userProfile = null;
+
+// ==================== SISTEMA DE REPORTE E BLOQUEIO ULTRA-RÁPIDO ====================
+
+// Variáveis globais
+let currentReportUserId = null;
+let currentBlockUserId = null;
+let currentReportUserName = null;
+let currentBlockUserName = null;
+// ✅ VARIÁVEL GLOBAL PARA BLOQUEIOS LOCAIS (MEMÓRIA)
+let blockedUserIdsSet = new Set();
+
+// ✅ PRÉ-CARREGAR BLOQUEIOS AO INICIAR A APLICAÇÃO
+async function initializeBlockSystem() {
+    await loadBlockedIdsForHome();
+    console.log(`✅ Sistema de bloqueio inicializado: ${blockedUserIdsSet.size} usuários bloqueados`);
+}
+
+// Função para toggle do menu de ações
+function toggleMenu(button) {
+    const menu = button.nextElementSibling;
+    const isShowing = menu.classList.contains('show');
+    
+    // Fechar todos os menus abertos
+    document.querySelectorAll('.menu-options').forEach(m => {
+        m.classList.remove('show');
+    });
+    
+    // Abrir/fechar o menu clicado
+    if (!isShowing) {
+        menu.classList.add('show');
+        
+        // Fechar menu ao clicar fora
+        setTimeout(() => {
+            document.addEventListener('click', closeAllMenus);
+        }, 100);
+    }
+}
+
+// Função para fechar todos os menus
+function closeAllMenus(event) {
+    if (!event || !event.target.closest('.user-card-menu')) {
+        document.querySelectorAll('.menu-options').forEach(menu => {
+            menu.classList.remove('show');
+        });
+        document.removeEventListener('click', closeAllMenus);
+    }
+}
+
+// Função para abrir modal de reporte
+function openReportModal(userId, userName) {
+    console.log('📝 Abrindo modal de reporte para:', userId, userName);
+    
+    currentReportUserId = userId;
+    currentReportUserName = userName;
+    
+    // Atualizar conteúdo do modal
+    document.getElementById('reportUserName').textContent = userName;
+    
+    // Resetar formulário
+    document.querySelectorAll('input[name="reportReason"]').forEach(radio => {
+        radio.checked = false;
+        radio.parentElement.classList.remove('selected');
+    });
+    document.getElementById('reportDescription').value = '';
+    document.getElementById('submitReportBtn').disabled = true;
+    
+    // Mostrar modal
+    document.getElementById('reportModal').classList.add('show');
+}
+
+// Função para fechar modal de reporte
+function closeReportModal() {
+    document.getElementById('reportModal').classList.remove('show');
+    currentReportUserId = null;
+    currentReportUserName = null;
+}
+
+// Função para selecionar categoria de reporte
+function selectReportCategory(radio) {
+    // Remover seleção de todas as categorias
+    document.querySelectorAll('.report-category').forEach(category => {
+        category.classList.remove('selected');
+    });
+    
+    // Adicionar seleção à categoria clicada
+    radio.parentElement.classList.add('selected');
+    
+    // Habilitar botão de enviar
+    document.getElementById('submitReportBtn').disabled = false;
+}
+
+// Função para enviar reporte
+async function submitReport() {
+    try {
+        const reason = document.querySelector('input[name="reportReason"]:checked')?.value;
+        const description = document.getElementById('reportDescription').value;
+        
+        if (!reason) {
+            alert('⚠️ Selecione um motivo para o reporte.');
+            return;
+        }
+        
+        console.log('🔄 Enviando reporte:', {
+            userId: currentReportUserId,
+            userName: currentReportUserName,
+            reason: reason,
+            description: description
+        });
+        
+        // Enviar para o Supabase
+        const { data, error } = await supabase
+            .from('user_reports')
+            .insert({
+                reporter_id: currentUser.id,
+                reported_user_id: currentReportUserId,
+                reason: reason,
+                category: reason,
+                evidence: description || null,
+                status: 'pending'
+            });
+            
+        if (error) {
+            console.error('❌ Erro ao enviar reporte:', error);
+            showAlert('❌ Erro ao enviar reporte. Tente novamente.', 'error');
+            return;
+        }
+        
+        console.log('✅ Reporte enviado com sucesso!');
+        showAlert('✅ Reporte enviado com sucesso! Nossa equipe irá analisar.', 'success');
+        closeReportModal();
+        
+    } catch (error) {
+        console.error('❌ Erro ao enviar reporte:', error);
+        showAlert('❌ Erro ao enviar reporte. Tente novamente.', 'error');
+    }
+}
+
+// Função para abrir modal de bloqueio
+function openBlockModal(userId, userName) {
+    console.log('🚫 Abrindo modal de bloqueio para:', userId, userName);
+    
+    currentBlockUserId = userId;
+    currentBlockUserName = userName;
+    
+    // Atualizar conteúdo do modal
+    document.getElementById('blockUserName').textContent = userName;
+    
+    // Mostrar modal
+    document.getElementById('blockModal').classList.add('show');
+}
+
+// Função para fechar modal de bloqueio
+function closeBlockModal() {
+    document.getElementById('blockModal').classList.remove('show');
+    currentBlockUserId = null;
+    currentBlockUserName = null;
+}
+
+// ✅ FUNÇÃO OTIMIZADA DE BLOQUEIO - MÁXIMA VELOCIDADE
+async function confirmBlock() {
+    if (!currentBlockUserId) return;
+    
+    const userId = currentBlockUserId;
+    const userName = currentBlockUserName;
+    
+    console.log('⚡ BLOQUEIO ULTRA-RÁPIDO iniciado:', userName);
+    
+    // FEEDBACK VISUAL IMEDIATO (antes mesmo da requisição)
+    showAlert('⚡ Bloqueando...', 'warning');
+    removeUserCardImmediately(userId); // Remove da UI INSTANTANEAMENTE
+    
+    try {
+        // ✅ USAR SUA NOVA FUNÇÃO SQL block_user_instant
+        const { data, error } = await supabase.rpc('block_user_instant', {
+            p_blocker_id: currentUser.id,
+            p_blocked_id: userId
+        });
+
+        if (error) {
+            console.error('❌ Erro no bloqueio:', error);
+            showAlert('❌ Erro ao bloquear usuário', 'error');
+            return;
+        }
+
+        // ✅ RESPOSTA DA SUA FUNÇÃO SQL
+        if (data.success) {
+            if (data.already_blocked) {
+                console.log('ℹ️ Usuário já estava bloqueado:', userName);
+                showAlert('ℹ️ Usuário já estava bloqueado', 'info');
+            } else {
+                console.log('✅ Bloqueio REAL realizado com sucesso:', userName);
+                showAlert(`✅ ${userName} bloqueado com sucesso!`, 'success');
+            }
+            
+            // ✅ ATUALIZAR MEMÓRIA LOCAL
+            blockedUserIdsSet.add(userId);
+            
+        } else {
+            throw new Error(data.error || 'Erro desconhecido');
+        }
+
+    } catch (error) {
+        console.error('❌ Falha no bloqueio:', error);
+        showAlert('❌ Falha no bloqueio. Tente novamente.', 'error');
+    } finally {
+        closeBlockModal();
+    }
+}
+
+// ✅ REMOÇÃO IMEDIATA DA UI (ANTES MESMO DA RESPOSTA DO SERVIDOR)
+function removeUserCardImmediately(userId) {
+    console.log('🗑️ Removendo card imediatamente:', userId);
+    
+    const userCards = document.querySelectorAll('.user-card');
+    let removed = false;
+    
+    userCards.forEach(card => {
+        // Verificar por data attribute ou conteúdo do card
+        const cardUserId = card.getAttribute('data-user-id') || 
+                          card.querySelector('[onclick*="viewProfile"]')?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+        
+        if (cardUserId === userId) {
+            card.style.opacity = '0.5';
+            card.style.transform = 'scale(0.95)';
+            
+            // Animar saída
+            setTimeout(() => {
+                card.style.transition = 'all 0.3s ease';
+                card.style.opacity = '0';
+                card.style.height = '0';
+                card.style.margin = '0';
+                card.style.padding = '0';
+                card.style.overflow = 'hidden';
+                
+                setTimeout(() => {
+                    card.remove();
+                    console.log('✅ Card removido da UI:', userId);
+                }, 300);
+            }, 100);
+            
+            removed = true;
+        }
+    });
+    
+    if (!removed) {
+        console.log('⚠️ Card não encontrado para remoção imediata:', userId);
+        // Fallback: esconder qualquer elemento que contenha o userId
+        document.querySelectorAll(`[onclick*="${userId}"]`).forEach(el => {
+            const card = el.closest('.user-card');
+            if (card) {
+                card.style.display = 'none';
+                console.log('✅ Card removido via fallback:', userId);
+            }
+        });
+    }
+}
+
+// ✅ FUNÇÃO PARA CARREGAR IDs BLOQUEADOS
+async function loadBlockedIdsForHome() {
+    try {
+        if (!currentUser) return;
+        
+        console.log('🔄 Carregando IDs de usuários bloqueados...');
+        const { data: blocks, error } = await supabase
+            .from('user_blocks')
+            .select('blocked_user_id')
+            .eq('blocker_id', currentUser.id);
+
+        if (error) throw error;
+
+        blockedUserIdsSet = new Set(blocks.map(b => b.blocked_user_id));
+        console.log(`✅ ${blockedUserIdsSet.size} IDs de bloqueados carregados`);
+        
+    } catch (error) {
+        console.error('❌ Erro ao carregar IDs de bloqueados:', error);
+    }
+}
+
+// ✅ FUNÇÃO AUXILIAR: VERIFICAR SE USUÁRIO ESTÁ BLOQUEADO
+function isUserBlocked(userId) {
+    return blockedUserIdsSet.has(userId);
+}
+
+// FUNÇÃO AUXILIAR - ALERTAS VISÍVEIS
+function showAlert(message, type = 'success') {
+    const existing = document.querySelectorAll('.custom-alert');
+    existing.forEach(alert => alert.remove());
+    
+    const alert = document.createElement('div');
+    alert.className = `custom-alert ${type}`;
+    alert.textContent = message;
+    alert.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1001;
+        padding: 1rem 2rem;
+        border-radius: 10px;
+        color: white;
+        font-weight: 600;
+        background: ${type === 'success' ? '#38a169' : type === 'error' ? '#e53e3e' : type === 'warning' ? '#d69e2e' : '#3182ce'};
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        animation: slideInDown 0.3s ease;
+        text-align: center;
+        min-width: 300px;
+        max-width: 90%;
+        border: 2px solid ${type === 'success' ? '#2f855a' : type === 'error' ? '#c53030' : type === 'warning' ? '#b7791f' : '#2c5aa0'};
+    `;
+    
+    document.body.appendChild(alert);
+    
+    setTimeout(() => {
+        alert.style.animation = 'slideOutUp 0.3s ease';
+        setTimeout(() => alert.remove(), 300);
+    }, 3000);
+}
+
+// ADICIONAR CSS PARA ANIMAÇÕES (se não existir)
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideInDown {
+        from { transform: translate(-50%, -100%); opacity: 0; }
+        to { transform: translate(-50%, 0); opacity: 1; }
+    }
+    @keyframes slideOutUp {
+        from { transform: translate(-50%, 0); opacity: 1; }
+        to { transform: translate(-50%, -100%); opacity: 0; }
+    }
+    .connection-status {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        z-index: 1000;
+        transition: all 0.3s ease;
+    }
+    .connection-good { background: #38a169; color: white; }
+    .connection-slow { background: #d69e2e; color: white; }
+    .custom-alert { 
+        /* Estilos base já aplicados inline */
+    }
+`;
+if (!document.querySelector('#alert-animations')) {
+    style.id = 'alert-animations';
+    document.head.appendChild(style);
+}
+
+// Funções auxiliares dos modais
+function closeConfirmModal() {
+    document.getElementById('confirmModal').classList.remove('show');
+}
+
+function openSupportModal() {
+    alert('📞 Entre em contato com nosso suporte: suporte@amorconect.com');
+}
+
+// ==================== INICIALIZAÇÃO DA APLICAÇÃO ====================
 
 document.addEventListener('DOMContentLoaded', function() {
     checkAuth();
@@ -1925,7 +2287,8 @@ async function checkAuth() {
         await Promise.all([
             loadUserData(),
             loadRealUsers(), 
-            loadVisitorsSystem()
+            loadVisitorsSystem(),
+            initializeBlockSystem() // ✅ NOVO: Inicializar sistema de bloqueio
         ]);
         
         updateStats();
@@ -2055,7 +2418,7 @@ async function handleInvisibleModeChangeInHome(isInvisible) {
 
 // ✅ NOVO: Iniciar atualização periódica do status
 function startOnlineStatusUpdater() {
-    // Atualizar imediatamente
+    // Atualizar imediamente
     updateOnlineStatus();
     
     // Atualizar a cada 1 minuto
@@ -2143,6 +2506,7 @@ async function loadUserData() {
         console.error('Erro ao carregar dados do usuário:', error);
     }
 }
+
 // FUNÇÃO AUXILIAR PARA ATUALIZAR AVATAR
 async function updateUserAvatar(displayName, profile) {
     const avatarElements = [
@@ -2321,404 +2685,6 @@ async function createUserCardWithPhoto(user) {
     `;
 }
 
-// ==================== SISTEMA DE REPORTE E BLOQUEIO ====================
-
-// Variáveis globais
-let currentReportUserId = null;
-let currentBlockUserId = null;
-let currentReportUserName = null;
-let currentBlockUserName = null;
-// ✅ ADIÇÃO 1/4: Variável global para armazenar IDs de usuários bloqueados pelo usuário atual
-let blockedUserIdsSet = new Set(); 
-
-// Função para toggle do menu de ações
-function toggleMenu(button) {
-    const menu = button.nextElementSibling;
-    const isShowing = menu.classList.contains('show');
-    
-    // Fechar todos os menus abertos
-    document.querySelectorAll('.menu-options').forEach(m => {
-        m.classList.remove('show');
-    });
-    
-    // Abrir/fechar o menu clicado
-    if (!isShowing) {
-        menu.classList.add('show');
-        
-        // Fechar menu ao clicar fora
-        setTimeout(() => {
-            document.addEventListener('click', closeAllMenus);
-        }, 100);
-    }
-}
-
-// Função para fechar todos os menus
-function closeAllMenus(event) {
-    if (!event || !event.target.closest('.user-card-menu')) {
-        document.querySelectorAll('.menu-options').forEach(menu => {
-            menu.classList.remove('show');
-        });
-        document.removeEventListener('click', closeAllMenus);
-    }
-}
-
-// Função para abrir modal de reporte
-function openReportModal(userId, userName) {
-    console.log('📝 Abrindo modal de reporte para:', userId, userName);
-    
-    currentReportUserId = userId;
-    currentReportUserName = userName;
-    
-    // Atualizar conteúdo do modal
-    document.getElementById('reportUserName').textContent = userName;
-    
-    // Resetar formulário
-    document.querySelectorAll('input[name="reportReason"]').forEach(radio => {
-        radio.checked = false;
-        radio.parentElement.classList.remove('selected');
-    });
-    document.getElementById('reportDescription').value = '';
-    document.getElementById('submitReportBtn').disabled = true;
-    
-    // Mostrar modal
-    document.getElementById('reportModal').classList.add('show');
-}
-
-// Função para fechar modal de reporte
-function closeReportModal() {
-    document.getElementById('reportModal').classList.remove('show');
-    currentReportUserId = null;
-    currentReportUserName = null;
-}
-
-// Função para selecionar categoria de reporte
-function selectReportCategory(radio) {
-    // Remover seleção de todas as categorias
-    document.querySelectorAll('.report-category').forEach(category => {
-        category.classList.remove('selected');
-    });
-    
-    // Adicionar seleção à categoria clicada
-    radio.parentElement.classList.add('selected');
-    
-    // Habilitar botão de enviar
-    document.getElementById('submitReportBtn').disabled = false;
-}
-
-// Função para enviar reporte
-async function submitReport() {
-    try {
-        const reason = document.querySelector('input[name="reportReason"]:checked')?.value;
-        const description = document.getElementById('reportDescription').value;
-        
-        if (!reason) {
-            alert('⚠️ Selecione um motivo para o reporte.');
-            return;
-        }
-        
-        console.log('🔄 Enviando reporte:', {
-            userId: currentReportUserId,
-            userName: currentReportUserName,
-            reason: reason,
-            description: description
-        });
-        
-        // Enviar para o Supabase
-        const { data, error } = await supabase
-            .from('user_reports')
-            .insert({
-                reporter_id: currentUser.id,
-                reported_user_id: currentReportUserId,
-                reason: reason,
-                category: reason,
-                evidence: description || null,
-                status: 'pending'
-            });
-            
-        if (error) {
-            console.error('❌ Erro ao enviar reporte:', error);
-            showAlert('❌ Erro ao enviar reporte. Tente novamente.', 'error');
-            return;
-        }
-        
-        console.log('✅ Reporte enviado com sucesso!');
-        showAlert('✅ Reporte enviado com sucesso! Nossa equipe irá analisar.', 'success');
-        closeReportModal();
-        
-    } catch (error) {
-        console.error('❌ Erro ao enviar reporte:', error);
-        showAlert('❌ Erro ao enviar reporte. Tente novamente.', 'error');
-    }
-}
-
-// Função para abrir modal de bloqueio
-function openBlockModal(userId, userName) {
-    console.log('🚫 Abrindo modal de bloqueio para:', userId, userName);
-    
-    currentBlockUserId = userId;
-    currentBlockUserName = userName;
-    
-    // Atualizar conteúdo do modal
-    document.getElementById('blockUserName').textContent = userName;
-    
-    // Mostrar modal
-    document.getElementById('blockModal').classList.add('show');
-}
-
-// Função para fechar modal de bloqueio
-function closeBlockModal() {
-    document.getElementById('blockModal').classList.remove('show');
-    currentBlockUserId = null;
-    currentBlockUserName = null;
-}
-
-/// Função para confirmar bloqueio - RÁPIDO E HONESTO
-async function confirmBlock() {
-    const startTime = Date.now();
-    
-    try {
-        console.log('⚡ Iniciando bloqueio REAL para:', currentBlockUserName);
-        
-        // FEEDBACK HONESTO
-        showAlert('⚡ Bloqueando...', 'warning');
-        
-        // TIMEOUT BALANCEADO - 2.5 SEGUNDOS (tempo suficiente)
-        const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Timeout - Rede lenta')), 2500)
-        );
-
-        // BLOQUEIO NO BANCO
-        const blockPromise = supabase
-            .from('user_blocks')
-            .insert({
-                blocker_id: currentUser.id,
-                blocked_user_id: currentBlockUserId
-            });
-
-        const { data, error } = await Promise.race([blockPromise, timeoutPromise]);
-        
-        const responseTime = Date.now() - startTime;
-        console.log(`✅ Bloqueio REAL concluído em ${responseTime}ms`);
-
-        // VERIFICAR SE BLOQUEIO FOI REALMENTE FEITO
-        if (error) {
-            if (error.code === '23505') {
-                // JÁ ESTAVA BLOQUEADO - AVISAR E REMOVER
-                console.log('ℹ️ Usuário já estava bloqueado');
-                removeBlockedUserFromUI(currentBlockUserId);
-                showAlert('ℹ️ Usuário já estava bloqueado', 'info');
-                // ✅ CORREÇÃO 2/4: Adiciona o ID ao Set global
-                blockedUserIdsSet.add(currentBlockUserId); 
-            } else {
-                // ERRO REAL - NÃO BLOQUEOU
-                throw new Error(`Erro no banco: ${error.message}`);
-            }
-        } else {
-            // BLOQUEIO REALIZADO COM SUCESSO
-            removeBlockedUserFromUI(currentBlockUserId);
-            showAlert(`✅ ${currentBlockUserName} bloqueado com sucesso!`, 'success');
-            // ✅ CORREÇÃO 2/4: Adiciona o ID ao Set global
-            blockedUserIdsSet.add(currentBlockUserId); 
-        }
-        
-        closeBlockModal();
-
-    } catch (error) {
-        console.error('❌ FALHA NO BLOQUEIO:', error.message);
-        
-        if (error.message.includes('Timeout')) {
-            // TIMEOUT - NÃO BLOQUEOU, NÃO REMOVER
-            showAlert('⏳ Bloqueio demorando... Verifique sua conexão', 'warning');
-            
-            // TENTAR NOVAMENTE EM BACKGROUND SEM ENGANAR USUÁRIO
-            setTimeout(async () => {
-                try {
-                    const { error: bgError } = await supabase
-                        .from('user_blocks')
-                        .insert({
-                            blocker_id: currentUser.id,
-                            blocked_user_id: currentBlockUserId
-                        });
-                    
-                    if (!bgError || bgError.code === '23505') {
-                        // AGORA SIM BLOQUEOU - REMOVER DA UI
-                        removeBlockedUserFromUI(currentBlockUserId);
-                        showAlert(`✅ ${currentBlockUserName} bloqueado!`, 'success');
-                        // ✅ CORREÇÃO 2/4: Adiciona o ID ao Set global no background retry
-                        blockedUserIdsSet.add(currentBlockUserId); 
-                        console.log('✅ Bloqueio concluído em background');
-                    } else {
-                        console.log('❌ Bloqueio em background falhou');
-                    }
-                } catch (bgError) {
-                    console.log('❌ Erro no bloqueio background:', bgError);
-                }
-            }, 1000);
-            
-        } else {
-            // ERRO REAL - NÃO BLOQUEOU
-            showAlert('❌ Falha no bloqueio. Tente novamente.', 'error');
-        }
-        
-        // NÃO FECHAR MODAL EM CASO DE ERRO - usuário pode tentar novamente
-        // closeBlockModal(); // REMOVIDO - deixa modal aberto para nova tentativa
-    }
-}
-
-// FUNÇÃO AUXILIAR - ALERTAS VISÍVEIS
-function showAlert(message, type = 'success') {
-    const existing = document.querySelectorAll('.custom-alert');
-    existing.forEach(alert => alert.remove());
-    
-    const alert = document.createElement('div');
-    alert.className = `custom-alert ${type}`;
-    alert.textContent = message;
-    alert.style.cssText = `
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 1001;
-        padding: 1rem 2rem;
-        border-radius: 10px;
-        color: white;
-        font-weight: 600;
-        background: ${type === 'success' ? '#38a169' : type === 'error' ? '#e53e3e' : type === 'warning' ? '#d69e2e' : '#3182ce'};
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        animation: slideInDown 0.3s ease;
-        text-align: center;
-        min-width: 300px;
-        max-width: 90%;
-        border: 2px solid ${type === 'success' ? '#2f855a' : type === 'error' ? '#c53030' : type === 'warning' ? '#b7791f' : '#2c5aa0'};
-    `;
-    
-    document.body.appendChild(alert);
-    
-    setTimeout(() => {
-        alert.style.animation = 'slideOutUp 0.3s ease';
-        setTimeout(() => alert.remove(), 300);
-    }, 3000);
-}
-// ADICIONAR CSS PARA ANIMAÇÕES (se não existir)
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideInDown {
-        from { transform: translate(-50%, -100%); opacity: 0; }
-        to { transform: translate(-50%, 0); opacity: 1; }
-    }
-    @keyframes slideOutUp {
-        from { transform: translate(-50%, 0); opacity: 1; }
-        to { transform: translate(-50%, -100%); opacity: 0; }
-    }
-    .connection-status {
-        position: fixed;
-        top: 10px;
-        right: 10px;
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        z-index: 1000;
-        transition: all 0.3s ease;
-    }
-    .connection-good { background: #38a169; color: white; }
-    .connection-slow { background: #d69e2e; color: white; }
-    .custom-alert { 
-        /* Estilos base já aplicados inline */
-    }
-`;
-if (!document.querySelector('#alert-animations')) {
-    style.id = 'alert-animations';
-    document.head.appendChild(style);
-}
-// Função para remover usuário bloqueado da UI
-function removeBlockedUserFromUI(userId) {
-    const userCards = document.querySelectorAll('.user-card');
-    userCards.forEach(card => {
-        // CORREÇÃO: Encontrar o elemento do card usando o atributo data-user-id ou procurando o onclick
-        const menuButton = card.querySelector(`[onclick*="${userId}"]`);
-        if (menuButton) {
-            // A melhor forma de remover é encontrando o card pai
-            const targetCard = menuButton.closest('.user-card');
-            if (targetCard) {
-                targetCard.style.display = 'none';
-                console.log('👤 Usuário removido da UI:', userId);
-            }
-        }
-    });
-}
-
-// Função para mostrar alerta
-// FUNÇÃO AUXILIAR - ALERTAS VISÍVEIS (VERDE VIBRANTE)
-function showAlert(message, type = 'success') {
-    // Remove alertas anteriores
-    const existing = document.querySelectorAll('.custom-alert');
-    existing.forEach(alert => alert.remove());
-    
-    const alert = document.createElement('div');
-    alert.className = `custom-alert ${type}`;
-    alert.textContent = message;
-    alert.style.cssText = `
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 1001;
-        padding: 1rem 2rem;
-        border-radius: 10px;
-        color: white;
-        font-weight: 600;
-        background: ${type === 'success' ? '#38a169' : type === 'error' ? '#e53e3e' : type === 'warning' ? '#d69e2e' : '#3182ce'};
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        animation: slideInDown 0.3s ease;
-        text-align: center;
-        min-width: 300px;
-        max-width: 90%;
-        border: 2px solid ${type === 'success' ? '#2f855a' : type === 'error' ? '#c53030' : type === 'warning' ? '#b7791f' : '#2c5aa0'};
-    `;
-    
-    document.body.appendChild(alert);
-    
-    setTimeout(() => {
-        alert.style.animation = 'slideOutUp 0.3s ease';
-        setTimeout(() => alert.remove(), 300);
-    }, 3000);
-}
-
-// Funções auxiliares dos modais
-function closeConfirmModal() {
-    document.getElementById('confirmModal').classList.remove('show');
-}
-
-function openSupportModal() {
-    alert('📞 Entre em contato com nosso suporte: suporte@amorconect.com');
-}
-
-// ✅ ADIÇÃO 3/4: Função para carregar os IDs dos usuários bloqueados
-async function loadBlockedIdsForHome() {
-    try {
-        if (!currentUser) return; // Garante que o usuário está autenticado
-        
-        console.log('🔄 Carregando IDs de usuários bloqueados para o frontend...');
-
-        // Busca apenas os IDs dos usuários que o usuário ATUAL bloqueou
-        const { data: blocks, error } = await supabase
-            .from('user_blocks')
-            .select('blocked_user_id')
-            .eq('blocker_id', currentUser.id);
-
-        if (error) throw error;
-
-        // Mapeia os IDs e armazena no Set global
-        blockedUserIdsSet = new Set(blocks.map(b => b.blocked_user_id));
-        
-        console.log(`✅ ${blockedUserIdsSet.size} IDs de bloqueados carregados para o frontend.`);
-    } catch (error) {
-        console.error('❌ Erro ao carregar IDs de bloqueados:', error);
-    }
-}
-
-
 // ==================== SISTEMA DE VISITANTES CORRIGIDO ====================
 
 // FUNÇÃO CORRIGIDA PARA REGISTRAR VISITA
@@ -2735,7 +2701,7 @@ async function registerProfileVisit(visitedUserId) {
             return false;
         }
         
-        // ✅ CORREÇÃO 4/4: Verifica se o usuário a ser visitado está bloqueado
+        // ✅ CORREÇÃO: Verifica se o usuário a ser visitado está bloqueado
         if (blockedUserIdsSet.has(visitedUserId)) {
             console.log('🚫 Não é possível visitar perfil: Usuário bloqueado pelo usuário atual.');
             showAlert('🚫 Você bloqueou este usuário e não pode visitá-lo.', 'error');
@@ -3000,7 +2966,7 @@ async function sendMessage(userId, event) {
     
     console.log('💌 Iniciando conversa com usuário:', userId);
 
-    // ✅ CORREÇÃO 4/4: Verifica se o usuário a ser contactado está bloqueado
+    // ✅ CORREÇÃO: Verifica se o usuário a ser contactado está bloqueado
     if (blockedUserIdsSet.has(userId)) {
         showAlert('🚫 Você bloqueou este usuário e não pode enviar mensagens.', 'error');
         return;
@@ -3045,7 +3011,7 @@ async function sendMessage(userId, event) {
 async function viewProfile(userId, event) {
     if (event) event.stopPropagation();
 
-    // ✅ CORREÇÃO 4/4: Verifica se o usuário a ser visualizado está bloqueado
+    // ✅ CORREÇÃO: Verifica se o usuário a ser visualizado está bloqueado
     if (blockedUserIdsSet.has(userId)) {
         showAlert('🚫 Você bloqueou este usuário e não pode visualizar o perfil.', 'error');
         return;
@@ -3218,9 +3184,8 @@ window.closeBlockModal = closeBlockModal;
 window.confirmBlock = confirmBlock;
 window.closeConfirmModal = closeConfirmModal;
 window.openSupportModal = openSupportModal;
-window.loadBlockedIdsForHome = loadBlockedIdsForHome; // ✅ EXPORTADO PARA SER CHAMADO NA INICIALIZAÇÃO
 
-console.log('✅ Home.js carregado e corrigido! Sistema de reporte/bloqueio funcionando! 🎉');
+console.log('✅ Home.js carregado e corrigido! Sistema de bloqueio ULTRA-RÁPIDO funcionando! 🎉');
 </script>
 </body>
 </html>
