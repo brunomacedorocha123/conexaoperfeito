@@ -241,229 +241,209 @@
             </div>
         </div>
     </div>
+<script>
+    // ==================== CONFIGURAÇÃO ====================
+const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 
-    <script>
-        // ==================== CONFIGURAÇÃO ====================
-        const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
-        
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // ⚠️ CHAVES SECRETAS - MUDE ISSO!
-        const VALID_KEYS = [
-            'chave-mestre-2024',
-            'senha-admin-amorconect',
-            'moderacao-plataforma'
-        ];
+// ==================== VERSÃO TESTE (SEM SEGURANÇA) ====================
+console.log('🔓 MODO TESTE - Acesso liberado temporariamente');
 
-        // ==================== VERIFICAÇÃO DE ACESSO ====================
-        function checkAdminAccess() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const key = urlParams.get('key');
-            
-            if (!VALID_KEYS.includes(key)) {
-                document.body.innerHTML = `
-                    <div style="text-align: center; padding: 100px; font-family: Arial, sans-serif;">
-                        <h1 style="color: #e53e3e; margin-bottom: 1rem;">🚫 Acesso Negado</h1>
-                        <p style="color: #666; margin-bottom: 2rem;">Esta área é restrita à administração do Amor Conect.</p>
-                        <a href="home.html" style="color: #d1656d; text-decoration: none;">← Voltar para o site</a>
-                    </div>
-                `;
-                return false;
-            }
-            return true;
-        }
+// Inicializa o painel imediatamente
+initializeAdminPanel();
 
-        // ==================== FUNÇÕES PRINCIPAIS ====================
-        async function initializeAdminPanel() {
-            console.log('✅ Acesso admin concedido! Inicializando painel...');
-            await loadStats();
-            await loadReports();
-        }
+// ==================== FUNÇÕES PRINCIPAIS ====================
+async function initializeAdminPanel() {
+    console.log('✅ Painel admin inicializado!');
+    await loadStats();
+    await loadReports();
+}
 
-        async function loadStats() {
-            try {
-                // Total de reportes
-                const { count: totalReports } = await supabase
-                    .from('user_reports')
-                    .select('*', { count: 'exact', head: true });
+async function loadStats() {
+    try {
+        // Total de reportes
+        const { count: totalReports } = await supabase
+            .from('user_reports')
+            .select('*', { count: 'exact', head: true });
 
-                // Reportes pendentes
-                const { count: pendingReports } = await supabase
-                    .from('user_reports')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('status', 'pending');
+        // Reportes pendentes
+        const { count: pendingReports } = await supabase
+            .from('user_reports')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'pending');
 
-                // Reportes resolvidos
-                const { count: resolvedReports } = await supabase
-                    .from('user_reports')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('status', 'resolved');
+        // Reportes resolvidos
+        const { count: resolvedReports } = await supabase
+            .from('user_reports')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'resolved');
 
-                // Total de usuários
-                const { count: totalUsers } = await supabase
-                    .from('profiles')
-                    .select('*', { count: 'exact', head: true });
+        // Total de usuários
+        const { count: totalUsers } = await supabase
+            .from('profiles')
+            .select('*', { count: 'exact', head: true });
 
-                // Atualiza interface
-                document.getElementById('totalReports').textContent = totalReports || 0;
-                document.getElementById('pendingReports').textContent = pendingReports || 0;
-                document.getElementById('resolvedReports').textContent = resolvedReports || 0;
-                document.getElementById('totalUsers').textContent = totalUsers || 0;
+        // Atualiza interface
+        document.getElementById('totalReports').textContent = totalReports || 0;
+        document.getElementById('pendingReports').textContent = pendingReports || 0;
+        document.getElementById('resolvedReports').textContent = resolvedReports || 0;
+        document.getElementById('totalUsers').textContent = totalUsers || 0;
 
-            } catch (error) {
-                console.error('Erro ao carregar estatísticas:', error);
-            }
-        }
+        console.log('📊 Estatísticas carregadas:', { totalReports, pendingReports, resolvedReports, totalUsers });
 
-        async function loadReports() {
-            const container = document.getElementById('reportsContainer');
+    } catch (error) {
+        console.error('Erro ao carregar estatísticas:', error);
+    }
+}
+
+async function loadReports() {
+    const container = document.getElementById('reportsContainer');
+    container.innerHTML = `
+        <div class="loading">
+            <div class="spinner"></div>
+            <p>Carregando reportes...</p>
+        </div>
+    `;
+
+    try {
+        const { data: reports, error } = await supabase
+            .from('user_reports')
+            .select(`
+                *,
+                reporter:reporter_id(nickname, avatar_url),
+                reported:reported_user_id(nickname, avatar_url)
+            `)
+            .eq('status', 'pending')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        console.log('📋 Reportes encontrados:', reports);
+
+        if (!reports || reports.length === 0) {
             container.innerHTML = `
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p>Carregando reportes...</p>
+                <div class="empty-state">
+                    <div class="icon">🎉</div>
+                    <h3>Nenhum reporte pendente!</h3>
+                    <p>Todos os reportes foram resolvidos.</p>
                 </div>
             `;
+            return;
+        }
 
-            try {
-                const { data: reports, error } = await supabase
-                    .from('user_reports')
-                    .select(`
-                        *,
-                        reporter:reporter_id(nickname, avatar_url),
-                        reported:reported_user_id(nickname, avatar_url)
-                    `)
-                    .eq('status', 'pending')
-                    .order('created_at', { ascending: false });
-
-                if (error) throw error;
-
-                if (!reports || reports.length === 0) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <div class="icon">🎉</div>
-                            <h3>Nenhum reporte pendente!</h3>
-                            <p>Todos os reportes foram resolvidos.</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                container.innerHTML = reports.map(report => `
-                    <div class="report-card">
-                        <div class="report-header">
-                            <div class="report-users">
-                                <strong>${report.reporter?.nickname || 'Usuário'}</strong> 
-                                reportou 
-                                <strong>${report.reported?.nickname || 'Usuário'}</strong>
-                            </div>
-                            <div class="report-reason">${formatReason(report.reason)}</div>
-                        </div>
-                        
-                        <div class="report-meta">
-                            <small>Data: ${new Date(report.created_at).toLocaleString('pt-BR')}</small>
-                        </div>
-
-                        ${report.evidence ? `
-                            <div class="report-evidence">
-                                <strong>Evidência:</strong> "${report.evidence}"
-                            </div>
-                        ` : ''}
-
-                        <div class="report-actions">
-                            <button class="btn btn-ban" onclick="takeAction('${report.id}', '${report.reported_user_id}', 'ban')">
-                                🚫 Banir Usuário
-                            </button>
-                            <button class="btn btn-warn" onclick="takeAction('${report.id}', '${report.reported_user_id}', 'warn')">
-                                ⚠️ Advertir
-                            </button>
-                            <button class="btn btn-resolve" onclick="takeAction('${report.id}', null, 'resolve')">
-                                ✅ Marcar como Resolvido
-                            </button>
-                            <button class="btn btn-dismiss" onclick="takeAction('${report.id}', null, 'dismiss')">
-                                ❌ Ignorar Reporte
-                            </button>
-                        </div>
+        container.innerHTML = reports.map(report => `
+            <div class="report-card">
+                <div class="report-header">
+                    <div class="report-users">
+                        <strong>${report.reporter?.nickname || 'Usuário'}</strong> 
+                        reportou 
+                        <strong>${report.reported?.nickname || 'Usuário'}</strong>
                     </div>
-                `).join('');
+                    <div class="report-reason">${formatReason(report.reason)}</div>
+                </div>
+                
+                <div class="report-meta">
+                    <small>Data: ${new Date(report.created_at).toLocaleString('pt-BR')}</small>
+                </div>
 
-            } catch (error) {
-                console.error('Erro ao carregar reportes:', error);
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="icon">❌</div>
-                        <h3>Erro ao carregar reportes</h3>
-                        <p>${error.message}</p>
+                ${report.evidence ? `
+                    <div class="report-evidence">
+                        <strong>Evidência:</strong> "${report.evidence}"
                     </div>
-                `;
-            }
+                ` : ''}
+
+                <div class="report-actions">
+                    <button class="btn btn-ban" onclick="takeAction('${report.id}', '${report.reported_user_id}', 'ban')">
+                        🚫 Banir Usuário
+                    </button>
+                    <button class="btn btn-warn" onclick="takeAction('${report.id}', '${report.reported_user_id}', 'warn')">
+                        ⚠️ Advertir
+                    </button>
+                    <button class="btn btn-resolve" onclick="takeAction('${report.id}', null, 'resolve')">
+                        ✅ Marcar como Resolvido
+                    </button>
+                    <button class="btn btn-dismiss" onclick="takeAction('${report.id}', null, 'dismiss')">
+                        ❌ Ignorar Reporte
+                    </button>
+                </div>
+            </div>
+        `).join('');
+
+    } catch (error) {
+        console.error('Erro ao carregar reportes:', error);
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="icon">❌</div>
+                <h3>Erro ao carregar reportes</h3>
+                <p>${error.message}</p>
+                <button class="btn btn-resolve" onclick="loadReports()" style="margin-top: 1rem;">
+                    🔄 Tentar Novamente
+                </button>
+            </div>
+        `;
+    }
+}
+
+async function takeAction(reportId, userId, action) {
+    if (!confirm(`Tem certeza que deseja ${getActionText(action)}?`)) {
+        return;
+    }
+
+    try {
+        // Atualiza o status do reporte
+        const { error: reportError } = await supabase
+            .from('user_reports')
+            .update({ 
+                status: action === 'dismiss' ? 'dismissed' : 'resolved',
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', reportId);
+
+        if (reportError) throw reportError;
+
+        // Ações adicionais baseadas no tipo
+        if (action === 'ban' && userId) {
+            console.log(`🚫 Usuário ${userId} banido`);
+            alert('Usuário banido com sucesso!');
+        } else if (action === 'warn' && userId) {
+            console.log(`⚠️ Usuário ${userId} advertido`);
+            alert('Advertência enviada ao usuário!');
         }
 
-        async function takeAction(reportId, userId, action) {
-            if (!confirm(`Tem certeza que deseja ${getActionText(action)}?`)) {
-                return;
-            }
+        // Recarrega os dados
+        await loadStats();
+        await loadReports();
 
-            try {
-                // Atualiza o status do reporte
-                const { error: reportError } = await supabase
-                    .from('user_reports')
-                    .update({ 
-                        status: action === 'dismiss' ? 'dismissed' : 'resolved',
-                        updated_at: new Date().toISOString()
-                    })
-                    .eq('id', reportId);
+    } catch (error) {
+        console.error('Erro ao executar ação:', error);
+        alert('Erro ao processar ação: ' + error.message);
+    }
+}
 
-                if (reportError) throw reportError;
+// ==================== FUNÇÕES AUXILIARES ====================
+function formatReason(reason) {
+    const reasons = {
+        'spam': 'Spam',
+        'inappropriate': 'Conteúdo Inadequado',
+        'harassment': 'Assédio',
+        'fake_profile': 'Perfil Falso', 
+        'scam': 'Golpe/Fraude',
+        'other': 'Outro'
+    };
+    return reasons[reason] || reason;
+}
 
-                // Ações adicionais baseadas no tipo
-                if (action === 'ban' && userId) {
-                    // Aqui você pode implementar o banimento do usuário
-                    console.log(`🚫 Usuário ${userId} banido`);
-                    alert('Usuário banido com sucesso!');
-                } else if (action === 'warn' && userId) {
-                    // Aqui você pode implementar advertência
-                    console.log(`⚠️ Usuário ${userId} advertido`);
-                    alert('Advertência enviada ao usuário!');
-                }
-
-                // Recarrega os dados
-                await loadStats();
-                await loadReports();
-
-            } catch (error) {
-                console.error('Erro ao executar ação:', error);
-                alert('Erro ao processar ação: ' + error.message);
-            }
-        }
-
-        // ==================== FUNÇÕES AUXILIARES ====================
-        function formatReason(reason) {
-            const reasons = {
-                'spam': 'Spam',
-                'inappropriate': 'Conteúdo Inadequado',
-                'harassment': 'Assédio',
-                'fake_profile': 'Perfil Falso', 
-                'scam': 'Golpe/Fraude',
-                'other': 'Outro'
-            };
-            return reasons[reason] || reason;
-        }
-
-        function getActionText(action) {
-            const actions = {
-                'ban': 'banir este usuário',
-                'warn': 'advertir este usuário', 
-                'resolve': 'resolver este reporte',
-                'dismiss': 'ignorar este reporte'
-            };
-            return actions[action] || 'executar esta ação';
-        }
-
-        // ==================== INICIALIZAÇÃO ====================
-        if (checkAdminAccess()) {
-            initializeAdminPanel();
-        }
+function getActionText(action) {
+    const actions = {
+        'ban': 'banir este usuário',
+        'warn': 'advertir este usuário', 
+        'resolve': 'resolver este reporte',
+        'dismiss': 'ignorar este reporte'
+    };
+    return actions[action] || 'executar esta ação';
+}
     </script>
 </body>
 </html>

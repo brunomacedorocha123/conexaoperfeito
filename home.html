@@ -3208,6 +3208,119 @@ function setupMobileMenu() {
     checkScreenSize();
 }
 
+// ==================== FUNÇÕES QUE ESTÃO FALTANDO ====================
+
+// Carregar estatísticas para free users
+async function loadFreeVisitorsStats() {
+    try {
+        document.getElementById('premiumVisitors').style.display = 'none';
+        document.getElementById('freeVisitors').style.display = 'block';
+        
+        const { data: visitCount, error } = await supabase.rpc('count_user_visits', {
+            p_user_id: currentUser.id,
+            p_days: 7
+        });
+        
+        const count = visitCount || 0;
+        const countText = count === 1 ? '1 pessoa' : `${count} pessoas`;
+        
+        document.getElementById('freeVisitorsCount').textContent = countText;
+        document.getElementById('visitorsCount').textContent = `${count} visita${count !== 1 ? 's' : ''}`;
+        
+    } catch (error) {
+        console.error('Erro ao carregar estatísticas free:', error);
+        document.getElementById('freeVisitorsCount').textContent = '0 pessoas';
+        document.getElementById('visitorsCount').textContent = '0 visitas';
+    }
+}
+
+// Registrar visita ao perfil
+async function registerProfileVisit(visitedUserId) {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            console.error('❌ Usuário não autenticado');
+            return false;
+        }
+
+        if (user.id === visitedUserId) {
+            console.log('⚠️ Não pode visitar próprio perfil');
+            return false;
+        }
+        
+        // ✅ VERIFICAR SE USUÁRIO ESTÁ BLOQUEADO
+        if (isUserBlocked(visitedUserId)) {
+            console.log('🚫 Não é possível visitar perfil: Usuário bloqueado');
+            showAlert('🚫 Você bloqueou este usuário e não pode visitá-lo.', 'error');
+            return false;
+        }
+
+        console.log('🔄 Registrando visita:', {
+            visitor: user.id,
+            visited: visitedUserId
+        });
+
+        const { data, error } = await supabase.rpc('register_visit_simple', {
+            p_visitor_id: user.id,
+            p_visited_id: visitedUserId
+        });
+
+        if (error) {
+            console.error('❌ Erro ao registrar visita:', error);
+            return false;
+        }
+
+        console.log('✅ Visita registrada com sucesso:', data);
+        return data.success;
+
+    } catch (error) {
+        console.error('❌ Erro no registro de visita:', error);
+        return false;
+    }
+}
+
+// ✅ ADICIONAR TAMBÉM ESTA FUNÇÃO QUE ESTÁ FALTANDO:
+function setupInvisibleModeSyncListener() {
+    try {
+        console.log('👂 Configurando ouvinte de sincronização do modo invisível...');
+        
+        window.addEventListener('invisibleModeUpdated', function(event) {
+            console.log('🔄 Evento de modo invisível recebido:', event.detail);
+            handleInvisibleModeChangeInHome(event.detail.isInvisible);
+        });
+        
+        window.addEventListener('storage', function(event) {
+            if (event.key === 'invisibleModeChanged') {
+                const isInvisible = localStorage.getItem('invisibleModeStatus') === 'true';
+                handleInvisibleModeChangeInHome(isInvisible);
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ Erro ao configurar sincronização:', error);
+    }
+}
+
+// ✅ E ESTA TAMBÉM:
+async function handleInvisibleModeChangeInHome(isInvisible) {
+    try {
+        console.log(`🔄 Processando mudança do modo invisível para: ${isInvisible}`);
+        
+        const statusElement = document.getElementById('invisibleStatusHome');
+        if (statusElement) {
+            if (isInvisible) {
+                statusElement.style.display = 'flex';
+                statusElement.querySelector('strong').textContent = 'Ativo';
+            } else {
+                statusElement.style.display = 'none';
+            }
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro ao processar mudança do modo invisível:', error);
+    }
+}
+
 // ==================== EXPORTAR FUNÇÕES GLOBAIS ====================
 
 window.sendMessage = sendMessage;
