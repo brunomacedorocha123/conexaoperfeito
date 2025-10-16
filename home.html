@@ -1551,6 +1551,42 @@ footer {
         font-size: 2.5rem;
     }
 }
+
+/* ✅ CORREÇÃO DOS BOTÕES NÃO CLICÁVEIS */
+.user-card-actions {
+    position: relative;
+    z-index: 1000;
+}
+
+.user-card-actions button {
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 1001 !important;
+    cursor: pointer !important;
+}
+
+.user-card-actions .btn-more {
+    pointer-events: auto !important;
+    z-index: 1002 !important;
+}
+
+.menu-options {
+    z-index: 1003 !important;
+}
+
+/* Garante que os cards não bloqueiem cliques */
+.user-card {
+    position: relative;
+}
+
+.user-card > *:not(.user-card-actions) {
+    pointer-events: none;
+}
+
+.user-card-actions,
+.user-card-actions * {
+    pointer-events: auto !important;
+}
 </style>
 </style>
 </head>
