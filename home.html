@@ -1460,6 +1460,28 @@ footer {
     color: #ffeb3b;
 }
 
+/* ✅ CSS PARA CORRIGIR IMAGENS DOS VISITANTES NA HOME */
+.visitor-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block !important;
+}
+
+.visitor-avatar-fallback {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
 /* Responsividade Visitantes */
 @media (max-width: 768px) {
     .visitors-grid {
@@ -1529,6 +1551,7 @@ footer {
         font-size: 2.5rem;
     }
 }
+</style>
 </style>
 </head>
 <body>
@@ -2646,9 +2669,11 @@ async function loadPremiumVisitors() {
     }
 }
 
-// ✅ FUNÇÃO AUXILIAR - Criar card para HOME (similar à visitante.html)
+// ✅ FUNÇÃO AUXILIAR CORRIGIDA - Criar card para HOME com DEBUG
 async function createVisitorCardForHome(visit) {
     try {
+        console.log('🎯 DEBUG CARD PEQUENO - Processando visita de:', visit.visitor_id);
+        
         // Busca perfil do visitante
         const { data: profile, error } = await supabase
             .from('profiles')
@@ -2656,7 +2681,11 @@ async function createVisitorCardForHome(visit) {
             .eq('id', visit.visitor_id)
             .single();
 
+        console.log('🎯 DEBUG - Perfil encontrado:', profile);
+        console.log('🎯 DEBUG - Avatar URL:', profile?.avatar_url);
+
         if (error || !profile) {
+            console.log('🎯 DEBUG - Perfil não encontrado, criando card básico');
             return createBasicCardForHome(visit);
         }
 
@@ -2668,20 +2697,28 @@ async function createVisitorCardForHome(visit) {
         const timeAgo = getTimeAgo(visit.visited_at);
         const initial = nickname.charAt(0).toUpperCase();
 
-        // Carregar foto
+        // ✅✅✅ CORREÇÃO: Carregar foto com DEBUG
         let avatarContent = '';
         if (profile.avatar_url) {
+            console.log('🎯 DEBUG - Tentando carregar foto:', profile.avatar_url);
             const photoUrl = await loadUserPhoto(profile.avatar_url);
+            console.log('🎯 DEBUG - Photo URL result:', photoUrl);
+            
             if (photoUrl) {
                 avatarContent = `
-                    <div class="visitor-avatar-img" style="background-image: url('${photoUrl}')"></div>
+                    <img class="visitor-avatar-img" src="${photoUrl}" alt="${nickname}" style="display: block;">
                 `;
+                console.log('🎯 DEBUG - ✅ Usando IMG com foto carregada');
             } else {
                 avatarContent = `<div class="visitor-avatar-fallback">${initial}</div>`;
+                console.log('🎯 DEBUG - ❌ Usando fallback (foto não carregada)');
             }
         } else {
             avatarContent = `<div class="visitor-avatar-fallback">${initial}</div>`;
+            console.log('🎯 DEBUG - ❌ Usando fallback (sem avatar_url no perfil)');
         }
+
+        console.log('🎯 DEBUG - Card criado com sucesso para:', nickname);
 
         return `
             <div class="visitor-card" onclick="viewProfile('${visit.visitor_id}')">
@@ -2695,7 +2732,7 @@ async function createVisitorCardForHome(visit) {
         `;
 
     } catch (error) {
-        console.error('Erro ao criar card:', error);
+        console.error('🎯 DEBUG - Erro ao criar card:', error);
         return createBasicCardForHome(visit);
     }
 }
@@ -2713,76 +2750,36 @@ function createBasicCardForHome(visit) {
         </div>
     `;
 }
-// Carregar estatísticas para free users
-async function loadFreeVisitorsStats() {
+
+// ✅ FUNÇÃO CORRIGIDA - Carregar foto ESPECÍFICA PARA HOME
+async function loadUserPhoto(avatarUrl) {
     try {
-        document.getElementById('premiumVisitors').style.display = 'none';
-        document.getElementById('freeVisitors').style.display = 'block';
+        if (!avatarUrl) {
+            console.log('❌ HOME - Avatar URL vazio');
+            return null;
+        }
+
+        console.log('📸 HOME - Carregando foto:', avatarUrl);
         
-        const { data: visitCount, error } = await supabase.rpc('count_user_visits', {
-            p_user_id: currentUser.id,
-            p_days: 7
-        });
-        
-        const count = visitCount || 0;
-        const countText = count === 1 ? '1 pessoa' : `${count} pessoas`;
-        
-        document.getElementById('freeVisitorsCount').textContent = countText;
-        document.getElementById('visitorsCount').textContent = `${count} visita${count !== 1 ? 's' : ''}`;
-        
+        const { data } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(avatarUrl);
+
+        if (data?.publicUrl) {
+            console.log('✅ HOME - URL pública gerada:', data.publicUrl);
+            // ✅ Adiciona timestamp para evitar cache
+            const finalUrl = data.publicUrl + '?t=' + Date.now();
+            console.log('✅ HOME - URL final com cache bust:', finalUrl);
+            return finalUrl;
+        } else {
+            console.log('❌ HOME - Nenhuma URL pública retornada');
+            return null;
+        }
     } catch (error) {
-        console.error('Erro ao carregar estatísticas free:', error);
-        document.getElementById('freeVisitorsCount').textContent = '0 pessoas';
-        document.getElementById('visitorsCount').textContent = '0 visitas';
+        console.error('❌ HOME - Erro ao carregar foto:', error);
+        return null;
     }
 }
-
-// Registrar visita ao perfil
-async function registerProfileVisit(visitedUserId) {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            console.error('❌ Usuário não autenticado');
-            return false;
-        }
-
-        if (user.id === visitedUserId) {
-            console.log('⚠️ Não pode visitar próprio perfil');
-            return false;
-        }
-        
-        // ✅ VERIFICAR SE USUÁRIO ESTÁ BLOQUEADO
-        if (isUserBlocked(visitedUserId)) {
-            console.log('🚫 Não é possível visitar perfil: Usuário bloqueado');
-            showAlert('🚫 Você bloqueou este usuário e não pode visitá-lo.', 'error');
-            return false;
-        }
-
-        console.log('🔄 Registrando visita:', {
-            visitor: user.id,
-            visited: visitedUserId
-        });
-
-        const { data, error } = await supabase.rpc('register_visit_simple', {
-            p_visitor_id: user.id,
-            p_visited_id: visitedUserId
-        });
-
-        if (error) {
-            console.error('❌ Erro ao registrar visita:', error);
-            return false;
-        }
-
-        console.log('✅ Visita registrada com sucesso:', data);
-        return data.success;
-
-    } catch (error) {
-        console.error('❌ Erro no registro de visita:', error);
-        return false;
-    }
-}
-
-// ==================== FUNÇÕES DE INTERAÇÃO ====================
 
 // Enviar mensagem
 async function sendMessage(userId, event) {
@@ -2830,7 +2827,6 @@ async function sendMessage(userId, event) {
         }
     }, 100);
 }
-
 // Visualizar perfil
 async function viewProfile(userId, event) {
     if (event) event.stopPropagation();
