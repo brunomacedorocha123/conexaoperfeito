@@ -2552,25 +2552,28 @@ async function checkPremiumStatus() {
     }
 }
 
-// Carregar visitantes premium CORRIGIDO
+// ✅ FUNÇÃO CORRIGIDA PARA HOME - Compatível com visitante.html
 async function loadPremiumVisitors() {
     try {
-        console.log('🔄 Carregando visitantes para o quadro grande...');
+        console.log('🔄 Carregando visitantes para HOME...');
         
         // Mostrar seção premium
         document.getElementById('premiumVisitors').style.display = 'block';
         document.getElementById('freeVisitors').style.display = 'none';
         
-        const { data: visitors, error } = await supabase.rpc('get_recent_visitors', {
-            p_user_id: currentUser.id,
-            p_limit: 8
-        });
-
         const visitorsGrid = document.getElementById('visitorsGrid');
         const visitorsCount = document.getElementById('visitorsCount');
         
+        // ✅ USA A MESMA CONSULTA DA VISITANTE.HTML (que funciona)
+        const { data: visits, error } = await supabase
+            .from('profile_visits')
+            .select('*')
+            .eq('visited_id', currentUser.id)  // Onde ELE foi visitado
+            .order('visited_at', { ascending: false })
+            .limit(8);
+
         if (error) {
-            console.error('❌ Erro ao buscar visitantes:', error);
+            console.error('❌ Erro ao carregar visitas:', error);
             visitorsGrid.innerHTML = `
                 <div class="visitors-empty">
                     <div class="icon">👀</div>
@@ -2581,17 +2584,15 @@ async function loadPremiumVisitors() {
             return;
         }
 
-        console.log('✅ Visitantes encontrados:', visitors);
+        console.log(`✅ ${visits?.length || 0} visitas encontradas na HOME:`, visits);
 
         // Atualizar contador
-        const visitCount = visitors?.length || 0;
+        const visitCount = visits?.length || 0;
         if (visitorsCount) {
             visitorsCount.textContent = `${visitCount} visita${visitCount !== 1 ? 's' : ''}`;
         }
-        
-        console.log(`📊 Contador atualizado: ${visitCount} visitas`);
 
-        if (!visitors || visitors.length === 0) {
+        if (!visits || visits.length === 0) {
             visitorsGrid.innerHTML = `
                 <div class="visitors-empty">
                     <div class="icon">👀</div>
@@ -2602,69 +2603,26 @@ async function loadPremiumVisitors() {
             return;
         }
         
-        // Criar cards dos visitantes - CORREÇÃO AQUI!
+        // Criar cards dos visitantes - MESMO MÉTODO DA VISITANTE.HTML
         let visitorsHTML = '';
-        let visitorsProcessed = 0;
+        let cardsCarregados = 0;
         
-        for (const visitor of visitors) {
+        for (const visit of visits) {
             try {
-                // ✅✅✅ CORREÇÃO CRÍTICA: Verificação mais flexível dos dados
-                const nickname = visitor.visitor_nickname || visitor.visitor_name || 'Usuário';
-                const city = visitor.visitor_city || 'Cidade não informada';
-                const timeAgo = getTimeAgo(visitor.visited_at);
-                const initial = nickname.charAt(0).toUpperCase();
-
-                // Status online - mais tolerante
-                const isOnline = visitor.is_online || false;
-                const onlineBadge = isOnline ? 
-                    '<div class="online-badge" title="Online"></div>' : 
-                    '<div class="offline-badge" title="Offline"></div>';
-
-                // Carregar foto - método simplificado
-                let avatarContent = '';
-                if (visitor.visitor_avatar_url) {
-                    const photoUrl = await loadUserPhoto(visitor.visitor_avatar_url);
-                    if (photoUrl) {
-                        avatarContent = `
-                            <div class="visitor-avatar-img" style="background-image: url('${photoUrl}')"></div>
-                            ${onlineBadge}
-                        `;
-                    } else {
-                        avatarContent = `
-                            <div class="visitor-avatar-fallback">${initial}</div>
-                            ${onlineBadge}
-                        `;
-                    }
-                } else {
-                    avatarContent = `
-                        <div class="visitor-avatar-fallback">${initial}</div>
-                        ${onlineBadge}
-                    `;
+                const cardHTML = await createVisitorCardForHome(visit);
+                if (cardHTML) {
+                    visitorsHTML += cardHTML;
+                    cardsCarregados++;
                 }
-
-                visitorsHTML += `
-                    <div class="visitor-card" onclick="viewProfile('${visitor.visitor_id}')">
-                        <div class="visitor-avatar">
-                            ${avatarContent}
-                        </div>
-                        <div class="visitor-name">${nickname}</div>
-                        <div class="visitor-location">${city}</div>
-                        <div class="visitor-time">${timeAgo}</div>
-                    </div>
-                `;
-                
-                visitorsProcessed++;
-                
             } catch (error) {
-                console.error('Erro ao criar card para visitante:', visitor, error);
-                // Continua processando os próximos mesmo com erro
+                console.error('Erro ao criar card:', error);
+                // Continua mesmo com erro em um card
             }
         }
         
-        // ✅✅✅ CORREÇÃO FINAL: Sempre mostra conteúdo
-        if (visitorsProcessed > 0) {
+        if (cardsCarregados > 0) {
             visitorsGrid.innerHTML = visitorsHTML;
-            console.log(`✅ ${visitorsProcessed} visitantes carregados com sucesso`);
+            console.log(`✅ ${cardsCarregados} visitantes carregados na HOME`);
         } else {
             visitorsGrid.innerHTML = `
                 <div class="visitors-empty">
@@ -2686,6 +2644,74 @@ async function loadPremiumVisitors() {
             </div>
         `;
     }
+}
+
+// ✅ FUNÇÃO AUXILIAR - Criar card para HOME (similar à visitante.html)
+async function createVisitorCardForHome(visit) {
+    try {
+        // Busca perfil do visitante
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('id, nickname, full_name, avatar_url, city')
+            .eq('id', visit.visitor_id)
+            .single();
+
+        if (error || !profile) {
+            return createBasicCardForHome(visit);
+        }
+
+        const nickname = profile.nickname || 
+                        profile.full_name?.split(' ')[0] || 
+                        'Usuário';
+        
+        const city = profile.city || 'Cidade não informada';
+        const timeAgo = getTimeAgo(visit.visited_at);
+        const initial = nickname.charAt(0).toUpperCase();
+
+        // Carregar foto
+        let avatarContent = '';
+        if (profile.avatar_url) {
+            const photoUrl = await loadUserPhoto(profile.avatar_url);
+            if (photoUrl) {
+                avatarContent = `
+                    <div class="visitor-avatar-img" style="background-image: url('${photoUrl}')"></div>
+                `;
+            } else {
+                avatarContent = `<div class="visitor-avatar-fallback">${initial}</div>`;
+            }
+        } else {
+            avatarContent = `<div class="visitor-avatar-fallback">${initial}</div>`;
+        }
+
+        return `
+            <div class="visitor-card" onclick="viewProfile('${visit.visitor_id}')">
+                <div class="visitor-avatar">
+                    ${avatarContent}
+                </div>
+                <div class="visitor-name">${nickname}</div>
+                <div class="visitor-location">${city}</div>
+                <div class="visitor-time">${timeAgo}</div>
+            </div>
+        `;
+
+    } catch (error) {
+        console.error('Erro ao criar card:', error);
+        return createBasicCardForHome(visit);
+    }
+}
+
+// ✅ FUNÇÃO AUXILIAR - Card básico para HOME
+function createBasicCardForHome(visit) {
+    return `
+        <div class="visitor-card" onclick="viewProfile('${visit.visitor_id}')">
+            <div class="visitor-avatar">
+                <div class="visitor-avatar-fallback">👤</div>
+            </div>
+            <div class="visitor-name">Usuário</div>
+            <div class="visitor-location">---</div>
+            <div class="visitor-time">${getTimeAgo(visit.visited_at)}</div>
+        </div>
+    `;
 }
 // Carregar estatísticas para free users
 async function loadFreeVisitorsStats() {
