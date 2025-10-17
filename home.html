@@ -2233,17 +2233,21 @@ async function logout() {
 
 // ==================== SISTEMA DE BLOQUEIO ULTRA-RÁPIDO ====================
 
-/// ✅ INICIALIZAÇÃO DO SISTEMA DE BLOQUEIO
+/// ==================== SISTEMA DE BLOQUEIO ULTRA-RÁPIDO ====================
+
+/// ✅ INICIALIZAÇÃO DO SISTEMA DE BLOQUEIO - CORRIGIDA
 async function initializeBlockSystem() {
     try {
         console.log('⚡ Inicializando sistema de bloqueio ULTRA-RÁPIDO...');
         
-        // REMOVER MENSAGEM "CONEXÃO OK" VERDE SE EXISTIR
-        const connectionOkMessage = document.querySelector('.connection-ok, .alert-success, [class*="success"], [class*="connection"]');
-        if (connectionOkMessage) {
-            connectionOkMessage.remove();
-            console.log('✅ Mensagem "conexão ok" removida');
-        }
+        // REMOVER MENSAGEM "CONEXÃO OK" VERDE SE EXISTIR - CORRIGIDO
+        const connectionElements = document.querySelectorAll('.connection-status, .connection-ok, .alert-success, [class*="success"], [class*="connection"]');
+        connectionElements.forEach(element => {
+            if (element.textContent.includes('Conexão OK') || element.textContent.includes('✅')) {
+                element.remove();
+                console.log('✅ Mensagem "conexão ok" removida');
+            }
+        });
         
         // 1. Carrega do cache local (INSTANTÂNEO)
         const cached = blockCache.get();
@@ -2261,7 +2265,7 @@ async function initializeBlockSystem() {
     }
 }
 
-// ✅ CARREGAR IDs BLOQUEADOS DO BANCO
+// ✅ CARREGAR IDs BLOQUEADOS DO BANCO - CORRIGIDA
 async function loadBlockedIdsForHome() {
     try {
         if (!currentUser) return;
@@ -2309,40 +2313,56 @@ async function confirmBlock() {
     blockedUserIdsSet.add(userId);
     blockCache.set(blockedUserIdsSet);
     
-    // 4. SALVAR NO BANCO EM BACKGROUND (AGORA FUNCIONA)
-    saveBlockToDatabase(userId, userName);
+    // 4. SALVAR NO BANCO EM BACKGROUND (AGORA FUNCIONA) - CORRIGIDO
+    const success = await saveBlockToDatabase(userId, userName);
+    
+    if (success) {
+        showQuickToast(`✅ ${userName} bloqueado com sucesso!`);
+    } else {
+        showQuickToast('⚠️ Bloqueado localmente (erro de rede)');
+    }
 }
 
-// ✅ SALVAR NO BANCO EM BACKGROUND - CORRIGIDO
+// ✅ SALVAR NO BANCO EM BACKGROUND - TOTALMENTE CORRIGIDA
 async function saveBlockToDatabase(userId, userName) {
     try {
         console.log('💾 Salvando bloqueio no banco para:', userId);
         
         const { data, error } = await supabase
             .from('user_blocks')
-            .insert({
-                blocker_id: currentUser.id,
-                blocked_user_id: userId,
-                created_at: new Date().toISOString()
-            })
-            .select()
-            .single();
+            .insert([
+                {
+                    blocker_id: currentUser.id,
+                    blocked_user_id: userId,
+                    created_at: new Date().toISOString()
+                }
+            ])
+            .select();
 
         if (error) {
             if (error.code === '23505') {
                 console.log('✅ Usuário já estava bloqueado no banco');
+                return true;
             } else {
                 console.error('❌ Erro grave no bloqueio:', error);
                 // ✅ RECUPERAÇÃO: Remove do cache se falhou
                 blockedUserIdsSet.delete(userId);
                 blockCache.set(blockedUserIdsSet);
+                return false;
             }
-        } else if (data) {
-            console.log('✅ BLOQUEIO SALVO NO BANCO:', data);
+        }
+        
+        if (data && data.length > 0) {
+            console.log('✅ BLOQUEIO SALVO NO BANCO:', data[0]);
+            return true;
+        } else {
+            console.error('❌ Bloqueio falhou - sem dados retornados');
+            return false;
         }
         
     } catch (error) {
         console.error('❌ Erro ao salvar bloqueio:', error);
+        return false;
     }
 }
 
@@ -3278,7 +3298,6 @@ function animateCardRemoval(card) {
         }, 300);
     }, 150);
 }
-
 // ✅ FUNÇÃO: Verificar se perfil está completo
 function isProfileComplete() {
     return userProfile &&
