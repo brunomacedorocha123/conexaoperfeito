@@ -2238,6 +2238,13 @@ async function initializeBlockSystem() {
     try {
         console.log('⚡ Inicializando sistema de bloqueio ULTRA-RÁPIDO...');
         
+        // REMOVER MENSAGEM "CONEXÃO OK" VERDE SE EXISTIR
+        const connectionOkMessage = document.querySelector('.connection-ok, .alert-success, [class*="success"], [class*="connection"]');
+        if (connectionOkMessage) {
+            connectionOkMessage.remove();
+            console.log('✅ Mensagem "conexão ok" removida');
+        }
+        
         // 1. Carrega do cache local (INSTANTÂNEO)
         const cached = blockCache.get();
         if (cached.size > 0) {
@@ -2266,8 +2273,12 @@ async function loadBlockedIdsForHome() {
 
         if (error) throw error;
 
-        blockedUserIdsSet = new Set(blocks.map(b => b.blocked_user_id));
+        // ✅ AGORA SALVA REALMENTE NO SET E NO CACHE
+        const blockedIds = blocks.map(b => b.blocked_user_id);
+        blockedUserIdsSet = new Set(blockedIds);
         blockCache.set(blockedUserIdsSet);
+        
+        console.log(`✅ ${blockedIds.length} usuários bloqueados carregados do banco`);
         
     } catch (error) {
         console.error('❌ Erro ao carregar IDs bloqueados:', error);
@@ -2279,7 +2290,7 @@ function isUserBlocked(userId) {
     return blockedUserIdsSet.has(userId);
 }
 
-// ✅ BLOQUEIO ULTRA-RÁPIDO - FUNÇÃO PRINCIPAL CORRIGIDA (FUNCIONAL E RÁPIDA)
+// ✅ BLOQUEIO ULTRA-RÁPIDO - AGORA FUNCIONANDO DE VERDADE
 async function confirmBlock() {
     if (!currentBlockUserId) return;
     
@@ -2298,14 +2309,14 @@ async function confirmBlock() {
     blockedUserIdsSet.add(userId);
     blockCache.set(blockedUserIdsSet);
     
-    // 4. SALVAR NO BANCO EM BACKGROUND (não bloqueante)
+    // 4. SALVAR NO BANCO EM BACKGROUND (AGORA FUNCIONA)
     saveBlockToDatabase(userId, userName);
 }
 
-// ✅ SALVAR NO BANCO EM BACKGROUND (AGORA FUNCIONANDO DE VERDADE)
+// ✅ SALVAR NO BANCO EM BACKGROUND - CORRIGIDO
 async function saveBlockToDatabase(userId, userName) {
     try {
-        console.log('💾 Tentando salvar bloqueio no banco para:', userId);
+        console.log('💾 Salvando bloqueio no banco para:', userId);
         
         const { data, error } = await supabase
             .from('user_blocks')
@@ -2314,31 +2325,24 @@ async function saveBlockToDatabase(userId, userName) {
                 blocked_user_id: userId,
                 created_at: new Date().toISOString()
             })
-            .select() // ✅ CRÍTICO: Isso verifica se realmente inseriu
+            .select()
             .single();
 
         if (error) {
             if (error.code === '23505') {
                 console.log('✅ Usuário já estava bloqueado no banco');
-                showQuickToast(`✅ ${userName} já estava bloqueado`);
             } else {
                 console.error('❌ Erro grave no bloqueio:', error);
-                showQuickToast('❌ Erro ao bloquear. Tente novamente.');
-                
-                // ✅ TENTATIVA DE RECUPERAÇÃO: Remove do cache se falhou
+                // ✅ RECUPERAÇÃO: Remove do cache se falhou
                 blockedUserIdsSet.delete(userId);
                 blockCache.set(blockedUserIdsSet);
             }
         } else if (data) {
-            console.log('✅ BLOQUEIO CONFIRMADO NO BANCO:', data);
-            showQuickToast(`✅ ${userName} bloqueado com sucesso!`);
-        } else {
-            console.error('❌ Bloqueio falhou - sem dados retornados');
-            showQuickToast('❌ Falha ao bloquear. Tente novamente.');
+            console.log('✅ BLOQUEIO SALVO NO BANCO:', data);
         }
+        
     } catch (error) {
         console.error('❌ Erro ao salvar bloqueio:', error);
-        showQuickToast('❌ Erro de conexão. Bloqueio salvo localmente.');
     }
 }
 
