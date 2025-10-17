@@ -21,12 +21,14 @@
             --success: #38a169;
             --warning: #d69e2e;
             --danger: #e53e3e;
+            --info: #3182ce;
         }
 
         body {
             background: var(--background);
             color: var(--text);
             padding: 20px;
+            min-height: 100vh;
         }
 
         .container {
@@ -61,6 +63,11 @@
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
         }
 
         .stat-number {
@@ -79,14 +86,21 @@
             border-radius: 15px;
             padding: 2rem;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
         }
 
         .section-title {
             color: var(--primary);
             margin-bottom: 1.5rem;
             display: flex;
-            justify-content: between;
+            justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .section-title h2 {
+            margin: 0;
         }
 
         .report-card {
@@ -95,6 +109,12 @@
             padding: 1.5rem;
             margin-bottom: 1rem;
             background: #f8fafc;
+            transition: all 0.3s ease;
+        }
+
+        .report-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-color: var(--secondary);
         }
 
         .report-header {
@@ -102,10 +122,13 @@
             justify-content: space-between;
             align-items: start;
             margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
 
         .report-users {
             font-weight: 600;
+            font-size: 1.1rem;
         }
 
         .report-reason {
@@ -117,12 +140,19 @@
             font-weight: 500;
         }
 
+        .report-meta {
+            margin-bottom: 1rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
         .report-evidence {
             background: #f1f5f9;
             padding: 1rem;
             border-radius: 8px;
             margin: 1rem 0;
             font-style: italic;
+            border-left: 4px solid var(--primary);
         }
 
         .report-actions {
@@ -138,10 +168,12 @@
             cursor: pointer;
             font-weight: 600;
             transition: all 0.3s ease;
+            font-size: 0.9rem;
         }
 
         .btn:hover {
             transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
 
         .btn-ban {
@@ -162,6 +194,16 @@
         .btn-resolve {
             background: var(--secondary);
             color: var(--text);
+        }
+
+        .btn-reload {
+            background: var(--info);
+            color: white;
+        }
+
+        .btn-debug {
+            background: #666;
+            color: white;
         }
 
         .loading {
@@ -196,14 +238,64 @@
             margin-bottom: 1rem;
             opacity: 0.5;
         }
+
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            z-index: 1000;
+        }
+
+        .status-online {
+            background: var(--success);
+            color: white;
+        }
+
+        .status-offline {
+            background: var(--danger);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .report-header {
+                flex-direction: column;
+                align-items: start;
+            }
+            
+            .report-actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+            
+            .section-title {
+                flex-direction: column;
+                align-items: start;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Status de Conexão -->
+        <div id="connectionStatus" class="connection-status status-online" style="display: none;">
+            ✅ Conectado
+        </div>
+
         <!-- Header -->
         <div class="header">
             <h1>👑 Painel de Administração</h1>
             <p>Amor Conect - Moderação de Conteúdo</p>
+            <div style="margin-top: 1rem;">
+                <small id="lastUpdate">Última atualização: --</small>
+            </div>
         </div>
 
         <!-- Estatísticas -->
@@ -230,7 +322,14 @@
         <div class="reports-section">
             <div class="section-title">
                 <h2>🚨 Reportes Pendentes</h2>
-                <button class="btn btn-resolve" onclick="loadReports()">🔄 Atualizar</button>
+                <div>
+                    <button class="btn btn-reload" onclick="forceReload()">
+                        🔄 Forçar Atualização
+                    </button>
+                    <button class="btn btn-debug" onclick="debugDatabase()">
+                        🐛 Debug
+                    </button>
+                </div>
             </div>
             
             <div id="reportsContainer">
@@ -240,65 +339,94 @@
                 </div>
             </div>
         </div>
+
+        <!-- Log de Atividades -->
+        <div class="reports-section">
+            <div class="section-title">
+                <h2>📊 Log do Sistema</h2>
+                <button class="btn btn-resolve" onclick="clearLog()">
+                    🧹 Limpar Log
+                </button>
+            </div>
+            <div id="systemLog" style="
+                background: #f8f9fa;
+                padding: 1rem;
+                border-radius: 8px;
+                max-height: 200px;
+                overflow-y: auto;
+                font-family: monospace;
+                font-size: 0.8rem;
+            "></div>
+        </div>
     </div>
-<script>
-    // ==================== CONFIGURAÇÃO ====================
-const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    <script>
+       // ==================== VERIFICAÇÃO DE ACESSO ====================
+(function() {
+    const tokensValidos = ['AMORCONECT2024', 'GESTOR_SECRETO', 'ADMIN_BRASIL'];
+    const token = localStorage.getItem('adminToken');
+    const expiracao = localStorage.getItem('adminExpiry');
+    
+    const acessoValido = token && tokensValidos.includes(token) && Date.now() < parseInt(expiracao);
+    
+    if (!acessoValido) {
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminExpiry');
+        alert('🔐 Acesso administrativo requerido!');
+        window.location.href = 'index.html';
+        return;
+    }
+})();
 
-// ==================== VERSÃO TESTE (SEM SEGURANÇA) ====================
-console.log('🔓 MODO TESTE - Acesso liberado temporariamente');
-
-// Inicializa o painel imediatamente
-initializeAdminPanel();
+// ==================== CONEXÃO COM BANCO ====================
+const supabaseUrl = 'https://gcukalndarlgydmgmmmt.supabase.co';
+const supabaseChave = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+const supabase = window.supabase.createClient(supabaseUrl, supabaseChave);
 
 // ==================== FUNÇÕES PRINCIPAIS ====================
-async function initializeAdminPanel() {
-    console.log('✅ Painel admin inicializado!');
-    await loadStats();
-    await loadReports();
-}
-
-async function loadStats() {
+async function carregarEstatisticas() {
     try {
+        adicionarLog('📊 Carregando estatísticas...');
+        
         // Total de reportes
-        const { count: totalReports } = await supabase
+        const { count: totalReportes } = await supabase
             .from('user_reports')
             .select('*', { count: 'exact', head: true });
 
         // Reportes pendentes
-        const { count: pendingReports } = await supabase
+        const { count: reportesPendentes } = await supabase
             .from('user_reports')
             .select('*', { count: 'exact', head: true })
             .eq('status', 'pending');
 
         // Reportes resolvidos
-        const { count: resolvedReports } = await supabase
+        const { count: reportesResolvidos } = await supabase
             .from('user_reports')
             .select('*', { count: 'exact', head: true })
             .eq('status', 'resolved');
 
         // Total de usuários
-        const { count: totalUsers } = await supabase
+        const { count: totalUsuarios } = await supabase
             .from('profiles')
             .select('*', { count: 'exact', head: true });
 
-        // Atualiza interface
-        document.getElementById('totalReports').textContent = totalReports || 0;
-        document.getElementById('pendingReports').textContent = pendingReports || 0;
-        document.getElementById('resolvedReports').textContent = resolvedReports || 0;
-        document.getElementById('totalUsers').textContent = totalUsers || 0;
+        // Atualiza a tela
+        document.getElementById('totalReports').textContent = totalReportes || 0;
+        document.getElementById('pendingReports').textContent = reportesPendentes || 0;
+        document.getElementById('resolvedReports').textContent = reportesResolvidos || 0;
+        document.getElementById('totalUsers').textContent = totalUsuarios || 0;
 
-        console.log('📊 Estatísticas carregadas:', { totalReports, pendingReports, resolvedReports, totalUsers });
+        document.getElementById('lastUpdate').textContent = 
+            `Última atualização: ${new Date().toLocaleString('pt-BR')}`;
 
-    } catch (error) {
-        console.error('Erro ao carregar estatísticas:', error);
+        adicionarLog(`✅ Estatísticas: ${reportesPendentes || 0} reportes pendentes`);
+
+    } catch (erro) {
+        adicionarLog(`❌ Erro nas estatísticas: ${erro.message}`);
     }
 }
 
-async function loadReports() {
+async function carregarReportes() {
     const container = document.getElementById('reportsContainer');
     container.innerHTML = `
         <div class="loading">
@@ -308,142 +436,246 @@ async function loadReports() {
     `;
 
     try {
-        const { data: reports, error } = await supabase
+        adicionarLog('🔍 Buscando reportes pendentes...');
+        
+        const { data: reportes, error } = await supabase
             .from('user_reports')
             .select(`
                 *,
-                reporter:reporter_id(nickname, avatar_url),
-                reported:reported_user_id(nickname, avatar_url)
+                reporter:reporter_id(nickname, avatar_url, id),
+                reported:reported_user_id(nickname, avatar_url, id)
             `)
             .eq('status', 'pending')
             .order('created_at', { ascending: false });
 
         if (error) throw error;
 
-        console.log('📋 Reportes encontrados:', reports);
+        adicionarLog(`✅ ${reportes?.length || 0} reportes encontrados`);
 
-        if (!reports || reports.length === 0) {
+        if (!reportes || reportes.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
                     <div class="icon">🎉</div>
                     <h3>Nenhum reporte pendente!</h3>
                     <p>Todos os reportes foram resolvidos.</p>
+                    <button class="btn btn-resolve" onclick="carregarReportes()" style="margin-top: 1rem;">
+                        🔄 Atualizar
+                    </button>
                 </div>
             `;
             return;
         }
 
-        container.innerHTML = reports.map(report => `
+        // Mostra os reportes na tela
+        container.innerHTML = reportes.map(reporte => `
             <div class="report-card">
                 <div class="report-header">
                     <div class="report-users">
-                        <strong>${report.reporter?.nickname || 'Usuário'}</strong> 
+                        <strong>${reporte.reporter?.nickname || 'Usuário'}</strong> 
                         reportou 
-                        <strong>${report.reported?.nickname || 'Usuário'}</strong>
+                        <strong>${reporte.reported?.nickname || 'Usuário'}</strong>
                     </div>
-                    <div class="report-reason">${formatReason(report.reason)}</div>
+                    <div class="report-reason">${traduzirMotivo(reporte.reason)}</div>
                 </div>
                 
                 <div class="report-meta">
-                    <small>Data: ${new Date(report.created_at).toLocaleString('pt-BR')}</small>
+                    <small>Data: ${new Date(reporte.created_at).toLocaleString('pt-BR')}</small>
                 </div>
 
-                ${report.evidence ? `
+                ${reporte.evidence ? `
                     <div class="report-evidence">
-                        <strong>Evidência:</strong> "${report.evidence}"
+                        <strong>Motivo:</strong> "${reporte.evidence}"
                     </div>
                 ` : ''}
 
                 <div class="report-actions">
-                    <button class="btn btn-ban" onclick="takeAction('${report.id}', '${report.reported_user_id}', 'ban')">
+                    <button class="btn btn-ban" onclick="tomarAcao('${reporte.id}', '${reporte.reported_user_id}', 'banir')">
                         🚫 Banir Usuário
                     </button>
-                    <button class="btn btn-warn" onclick="takeAction('${report.id}', '${report.reported_user_id}', 'warn')">
+                    <button class="btn btn-warn" onclick="tomarAcao('${reporte.id}', '${reporte.reported_user_id}', 'advertir')">
                         ⚠️ Advertir
                     </button>
-                    <button class="btn btn-resolve" onclick="takeAction('${report.id}', null, 'resolve')">
-                        ✅ Marcar como Resolvido
+                    <button class="btn btn-resolve" onclick="tomarAcao('${reporte.id}', null, 'resolver')">
+                        ✅ Resolver
                     </button>
-                    <button class="btn btn-dismiss" onclick="takeAction('${report.id}', null, 'dismiss')">
-                        ❌ Ignorar Reporte
+                    <button class="btn btn-dismiss" onclick="tomarAcao('${reporte.id}', null, 'ignorar')">
+                        ❌ Ignorar
                     </button>
                 </div>
             </div>
         `).join('');
 
-    } catch (error) {
-        console.error('Erro ao carregar reportes:', error);
+    } catch (erro) {
+        adicionarLog(`❌ Erro ao carregar reportes: ${erro.message}`);
+        
         container.innerHTML = `
             <div class="empty-state">
                 <div class="icon">❌</div>
                 <h3>Erro ao carregar reportes</h3>
-                <p>${error.message}</p>
-                <button class="btn btn-resolve" onclick="loadReports()" style="margin-top: 1rem;">
-                    🔄 Tentar Novamente
-                </button>
+                <p>${erro.message}</p>
+                <div style="margin-top: 1rem;">
+                    <button class="btn btn-resolve" onclick="carregarReportes()">
+                        🔄 Tentar Novamente
+                    </button>
+                </div>
             </div>
         `;
     }
 }
 
-async function takeAction(reportId, userId, action) {
-    if (!confirm(`Tem certeza que deseja ${getActionText(action)}?`)) {
+async function tomarAcao(idReporte, idUsuario, acao) {
+    const textoAcao = {
+        'banir': 'banir este usuário',
+        'advertir': 'advertir este usuário', 
+        'resolver': 'resolver este reporte',
+        'ignorar': 'ignorar este reporte'
+    }[acao];
+    
+    if (!confirm(`Tem certeza que deseja ${textoAcao}?`)) {
         return;
     }
 
     try {
+        adicionarLog(`⚡ Executando: ${textoAcao}`);
+        
         // Atualiza o status do reporte
-        const { error: reportError } = await supabase
+        const status = acao === 'ignorar' ? 'dismissed' : 'resolved';
+        await supabase
             .from('user_reports')
             .update({ 
-                status: action === 'dismiss' ? 'dismissed' : 'resolved',
-                updated_at: new Date().toISOString()
+                status: status,
+                resolved_at: new Date().toISOString()
             })
-            .eq('id', reportId);
+            .eq('id', idReporte);
 
-        if (reportError) throw reportError;
-
-        // Ações adicionais baseadas no tipo
-        if (action === 'ban' && userId) {
-            console.log(`🚫 Usuário ${userId} banido`);
-            alert('Usuário banido com sucesso!');
-        } else if (action === 'warn' && userId) {
-            console.log(`⚠️ Usuário ${userId} advertido`);
-            alert('Advertência enviada ao usuário!');
+        if (acao === 'banir' && idUsuario) {
+            adicionarLog(`🚫 Usuário ${idUsuario} banido`);
+        } else if (acao === 'advertir' && idUsuario) {
+            adicionarLog(`⚠️ Usuário ${idUsuario} advertido`);
         }
 
+        mostrarNotificacao(`✅ ${textoAcao} com sucesso!`);
+        
         // Recarrega os dados
-        await loadStats();
-        await loadReports();
+        await carregarEstatisticas();
+        await carregarReportes();
 
-    } catch (error) {
-        console.error('Erro ao executar ação:', error);
-        alert('Erro ao processar ação: ' + error.message);
+    } catch (erro) {
+        adicionarLog(`❌ Erro na ação: ${erro.message}`);
+        mostrarNotificacao(`❌ Erro: ${erro.message}`, 'erro');
     }
 }
 
 // ==================== FUNÇÕES AUXILIARES ====================
-function formatReason(reason) {
-    const reasons = {
-        'spam': 'Spam',
-        'inappropriate': 'Conteúdo Inadequado',
-        'harassment': 'Assédio',
-        'fake_profile': 'Perfil Falso', 
-        'scam': 'Golpe/Fraude',
-        'other': 'Outro'
-    };
-    return reasons[reason] || reason;
+function adicionarLog(mensagem, tipo = 'info') {
+    const logContainer = document.getElementById('systemLog');
+    const horario = new Date().toLocaleTimeString('pt-BR');
+    const entrada = document.createElement('div');
+    
+    const icones = { 'info': '🔵', 'success': '🟢', 'warning': '🟡', 'error': '🔴' };
+    entrada.innerHTML = `${icones[tipo] || '⚪'} [${horario}] ${mensagem}`;
+    
+    logContainer.appendChild(entrada);
+    logContainer.scrollTop = logContainer.scrollHeight;
+    
+    // Mantém só 50 mensagens no log
+    if (logContainer.children.length > 50) {
+        logContainer.removeChild(logContainer.children[0]);
+    }
 }
 
-function getActionText(action) {
-    const actions = {
-        'ban': 'banir este usuário',
-        'warn': 'advertir este usuário', 
-        'resolve': 'resolver este reporte',
-        'dismiss': 'ignorar este reporte'
-    };
-    return actions[action] || 'executar esta ação';
+function mostrarNotificacao(mensagem, tipo = 'sucesso') {
+    adicionarLog(mensagem, tipo === 'erro' ? 'error' : 'success');
+    
+    const notificacao = document.createElement('div');
+    notificacao.style.cssText = `
+        position: fixed; top: 20px; right: 20px; padding: 15px 20px;
+        border-radius: 8px; color: white; font-weight: 600; z-index: 10000;
+        background: ${tipo === 'erro' ? '#e53e3e' : '#38a169'};
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transform: translateX(100%); transition: transform 0.3s ease;
+    `;
+    notificacao.textContent = mensagem;
+    
+    document.body.appendChild(notificacao);
+    setTimeout(() => notificacao.style.transform = 'translateX(0)', 100);
+    setTimeout(() => {
+        notificacao.style.transform = 'translateX(100%)';
+        setTimeout(() => notificacao.remove(), 300);
+    }, 3000);
 }
+
+function traduzirMotivo(motivo) {
+    const motivos = {
+        'spam': '📢 Spam',
+        'inappropriate': '🔞 Conteúdo Inadequado',
+        'harassment': '🚨 Assédio',
+        'fake_profile': '👤 Perfil Falso', 
+        'scam': '💸 Golpe/Fraude',
+        'other': '❓ Outro'
+    };
+    return motivos[motivo] || motivo;
+}
+
+function limparLog() {
+    document.getElementById('systemLog').innerHTML = '';
+    adicionarLog('🧹 Log limpo');
+}
+
+function forcarAtualizacao() {
+    adicionarLog('🔄 Atualizando dados...');
+    mostrarNotificacao('🔄 Atualizando dados...');
+    carregarEstatisticas();
+    carregarReportes();
+}
+
+async function verificarBanco() {
+    try {
+        adicionarLog('🔍 Verificando banco de dados...');
+        
+        const { data: reportes, error } = await supabase
+            .from('user_reports')
+            .select('id, status, created_at')
+            .order('created_at', { ascending: false })
+            .limit(10);
+
+        if (error) throw error;
+
+        let mensagem = `📊 Total de reportes: ${reportes?.length || 0}\n\n`;
+        if (reportes) {
+            reportes.forEach(reporte => {
+                const data = new Date(reporte.created_at).toLocaleDateString('pt-BR');
+                mensagem += `• ${reporte.id} (${reporte.status}) - ${data}\n`;
+            });
+        }
+
+        alert(`🐛 VERIFICAÇÃO DO BANCO:\n\n${mensagem}`);
+
+    } catch (erro) {
+        alert('❌ Erro na verificação: ' + erro.message);
+    }
+}
+
+// ==================== INICIALIZAÇÃO ====================
+async function iniciarPainelAdmin() {
+    adicionarLog('👑 Iniciando painel administrativo...');
+    
+    await carregarEstatisticas();
+    await carregarReportes();
+    
+    adicionarLog('✅ Painel pronto para uso!');
+    
+    // Atualiza a cada 30 segundos
+    setInterval(() => {
+        carregarEstatisticas();
+    }, 30000);
+}
+
+// Inicia quando a página carrega
+document.addEventListener('DOMContentLoaded', function() {
+    adicionarLog('📱 Página admin carregada');
+    iniciarPainelAdmin();
+});
     </script>
 </body>
 </html>
