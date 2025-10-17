@@ -2140,7 +2140,7 @@ footer {
   </footer>
 
 <script>
-/// Configuração do Supabase
+// Configuração do Supabase
 const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 
@@ -2318,11 +2318,6 @@ async function confirmBlock() {
     if (success) {
         showQuickToast(`✅ ${userName} bloqueado com sucesso!`);
         console.log('🎯 USUÁRIO BLOQUEADO E SALVO NO BANCO!');
-        
-        // 5. Redirecionar para blocks.html após sucesso
-        setTimeout(() => {
-            window.location.href = 'blocks.html';
-        }, 1500);
     } else {
         showQuickToast('⚠️ Bloqueado localmente (erro de rede)');
     }
@@ -2493,6 +2488,7 @@ function animateCardRemoval(card) {
         }, 300);
     }, 150);
 }
+
 // ==================== SISTEMA DE REPORTE ====================
 
 // MENU DE AÇÕES CORRIGIDO - 3 PONTOS FUNCIONAL
@@ -2892,6 +2888,7 @@ async function createUserCardWithPhoto(user) {
         </div>
     `;
 }
+
 // ==================== SISTEMA DE VISITANTES ====================
 
 // Carregar sistema de visitantes
@@ -3312,6 +3309,7 @@ function animateCardRemoval(card) {
         }, 300);
     }, 150);
 }
+
 // ==================== FUNÇÕES AUXILIARES ====================
 
 // CALCULAR IDADE
