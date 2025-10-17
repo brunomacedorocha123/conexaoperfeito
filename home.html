@@ -2168,48 +2168,58 @@ const blockCache = {
     }
 };
 
-// ==================== INICIALIZAÇÃO DA APLICAÇÃO ====================
+// ==================== INICIALIZAÇÃO CORRIGIDA ====================
 
 document.addEventListener('DOMContentLoaded', function() {
-    checkAuth();
-    setupEventListeners();
-    setupMobileMenu();
+    console.log('🚀 Iniciando aplicação...');
+    initializeApp();
 });
 
-// Verificar autenticação
-async function checkAuth() {
+// ✅ CORREÇÃO CRÍTICA: Inicialização sem loop
+async function initializeApp() {
     try {
+        // 1. Verificar autenticação UMA VEZ
         const { data: { user }, error } = await supabase.auth.getUser();
         
-        if (error) throw error;
-        
-        if (!user) {
+        if (error) {
+            console.error('Erro de autenticação:', error);
             window.location.href = 'login.html';
             return;
         }
         
+        if (!user) {
+            console.log('❌ Usuário não autenticado, redirecionando...');
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        console.log('✅ Usuário autenticado:', user.id);
         currentUser = user;
         
-        // ✅ CORREÇÃO: Carregar dados do usuário PRIMEIRO
+        // 2. Carregar dados do usuário
         await loadUserData();
         
-        // ✅ CORREÇÃO: Carregar usuários ANTES do sistema de bloqueio
+        // 3. Carregar usuários (IMPORTANTE: antes do bloqueio)
         await loadRealUsers();
         
-        // ✅ CORREÇÃO: Depois carrega bloqueios em background
-        await initializeBlockSystem();
+        // 4. Inicializar sistema de bloqueio em background
+        initializeBlockSystem().catch(console.error);
         
-        // ✅ CORREÇÃO: Carregar visitantes por último
-        await loadVisitorsSystem();
+        // 5. Carregar visitantes
+        loadVisitorsSystem().catch(console.error);
         
+        // 6. Configurar sistemas secundários
+        setupEventListeners();
+        setupMobileMenu();
         updateStats();
-        startStatsAutoUpdate();
         startOnlineStatusUpdater();
-        setupInvisibleModeSyncListener();
+        
+        console.log('🎯 Aplicação carregada com sucesso!');
         
     } catch (error) {
-        console.error('Erro na autenticação:', error);
-        window.location.href = 'login.html';
+        console.error('❌ Erro crítico na inicialização:', error);
+        // Não redireciona para evitar loop
+        showQuickToast('Erro ao carregar a página. Recarregue.');
     }
 }
 
@@ -2219,47 +2229,42 @@ function setupEventListeners() {
     if (logoutBtn) {
         logoutBtn.addEventListener('click', logout);
     }
-    
-    document.addEventListener('touchstart', function() {}, { passive: true });
 }
 
 // Logout
 async function logout() {
     try {
-        const { error } = await supabase.auth.signOut();
-        if (error) throw error;
-        
+        await supabase.auth.signOut();
         window.location.href = 'index.html';
     } catch (error) {
         console.error('Erro ao fazer logout:', error);
-        alert('Erro ao fazer logout. Tente novamente.');
     }
 }
 
 // ==================== SISTEMA DE BLOQUEIO CORRIGIDO ====================
 
-// ✅ CORREÇÃO: Inicializar bloqueio DEPOIS dos usuários
 async function initializeBlockSystem() {
     try {
+        if (!currentUser) return;
+        
         console.log('⚡ Inicializando sistema de bloqueio...');
         
         // Carrega do cache local
         const cached = blockCache.get();
         if (cached.size > 0) {
             blockedUserIdsSet = cached;
-            console.log(`⚡ Cache carregado: ${blockedUserIdsSet.size} usuários bloqueados`);
+            console.log(`⚡ Cache carregado: ${blockedUserIdsSet.size} bloqueados`);
         }
         
-        // Atualiza do banco em background
+        // Atualiza do banco
         await loadBlockedIdsForHome();
-        console.log(`✅ Sistema de bloqueio pronto: ${blockedUserIdsSet.size} usuários bloqueados`);
+        console.log(`✅ Sistema de bloqueio pronto: ${blockedUserIdsSet.size} bloqueados`);
         
     } catch (error) {
-        console.error('❌ Erro ao inicializar bloqueio:', error);
+        console.error('❌ Erro no sistema de bloqueio:', error);
     }
 }
 
-// Carregar IDs bloqueados do banco
 async function loadBlockedIdsForHome() {
     try {
         if (!currentUser) return;
@@ -2275,19 +2280,18 @@ async function loadBlockedIdsForHome() {
         blockedUserIdsSet = new Set(blockedIds);
         blockCache.set(blockedUserIdsSet);
         
-        console.log(`✅ ${blockedIds.length} usuários bloqueados carregados do banco`);
+        console.log(`✅ ${blockedIds.length} bloqueados carregados`);
         
     } catch (error) {
-        console.error('❌ Erro ao carregar IDs bloqueados:', error);
+        console.error('❌ Erro ao carregar bloqueados:', error);
     }
 }
 
-// Verificar se usuário está bloqueado
 function isUserBlocked(userId) {
     return blockedUserIdsSet.has(userId);
 }
 
-// ✅ FUNÇÃO PRINCIPAL DE BLOQUEIO - CORRIGIDA
+// ✅ FUNÇÃO PRINCIPAL DE BLOQUEIO
 async function confirmBlock() {
     if (!currentBlockUserId) return;
     
@@ -2296,38 +2300,34 @@ async function confirmBlock() {
     
     console.log('⚡ BLOQUEIO INICIADO:', userName);
     
-    // 1. FECHAR MODAL IMEDIATAMENTE
+    // 1. Fechar modal
     closeBlockModal();
     
-    // 2. REMOVER DA UI IMEDIATAMENTE
+    // 2. Remover da UI
     removeUserCardImmediately(userId);
     
-    // 3. ATUALIZAR CACHE LOCAL
+    // 3. Atualizar cache
     blockedUserIdsSet.add(userId);
     blockCache.set(blockedUserIdsSet);
     
-    // 4. SALVAR NO BANCO
+    // 4. Salvar no banco
     const success = await saveBlockToDatabase(userId);
     
     if (success) {
-        showQuickToast(`✅ ${userName} bloqueado com sucesso!`);
-        console.log('🎯 USUÁRIO BLOQUEADO DEFINITIVAMENTE!');
+        showQuickToast(`✅ ${userName} bloqueado!`);
         
-        // 5. Redirecionar para blocks.html após sucesso
+        // 5. Redirecionar após sucesso
         setTimeout(() => {
             window.location.href = 'blocks.html';
-        }, 1500);
+        }, 1000);
     } else {
         showQuickToast('⚠️ Bloqueado localmente (erro de rede)');
     }
 }
 
-// Salvar bloqueio no banco
 async function saveBlockToDatabase(userId) {
     try {
-        console.log('💾 SALVANDO BLOQUEIO NO BANCO:', userId);
-        
-        const { data, error } = await supabase
+        const { error } = await supabase
             .from('user_blocks')
             .insert({
                 blocker_id: currentUser.id,
@@ -2337,23 +2337,19 @@ async function saveBlockToDatabase(userId) {
 
         if (error) {
             if (error.code === '23505') {
-                console.log('✅ Usuário já estava bloqueado no banco');
-                return true;
+                return true; // Já existe
             }
-            console.error('❌ Erro ao inserir bloqueio:', error);
-            return false;
+            throw error;
         }
         
-        console.log('✅ BLOQUEIO SALVO NO BANCO COM SUCESSO!');
         return true;
         
     } catch (error) {
-        console.error('❌ Erro crítico ao salvar bloqueio:', error);
+        console.error('❌ Erro ao salvar bloqueio:', error);
         return false;
     }
 }
 
-// Toast rápido
 function showQuickToast(message) {
     document.querySelectorAll('.quick-toast').forEach(toast => toast.remove());
     
@@ -2361,79 +2357,34 @@ function showQuickToast(message) {
     toast.className = 'quick-toast';
     toast.textContent = message;
     toast.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: #38a169;
-        color: white;
-        padding: 12px 20px;
-        border-radius: 25px;
-        font-size: 14px;
-        font-weight: 600;
-        z-index: 10000;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        text-align: center;
-        min-width: 200px;
-        max-width: 90%;
+        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+        background: #38a169; color: white; padding: 12px 20px; border-radius: 25px;
+        font-size: 14px; font-weight: 600; z-index: 10000; opacity: 0;
+        transition: opacity 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        text-align: center; min-width: 200px; max-width: 90%;
     `;
     
     document.body.appendChild(toast);
-    
     setTimeout(() => toast.style.opacity = '1', 100);
-    
     setTimeout(() => {
         toast.style.opacity = '0';
-        setTimeout(() => {
-            if (toast.parentNode) {
-                toast.remove();
-            }
-        }, 300);
+        setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
 
-// Remoção imediata da UI
 function removeUserCardImmediately(userId) {
-    console.log('🗑️ Removendo card imediatamente:', userId);
+    console.log('🗑️ Removendo card:', userId);
     
-    let removed = false;
-    
-    // Método 1: Busca por data-user-id
-    const cardsWithData = document.querySelectorAll(`[data-user-id="${userId}"]`);
-    cardsWithData.forEach(card => {
+    const cards = document.querySelectorAll(`[data-user-id="${userId}"]`);
+    cards.forEach(card => {
         animateCardRemoval(card);
-        removed = true;
     });
-    
-    // Método 2: Busca por onclick (fallback)
-    if (!removed) {
-        document.querySelectorAll('.user-card').forEach(card => {
-            const buttons = card.querySelectorAll('[onclick*="openBlockModal"]');
-            buttons.forEach(button => {
-                if (button.getAttribute('onclick').includes(userId)) {
-                    animateCardRemoval(card);
-                    removed = true;
-                }
-            });
-        });
-    }
-    
-    if (!removed) {
-        console.log('⚠️ Card não encontrado para remoção:', userId);
-    }
 }
 
-// Animação de remoção
 function animateCardRemoval(card) {
-    if (card.classList.contains('removing')) return;
-    
-    card.classList.add('removing');
     card.style.transition = 'all 0.3s ease';
     card.style.opacity = '0.5';
     card.style.transform = 'scale(0.95)';
-    card.style.pointerEvents = 'none';
     
     setTimeout(() => {
         card.style.opacity = '0';
@@ -2441,207 +2392,85 @@ function animateCardRemoval(card) {
         card.style.margin = '0';
         card.style.padding = '0';
         card.style.overflow = 'hidden';
-        card.style.border = 'none';
         
         setTimeout(() => {
             if (card.parentNode) {
                 card.remove();
-                console.log('✅ Card removido da UI');
             }
         }, 300);
     }, 150);
 }
-// ==================== SISTEMA DE REPORTE ====================
+// ==================== SISTEMA DE USUÁRIOS CORRIGIDO ====================
 
-// Menu de ações
-function toggleMenu(button) {
-    const menu = button.nextElementSibling;
-    const isShowing = menu.classList.contains('show');
-    
-    // Fechar todos os menus abertos
-    document.querySelectorAll('.menu-options').forEach(m => {
-        m.classList.remove('show');
-    });
-    
-    // Abrir/fechar o menu clicado
-    if (!isShowing) {
-        menu.classList.add('show');
-        
-        // Fechar menu ao clicar fora
-        const closeMenuHandler = function(event) {
-            if (!event.target.closest('.user-card-menu')) {
-                menu.classList.remove('show');
-                document.removeEventListener('click', closeMenuHandler);
-            }
-        };
-        
-        setTimeout(() => {
-            document.addEventListener('click', closeMenuHandler);
-        }, 10);
-    }
-}
-
-// Abrir modal de reporte
-function openReportModal(userId, userName) {
-    console.log('📝 Abrindo modal de reporte para:', userId, userName);
-    
-    currentReportUserId = userId;
-    currentReportUserName = userName;
-    
-    document.getElementById('reportUserName').textContent = userName;
-    
-    // Resetar formulário
-    document.querySelectorAll('input[name="reportReason"]').forEach(radio => {
-        radio.checked = false;
-        radio.parentElement.classList.remove('selected');
-    });
-    document.getElementById('reportDescription').value = '';
-    document.getElementById('submitReportBtn').disabled = true;
-    
-    document.getElementById('reportModal').classList.add('show');
-}
-
-// Fechar modal de reporte
-function closeReportModal() {
-    document.getElementById('reportModal').classList.remove('show');
-    currentReportUserId = null;
-    currentReportUserName = null;
-}
-
-// Selecionar categoria de reporte
-function selectReportCategory(radio) {
-    document.querySelectorAll('.report-category').forEach(category => {
-        category.classList.remove('selected');
-    });
-    
-    radio.parentElement.classList.add('selected');
-    document.getElementById('submitReportBtn').disabled = false;
-}
-
-// Enviar reporte
-async function submitReport() {
-    try {
-        const reason = document.querySelector('input[name="reportReason"]:checked')?.value;
-        const description = document.getElementById('reportDescription').value;
-        
-        if (!reason) {
-            showQuickToast('⚠️ Selecione um motivo para o reporte.');
-            return;
-        }
-        
-        console.log('🔄 Enviando reporte:', {
-            userId: currentReportUserId,
-            userName: currentReportUserName,
-            reason: reason,
-            description: description
-        });
-        
-        const { data, error } = await supabase
-            .from('user_reports')
-            .insert({
-                reporter_id: currentUser.id,
-                reported_user_id: currentReportUserId,
-                reason: reason,
-                category: reason,
-                evidence: description || null,
-                status: 'pending'
-            });
-            
-        if (error) throw error;
-        
-        console.log('✅ Reporte enviado com sucesso!');
-        showQuickToast('✅ Reporte enviado com sucesso!');
-        closeReportModal();
-        
-    } catch (error) {
-        console.error('❌ Erro ao enviar reporte:', error);
-        showQuickToast('❌ Erro ao enviar reporte. Tente novamente.');
-    }
-}
-
-// Abrir modal de bloqueio
-function openBlockModal(userId, userName) {
-    console.log('🚫 Abrindo modal de bloqueio para:', userId, userName);
-    
-    currentBlockUserId = userId;
-    currentBlockUserName = userName;
-    
-    document.getElementById('blockUserName').textContent = userName;
-    document.getElementById('blockModal').classList.add('show');
-}
-
-// Fechar modal de bloqueio
-function closeBlockModal() {
-    document.getElementById('blockModal').classList.remove('show');
-    currentBlockUserId = null;
-    currentBlockUserName = null;
-}
-
-// Funções auxiliares dos modais
-function closeConfirmModal() {
-    document.getElementById('confirmModal').classList.remove('show');
-}
-
-function openSupportModal() {
-    alert('📞 Entre em contato com nosso suporte: suporte@amorconect.com');
-}
-
-// ==================== SISTEMA DE USUÁRIOS E PERFIS ====================
-
-// Carregar dados do usuário atual
+// ✅ CORREÇÃO: Carregar dados do usuário
 async function loadUserData() {
     try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        const { data: profile } = await supabase
+        const { data: profile, error } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', currentUser.id)
             .single();
 
+        if (error) throw error;
+
         userProfile = profile;
 
         let displayName = 'Usuário';
         
-        if (user.user_metadata?.nickname) {
-            displayName = user.user_metadata.nickname;
-        } else if (user.user_metadata?.full_name) {
-            displayName = user.user_metadata.full_name;
-        } else if (user.email) {
-            displayName = user.email.split('@')[0];
+        if (currentUser.user_metadata?.nickname) {
+            displayName = currentUser.user_metadata.nickname;
+        } else if (currentUser.user_metadata?.full_name) {
+            displayName = currentUser.user_metadata.full_name;
+        } else if (currentUser.email) {
+            displayName = currentUser.email.split('@')[0];
         }
 
+        // Atualizar elementos da UI
+        const nicknameElements = [
+            document.getElementById('userNickname'),
+            document.getElementById('mobileUserNickname'), 
+            document.getElementById('welcomeNickname')
+        ];
+        
+        nicknameElements.forEach(element => {
+            if (element) element.textContent = displayName;
+        });
+
+        // Atualizar avatar
         await updateUserAvatar(displayName, profile);
 
-        document.getElementById('userNickname').textContent = displayName;
-        document.getElementById('mobileUserNickname').textContent = displayName;
-        document.getElementById('welcomeNickname').textContent = displayName;
-
-        // Mostrar Free ou Premium no header
+        // Mostrar Free ou Premium
         const isPremium = profile?.is_premium || false;
-        const freeBadge = document.getElementById('freeBadge');
-        const premiumBtn = document.getElementById('premiumBtn');
-        const mobileFreeBadge = document.getElementById('mobileFreeBadge');
-        const mobilePremiumBtn = document.getElementById('mobilePremiumBtn');
-        
-        if (isPremium) {
-            if (premiumBtn) premiumBtn.style.display = 'inline-block';
-            if (freeBadge) freeBadge.style.display = 'none';
-            if (mobilePremiumBtn) mobilePremiumBtn.style.display = 'flex';
-            if (mobileFreeBadge) mobileFreeBadge.style.display = 'none';
-        } else {
-            if (freeBadge) freeBadge.style.display = 'inline-block';
-            if (premiumBtn) premiumBtn.style.display = 'none';
-            if (mobileFreeBadge) mobileFreeBadge.style.display = 'flex';
-            if (mobilePremiumBtn) mobilePremiumBtn.style.display = 'none';
-        }
+        updatePremiumBadges(isPremium);
         
     } catch (error) {
         console.error('Erro ao carregar dados do usuário:', error);
     }
 }
 
-// Atualizar avatar do usuário
+// Atualizar badges premium/free
+function updatePremiumBadges(isPremium) {
+    const elements = {
+        freeBadge: document.getElementById('freeBadge'),
+        premiumBtn: document.getElementById('premiumBtn'),
+        mobileFreeBadge: document.getElementById('mobileFreeBadge'),
+        mobilePremiumBtn: document.getElementById('mobilePremiumBtn')
+    };
+    
+    if (isPremium) {
+        if (elements.premiumBtn) elements.premiumBtn.style.display = 'inline-block';
+        if (elements.freeBadge) elements.freeBadge.style.display = 'none';
+        if (elements.mobilePremiumBtn) elements.mobilePremiumBtn.style.display = 'flex';
+        if (elements.mobileFreeBadge) elements.mobileFreeBadge.style.display = 'none';
+    } else {
+        if (elements.freeBadge) elements.freeBadge.style.display = 'inline-block';
+        if (elements.premiumBtn) elements.premiumBtn.style.display = 'none';
+        if (elements.mobileFreeBadge) elements.mobileFreeBadge.style.display = 'flex';
+        if (elements.mobilePremiumBtn) elements.mobilePremiumBtn.style.display = 'none';
+    }
+}
+
+// Atualizar avatar
 async function updateUserAvatar(displayName, profile) {
     const avatarElements = [
         document.getElementById('userAvatar'),
@@ -2651,48 +2480,42 @@ async function updateUserAvatar(displayName, profile) {
     for (const avatarElement of avatarElements) {
         if (!avatarElement) continue;
         
-        const userAvatarFallback = avatarElement.querySelector('.user-avatar-fallback');
-        const userAvatarImg = avatarElement.querySelector('.user-avatar-img');
+        const fallback = avatarElement.querySelector('.user-avatar-fallback');
+        const img = avatarElement.querySelector('.user-avatar-img');
         
-        if (!userAvatarFallback || !userAvatarImg) continue;
+        if (!fallback || !img) continue;
 
-        userAvatarImg.style.display = 'none';
-        userAvatarFallback.style.display = 'flex';
+        img.style.display = 'none';
+        fallback.style.display = 'flex';
         
         if (profile?.avatar_url) {
             const photoUrl = await loadUserPhoto(profile.avatar_url);
             if (photoUrl) {
-                userAvatarImg.src = photoUrl;
-                userAvatarImg.style.display = 'block';
-                userAvatarFallback.style.display = 'none';
+                img.src = photoUrl;
+                img.style.display = 'block';
+                fallback.style.display = 'none';
             }
         }
         
-        userAvatarFallback.textContent = displayName.charAt(0).toUpperCase();
+        fallback.textContent = displayName.charAt(0).toUpperCase();
     }
 }
 
-// Carregar foto do usuário
+// Carregar foto
 async function loadUserPhoto(avatarUrl) {
     try {
         if (!avatarUrl) return null;
-
-        const { data } = supabase.storage
-            .from('avatars')
-            .getPublicUrl(avatarUrl);
-
+        const { data } = supabase.storage.from('avatars').getPublicUrl(avatarUrl);
         return data?.publicUrl || null;
-
     } catch (error) {
-        console.error('Erro ao carregar foto:', error);
         return null;
     }
 }
 
-// ✅ CORREÇÃO: Carregar usuários reais do banco - FUNCIONANDO
+// ✅ CORREÇÃO CRÍTICA: Carregar usuários SEM bloqueio
 async function loadRealUsers() {
     try {
-        console.log('🔄 Carregando usuários reais...');
+        console.log('👥 Carregando usuários...');
         
         const limit = window.innerWidth <= 768 ? 4 : 8;
         
@@ -2719,18 +2542,16 @@ async function loadRealUsers() {
             .limit(limit)
             .order('created_at', { ascending: false });
 
-        const usersGrid = document.getElementById('usersGrid');
-        
         if (error) {
             console.error('Erro ao carregar usuários:', error);
-            showEmptyState('Erro ao carregar usuários. Tente novamente.');
+            showEmptyState('Erro ao carregar usuários.');
             return;
         }
 
-        console.log(`✅ ${users?.length || 0} usuários carregados do banco`);
+        console.log(`✅ ${users?.length || 0} usuários encontrados`);
 
         if (!users || users.length === 0) {
-            showEmptyState('Ainda não há outros usuários cadastrados. Seja o primeiro!');
+            showEmptyState('Ainda não há outros usuários cadastrados.');
             return;
         }
         
@@ -2738,14 +2559,13 @@ async function loadRealUsers() {
 
     } catch (error) {
         console.error('Erro ao carregar usuários:', error);
-        showEmptyState('Erro ao carregar usuários. Tente novamente.');
+        showEmptyState('Erro ao carregar usuários.');
     }
 }
 
 // Exibir usuários com fotos
 async function displayUsersWithPhotos(users) {
     const usersGrid = document.getElementById('usersGrid');
-    
     if (!usersGrid) {
         console.error('❌ usersGrid não encontrado');
         return;
@@ -2754,29 +2574,25 @@ async function displayUsersWithPhotos(users) {
     const userCards = [];
     
     for (const user of users) {
-        // ✅ CORREÇÃO: Verifica se usuário não está bloqueado ANTES de criar card
+        // ✅ CORREÇÃO: Verificar bloqueio APENAS na exibição
         if (!isUserBlocked(user.id)) {
             const card = await createUserCardWithPhoto(user);
-            if (card) {
-                userCards.push(card);
-            }
+            if (card) userCards.push(card);
         }
     }
     
-    console.log(`🎯 Criando ${userCards.length} cards de usuários`);
+    console.log(`🎯 Exibindo ${userCards.length} cards`);
     usersGrid.innerHTML = userCards.join('');
     
     if (userCards.length === 0) {
-        showEmptyState('Todos os usuários disponíveis foram bloqueados ou não há usuários para mostrar.');
+        showEmptyState('Todos os usuários disponíveis foram bloqueados.');
     }
 }
 
-// Criar card de usuário com foto
+// Criar card de usuário
 async function createUserCardWithPhoto(user) {
     try {
-        if (!user || !user.nickname) {
-            return '';
-        }
+        if (!user || !user.nickname) return '';
 
         const nickname = user.nickname || user.full_name?.split(' ')[0] || 'Usuário';
         const age = user.birth_date ? calculateAge(user.birth_date) : null;
@@ -2789,20 +2605,19 @@ async function createUserCardWithPhoto(user) {
             '<div class="offline-badge" title="Offline"></div>';
         
         let avatarHtml = '';
-        let photoUrl = null;
-        
         if (user.avatar_url) {
-            photoUrl = await loadUserPhoto(user.avatar_url);
+            const photoUrl = await loadUserPhoto(user.avatar_url);
+            if (photoUrl) {
+                avatarHtml = `
+                    <div class="user-card-avatar" style="background-image: url('${photoUrl}')">
+                        ${onlineBadge}
+                        <div class="user-card-avatar-fallback" style="display: none;">${nickname.charAt(0).toUpperCase()}</div>
+                    </div>
+                `;
+            }
         }
         
-        if (photoUrl) {
-            avatarHtml = `
-                <div class="user-card-avatar" style="background-image: url('${photoUrl}'); background-size: cover; background-position: center;">
-                    ${onlineBadge}
-                    <div class="user-card-avatar-fallback" style="display: none;">${nickname.charAt(0).toUpperCase()}</div>
-                </div>
-            `;
-        } else {
+        if (!avatarHtml) {
             avatarHtml = `
                 <div class="user-card-avatar">
                     ${onlineBadge}
@@ -2813,7 +2628,6 @@ async function createUserCardWithPhoto(user) {
 
         const zodiac = details.zodiac ? getZodiacIcon(details.zodiac) + ' ' + formatZodiac(details.zodiac) : null;
         const profession = details.profession || null;
-        const interests = details.interests ? details.interests.slice(0, 2).join(', ') : null;
         const lookingFor = details.looking_for ? formatLookingFor(details.looking_for) : null;
         const bio = details.description || 'Este usuário ainda não adicionou uma descrição.';
 
@@ -2837,7 +2651,6 @@ async function createUserCardWithPhoto(user) {
                     <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewProfile('${user.id}')">
                         👀 Ver Perfil
                     </button>
-                    <!-- Menu de ações -->
                     <div class="user-card-menu">
                         <button class="btn-more" onclick="event.stopPropagation(); toggleMenu(this)" title="Mais opções">
                             ⋯
@@ -2855,20 +2668,203 @@ async function createUserCardWithPhoto(user) {
             </div>
         `;
     } catch (error) {
-        console.error('Erro ao criar card do usuário:', error);
+        console.error('Erro ao criar card:', error);
         return '';
     }
 }
+
+// ==================== SISTEMA DE REPORTE ====================
+
+function toggleMenu(button) {
+    const menu = button.nextElementSibling;
+    const isShowing = menu.classList.contains('show');
+    
+    document.querySelectorAll('.menu-options').forEach(m => m.classList.remove('show'));
+    
+    if (!isShowing) {
+        menu.classList.add('show');
+        
+        const closeMenuHandler = function(event) {
+            if (!event.target.closest('.user-card-menu')) {
+                menu.classList.remove('show');
+                document.removeEventListener('click', closeMenuHandler);
+            }
+        };
+        
+        setTimeout(() => document.addEventListener('click', closeMenuHandler), 10);
+    }
+}
+
+function openReportModal(userId, userName) {
+    currentReportUserId = userId;
+    currentReportUserName = userName;
+    
+    document.getElementById('reportUserName').textContent = userName;
+    document.querySelectorAll('input[name="reportReason"]').forEach(radio => {
+        radio.checked = false;
+        radio.parentElement.classList.remove('selected');
+    });
+    document.getElementById('reportDescription').value = '';
+    document.getElementById('submitReportBtn').disabled = true;
+    
+    document.getElementById('reportModal').classList.add('show');
+}
+
+function closeReportModal() {
+    document.getElementById('reportModal').classList.remove('show');
+    currentReportUserId = null;
+    currentReportUserName = null;
+}
+
+function selectReportCategory(radio) {
+    document.querySelectorAll('.report-category').forEach(category => {
+        category.classList.remove('selected');
+    });
+    
+    radio.parentElement.classList.add('selected');
+    document.getElementById('submitReportBtn').disabled = false;
+}
+
+async function submitReport() {
+    try {
+        const reason = document.querySelector('input[name="reportReason"]:checked')?.value;
+        const description = document.getElementById('reportDescription').value;
+        
+        if (!reason) {
+            showQuickToast('⚠️ Selecione um motivo.');
+            return;
+        }
+        
+        const { error } = await supabase
+            .from('user_reports')
+            .insert({
+                reporter_id: currentUser.id,
+                reported_user_id: currentReportUserId,
+                reason: reason,
+                category: reason,
+                evidence: description || null,
+                status: 'pending'
+            });
+            
+        if (error) throw error;
+        
+        showQuickToast('✅ Reporte enviado!');
+        closeReportModal();
+        
+    } catch (error) {
+        console.error('Erro ao enviar reporte:', error);
+        showQuickToast('❌ Erro ao enviar reporte.');
+    }
+}
+
+function openBlockModal(userId, userName) {
+    currentBlockUserId = userId;
+    currentBlockUserName = userName;
+    
+    document.getElementById('blockUserName').textContent = userName;
+    document.getElementById('blockModal').classList.add('show');
+}
+
+function closeBlockModal() {
+    document.getElementById('blockModal').classList.remove('show');
+    currentBlockUserId = null;
+    currentBlockUserName = null;
+}
+
+function closeConfirmModal() {
+    document.getElementById('confirmModal').classList.remove('show');
+}
+
+function openSupportModal() {
+    alert('📞 Entre em contato com nosso suporte: suporte@amorconect.com');
+}
+// ==================== FUNÇÕES DE INTERAÇÃO ====================
+
+async function sendMessage(userId, event) {
+    if (event) event.stopPropagation();
+    
+    console.log('💌 Enviando mensagem para:', userId);
+
+    // Verificação de bloqueio
+    if (isUserBlocked(userId)) {
+        showQuickToast('🚫 Você bloqueou este usuário.');
+        return;
+    }
+    
+    // Verificar se o usuário te bloqueou
+    const isBlockedByUser = await checkIfBlockedByUser(userId);
+    if (isBlockedByUser) {
+        showQuickToast('🚫 Este usuário te bloqueou.');
+        removeUserCardImmediately(userId);
+        return;
+    }
+    
+    if (!isProfileComplete()) {
+        showQuickToast('Complete seu perfil primeiro!');
+        window.location.href = 'painel.html';
+        return;
+    }
+    
+    localStorage.setItem('openChatWithUserId', userId);
+    window.location.href = 'mensagens.html';
+}
+
+async function viewProfile(userId, event) {
+    if (event) event.stopPropagation();
+
+    // Verificação de bloqueio
+    if (isUserBlocked(userId)) {
+        showQuickToast('🚫 Você bloqueou este usuário.');
+        return;
+    }
+    
+    // Verificar se o usuário te bloqueou
+    const isBlockedByUser = await checkIfBlockedByUser(userId);
+    if (isBlockedByUser) {
+        showQuickToast('🚫 Este usuário te bloqueou.');
+        removeUserCardImmediately(userId);
+        return;
+    }
+    
+    if (!isProfileComplete()) {
+        showQuickToast('Complete seu perfil primeiro!');
+        window.location.href = 'painel.html';
+        return;
+    }
+    
+    localStorage.setItem('viewingProfileId', userId);
+    window.location.href = 'perfil.html';
+}
+
+async function checkIfBlockedByUser(userId) {
+    try {
+        if (!currentUser) return false;
+        
+        const { data: blocks, error } = await supabase
+            .from('user_blocks')
+            .select('blocker_id')
+            .eq('blocker_id', userId)
+            .eq('blocked_user_id', currentUser.id)
+            .single();
+
+        if (error) {
+            if (error.code === 'PGRST116') return false;
+            throw error;
+        }
+        return !!blocks;
+    } catch (error) {
+        return false;
+    }
+}
+
 // ==================== SISTEMA DE VISITANTES ====================
 
-// Carregar sistema de visitantes
 async function loadVisitorsSystem() {
     try {
         const isPremium = await checkPremiumStatus();
         
         if (isPremium) {
             await loadPremiumVisitors();
-            await checkInvisibleStatusHome();
         } else {
             await loadFreeVisitorsStats();
         }
@@ -2878,31 +2874,22 @@ async function loadVisitorsSystem() {
     }
 }
 
-// Verificar status premium
 async function checkPremiumStatus() {
     try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return false;
-        
         const { data: profile } = await supabase
             .from('profiles')
             .select('is_premium')
-            .eq('id', user.id)
+            .eq('id', currentUser.id)
             .single();
             
         return profile?.is_premium || false;
     } catch (error) {
-        console.error('Erro ao verificar premium:', error);
         return false;
     }
 }
 
-// Carregar visitantes premium
 async function loadPremiumVisitors() {
     try {
-        console.log('🔄 Carregando visitantes premium...');
-        
-        // Mostrar seção premium
         document.getElementById('premiumVisitors').style.display = 'block';
         document.getElementById('freeVisitors').style.display = 'none';
         
@@ -2917,20 +2904,15 @@ async function loadPremiumVisitors() {
             .limit(8);
 
         if (error) {
-            console.error('❌ Erro ao carregar visitas:', error);
             visitorsGrid.innerHTML = `
                 <div class="visitors-empty">
                     <div class="icon">👀</div>
                     <h3>Nenhuma visita recente</h3>
-                    <p>Seu perfil ainda não foi visitado</p>
                 </div>
             `;
             return;
         }
 
-        console.log(`✅ ${visits?.length || 0} visitas encontradas`);
-
-        // Atualizar contador
         const visitCount = visits?.length || 0;
         if (visitorsCount) {
             visitorsCount.textContent = `${visitCount} visita${visitCount !== 1 ? 's' : ''}`;
@@ -2941,46 +2923,30 @@ async function loadPremiumVisitors() {
                 <div class="visitors-empty">
                     <div class="icon">👀</div>
                     <h3>Nenhuma visita ainda</h3>
-                    <p>Seu perfil ainda não foi visitado por outros usuários</p>
                 </div>
             `;
             return;
         }
         
-        // Criar cards dos visitantes
         let visitorsHTML = '';
-        
         for (const visit of visits) {
             try {
                 const cardHTML = await createVisitorCardForHome(visit);
-                if (cardHTML) {
-                    visitorsHTML += cardHTML;
-                }
+                if (cardHTML) visitorsHTML += cardHTML;
             } catch (error) {
                 console.error('Erro ao criar card:', error);
             }
         }
         
         visitorsGrid.innerHTML = visitorsHTML;
-        console.log(`✅ ${visits.length} visitantes carregados`);
 
     } catch (error) {
-        console.error('❌ Erro geral ao carregar visitantes:', error);
-        const visitorsGrid = document.getElementById('visitorsGrid');
-        visitorsGrid.innerHTML = `
-            <div class="visitors-empty">
-                <div class="icon">👀</div>
-                <h3>Nenhuma visita recente</h3>
-                <p>Seu perfil ainda não foi visitado</p>
-            </div>
-        `;
+        console.error('Erro ao carregar visitantes:', error);
     }
 }
 
-// Criar card para visitante
 async function createVisitorCardForHome(visit) {
     try {
-        // Busca perfil do visitante
         const { data: profile, error } = await supabase
             .from('profiles')
             .select('id, nickname, full_name, avatar_url, city, last_online_at, is_invisible')
@@ -2991,47 +2957,28 @@ async function createVisitorCardForHome(visit) {
             return createBasicCardForHome(visit);
         }
 
-        const nickname = profile.nickname || 
-                        profile.full_name?.split(' ')[0] || 
-                        'Usuário';
-        
+        const nickname = profile.nickname || profile.full_name?.split(' ')[0] || 'Usuário';
         const city = profile.city || 'Cidade não informada';
         const timeAgo = getTimeAgo(visit.visited_at);
         const initial = nickname.charAt(0).toUpperCase();
-        
-        // Status online
         const isOnline = isUserOnline(profile, currentUser.id);
-        const onlineBadge = isOnline ? 
-            '<div class="online-badge" title="Online"></div>' : 
-            '<div class="offline-badge" title="Offline"></div>';
+        const onlineBadge = isOnline ? '<div class="online-badge" title="Online"></div>' : '<div class="offline-badge" title="Offline"></div>';
 
-        // Carregar foto
         let avatarContent = '';
         if (profile.avatar_url) {
             const photoUrl = await loadUserPhoto(profile.avatar_url);
             if (photoUrl) {
-                avatarContent = `
-                    <img class="visitor-avatar-img" src="${photoUrl}" alt="${nickname}">
-                    ${onlineBadge}
-                `;
+                avatarContent = `<img class="visitor-avatar-img" src="${photoUrl}" alt="${nickname}">${onlineBadge}`;
             } else {
-                avatarContent = `
-                    <div class="visitor-avatar-fallback">${initial}</div>
-                    ${onlineBadge}
-                `;
+                avatarContent = `<div class="visitor-avatar-fallback">${initial}</div>${onlineBadge}`;
             }
         } else {
-            avatarContent = `
-                <div class="visitor-avatar-fallback">${initial}</div>
-                ${onlineBadge}
-            `;
+            avatarContent = `<div class="visitor-avatar-fallback">${initial}</div>${onlineBadge}`;
         }
 
         return `
             <div class="visitor-card" onclick="viewProfile('${visit.visitor_id}')">
-                <div class="visitor-avatar">
-                    ${avatarContent}
-                </div>
+                <div class="visitor-avatar">${avatarContent}</div>
                 <div class="visitor-name">${nickname}</div>
                 <div class="visitor-location">${city}</div>
                 <div class="visitor-time">${timeAgo}</div>
@@ -3039,12 +2986,10 @@ async function createVisitorCardForHome(visit) {
         `;
 
     } catch (error) {
-        console.error('Erro ao criar card:', error);
         return createBasicCardForHome(visit);
     }
 }
 
-// Card básico para visitante
 function createBasicCardForHome(visit) {
     return `
         <div class="visitor-card" onclick="viewProfile('${visit.visitor_id}')">
@@ -3059,337 +3004,6 @@ function createBasicCardForHome(visit) {
     `;
 }
 
-// ==================== FUNÇÕES DE INTERAÇÃO ====================
-
-// Enviar mensagem
-async function sendMessage(userId, event) {
-    if (event) event.stopPropagation();
-    
-    console.log('💌 Iniciando conversa com usuário:', userId);
-
-    // Verificação de bloqueio
-    if (isUserBlocked(userId)) {
-        showQuickToast('🚫 Você bloqueou este usuário e não pode enviar mensagens.');
-        return;
-    }
-    
-    // Verificar se o usuário te bloqueou
-    const isBlockedByUser = await checkIfBlockedByUser(userId);
-    if (isBlockedByUser) {
-        showQuickToast('🚫 Este usuário te bloqueou. Você não pode enviar mensagens.');
-        removeUserCardImmediately(userId);
-        return;
-    }
-    
-    if (!isProfileComplete()) {
-        showQuickToast('Complete seu perfil primeiro para enviar mensagens!');
-        window.location.href = 'painel.html';
-        return;
-    }
-    
-    // Redirecionar para mensagens
-    localStorage.setItem('openChatWithUserId', userId);
-    window.location.href = 'mensagens.html';
-}
-
-// Visualizar perfil
-async function viewProfile(userId, event) {
-    if (event) event.stopPropagation();
-
-    // Verificação de bloqueio
-    if (isUserBlocked(userId)) {
-        showQuickToast('🚫 Você bloqueou este usuário e não pode visualizar o perfil.');
-        return;
-    }
-    
-    // Verificar se o usuário te bloqueou
-    const isBlockedByUser = await checkIfBlockedByUser(userId);
-    if (isBlockedByUser) {
-        showQuickToast('🚫 Este usuário te bloqueou. Você não pode visualizar o perfil.');
-        removeUserCardImmediately(userId);
-        return;
-    }
-    
-    if (!isProfileComplete()) {
-        showQuickToast('Complete seu perfil primeiro para ver outros perfis!');
-        window.location.href = 'painel.html';
-        return;
-    }
-    
-    localStorage.setItem('viewingProfileId', userId);
-    window.location.href = 'perfil.html';
-}
-
-// Verificar se o usuário te bloqueou
-async function checkIfBlockedByUser(userId) {
-    try {
-        if (!currentUser) return false;
-        
-        const { data: blocks, error } = await supabase
-            .from('user_blocks')
-            .select('blocker_id')
-            .eq('blocker_id', userId)
-            .eq('blocked_user_id', currentUser.id)
-            .single();
-
-        if (error) {
-            if (error.code === 'PGRST116') {
-                return false; // Não encontrado = não está bloqueado
-            }
-            throw error;
-        }
-
-        return !!blocks;
-        
-    } catch (error) {
-        console.error('❌ Erro ao verificar bloqueio:', error);
-        return false;
-    }
-}
-
-// ==================== FUNÇÕES AUXILIARES ====================
-
-// Calcular idade
-function calculateAge(birthDate) {
-    if (!birthDate) return null;
-    const today = new Date();
-    const birth = new Date(birthDate);
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-        age--;
-    }
-    return age;
-}
-
-// Formatar zodíaco
-function formatZodiac(zodiac) {
-    const zodiacMap = {
-        'aries': 'Áries', 'taurus': 'Touro', 'gemini': 'Gêmeos', 'cancer': 'Câncer',
-        'leo': 'Leão', 'virgo': 'Virgem', 'libra': 'Libra', 'scorpio': 'Escorpião',
-        'sagittarius': 'Sagitário', 'capricorn': 'Capricórnio', 'aquarius': 'Aquário', 'pisces': 'Peixes'
-    };
-    return zodiacMap[zodiac?.toLowerCase()] || zodiac;
-}
-
-// Ícone do zodíaco
-function getZodiacIcon(zodiac) {
-    const zodiacIcons = {
-        'aries': '♈', 'taurus': '♉', 'gemini': '♊', 'cancer': '♋',
-        'leo': '♌', 'virgo': '♍', 'libra': '♎', 'scorpio': '♏',
-        'sagittarius': '♐', 'capricorn': '♑', 'aquarius': '♒', 'pisces': '♓'
-    };
-    return zodiacIcons[zodiac?.toLowerCase()] || '✨';
-}
-
-// Formatar "procurando por"
-function formatLookingFor(lookingFor) {
-    if (Array.isArray(lookingFor)) {
-        return lookingFor.join(', ');
-    }
-    return lookingFor || 'Não informado';
-}
-
-// Verificar se perfil está completo
-function isProfileComplete() {
-    return userProfile &&
-           userProfile.full_name &&
-           userProfile.full_name.trim() !== '' &&
-           userProfile.birth_date;
-}
-
-// Tempo decorrido
-function getTimeAgo(dateString) {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now - date) / 1000);
-    
-    if (diffInSeconds < 60) {
-        return 'Agora mesmo';
-    } else if (diffInSeconds < 3600) {
-        const minutes = Math.floor(diffInSeconds / 60);
-        return `Há ${minutes} min`;
-    } else if (diffInSeconds < 86400) {
-        const hours = Math.floor(diffInSeconds / 3600);
-        return `Há ${hours} h`;
-    } else {
-        const days = Math.floor(diffInSeconds / 86400);
-        return `Há ${days} dia${days !== 1 ? 's' : ''}`;
-    }
-}
-
-// Verificar se usuário está online
-function isUserOnline(userProfile, currentUserId) {
-    if (!userProfile.last_online_at) return false;
-    
-    const lastOnline = new Date(userProfile.last_online_at);
-    const now = new Date();
-    const minutesDiff = (now - lastOnline) / (1000 * 60);
-    
-    const isActuallyOnline = minutesDiff <= 5;
-    
-    if (userProfile.id === currentUserId) return true;
-    
-    if (userProfile.is_invisible && userProfile.id !== currentUserId) {
-        return false;
-    }
-    
-    return isActuallyOnline;
-}
-
-// Mostrar estado vazio
-function showEmptyState(message) {
-    const usersGrid = document.getElementById('usersGrid');
-    if (usersGrid) {
-        usersGrid.innerHTML = `
-            <div class="empty-state">
-                <h3>${message}</h3>
-            </div>
-        `;
-    }
-}
-
-// Registrar visita ao perfil
-async function registerProfileVisit(visitedUserId) {
-    try {
-        if (!currentUser || currentUser.id === visitedUserId) return false;
-        
-        const { error } = await supabase
-            .from('profile_visits')
-            .insert({
-                visitor_id: currentUser.id,
-                visited_id: visitedUserId,
-                visited_at: new Date().toISOString()
-            });
-
-        if (error) {
-            if (error.code === '23505') {
-                return true;
-            }
-            throw error;
-        }
-        return true;
-    } catch (error) {
-        console.error('Erro ao registrar visita:', error);
-        return false;
-    }
-}
-
-// ==================== SISTEMA DE STATUS ONLINE ====================
-
-// Atualizar status online
-async function updateOnlineStatus() {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { error } = await supabase
-            .from('profiles')
-            .update({ 
-                last_online_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-            })
-            .eq('id', user.id);
-
-        if (error) {
-            console.error('Erro ao atualizar status online:', error);
-        }
-        
-    } catch (error) {
-        console.error('Erro no sistema de status online:', error);
-    }
-}
-
-// Iniciar atualização periódica do status
-function startOnlineStatusUpdater() {
-    updateOnlineStatus();
-    setInterval(updateOnlineStatus, 60000);
-    
-    document.addEventListener('visibilitychange', function() {
-        if (!document.hidden) {
-            updateOnlineStatus();
-        }
-    });
-    
-    ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => {
-        document.addEventListener(event, updateOnlineStatus, { passive: true });
-    });
-}
-
-// Verificar status do modo invisível
-async function checkInvisibleStatusHome() {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-        
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('is_invisible')
-            .eq('id', user.id)
-            .single();
-            
-        const statusElement = document.getElementById('invisibleStatusHome');
-        if (statusElement && profile) {
-            if (profile.is_invisible) {
-                statusElement.style.display = 'flex';
-                statusElement.querySelector('strong').textContent = 'Ativo';
-            } else {
-                statusElement.style.display = 'none';
-            }
-        }
-    } catch (error) {
-        console.error('Erro ao verificar modo invisível:', error);
-    }
-}
-
-// ==================== ESTATÍSTICAS ====================
-
-// Atualizar estatísticas
-async function updateStats() {
-    document.getElementById('totalUsers').textContent = '...';
-    document.getElementById('newMatches').textContent = '0';
-    document.getElementById('usersOnline').textContent = '...';
-    document.getElementById('profileViews').textContent = '...';
-
-    try {
-        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-        
-        const [totalResult, messagesResult, viewsResult, onlineResult] = await Promise.all([
-            supabase.from('profiles').select('*', { count: 'exact', head: true }),
-            supabase.from('messages').select('*', { count: 'exact', head: true })
-                .eq('receiver_id', currentUser.id)
-                .eq('is_read', false),
-            supabase.rpc('count_user_visits', {
-                p_user_id: currentUser.id,
-                p_days: 7
-            }),
-            supabase.from('profiles').select('*', { count: 'exact', head: true })
-                .gte('last_online_at', fiveMinutesAgo)
-                .eq('is_invisible', false)
-                .neq('id', currentUser.id)
-        ]);
-
-        document.getElementById('totalUsers').textContent = totalResult.count || 1;
-        document.getElementById('newMatches').textContent = messagesResult.count || 0;
-        document.getElementById('usersOnline').textContent = onlineResult.count || 0;
-        document.getElementById('profileViews').textContent = viewsResult.data || 0;
-
-    } catch (error) {
-        console.error('Erro ao atualizar estatísticas:', error);
-        document.getElementById('totalUsers').textContent = '1';
-        document.getElementById('newMatches').textContent = '0';
-        document.getElementById('usersOnline').textContent = '0';
-        document.getElementById('profileViews').textContent = '0';
-    }
-}
-
-// Iniciar atualização automática de estatísticas
-function startStatsAutoUpdate() {
-    setInterval(updateStats, 30000);
-}
-
-// Carregar estatísticas para free users
 async function loadFreeVisitorsStats() {
     try {
         document.getElementById('premiumVisitors').style.display = 'none';
@@ -3407,9 +3021,159 @@ async function loadFreeVisitorsStats() {
         document.getElementById('visitorsCount').textContent = `${count} visita${count !== 1 ? 's' : ''}`;
         
     } catch (error) {
-        console.error('Erro ao carregar estatísticas free:', error);
         document.getElementById('freeVisitorsCount').textContent = '0 pessoas';
         document.getElementById('visitorsCount').textContent = '0 visitas';
+    }
+}
+
+// ==================== FUNÇÕES AUXILIARES ====================
+
+function calculateAge(birthDate) {
+    if (!birthDate) return null;
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--;
+    }
+    return age;
+}
+
+function formatZodiac(zodiac) {
+    const zodiacMap = {
+        'aries': 'Áries', 'taurus': 'Touro', 'gemini': 'Gêmeos', 'cancer': 'Câncer',
+        'leo': 'Leão', 'virgo': 'Virgem', 'libra': 'Libra', 'scorpio': 'Escorpião',
+        'sagittarius': 'Sagitário', 'capricorn': 'Capricórnio', 'aquarius': 'Aquário', 'pisces': 'Peixes'
+    };
+    return zodiacMap[zodiac?.toLowerCase()] || zodiac;
+}
+
+function getZodiacIcon(zodiac) {
+    const zodiacIcons = {
+        'aries': '♈', 'taurus': '♉', 'gemini': '♊', 'cancer': '♋',
+        'leo': '♌', 'virgo': '♍', 'libra': '♎', 'scorpio': '♏',
+        'sagittarius': '♐', 'capricorn': '♑', 'aquarius': '♒', 'pisces': '♓'
+    };
+    return zodiacIcons[zodiac?.toLowerCase()] || '✨';
+}
+
+function formatLookingFor(lookingFor) {
+    if (Array.isArray(lookingFor)) {
+        return lookingFor.join(', ');
+    }
+    return lookingFor || 'Não informado';
+}
+
+function isProfileComplete() {
+    return userProfile && userProfile.full_name && userProfile.full_name.trim() !== '' && userProfile.birth_date;
+}
+
+function getTimeAgo(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    
+    if (diffInSeconds < 60) return 'Agora mesmo';
+    else if (diffInSeconds < 3600) return `Há ${Math.floor(diffInSeconds / 60)} min`;
+    else if (diffInSeconds < 86400) return `Há ${Math.floor(diffInSeconds / 3600)} h`;
+    else return `Há ${Math.floor(diffInSeconds / 86400)} dia${Math.floor(diffInSeconds / 86400) !== 1 ? 's' : ''}`;
+}
+
+function isUserOnline(userProfile, currentUserId) {
+    if (!userProfile.last_online_at) return false;
+    const lastOnline = new Date(userProfile.last_online_at);
+    const now = new Date();
+    const minutesDiff = (now - lastOnline) / (1000 * 60);
+    const isActuallyOnline = minutesDiff <= 5;
+    if (userProfile.id === currentUserId) return true;
+    if (userProfile.is_invisible && userProfile.id !== currentUserId) return false;
+    return isActuallyOnline;
+}
+
+function showEmptyState(message) {
+    const usersGrid = document.getElementById('usersGrid');
+    if (usersGrid) {
+        usersGrid.innerHTML = `<div class="empty-state"><h3>${message}</h3></div>`;
+    }
+}
+
+async function registerProfileVisit(visitedUserId) {
+    try {
+        if (!currentUser || currentUser.id === visitedUserId) return false;
+        const { error } = await supabase.from('profile_visits').insert({
+            visitor_id: currentUser.id,
+            visited_id: visitedUserId,
+            visited_at: new Date().toISOString()
+        });
+        return !error;
+    } catch (error) {
+        return false;
+    }
+}
+
+// ==================== SISTEMA DE STATUS ONLINE ====================
+
+async function updateOnlineStatus() {
+    try {
+        const { error } = await supabase
+            .from('profiles')
+            .update({ 
+                last_online_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', currentUser.id);
+    } catch (error) {
+        console.error('Erro ao atualizar status online:', error);
+    }
+}
+
+function startOnlineStatusUpdater() {
+    updateOnlineStatus();
+    setInterval(updateOnlineStatus, 60000);
+    
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) updateOnlineStatus();
+    });
+    
+    ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => {
+        document.addEventListener(event, updateOnlineStatus, { passive: true });
+    });
+}
+
+// ==================== ESTATÍSTICAS ====================
+
+async function updateStats() {
+    document.getElementById('totalUsers').textContent = '...';
+    document.getElementById('newMatches').textContent = '0';
+    document.getElementById('usersOnline').textContent = '...';
+    document.getElementById('profileViews').textContent = '...';
+
+    try {
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+        
+        const [totalResult, messagesResult, viewsResult, onlineResult] = await Promise.all([
+            supabase.from('profiles').select('*', { count: 'exact', head: true }),
+            supabase.from('messages').select('*', { count: 'exact', head: true })
+                .eq('receiver_id', currentUser.id)
+                .eq('is_read', false),
+            supabase.rpc('count_user_visits', { p_user_id: currentUser.id, p_days: 7 }),
+            supabase.from('profiles').select('*', { count: 'exact', head: true })
+                .gte('last_online_at', fiveMinutesAgo)
+                .eq('is_invisible', false)
+                .neq('id', currentUser.id)
+        ]);
+
+        document.getElementById('totalUsers').textContent = totalResult.count || 1;
+        document.getElementById('newMatches').textContent = messagesResult.count || 0;
+        document.getElementById('usersOnline').textContent = onlineResult.count || 0;
+        document.getElementById('profileViews').textContent = viewsResult.data || 0;
+
+    } catch (error) {
+        document.getElementById('totalUsers').textContent = '1';
+        document.getElementById('newMatches').textContent = '0';
+        document.getElementById('usersOnline').textContent = '0';
+        document.getElementById('profileViews').textContent = '0';
     }
 }
 
@@ -3476,7 +3240,7 @@ window.confirmBlock = confirmBlock;
 window.closeConfirmModal = closeConfirmModal;
 window.openSupportModal = openSupportModal;
 
-console.log('✅ SISTEMA COMPLETO CARREGADO! 🎉');
+console.log('✅ SISTEMA ESTÁVEL CARREGADO! 🎉');
 </script>
 </body>
 </html>
