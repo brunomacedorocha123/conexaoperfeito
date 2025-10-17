@@ -1482,74 +1482,258 @@ footer {
     font-size: 1.2rem;
 }
 
-/* Responsividade Visitantes */
-@media (max-width: 768px) {
-    .visitors-grid {
-        gap: 0.8rem;
-    }
-    
-    .visitor-card {
-        width: 110px;
-        padding: 0.8rem;
-    }
-    
-    .visitor-avatar {
-        width: 50px;
-        height: 50px;
-        font-size: 1rem;
-    }
-    
-    .visitors-actions {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 1rem;
-    }
-    
-    .visitors-header {
-        flex-direction: column;
-        gap: 1rem;
-        align-items: flex-start;
-    }
-    
-    .visitors-count {
-        align-self: flex-start;
-    }
+/* ==================== CORREÇÕES MOBILE - BLOQUEIO E MENU ==================== */
 
-    .invisible-status {
-        margin-left: 0;
-        align-self: flex-start;
-    }
+/* ✅ CORREÇÃO: Menu de opções com z-index alto para mobile */
+.user-card-menu {
+  position: relative;
+  z-index: 100 !important;
+}
+
+.menu-options {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--branco);
+  border: 1px solid var(--lilas);
+  border-radius: 10px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  padding: 0.5rem;
+  z-index: 1000 !important; /* ✅ AUMENTADO */
+  display: none;
+  min-width: 160px;
+  animation: fadeIn 0.2s ease;
+}
+
+/* ✅ CORREÇÃO: Garantir que cards não cortem o menu */
+.user-card {
+  position: relative;
+  z-index: 1;
+  overflow: visible !important; /* ✅ IMPORTANTE */
+}
+
+.user-card:hover {
+  z-index: 2;
+}
+
+/* ✅ CORREÇÃO: Menu sempre visível quando aberto */
+.menu-options.show {
+  display: block;
+  z-index: 1001 !important;
+}
+
+/* ✅ CORREÇÃO: Remoção visual imediata dos cards */
+.user-card.removing {
+  opacity: 0.5 !important;
+  transform: scale(0.95) !important;
+  pointer-events: none !important;
+  transition: all 0.3s ease !important;
+}
+
+/* ==================== MENU DE AÇÕES MOBILE ==================== */
+.menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  display: none;
+  backdrop-filter: blur(5px);
+}
+
+.menu-overlay.show {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.mobile-menu-options {
+  background: var(--branco);
+  width: 100%;
+  max-width: 500px;
+  border-radius: 20px 20px 0 0;
+  padding: 1.5rem;
+  animation: slideUp 0.3s ease;
+}
+
+.mobile-menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--bege);
+}
+
+.mobile-menu-header h4 {
+  color: var(--vermelho-rosado);
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.close-mobile-menu {
+  background: none;
+  border: none;
+  font-size: 1.8rem;
+  color: var(--text-light);
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+.mobile-menu-btn {
+  width: 100%;
+  padding: 1.2rem;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 1.1rem;
+  border-radius: 10px;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  transition: var(--transition);
+}
+
+.mobile-menu-btn.report-btn {
+  color: #e53e3e;
+  background: #fed7d7;
+}
+
+.mobile-menu-btn.block-btn {
+  color: #d1656d;
+  background: #fbd5d5;
+}
+
+.mobile-menu-btn.cancel-btn {
+  color: var(--text);
+  background: var(--bege);
+  justify-content: center;
+  margin-top: 1rem;
+  font-weight: 600;
+}
+
+.mobile-menu-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* ✅ CORREÇÃO ESPECÍFICA PARA MOBILE */
+@media (max-width: 768px) {
+  .user-card-menu {
+    z-index: 150 !important;
+  }
+  
+  .menu-options {
+    z-index: 1002 !important;
+    position: fixed !important; /* ✅ MUDA PARA FIXED NO MOBILE */
+    top: auto !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    min-width: auto !important;
+    border-radius: 15px 15px 0 0 !important;
+    animation: slideUp 0.3s ease !important;
+  }
+  
+  .menu-options button {
+    padding: 1rem !important;
+    font-size: 1rem !important;
+    justify-content: center !important;
+  }
+  
+  /* Responsividade Visitantes */
+  .visitors-grid {
+    gap: 0.8rem;
+  }
+  
+  .visitor-card {
+    width: 110px;
+    padding: 0.8rem;
+  }
+  
+  .visitor-avatar {
+    width: 50px;
+    height: 50px;
+    font-size: 1rem;
+  }
+  
+  .visitors-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .visitors-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .visitors-count {
+    align-self: flex-start;
+  }
+
+  .invisible-status {
+    margin-left: 0;
+    align-self: flex-start;
+  }
 }
 
 @media (max-width: 480px) {
-    .visitor-card {
-        width: 100px;
-    }
-    
-    .visitor-avatar {
-        width: 45px;
-        height: 45px;
-    }
-    
-    .visitor-name {
-        font-size: 0.75rem;
-    }
-    
-    .visitor-location {
-        font-size: 0.65rem;
-    }
-    
-    .visitor-time {
-        font-size: 0.65rem;
-    }
-    
-    .free-content {
-        padding: 1.5rem;
-    }
-    
-    .free-content .icon {
-        font-size: 2.5rem;
-    }
+  .visitor-card {
+    width: 100px;
+  }
+  
+  .visitor-avatar {
+    width: 45px;
+    height: 45px;
+  }
+  
+  .visitor-name {
+    font-size: 0.75rem;
+  }
+  
+  .visitor-location {
+    font-size: 0.65rem;
+  }
+  
+  .visitor-time {
+    font-size: 0.65rem;
+  }
+  
+  .free-content {
+    padding: 1.5rem;
+  }
+  
+  .free-content .icon {
+    font-size: 2.5rem;
+  }
+  
+  /* ✅ CORREÇÃO EXTRA PARA MOBILE PEQUENO */
+  .user-card-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .user-card-actions .btn {
+    width: 100%;
+    padding: 0.8rem;
+  }
 }
 
 /* ✅ CORREÇÃO DOS BOTÕES NÃO CLICÁVEIS */
@@ -2817,15 +3001,24 @@ async function loadUserPhoto(avatarUrl) {
     }
 }
 
-// Enviar mensagem
+// ✅ FUNÇÃO CORRIGIDA: Enviar mensagem com verificação de bloqueio bilateral
 async function sendMessage(userId, event) {
     if (event) event.stopPropagation();
     
     console.log('💌 Iniciando conversa com usuário:', userId);
 
-    // ✅ VERIFICAR SE USUÁRIO ESTÁ BLOQUEADO
+    // ✅ VERIFICAÇÃO COMPLETA DE BLOQUEIO (BILATERAL)
     if (isUserBlocked(userId)) {
         showAlert('🚫 Você bloqueou este usuário e não pode enviar mensagens.', 'error');
+        return;
+    }
+    
+    // ✅ VERIFICAR SE O USUÁRIO TE BLOQUEOU
+    const isBlockedByUser = await checkIfBlockedByUser(userId);
+    if (isBlockedByUser) {
+        showAlert('🚫 Este usuário te bloqueou. Você não pode enviar mensagens.', 'error');
+        // ✅ REMOVE O CARD DA UI SE FOI BLOQUEADO
+        removeUserCardImmediately(userId);
         return;
     }
     
@@ -2835,11 +3028,11 @@ async function sendMessage(userId, event) {
         return;
     }
     
-    // REDIRECIONAR IMEDIATAMENTE
+    // ✅ REDIRECIONAR IMEDIATAMENTE
     localStorage.setItem('openChatWithUserId', userId);
     window.location.href = 'mensagens.html';
     
-    // CRIAR MENSAGEM EM BACKGROUND (NÃO BLOQUEIA)
+    // ✅ CRIAR MENSAGEM EM BACKGROUND (NÃO BLOQUEIA)
     setTimeout(async () => {
         try {
             console.log('🔄 Criando conversa REAL em background:', userId);
@@ -2863,13 +3056,23 @@ async function sendMessage(userId, event) {
         }
     }, 100);
 }
-// Visualizar perfil
+
+// ✅ FUNÇÃO CORRIGIDA: Visualizar perfil com verificação de bloqueio bilateral
 async function viewProfile(userId, event) {
     if (event) event.stopPropagation();
 
-    // ✅ VERIFICAR SE USUÁRIO ESTÁ BLOQUEADO
+    // ✅ VERIFICAÇÃO COMPLETA DE BLOQUEIO (BILATERAL)
     if (isUserBlocked(userId)) {
         showAlert('🚫 Você bloqueou este usuário e não pode visualizar o perfil.', 'error');
+        return;
+    }
+    
+    // ✅ VERIFICAR SE O USUÁRIO TE BLOQUEOU
+    const isBlockedByUser = await checkIfBlockedByUser(userId);
+    if (isBlockedByUser) {
+        showAlert('🚫 Este usuário te bloqueou. Você não pode visualizar o perfil.', 'error');
+        // ✅ REMOVE O CARD DA UI SE FOI BLOQUEADO
+        removeUserCardImmediately(userId);
         return;
     }
     
@@ -2879,11 +3082,11 @@ async function viewProfile(userId, event) {
         return;
     }
     
-    // REDIRECIONAR IMEDIATAMENTE (SEM ESPERAR NADA)
+    // ✅ REDIRECIONAR IMEDIATAMENTE (SEM ESPERAR NADA)
     localStorage.setItem('viewingProfileId', userId);
     window.location.href = 'perfil.html';
     
-    // REGISTRAR VISITA EM BACKGROUND (NÃO BLOQUEIA REDIRECIONAMENTO)
+    // ✅ REGISTRAR VISITA EM BACKGROUND (NÃO BLOQUEIA REDIRECIONAMENTO)
     setTimeout(async () => {
         try {
             console.log('👀 Registrando visita em background para:', userId);
@@ -2895,7 +3098,104 @@ async function viewProfile(userId, event) {
     }, 100);
 }
 
-// Verificar se perfil está completo
+// ✅ NOVA FUNÇÃO: Verificar se o usuário te bloqueou
+async function checkIfBlockedByUser(userId) {
+    try {
+        if (!currentUser) return false;
+        
+        const { data: blocks, error } = await supabase
+            .from('user_blocks')
+            .select('blocker_id')
+            .eq('blocker_id', userId)
+            .eq('blocked_user_id', currentUser.id)
+            .single();
+
+        if (error) {
+            if (error.code === 'PGRST116') {
+                // Não encontrado = não está bloqueado
+                return false;
+            }
+            throw error;
+        }
+
+        // Se encontrou registro, significa que o usuário te bloqueou
+        return !!blocks;
+        
+    } catch (error) {
+        console.error('❌ Erro ao verificar bloqueio bilateral:', error);
+        return false;
+    }
+}
+
+// ✅ FUNÇÃO MELHORADA: Remoção imediata da UI
+function removeUserCardImmediately(userId) {
+    console.log('🗑️ Removendo card da UI:', userId);
+    
+    let removed = false;
+    
+    // Método 1: Busca por data-user-id
+    const cardsWithData = document.querySelectorAll(`[data-user-id="${userId}"]`);
+    cardsWithData.forEach(card => {
+        animateCardRemoval(card);
+        removed = true;
+    });
+    
+    // Método 2: Fallback - busca por conteúdo
+    if (!removed) {
+        document.querySelectorAll('.user-card').forEach(card => {
+            const buttons = card.querySelectorAll('[onclick*="openBlockModal"]');
+            buttons.forEach(button => {
+                if (button.getAttribute('onclick').includes(userId)) {
+                    animateCardRemoval(card);
+                    removed = true;
+                }
+            });
+        });
+    }
+    
+    // Método 3: Fallback - recarrega a lista
+    if (!removed) {
+        console.log('⚠️ Card não encontrado, recarregando lista...');
+        setTimeout(() => {
+            loadRealUsers();
+        }, 500);
+    }
+}
+
+// ✅ FUNÇÃO: Animação de remoção
+function animateCardRemoval(card) {
+    if (card.classList.contains('removing')) return;
+    
+    card.classList.add('removing');
+    card.style.transition = 'all 0.3s ease';
+    card.style.opacity = '0.5';
+    card.style.transform = 'scale(0.95)';
+    card.style.pointerEvents = 'none';
+    
+    setTimeout(() => {
+        card.style.opacity = '0';
+        card.style.height = '0';
+        card.style.margin = '0';
+        card.style.padding = '0';
+        card.style.overflow = 'hidden';
+        card.style.border = 'none';
+        
+        setTimeout(() => {
+            if (card.parentNode) {
+                card.remove();
+                console.log('✅ Card removido da UI');
+                
+                // Verifica se ficou vazio
+                const remainingCards = document.querySelectorAll('.user-card:not(.removing)').length;
+                if (remainingCards === 0) {
+                    showEmptyState('Todos os usuários foram carregados ou bloqueados.');
+                }
+            }
+        }, 300);
+    }, 150);
+}
+
+// ✅ FUNÇÃO: Verificar se perfil está completo
 function isProfileComplete() {
     return userProfile &&
             userProfile.full_name &&
@@ -3137,7 +3437,6 @@ function showAlert(message, type = 'success') {
         setTimeout(() => alert.remove(), 300);
     }, 3000);
 }
-
 // ==================== FUNÇÕES AUXILIARES ====================
 
 function calculateAge(birthDate) {
