@@ -1484,10 +1484,10 @@ footer {
 
 /* ==================== CORREÇÕES MOBILE - BLOQUEIO E MENU ==================== */
 
-/* ✅ CORREÇÃO: Menu de opções com z-index alto para mobile */
+/* ✅ CORREÇÃO: Menu de opções desktop */
 .user-card-menu {
   position: relative;
-  z-index: 100 !important;
+  z-index: 100;
 }
 
 .menu-options {
@@ -1499,27 +1499,25 @@ footer {
   border-radius: 10px;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
   padding: 0.5rem;
-  z-index: 1000 !important; /* ✅ AUMENTADO */
+  z-index: 1000;
   display: none;
   min-width: 160px;
   animation: fadeIn 0.2s ease;
+}
+
+.menu-options.show {
+  display: block;
 }
 
 /* ✅ CORREÇÃO: Garantir que cards não cortem o menu */
 .user-card {
   position: relative;
   z-index: 1;
-  overflow: visible !important; /* ✅ IMPORTANTE */
+  overflow: visible !important;
 }
 
 .user-card:hover {
   z-index: 2;
-}
-
-/* ✅ CORREÇÃO: Menu sempre visível quando aberto */
-.menu-options.show {
-  display: block;
-  z-index: 1001 !important;
 }
 
 /* ✅ CORREÇÃO: Remoção visual imediata dos cards */
@@ -1530,7 +1528,7 @@ footer {
   transition: all 0.3s ease !important;
 }
 
-/* ==================== MENU DE AÇÕES MOBILE ==================== */
+/* ==================== MENU DE AÇÕES MOBILE CORRIGIDO ==================== */
 .menu-overlay {
   position: fixed;
   top: 0;
@@ -1547,7 +1545,6 @@ footer {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  animation: fadeIn 0.3s ease;
 }
 
 .mobile-menu-options {
@@ -1555,8 +1552,9 @@ footer {
   width: 100%;
   max-width: 500px;
   border-radius: 20px 20px 0 0;
-  padding: 1.5rem;
-  animation: slideUp 0.3s ease;
+  padding: 2rem 1.5rem 1.5rem;
+  animation: slideUpMobile 0.3s ease;
+  position: relative;
 }
 
 .mobile-menu-header {
@@ -1571,91 +1569,116 @@ footer {
 .mobile-menu-header h4 {
   color: var(--vermelho-rosado);
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
+  font-weight: 600;
 }
 
 .close-mobile-menu {
   background: none;
   border: none;
-  font-size: 1.8rem;
+  font-size: 2rem;
   color: var(--text-light);
   cursor: pointer;
   padding: 0.5rem;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: var(--transition);
+}
+
+.close-mobile-menu:active {
+  background: var(--bege);
 }
 
 .mobile-menu-btn {
   width: 100%;
-  padding: 1.2rem;
-  border: none;
-  background: none;
-  text-align: left;
+  padding: 1.3rem 1rem;
+  border: 2px solid transparent;
+  border-radius: 12px;
   font-size: 1.1rem;
-  border-radius: 10px;
-  margin-bottom: 0.5rem;
+  font-weight: 600;
+  margin-bottom: 0.8rem;
   cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.8rem;
   transition: var(--transition);
+  text-align: center;
 }
 
 .mobile-menu-btn.report-btn {
   color: #e53e3e;
   background: #fed7d7;
+  border-color: #feb2b2;
 }
 
 .mobile-menu-btn.block-btn {
   color: #d1656d;
   background: #fbd5d5;
+  border-color: #f8a5a5;
 }
 
 .mobile-menu-btn.cancel-btn {
   color: var(--text);
   background: var(--bege);
-  justify-content: center;
-  margin-top: 1rem;
-  font-weight: 600;
+  border-color: var(--lilas);
+  margin-top: 0.5rem;
 }
 
-.mobile-menu-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.mobile-menu-btn:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-@keyframes slideUp {
+@keyframes slideUpMobile {
   from {
     transform: translateY(100%);
+    opacity: 0;
   }
   to {
     transform: translateY(0);
+    opacity: 1;
   }
 }
 
-/* ✅ CORREÇÃO ESPECÍFICA PARA MOBILE */
+/* ✅ CORREÇÃO ESPECÍFICA PARA MOBILE - MENU LIMPO */
 @media (max-width: 768px) {
-  .user-card-menu {
-    z-index: 150 !important;
-  }
-  
+  /* ✅ ESCONDE COMPLETAMENTE O MENU DESKTOP NO MOBILE */
   .menu-options {
-    z-index: 1002 !important;
-    position: fixed !important; /* ✅ MUDA PARA FIXED NO MOBILE */
-    top: auto !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    width: 100% !important;
-    min-width: auto !important;
-    border-radius: 15px 15px 0 0 !important;
-    animation: slideUp 0.3s ease !important;
+    display: none !important;
   }
   
-  .menu-options button {
-    padding: 1rem !important;
-    font-size: 1rem !important;
-    justify-content: center !important;
+  /* ✅ BOTÃO DOS 3 PONTOS ESTILIZADO */
+  .btn-more {
+    width: 44px;
+    height: 44px;
+    background: var(--lilas);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    font-weight: bold;
+    border: 2px solid var(--branco);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: var(--transition);
   }
   
+  .btn-more:active {
+    transform: scale(0.95);
+    background: var(--vermelho-rosado);
+  }
+  
+  .user-card-menu {
+    z-index: 10;
+    position: relative;
+  }
+
   /* Responsividade Visitantes */
   .visitors-grid {
     gap: 0.8rem;
@@ -1692,6 +1715,30 @@ footer {
     margin-left: 0;
     align-self: flex-start;
   }
+  
+  /* ✅ CORREÇÃO: Ações dos cards em mobile */
+  .user-card-actions {
+    flex-direction: row;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .user-card-actions .btn {
+    flex: 1;
+    padding: 0.8rem 0.5rem;
+    font-size: 0.8rem;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .user-card-actions .btn-more {
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1725,14 +1772,18 @@ footer {
   }
   
   /* ✅ CORREÇÃO EXTRA PARA MOBILE PEQUENO */
-  .user-card-actions {
-    flex-direction: column;
-    gap: 0.5rem;
+  .user-card-actions .btn {
+    font-size: 0.75rem;
+    padding: 0.7rem 0.3rem;
   }
   
-  .user-card-actions .btn {
-    width: 100%;
-    padding: 0.8rem;
+  .mobile-menu-options {
+    padding: 1.5rem 1rem 1rem;
+  }
+  
+  .mobile-menu-btn {
+    padding: 1.1rem 0.8rem;
+    font-size: 1rem;
   }
 }
 
@@ -2889,23 +2940,20 @@ async function loadPremiumVisitors() {
     }
 }
 
-// ✅ FUNÇÃO AUXILIAR CORRIGIDA - Criar card para HOME com DEBUG
+/// ✅ FUNÇÃO AUXILIAR CORRIGIDA - Criar card para HOME
 async function createVisitorCardForHome(visit) {
     try {
-        console.log('🎯 DEBUG CARD PEQUENO - Processando visita de:', visit.visitor_id);
+        console.log('🎯 Processando visita de:', visit.visitor_id);
         
         // Busca perfil do visitante
         const { data: profile, error } = await supabase
             .from('profiles')
-            .select('id, nickname, full_name, avatar_url, city')
+            .select('id, nickname, full_name, avatar_url, city, last_online_at, is_invisible')
             .eq('id', visit.visitor_id)
             .single();
 
-        console.log('🎯 DEBUG - Perfil encontrado:', profile);
-        console.log('🎯 DEBUG - Avatar URL:', profile?.avatar_url);
-
         if (error || !profile) {
-            console.log('🎯 DEBUG - Perfil não encontrado, criando card básico');
+            console.log('Perfil não encontrado, criando card básico');
             return createBasicCardForHome(visit);
         }
 
@@ -2916,29 +2964,34 @@ async function createVisitorCardForHome(visit) {
         const city = profile.city || 'Cidade não informada';
         const timeAgo = getTimeAgo(visit.visited_at);
         const initial = nickname.charAt(0).toUpperCase();
+        
+        // ✅ Status online
+        const isOnline = isUserOnline(profile, currentUser.id);
+        const onlineBadge = isOnline ? 
+            '<div class="online-badge" title="Online"></div>' : 
+            '<div class="offline-badge" title="Offline"></div>';
 
-        // ✅✅✅ CORREÇÃO: Carregar foto com DEBUG
+        // ✅ Carregar foto
         let avatarContent = '';
         if (profile.avatar_url) {
-            console.log('🎯 DEBUG - Tentando carregar foto:', profile.avatar_url);
             const photoUrl = await loadUserPhoto(profile.avatar_url);
-            console.log('🎯 DEBUG - Photo URL result:', photoUrl);
-            
             if (photoUrl) {
                 avatarContent = `
-                    <img class="visitor-avatar-img" src="${photoUrl}" alt="${nickname}" style="display: block;">
+                    <img class="visitor-avatar-img" src="${photoUrl}" alt="${nickname}">
+                    ${onlineBadge}
                 `;
-                console.log('🎯 DEBUG - ✅ Usando IMG com foto carregada');
             } else {
-                avatarContent = `<div class="visitor-avatar-fallback">${initial}</div>`;
-                console.log('🎯 DEBUG - ❌ Usando fallback (foto não carregada)');
+                avatarContent = `
+                    <div class="visitor-avatar-fallback">${initial}</div>
+                    ${onlineBadge}
+                `;
             }
         } else {
-            avatarContent = `<div class="visitor-avatar-fallback">${initial}</div>`;
-            console.log('🎯 DEBUG - ❌ Usando fallback (sem avatar_url no perfil)');
+            avatarContent = `
+                <div class="visitor-avatar-fallback">${initial}</div>
+                ${onlineBadge}
+            `;
         }
-
-        console.log('🎯 DEBUG - Card criado com sucesso para:', nickname);
 
         return `
             <div class="visitor-card" onclick="viewProfile('${visit.visitor_id}')">
@@ -2952,7 +3005,7 @@ async function createVisitorCardForHome(visit) {
         `;
 
     } catch (error) {
-        console.error('🎯 DEBUG - Erro ao criar card:', error);
+        console.error('Erro ao criar card:', error);
         return createBasicCardForHome(visit);
     }
 }
@@ -2963,6 +3016,7 @@ function createBasicCardForHome(visit) {
         <div class="visitor-card" onclick="viewProfile('${visit.visitor_id}')">
             <div class="visitor-avatar">
                 <div class="visitor-avatar-fallback">👤</div>
+                <div class="offline-badge" title="Offline"></div>
             </div>
             <div class="visitor-name">Usuário</div>
             <div class="visitor-location">---</div>
@@ -2971,32 +3025,22 @@ function createBasicCardForHome(visit) {
     `;
 }
 
-// ✅ FUNÇÃO CORRIGIDA - Carregar foto ESPECÍFICA PARA HOME
+// ✅ FUNÇÃO CORRIGIDA - Carregar foto
 async function loadUserPhoto(avatarUrl) {
     try {
-        if (!avatarUrl) {
-            console.log('❌ HOME - Avatar URL vazio');
-            return null;
-        }
+        if (!avatarUrl) return null;
 
-        console.log('📸 HOME - Carregando foto:', avatarUrl);
-        
         const { data } = supabase.storage
             .from('avatars')
             .getPublicUrl(avatarUrl);
 
         if (data?.publicUrl) {
-            console.log('✅ HOME - URL pública gerada:', data.publicUrl);
             // ✅ Adiciona timestamp para evitar cache
-            const finalUrl = data.publicUrl + '?t=' + Date.now();
-            console.log('✅ HOME - URL final com cache bust:', finalUrl);
-            return finalUrl;
-        } else {
-            console.log('❌ HOME - Nenhuma URL pública retornada');
-            return null;
+            return data.publicUrl + '?t=' + Date.now();
         }
+        return null;
     } catch (error) {
-        console.error('❌ HOME - Erro ao carregar foto:', error);
+        console.error('Erro ao carregar foto:', error);
         return null;
     }
 }
@@ -3017,7 +3061,6 @@ async function sendMessage(userId, event) {
     const isBlockedByUser = await checkIfBlockedByUser(userId);
     if (isBlockedByUser) {
         showAlert('🚫 Este usuário te bloqueou. Você não pode enviar mensagens.', 'error');
-        // ✅ REMOVE O CARD DA UI SE FOI BLOQUEADO
         removeUserCardImmediately(userId);
         return;
     }
@@ -3032,11 +3075,9 @@ async function sendMessage(userId, event) {
     localStorage.setItem('openChatWithUserId', userId);
     window.location.href = 'mensagens.html';
     
-    // ✅ CRIAR MENSAGEM EM BACKGROUND (NÃO BLOQUEIA)
+    // ✅ CRIAR MENSAGEM EM BACKGROUND
     setTimeout(async () => {
         try {
-            console.log('🔄 Criando conversa REAL em background:', userId);
-            
             const { error: messageError } = await supabase
                 .from('messages')
                 .insert({
@@ -3048,11 +3089,9 @@ async function sendMessage(userId, event) {
 
             if (messageError) {
                 console.error('❌ Erro ao criar conversa:', messageError);
-            } else {
-                console.log('✅ Conversa criada com sucesso em background');
             }
         } catch (error) {
-            console.error('❌ Erro ao enviar mensagem em background:', error);
+            console.error('❌ Erro ao enviar mensagem:', error);
         }
     }, 100);
 }
@@ -3071,7 +3110,6 @@ async function viewProfile(userId, event) {
     const isBlockedByUser = await checkIfBlockedByUser(userId);
     if (isBlockedByUser) {
         showAlert('🚫 Este usuário te bloqueou. Você não pode visualizar o perfil.', 'error');
-        // ✅ REMOVE O CARD DA UI SE FOI BLOQUEADO
         removeUserCardImmediately(userId);
         return;
     }
@@ -3082,23 +3120,22 @@ async function viewProfile(userId, event) {
         return;
     }
     
-    // ✅ REDIRECIONAR IMEDIATAMENTE (SEM ESPERAR NADA)
+    // ✅ REDIRECIONAR IMEDIATAMENTE
     localStorage.setItem('viewingProfileId', userId);
     window.location.href = 'perfil.html';
     
-    // ✅ REGISTRAR VISITA EM BACKGROUND (NÃO BLOQUEIA REDIRECIONAMENTO)
+    // ✅ REGISTRAR VISITA EM BACKGROUND
     setTimeout(async () => {
         try {
-            console.log('👀 Registrando visita em background para:', userId);
             const visitRegistered = await registerProfileVisit(userId);
             console.log('✅ Visita registrada em background:', visitRegistered);
         } catch (visitError) {
-            console.log('⚠️ Visita não registrada (background):', visitError);
+            console.log('⚠️ Visita não registrada:', visitError);
         }
     }, 100);
 }
 
-// ✅ NOVA FUNÇÃO: Verificar se o usuário te bloqueou
+// ✅ FUNÇÃO: Verificar se o usuário te bloqueou
 async function checkIfBlockedByUser(userId) {
     try {
         if (!currentUser) return false;
@@ -3112,22 +3149,20 @@ async function checkIfBlockedByUser(userId) {
 
         if (error) {
             if (error.code === 'PGRST116') {
-                // Não encontrado = não está bloqueado
-                return false;
+                return false; // Não encontrado = não está bloqueado
             }
             throw error;
         }
 
-        // Se encontrou registro, significa que o usuário te bloqueou
-        return !!blocks;
+        return !!blocks; // Se encontrou registro, usuário te bloqueou
         
     } catch (error) {
-        console.error('❌ Erro ao verificar bloqueio bilateral:', error);
+        console.error('❌ Erro ao verificar bloqueio:', error);
         return false;
     }
 }
 
-// ✅ FUNÇÃO MELHORADA: Remoção imediata da UI
+// ✅ FUNÇÃO: Remoção imediata da UI
 function removeUserCardImmediately(userId) {
     console.log('🗑️ Removendo card da UI:', userId);
     
@@ -3140,7 +3175,7 @@ function removeUserCardImmediately(userId) {
         removed = true;
     });
     
-    // Método 2: Fallback - busca por conteúdo
+    // Método 2: Fallback
     if (!removed) {
         document.querySelectorAll('.user-card').forEach(card => {
             const buttons = card.querySelectorAll('[onclick*="openBlockModal"]');
@@ -3153,9 +3188,8 @@ function removeUserCardImmediately(userId) {
         });
     }
     
-    // Método 3: Fallback - recarrega a lista
+    // Método 3: Recarrega lista
     if (!removed) {
-        console.log('⚠️ Card não encontrado, recarregando lista...');
         setTimeout(() => {
             loadRealUsers();
         }, 500);
@@ -3198,12 +3232,12 @@ function animateCardRemoval(card) {
 // ✅ FUNÇÃO: Verificar se perfil está completo
 function isProfileComplete() {
     return userProfile &&
-            userProfile.full_name &&
-            userProfile.full_name.trim() !== '' &&
-            userProfile.birth_date;
+           userProfile.full_name &&
+           userProfile.full_name.trim() !== '' &&
+           userProfile.birth_date;
 }
 
-// Verificar se usuário está online
+// ✅ FUNÇÃO: Verificar se usuário está online
 function isUserOnline(userProfile, currentUserId) {
     if (!userProfile.last_online_at) return false;
     
@@ -3224,7 +3258,6 @@ function isUserOnline(userProfile, currentUserId) {
     
     return isActuallyOnline;
 }
-
 // ==================== SISTEMA DE STATUS ONLINE ====================
 
 // Atualizar status online
