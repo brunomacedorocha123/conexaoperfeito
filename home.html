@@ -2233,7 +2233,7 @@ async function logout() {
 
 // ==================== SISTEMA DE BLOQUEIO ULTRA-RÁPIDO ====================
 
-// ✅ INICIALIZAÇÃO DO SISTEMA DE BLOQUEIO
+/// ✅ INICIALIZAÇÃO DO SISTEMA DE BLOQUEIO
 async function initializeBlockSystem() {
     try {
         console.log('⚡ Inicializando sistema de bloqueio ULTRA-RÁPIDO...');
@@ -2279,7 +2279,7 @@ function isUserBlocked(userId) {
     return blockedUserIdsSet.has(userId);
 }
 
-// ✅ BLOQUEIO ULTRA-RÁPIDO - FUNÇÃO PRINCIPAL CORRIGIDA (MENOS DE 3s)
+// ✅ BLOQUEIO ULTRA-RÁPIDO - FUNÇÃO PRINCIPAL CORRIGIDA (FUNCIONAL E RÁPIDA)
 async function confirmBlock() {
     if (!currentBlockUserId) return;
     
@@ -2302,36 +2302,53 @@ async function confirmBlock() {
     saveBlockToDatabase(userId, userName);
 }
 
-// ✅ SALVAR NO BANCO EM BACKGROUND (SEM TRAVAR A INTERFACE)
+// ✅ SALVAR NO BANCO EM BACKGROUND (AGORA FUNCIONANDO DE VERDADE)
 async function saveBlockToDatabase(userId, userName) {
     try {
-        const { error } = await supabase
+        console.log('💾 Tentando salvar bloqueio no banco para:', userId);
+        
+        const { data, error } = await supabase
             .from('user_blocks')
             .insert({
                 blocker_id: currentUser.id,
                 blocked_user_id: userId,
                 created_at: new Date().toISOString()
-            });
+            })
+            .select() // ✅ CRÍTICO: Isso verifica se realmente inseriu
+            .single();
 
         if (error) {
             if (error.code === '23505') {
-                console.log('ℹ️ Usuário já estava bloqueado no banco');
+                console.log('✅ Usuário já estava bloqueado no banco');
+                showQuickToast(`✅ ${userName} já estava bloqueado`);
             } else {
-                console.error('❌ Erro no bloqueio em background:', error);
+                console.error('❌ Erro grave no bloqueio:', error);
+                showQuickToast('❌ Erro ao bloquear. Tente novamente.');
+                
+                // ✅ TENTATIVA DE RECUPERAÇÃO: Remove do cache se falhou
+                blockedUserIdsSet.delete(userId);
+                blockCache.set(blockedUserIdsSet);
             }
+        } else if (data) {
+            console.log('✅ BLOQUEIO CONFIRMADO NO BANCO:', data);
+            showQuickToast(`✅ ${userName} bloqueado com sucesso!`);
         } else {
-            console.log('✅ Bloqueio salvo no banco com sucesso');
-            // Feedback visual discreto
-            showQuickToast(`✅ ${userName} bloqueado`);
+            console.error('❌ Bloqueio falhou - sem dados retornados');
+            showQuickToast('❌ Falha ao bloquear. Tente novamente.');
         }
     } catch (error) {
         console.error('❌ Erro ao salvar bloqueio:', error);
+        showQuickToast('❌ Erro de conexão. Bloqueio salvo localmente.');
     }
 }
 
 // ✅ TOAST RÁPIDO (sem atrapalhar)
 function showQuickToast(message) {
+    // Remove toasts anteriores
+    document.querySelectorAll('.quick-toast').forEach(toast => toast.remove());
+    
     const toast = document.createElement('div');
+    toast.className = 'quick-toast';
     toast.textContent = message;
     toast.style.cssText = `
         position: fixed;
@@ -2340,20 +2357,33 @@ function showQuickToast(message) {
         transform: translateX(-50%);
         background: #38a169;
         color: white;
-        padding: 8px 16px;
-        border-radius: 20px;
+        padding: 12px 20px;
+        border-radius: 25px;
         font-size: 14px;
-        z-index: 1000;
+        font-weight: 600;
+        z-index: 10000;
         opacity: 0;
-        transition: opacity 0.3s;
+        transition: opacity 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        text-align: center;
+        min-width: 200px;
+        max-width: 90%;
     `;
+    
     document.body.appendChild(toast);
     
+    // Animação de entrada
     setTimeout(() => toast.style.opacity = '1', 100);
+    
+    // Animação de saída
     setTimeout(() => {
         toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 300);
-    }, 2000);
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.remove();
+            }
+        }, 300);
+    }, 3000);
 }
 
 // ✅ REMOÇÃO IMEDIATA DA UI
@@ -2384,6 +2414,10 @@ function removeUserCardImmediately(userId) {
     
     if (!removed) {
         console.log('⚠️ Card não encontrado para remoção:', userId);
+        // Força recarregar a lista
+        setTimeout(() => {
+            loadRealUsers();
+        }, 100);
     }
 }
 
@@ -3579,7 +3613,6 @@ async function loadFreeVisitorsStats() {
         document.getElementById('visitorsCount').textContent = '0 visitas';
     }
 }
-
 // Registrar visita ao perfil
 async function registerProfileVisit(visitedUserId) {
     try {
