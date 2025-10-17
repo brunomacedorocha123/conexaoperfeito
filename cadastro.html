@@ -4,236 +4,536 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro - Amor Conect</title>
-    
-    <!-- CSS MODULAR -->
-    <link rel="stylesheet" href="css/globals.css">
-    <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/auth.css">
-    
-    <!-- CSS ESPECÍFICO DO CADASTRO -->
-    <style>
-        /* ==================== CADASTRO CSS ==================== */
-        /* Estilos específicos para manter IDÊNTICO ao original */
-        
-        .auth-container {
-            width: 90%;
-            max-width: 500px;
-            background: var(--branco);
-            border-radius: 20px;
-            box-shadow: var(--shadow);
-            padding: 3rem;
-            border: 1px solid var(--lilas);
-            margin: 0 auto;
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+ <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    :root {
+        --bege: #f6ecc5;
+        --vermelho-rosado: #d1656d;
+        --lilas: #dfc9ed;
+        --branco: #ffffff;
+        --text: #444;
+        --text-light: #666;
+        --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        --transition: all 0.3s ease;
+        --success: #22c55e;
+        --error: #ef4444;
+    }
+
+    body {
+        background-color: var(--bege);
+        color: var(--text);
+        line-height: 1.6;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .container {
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    /* Header - COM SUA LOGO */
+    header {
+        background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+        color: var(--branco);
+        padding: 0.5rem 0;
+        box-shadow: var(--shadow);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 70px;
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-shrink: 0;
+    }
+
+    .logo img {
+    height: 160px; /* AUMENTADO */
+    width: auto;
+    object-fit: contain;
+    position: relative;
+    top: -25px; /* COMPENSA para cima */
+    margin-bottom: -50px; /* COMPENSA para baixo */
+    z-index: 101;
+}
+
+    .logo h1 {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--branco);
+        white-space: nowrap;
+    }
+
+    .auth-buttons {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .btn {
+        padding: 0.6rem 1.2rem;
+        border-radius: 30px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+        font-size: 0.9rem;
+    }
+
+    .btn-outline {
+        background: transparent;
+        border: 2px solid var(--branco);
+        color: var(--branco);
+    }
+
+    .btn-primary {
+        background: var(--branco);
+        color: var(--vermelho-rosado);
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Main Content - COM SUA LOGO NO CARD */
+    .main-content {
+        flex: 1;
+        padding: 2rem 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .auth-container {
+        width: 90%;
+        max-width: 500px;
+        background: var(--branco);
+        border-radius: 20px;
+        box-shadow: var(--shadow);
+        padding: 3rem;
+        border: 1px solid var(--lilas);
+        margin: 0 auto;
+    }
+
+    .auth-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    /* SUA LOGO NO LUGAR DO EMOJI - CORRIGIDO */
+   .auth-logo {
+    width: 250px; /* AUMENTADO */
+    height: 250px; /* AUMENTADO */
+    margin: -25px auto 1rem auto; /* COMPENSAÇÃO: -25px top, 1rem bottom */
+    object-fit: contain;
+    display: block;
+    position: relative;
+    z-index: 1;
+}
+
+    .auth-header h1 {
+        font-size: 2.2rem;
+        color: var(--vermelho-rosado);
+        margin-bottom: 0.5rem;
+    }
+
+    .auth-header p {
+        color: var(--text-light);
+        font-size: 1rem;
+    }
+
+    /* Form Styles */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--text);
+        font-weight: 500;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid var(--lilas);
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: var(--transition);
+        background: var(--branco);
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--vermelho-rosado);
+        box-shadow: 0 0 0 3px rgba(209, 101, 109, 0.1);
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .btn-block {
+        width: 100%;
+        padding: 1rem;
+        font-size: 1.1rem;
+        margin-top: 1rem;
+    }
+
+    .auth-footer {
+        text-align: center;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--lilas);
+    }
+
+    .auth-footer a {
+        color: var(--vermelho-rosado);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .auth-footer a:hover {
+        text-decoration: underline;
+    }
+
+    /* Alert Messages */
+    .alert {
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        display: none;
+    }
+
+    .alert-error {
+        background: #fee;
+        border: 1px solid #fcc;
+        color: var(--error);
+    }
+
+    .alert-success {
+        background: #efe;
+        border: 1px solid #cfc;
+        color: var(--success);
+    }
+
+    /* Loading */
+    .loading {
+        display: none;
+        text-align: center;
+        padding: 1rem;
+        color: var(--vermelho-rosado);
+    }
+
+    /* Error Messages */
+    .error-message {
+        color: var(--error);
+        font-size: 0.8rem;
+        margin-top: 0.25rem;
+        display: none;
+    }
+
+    .form-control.error {
+        border-color: var(--error);
+    }
+
+    /* Password Requirements - MELHORADO */
+    .password-requirements {
+        background: var(--bege);
+        padding: 1rem;
+        border-radius: 10px;
+        margin-top: 0.5rem;
+        border: 1px solid var(--lilas);
+    }
+
+    .password-requirements h4 {
+        color: var(--vermelho-rosado);
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .requirements-list {
+        list-style: none;
+        font-size: 0.8rem;
+    }
+
+    .requirements-list li {
+        margin-bottom: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: var(--transition);
+    }
+
+    .requirement-met {
+        color: var(--success);
+        font-weight: 600;
+    }
+
+    .requirement-met::before {
+        content: "✅ ";
+    }
+
+    .requirement-unmet {
+        color: var(--text-light);
+    }
+
+    .requirement-unmet::before {
+        content: "❌ ";
+    }
+
+    /* Password Strength Meter */
+    .password-strength {
+        margin-top: 0.5rem;
+        height: 4px;
+        border-radius: 2px;
+        background: #e5e7eb;
+        overflow: hidden;
+    }
+
+    .strength-bar {
+        height: 100%;
+        width: 0%;
+        transition: var(--transition);
+        border-radius: 2px;
+    }
+
+    .strength-weak { background: var(--error); width: 25%; }
+    .strength-fair { background: #f59e0b; width: 50%; }
+    .strength-good { background: #eab308; width: 75%; }
+    .strength-strong { background: var(--success); width: 100%; }
+
+    .strength-text {
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+        text-align: right;
+        font-weight: 500;
+    }
+
+    /* Terms Checkbox */
+    .terms-group {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .terms-group input[type="checkbox"] {
+        margin-top: 0.25rem;
+        accent-color: var(--vermelho-rosado);
+    }
+
+    .terms-group label {
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+
+    .terms-group a {
+        color: var(--vermelho-rosado);
+        text-decoration: none;
+    }
+
+    .terms-group a:hover {
+        text-decoration: underline;
+    }
+
+    /* Footer */
+    footer {
+        background-color: var(--bege);
+        color: var(--text);
+        padding: 2rem 0 1rem;
+        border-top: 1px solid var(--lilas);
+    }
+
+    .footer-content {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .footer-column h3 {
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        color: var(--vermelho-rosado);
+    }
+
+    .footer-column ul {
+        list-style: none;
+    }
+
+    .footer-column ul li {
+        margin-bottom: 0.5rem;
+    }
+
+    .footer-column a {
+        color: var(--text);
+        text-decoration: none;
+        transition: var(--transition);
+        font-size: 0.9rem;
+    }
+
+    .footer-column a:hover {
+        color: var(--vermelho-rosado);
+    }
+
+    .copyright {
+        text-align: center;
+        padding-top: 1rem;
+        border-top: 1px solid var(--lilas);
+        font-size: 0.8rem;
+        color: var(--text-light);
+    }
+
+    /* Responsividade */
+    @media (max-width: 768px) {
+        .header-content {
+            flex-direction: row;
+            justify-content: space-between;
+            height: 70px;
+            padding: 0;
         }
 
-        .auth-header {
-            text-align: center;
-            margin-bottom: 2rem;
+        .logo h1 {
+            display: none;
+        }
+
+       .logo img {
+    height: 160px; /* AUMENTADO no mobile */
+    position: relative;
+    top: -15px; /* COMPENSA para cima */
+    margin-bottom: -30px; /* COMPENSA para baixo */
+}
+
+        .auth-buttons {
+            gap: 0.8rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        .auth-container {
+            padding: 2.5rem;
+            margin: 1rem auto;
+            width: 95%;
+            max-width: 450px;
         }
 
         .auth-logo {
-            width: 250px;
-            height: 250px;
-            margin: -25px auto 1rem auto;
-            object-fit: contain;
-            display: block;
-            position: relative;
-            z-index: 1;
-        }
+    width: 130px; /* AUMENTADO */
+    height: 130px; /* AUMENTADO */
+    margin: -20px auto 0.8rem auto; /* COMPENSAÇÃO ajustada */
+}
 
         .auth-header h1 {
-            font-size: 2.2rem;
-            color: var(--vermelho-rosado);
-            margin-bottom: 0.5rem;
-        }
-
-        .auth-header p {
-            color: var(--text-light);
-            font-size: 1rem;
+            font-size: 2rem;
         }
 
         .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
+            grid-template-columns: 1fr;
         }
 
-        .btn-block {
-            width: 100%;
-            padding: 1rem;
-            font-size: 1.1rem;
-            margin-top: 1rem;
+        .main-content {
+            padding: 1.5rem 0;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .header-content {
+            height: 65px;
         }
 
-        .auth-footer {
-            text-align: center;
-            margin-top: 2rem;
-            padding-top: 2rem;
-            border-top: 1px solid var(--lilas);
+        .logo img {
+            height: 100px;
+            margin-top: 5px;
+            margin-bottom: 5px;
         }
 
-        /* Password Requirements - IDÊNTICO AO ORIGINAL */
-        .password-requirements {
-            background: var(--bege);
-            padding: 1rem;
-            border-radius: 10px;
-            margin-top: 0.5rem;
-            border: 1px solid var(--lilas);
+        .auth-container {
+            padding: 2rem;
+            margin: 1rem auto;
+            width: 95%;
         }
 
-        .password-requirements h4 {
-            color: var(--vermelho-rosado);
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
+        .auth-logo {
+            width: 80px;
+            height: 80px;
         }
 
-        .requirements-list {
-            list-style: none;
+        .auth-header h1 {
+            font-size: 1.8rem;
+        }
+
+        .auth-header p {
+            font-size: 0.95rem;
+        }
+
+        .btn {
+            padding: 0.6rem 1rem;
+        }
+    }
+
+    @media (max-width: 360px) {
+        .header-content {
+            height: 60px;
+        }
+
+        .logo img {
+            height: 90px;
+            margin-top: 3px;
+            margin-bottom: 3px;
+        }
+
+        .auth-buttons {
+            gap: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.5rem 0.8rem;
             font-size: 0.8rem;
         }
 
-        .requirements-list li {
-            margin-bottom: 0.25rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: var(--transition);
+        .auth-container {
+            padding: 1.5rem;
+            margin: 0.5rem auto;
+            width: 98%;
         }
 
-        .requirement-met {
-            color: var(--success);
-            font-weight: 600;
+        .auth-logo {
+            width: 70px;
+            height: 70px;
         }
-
-        .requirement-met::before {
-            content: "✅ ";
-        }
-
-        .requirement-unmet {
-            color: var(--text-light);
-        }
-
-        .requirement-unmet::before {
-            content: "❌ ";
-        }
-
-        /* Password Strength Meter */
-        .password-strength {
-            margin-top: 0.5rem;
-            height: 4px;
-            border-radius: 2px;
-            background: #e5e7eb;
-            overflow: hidden;
-        }
-
-        .strength-bar {
-            height: 100%;
-            width: 0%;
-            transition: var(--transition);
-            border-radius: 2px;
-        }
-
-        .strength-weak { background: var(--error); width: 25%; }
-        .strength-fair { background: #f59e0b; width: 50%; }
-        .strength-good { background: #eab308; width: 75%; }
-        .strength-strong { background: var(--success); width: 100%; }
-
-        .strength-text {
-            font-size: 0.75rem;
-            margin-top: 0.25rem;
-            text-align: right;
-            font-weight: 500;
-        }
-
-        /* Terms Checkbox */
-        .terms-group {
-            display: flex;
-            align-items: flex-start;
-            gap: 0.75rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .terms-group input[type="checkbox"] {
-            margin-top: 0.25rem;
-            accent-color: var(--vermelho-rosado);
-        }
-
-        .terms-group label {
-            font-size: 0.9rem;
-            line-height: 1.4;
-        }
-
-        .terms-group a {
-            color: var(--vermelho-rosado);
-            text-decoration: none;
-        }
-
-        .terms-group a:hover {
-            text-decoration: underline;
-        }
-
-        /* Responsividade IDÊNTICA */
-        @media (max-width: 768px) {
-            .auth-container {
-                padding: 2.5rem;
-                margin: 1rem auto;
-                width: 95%;
-                max-width: 450px;
-            }
-
-            .auth-logo {
-                width: 130px;
-                height: 130px;
-                margin: -20px auto 0.8rem auto;
-            }
-
-            .auth-header h1 {
-                font-size: 2rem;
-            }
-
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .auth-container {
-                padding: 2rem;
-                margin: 1rem auto;
-                width: 95%;
-            }
-
-            .auth-logo {
-                width: 80px;
-                height: 80px;
-            }
-
-            .auth-header h1 {
-                font-size: 1.8rem;
-            }
-
-            .auth-header p {
-                font-size: 0.95rem;
-            }
-        }
-
-        @media (max-width: 360px) {
-            .auth-container {
-                padding: 1.5rem;
-                margin: 0.5rem auto;
-                width: 98%;
-            }
-
-            .auth-logo {
-                width: 70px;
-                height: 70px;
-            }
-
-            .auth-header h1 {
-                font-size: 1.6rem;
-            }
-        }
-    </style>
+    }
+</style>
 </head>
 <body>
     <!-- Header -->
@@ -304,7 +604,7 @@
                         <input type="password" id="password" class="form-control" required>
                         <div id="passwordError" class="error-message"></div>
                         
-                        <!-- REQUISITOS DA SENHA - IDÊNTICO AO ORIGINAL -->
+                        <!-- REQUISITOS DA SENHA - CORRIGIDOS -->
                         <div class="password-requirements">
                             <h4>Requisitos da senha:</h4>
                             <ul class="requirements-list">
@@ -388,57 +688,323 @@
         </div>
     </footer>
 
-    <!-- SCRIPTS -->
-    <script src="js/globals.js"></script>
-    <script src="js/auth.js"></script>
-    
-    <!-- JS ESPECÍFICO DO CADASTRO -->
     <script>
-        // ==================== CADASTRO JS ====================
-        // Lógica específica do cadastro - IDÊNTICA AO ORIGINAL
+    // Configuração do Supabase
+    const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('📝 Cadastro.js inicializando...');
-            initializeCadastro();
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ==================== FUNÇÕES DE VALIDAÇÃO DE SENHA ====================
+    
+    // Função para verificar força da senha
+    function checkPasswordStrength(password) {
+        const requirements = {
+            length: password.length >= 8,
+            uppercase: /[A-Z]/.test(password),
+            lowercase: /[a-z]/.test(password),
+            number: /[0-9]/.test(password),
+            special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+        };
+        
+        const strength = Object.values(requirements).filter(Boolean).length;
+        return { requirements, strength };
+    }
+
+    // Função para atualizar visualização dos requisitos
+    function updatePasswordRequirements(password) {
+        const { requirements, strength } = checkPasswordStrength(password);
+        const requirementElements = {
+            length: document.getElementById('reqLength'),
+            uppercase: document.getElementById('reqUppercase'),
+            lowercase: document.getElementById('reqLowercase'),
+            number: document.getElementById('reqNumber'),
+            special: document.getElementById('reqSpecial')
+        };
+        
+        // Atualizar cada requisito
+        Object.keys(requirements).forEach(key => {
+            const element = requirementElements[key];
+            if (element) {
+                if (requirements[key]) {
+                    element.classList.add('requirement-met');
+                    element.classList.remove('requirement-unmet');
+                } else {
+                    element.classList.remove('requirement-met');
+                    element.classList.add('requirement-unmet');
+                }
+            }
         });
 
-        function initializeCadastro() {
-            // Configurar data máxima (18 anos atrás)
-            const today = new Date();
-            const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
-            document.getElementById('birthDate').max = maxDate.toISOString().split('T')[0];
-
-            // Configurar formulário
-            setupRegisterForm();
+        // Atualizar barra de força
+        const strengthBar = document.getElementById('strengthBar');
+        const strengthText = document.getElementById('strengthText');
+        
+        strengthBar.className = 'strength-bar';
+        strengthText.textContent = '';
+        
+        if (password.length > 0) {
+            switch(strength) {
+                case 1:
+                case 2:
+                    strengthBar.classList.add('strength-weak');
+                    strengthText.textContent = 'Fraca';
+                    strengthText.style.color = '#ef4444';
+                    break;
+                case 3:
+                    strengthBar.classList.add('strength-fair');
+                    strengthText.textContent = 'Razoável';
+                    strengthText.style.color = '#f59e0b';
+                    break;
+                case 4:
+                    strengthBar.classList.add('strength-good');
+                    strengthText.textContent = 'Boa';
+                    strengthText.style.color = '#eab308';
+                    break;
+                case 5:
+                    strengthBar.classList.add('strength-strong');
+                    strengthText.textContent = 'Forte';
+                    strengthText.style.color = '#22c55e';
+                    break;
+            }
         }
+    }
 
-        // Configurar validações em tempo real
-        function setupRegisterForm() {
-            const form = document.getElementById('registerForm');
+    // Validação completa da senha
+    function validatePassword(password) {
+        const { requirements, strength } = checkPasswordStrength(password);
+        
+        // Verificar se atende a todos os requisitos
+        const allMet = Object.values(requirements).every(Boolean);
+        
+        return {
+            isValid: allMet,
+            requirements,
+            strength,
+            message: allMet ? '' : 'A senha não atende a todos os requisitos de segurança'
+        };
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('registerForm');
+        const loading = document.getElementById('loading');
+        const errorAlert = document.getElementById('errorAlert');
+        const successAlert = document.getElementById('successAlert');
+        
+        // Configurar data máxima (18 anos atrás)
+        const today = new Date();
+        const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+        document.getElementById('birthDate').max = maxDate.toISOString().split('T')[0];
+
+        // Função para mostrar alertas
+        function showAlert(alertElement, message, isError = true) {
+            alertElement.textContent = message;
+            alertElement.style.display = 'block';
             
-            // Validações em tempo real
-            document.getElementById('firstName').addEventListener('blur', validateName);
-            document.getElementById('lastName').addEventListener('blur', validateName);
-            document.getElementById('nickname').addEventListener('blur', validateNickname);
-            document.getElementById('email').addEventListener('blur', validateEmail);
-            document.getElementById('birthDate').addEventListener('change', validateBirthDate);
-            document.getElementById('password').addEventListener('input', function() {
-                updatePasswordRequirements(this.value);
-                validatePasswordRealTime();
-            });
-            document.getElementById('confirmPassword').addEventListener('blur', validateConfirmPassword);
-
-            // O submit é tratado pelo auth.js
+            if (!isError) {
+                setTimeout(() => {
+                    alertElement.style.display = 'none';
+                }, 5000);
+            }
         }
 
-        // Funções de validação em tempo real
+        function hideAlerts() {
+            errorAlert.style.display = 'none';
+            successAlert.style.display = 'none';
+        }
+
+        // SUBMIT CORRETO E FUNCIONAL
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Reset de erros
+            hideAlerts();
+            document.querySelectorAll('.error-message').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.form-control').forEach(el => el.classList.remove('error'));
+
+            const submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            loading.style.display = 'block';
+            
+            try {
+                console.log('🔄 Iniciando cadastro...');
+                
+                // Coletar dados do formulário
+                const firstName = document.getElementById('firstName').value.trim();
+                const lastName = document.getElementById('lastName').value.trim();
+                const nickname = document.getElementById('nickname').value.trim();
+                const email = document.getElementById('email').value.trim();
+                const birthDate = document.getElementById('birthDate').value;
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                const terms = document.getElementById('terms').checked;
+
+                // VALIDAÇÕES BÁSICAS
+                let hasError = false;
+
+                if (firstName.length < 2) {
+                    document.getElementById('firstNameError').textContent = 'Nome deve ter pelo menos 2 caracteres';
+                    document.getElementById('firstNameError').style.display = 'block';
+                    document.getElementById('firstName').classList.add('error');
+                    hasError = true;
+                }
+
+                if (lastName.length < 2) {
+                    document.getElementById('lastNameError').textContent = 'Sobrenome deve ter pelo menos 2 caracteres';
+                    document.getElementById('lastNameError').style.display = 'block';
+                    document.getElementById('lastName').classList.add('error');
+                    hasError = true;
+                }
+
+                if (nickname.length < 3) {
+                    document.getElementById('nicknameError').textContent = 'Nickname deve ter pelo menos 3 caracteres';
+                    document.getElementById('nicknameError').style.display = 'block';
+                    document.getElementById('nickname').classList.add('error');
+                    hasError = true;
+                }
+
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    document.getElementById('emailError').textContent = 'Por favor, insira um e-mail válido';
+                    document.getElementById('emailError').style.display = 'block';
+                    document.getElementById('email').classList.add('error');
+                    hasError = true;
+                }
+
+                if (!birthDate) {
+                    document.getElementById('birthDateError').textContent = 'Data de nascimento é obrigatória';
+                    document.getElementById('birthDateError').style.display = 'block';
+                    document.getElementById('birthDate').classList.add('error');
+                    hasError = true;
+                } else {
+                    const selectedDate = new Date(birthDate);
+                    if (selectedDate > maxDate) {
+                        document.getElementById('birthDateError').textContent = 'Você deve ter pelo menos 18 anos';
+                        document.getElementById('birthDateError').style.display = 'block';
+                        document.getElementById('birthDate').classList.add('error');
+                        hasError = true;
+                    }
+                }
+
+                // VALIDAÇÃO FORTE DA SENHA - CORRIGIDA
+                const passwordValidation = validatePassword(password);
+                if (!passwordValidation.isValid) {
+                    document.getElementById('passwordError').textContent = passwordValidation.message;
+                    document.getElementById('passwordError').style.display = 'block';
+                    document.getElementById('password').classList.add('error');
+                    hasError = true;
+                }
+
+                if (password !== confirmPassword) {
+                    document.getElementById('confirmPasswordError').textContent = 'As senhas não coincidem';
+                    document.getElementById('confirmPasswordError').style.display = 'block';
+                    document.getElementById('confirmPassword').classList.add('error');
+                    hasError = true;
+                }
+
+                if (!terms) {
+                    showAlert(errorAlert, 'Você deve aceitar os termos e condições');
+                    hasError = true;
+                }
+
+                if (hasError) {
+                    throw new Error('Por favor, corrija os erros no formulário');
+                }
+
+                // REGISTRAR USUÁRIO NO SUPABASE
+                const { data: authData, error: authError } = await supabase.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: {
+                            full_name: `${firstName} ${lastName}`,
+                            nickname: nickname,
+                            birth_date: birthDate
+                        },
+                        emailRedirectTo: `${window.location.origin}/login.html`
+                    }
+                });
+
+                if (authError) {
+                    console.error('❌ Erro no Auth:', authError);
+                    throw authError;
+                }
+
+                console.log('✅ Auth criado:', authData);
+
+                if (authData.user) {
+                    // Verificar se é um usuário novo
+                    if (authData.user.identities && authData.user.identities.length === 0) {
+                        showAlert(errorAlert, '❌ Este e-mail já está cadastrado. Tente fazer login.');
+                        submitBtn.disabled = false;
+                        loading.style.display = 'none';
+                        return;
+                    }
+
+                    // ✅ SUCESSO - CADASTRO REALIZADO
+                    console.log('✅ Cadastro completo!');
+                    showAlert(successAlert, '✅ Cadastro realizado com sucesso! Verifique seu e-mail para confirmar a conta.', false);
+                    
+                    // Limpar formulário
+                    form.reset();
+                    
+                    // Redirecionar para login após 3 segundos
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 3000);
+
+                } else {
+                    throw new Error('Falha ao criar usuário');
+                }
+
+            } catch (error) {
+                console.error('❌ Erro no cadastro:', error);
+                
+                let errorMessage = 'Erro ao realizar cadastro. Tente novamente.';
+                
+                if (error.message.includes('already registered') || error.message.includes('user already exists')) {
+                    errorMessage = '❌ Este e-mail já está cadastrado. Tente fazer login.';
+                } else if (error.message.includes('password')) {
+                    errorMessage = '❌ A senha deve atender a todos os requisitos de segurança.';
+                } else if (error.message.includes('email')) {
+                    errorMessage = '❌ Por favor, insira um e-mail válido.';
+                } else if (error.message.includes('rate limit')) {
+                    errorMessage = '⏰ Muitas tentativas. Aguarde alguns minutos.';
+                } else if (error.message.includes('corrija os erros')) {
+                    errorMessage = '❌ ' + error.message;
+                }
+                
+                showAlert(errorAlert, errorMessage);
+                submitBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        });
+
+        // Verificar se o usuário já está logado
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            if (user) {
+                console.log('🔑 Usuário já logado, redirecionando...');
+                window.location.href = 'home.html';
+            }
+        });
+
+        // Validação em tempo real dos campos
+        document.getElementById('firstName').addEventListener('blur', validateName);
+        document.getElementById('lastName').addEventListener('blur', validateName);
+        document.getElementById('nickname').addEventListener('blur', validateNickname);
+        document.getElementById('email').addEventListener('blur', validateEmail);
+        document.getElementById('birthDate').addEventListener('change', validateBirthDate);
+        document.getElementById('password').addEventListener('input', function() {
+            updatePasswordRequirements(this.value);
+            validatePasswordRealTime();
+        });
+        document.getElementById('confirmPassword').addEventListener('blur', validateConfirmPassword);
+
         function validateName(e) {
             const field = e.target;
             const errorElement = document.getElementById(field.id + 'Error');
             if (field.value.trim().length < 2) {
-                errorElement.textContent = field.id === 'firstName' ? 
-                    'Nome deve ter pelo menos 2 caracteres' : 
-                    'Sobrenome deve ter pelo menos 2 caracteres';
+                errorElement.textContent = field.id === 'firstName' ? 'Nome deve ter pelo menos 2 caracteres' : 'Sobrenome deve ter pelo menos 2 caracteres';
                 errorElement.style.display = 'block';
                 field.classList.add('error');
             } else {
@@ -483,9 +1049,6 @@
                 field.classList.add('error');
             } else {
                 const selectedDate = new Date(field.value);
-                const maxDate = new Date();
-                maxDate.setFullYear(maxDate.getFullYear() - 18);
-                
                 if (selectedDate > maxDate) {
                     errorElement.textContent = 'Você deve ter pelo menos 18 anos';
                     errorElement.style.display = 'block';
@@ -503,7 +1066,7 @@
             const passwordValidation = validatePassword(field.value);
             
             if (field.value && !passwordValidation.isValid) {
-                errorElement.textContent = 'A senha não atende aos requisitos de segurança';
+                errorElement.textContent = passwordValidation.message;
                 errorElement.style.display = 'block';
                 field.classList.add('error');
             } else {
@@ -525,81 +1088,7 @@
                 field.classList.remove('error');
             }
         }
-
-        // Sistema de requisitos de senha em tempo real
-        function updatePasswordRequirements(password) {
-            const { requirements, strength } = checkPasswordStrength(password);
-            const requirementElements = {
-                length: document.getElementById('reqLength'),
-                uppercase: document.getElementById('reqUppercase'),
-                lowercase: document.getElementById('reqLowercase'),
-                number: document.getElementById('reqNumber'),
-                special: document.getElementById('reqSpecial')
-            };
-            
-            // Atualizar cada requisito
-            Object.keys(requirements).forEach(key => {
-                const element = requirementElements[key];
-                if (element) {
-                    if (requirements[key]) {
-                        element.classList.add('requirement-met');
-                        element.classList.remove('requirement-unmet');
-                    } else {
-                        element.classList.remove('requirement-met');
-                        element.classList.add('requirement-unmet');
-                    }
-                }
-            });
-
-            // Atualizar barra de força
-            const strengthBar = document.getElementById('strengthBar');
-            const strengthText = document.getElementById('strengthText');
-            
-            strengthBar.className = 'strength-bar';
-            strengthText.textContent = '';
-            
-            if (password.length > 0) {
-                switch(strength) {
-                    case 1:
-                    case 2:
-                        strengthBar.classList.add('strength-weak');
-                        strengthText.textContent = 'Fraca';
-                        strengthText.style.color = '#ef4444';
-                        break;
-                    case 3:
-                        strengthBar.classList.add('strength-fair');
-                        strengthText.textContent = 'Razoável';
-                        strengthText.style.color = '#f59e0b';
-                        break;
-                    case 4:
-                        strengthBar.classList.add('strength-good');
-                        strengthText.textContent = 'Boa';
-                        strengthText.style.color = '#eab308';
-                        break;
-                    case 5:
-                        strengthBar.classList.add('strength-strong');
-                        strengthText.textContent = 'Forte';
-                        strengthText.style.color = '#22c55e';
-                        break;
-                }
-            }
-        }
-
-        // Função auxiliar para verificar força da senha
-        function checkPasswordStrength(password) {
-            const requirements = {
-                length: password.length >= 8,
-                uppercase: /[A-Z]/.test(password),
-                lowercase: /[a-z]/.test(password),
-                number: /[0-9]/.test(password),
-                special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
-            };
-            
-            const strength = Object.values(requirements).filter(Boolean).length;
-            return { requirements, strength };
-        }
-
-        console.log('✅ Cadastro.js carregado!');
-    </script>
+    });
+</script>
 </body>
 </html>
