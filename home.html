@@ -2279,27 +2279,31 @@ function isUserBlocked(userId) {
     return blockedUserIdsSet.has(userId);
 }
 
-// ✅ BLOQUEIO ULTRA-RÁPIDO - FUNÇÃO PRINCIPAL CORRIGIDA
+// ✅ BLOQUEIO ULTRA-RÁPIDO - FUNÇÃO PRINCIPAL CORRIGIDA (MENOS DE 3s)
 async function confirmBlock() {
     if (!currentBlockUserId) return;
     
     const userId = currentBlockUserId;
     const userName = currentBlockUserName;
-    const startTime = Date.now();
     
     console.log('⚡ BLOQUEIO ULTRA-RÁPIDO iniciado:', userName);
     
-    // 1. FEEDBACK VISUAL IMEDIATO (0ms)
-    showAlert('⚡ Bloqueando...', 'warning');
+    // 1. FECHAR MODAL IMEDIATAMENTE (0ms)
+    closeBlockModal();
     
-    // 2. REMOVE DA UI INSTANTANEAMENTE (0ms)
+    // 2. REMOVER DA UI INSTANTANEAMENTE (0ms)
     removeUserCardImmediately(userId);
     
-    // 3. ATUALIZA CACHE LOCAL (0ms)
+    // 3. ATUALIZAR CACHE LOCAL (0ms)
     blockedUserIdsSet.add(userId);
     blockCache.set(blockedUserIdsSet);
     
-    // ✅ 4. BLOQUEIO DIRETO E RÁPIDO NO BANCO (1-2s)
+    // 4. SALVAR NO BANCO EM BACKGROUND (não bloqueante)
+    saveBlockToDatabase(userId, userName);
+}
+
+// ✅ SALVAR NO BANCO EM BACKGROUND (SEM TRAVAR A INTERFACE)
+async function saveBlockToDatabase(userId, userName) {
     try {
         const { error } = await supabase
             .from('user_blocks')
@@ -2309,31 +2313,47 @@ async function confirmBlock() {
                 created_at: new Date().toISOString()
             });
 
-        const responseTime = Date.now() - startTime;
-        console.log(`✅ Bloqueio concluído em ${responseTime}ms`);
-
         if (error) {
             if (error.code === '23505') {
-                console.log('ℹ️ Usuário já estava bloqueado');
-                showAlert('ℹ️ Usuário já estava bloqueado', 'info');
+                console.log('ℹ️ Usuário já estava bloqueado no banco');
             } else {
-                throw error;
+                console.error('❌ Erro no bloqueio em background:', error);
             }
         } else {
-            showAlert(`✅ ${userName} bloqueado com sucesso!`, 'success');
+            console.log('✅ Bloqueio salvo no banco com sucesso');
+            // Feedback visual discreto
+            showQuickToast(`✅ ${userName} bloqueado`);
         }
-
     } catch (error) {
-        console.error('❌ Falha no bloqueio:', error);
-        
-        if (error.message?.includes('Timeout') || error.message?.includes('Network')) {
-            showAlert('⚠️ Bloqueado localmente (sem internet)', 'warning');
-        } else {
-            showAlert('❌ Falha no bloqueio. Tente novamente.', 'error');
-        }
-    } finally {
-        closeBlockModal();
+        console.error('❌ Erro ao salvar bloqueio:', error);
     }
+}
+
+// ✅ TOAST RÁPIDO (sem atrapalhar)
+function showQuickToast(message) {
+    const toast = document.createElement('div');
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #38a169;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        z-index: 1000;
+        opacity: 0;
+        transition: opacity 0.3s;
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => toast.style.opacity = '1', 100);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 2000);
 }
 
 // ✅ REMOÇÃO IMEDIATA DA UI
@@ -2402,7 +2422,7 @@ function animateCardRemoval(card) {
 
 // ==================== SISTEMA DE REPORTE ====================
 
-// Função para toggle do menu de ações - CORRIGIDA PARA MOBILE
+// ✅ MENU DE AÇÕES CORRIGIDO - 3 PONTOS FUNCIONAL
 function toggleMenu(button) {
     const menu = button.nextElementSibling;
     const isShowing = menu.classList.contains('show');
@@ -2416,17 +2436,17 @@ function toggleMenu(button) {
     if (!isShowing) {
         menu.classList.add('show');
         
-        // ✅ MELHORIA: Fechar menu após 5 segundos no mobile
-        if (window.innerWidth <= 768) {
-            setTimeout(() => {
-                menu.classList.remove('show');
-            }, 5000);
-        }
-        
         // Fechar menu ao clicar fora
+        const closeMenuHandler = function(event) {
+            if (!event.target.closest('.user-card-menu')) {
+                menu.classList.remove('show');
+                document.removeEventListener('click', closeMenuHandler);
+            }
+        };
+        
         setTimeout(() => {
-            document.addEventListener('click', closeAllMenus);
-        }, 100);
+            document.addEventListener('click', closeMenuHandler);
+        }, 10);
     }
 }
 
@@ -2436,7 +2456,6 @@ function closeAllMenus(event) {
         document.querySelectorAll('.menu-options').forEach(menu => {
             menu.classList.remove('show');
         });
-        document.removeEventListener('click', closeAllMenus);
     }
 }
 
@@ -2484,7 +2503,7 @@ async function submitReport() {
         const description = document.getElementById('reportDescription').value;
         
         if (!reason) {
-            alert('⚠️ Selecione um motivo para o reporte.');
+            showQuickToast('⚠️ Selecione um motivo para o reporte.');
             return;
         }
         
@@ -2509,12 +2528,12 @@ async function submitReport() {
         if (error) throw error;
         
         console.log('✅ Reporte enviado com sucesso!');
-        showAlert('✅ Reporte enviado com sucesso! Nossa equipe irá analisar.', 'success');
+        showQuickToast('✅ Reporte enviado com sucesso!');
         closeReportModal();
         
     } catch (error) {
         console.error('❌ Erro ao enviar reporte:', error);
-        showAlert('❌ Erro ao enviar reporte. Tente novamente.', 'error');
+        showQuickToast('❌ Erro ao enviar reporte. Tente novamente.');
     }
 }
 
@@ -2782,9 +2801,9 @@ async function createUserCardWithPhoto(user) {
                 <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewProfile('${user.id}')">
                     👀 Ver Perfil
                 </button>
-                <!-- Menu de ações -->
+                <!-- Menu de ações - 3 PONTOS FUNCIONAL -->
                 <div class="user-card-menu">
-                    <button class="btn-more" onclick="event.stopPropagation(); toggleMenu(this)">
+                    <button class="btn-more" onclick="event.stopPropagation(); toggleMenu(this)" title="Mais opções">
                         ⋯
                     </button>
                     <div class="menu-options">
@@ -3046,20 +3065,20 @@ async function sendMessage(userId, event) {
 
     // ✅ VERIFICAÇÃO COMPLETA DE BLOQUEIO (BILATERAL)
     if (isUserBlocked(userId)) {
-        showAlert('🚫 Você bloqueou este usuário e não pode enviar mensagens.', 'error');
+        showQuickToast('🚫 Você bloqueou este usuário e não pode enviar mensagens.');
         return;
     }
     
     // ✅ VERIFICAR SE O USUÁRIO TE BLOQUEOU
     const isBlockedByUser = await checkIfBlockedByUser(userId);
     if (isBlockedByUser) {
-        showAlert('🚫 Este usuário te bloqueou. Você não pode enviar mensagens.', 'error');
+        showQuickToast('🚫 Este usuário te bloqueou. Você não pode enviar mensagens.');
         removeUserCardImmediately(userId);
         return;
     }
     
     if (!isProfileComplete()) {
-        alert('Complete seu perfil primeiro para enviar mensagens!');
+        showQuickToast('Complete seu perfil primeiro para enviar mensagens!');
         window.location.href = 'painel.html';
         return;
     }
@@ -3095,20 +3114,20 @@ async function viewProfile(userId, event) {
 
     // ✅ VERIFICAÇÃO COMPLETA DE BLOQUEIO (BILATERAL)
     if (isUserBlocked(userId)) {
-        showAlert('🚫 Você bloqueou este usuário e não pode visualizar o perfil.', 'error');
+        showQuickToast('🚫 Você bloqueou este usuário e não pode visualizar o perfil.');
         return;
     }
     
     // ✅ VERIFICAR SE O USUÁRIO TE BLOQUEOU
     const isBlockedByUser = await checkIfBlockedByUser(userId);
     if (isBlockedByUser) {
-        showAlert('🚫 Este usuário te bloqueou. Você não pode visualizar o perfil.', 'error');
+        showQuickToast('🚫 Este usuário te bloqueou. Você não pode visualizar o perfil.');
         removeUserCardImmediately(userId);
         return;
     }
     
     if (!isProfileComplete()) {
-        alert('Complete seu perfil primeiro para ver outros perfis!');
+        showQuickToast('Complete seu perfil primeiro para ver outros perfis!');
         window.location.href = 'painel.html';
         return;
     }
@@ -3429,40 +3448,6 @@ function showEmptyState(message) {
     `;
 }
 
-// Alertas visíveis
-function showAlert(message, type = 'success') {
-    const existing = document.querySelectorAll('.custom-alert');
-    existing.forEach(alert => alert.remove());
-    
-    const alert = document.createElement('div');
-    alert.className = `custom-alert ${type}`;
-    alert.textContent = message;
-    alert.style.cssText = `
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 1001;
-        padding: 1rem 2rem;
-        border-radius: 10px;
-        color: white;
-        font-weight: 600;
-        background: ${type === 'success' ? '#38a169' : type === 'error' ? '#e53e3e' : type === 'warning' ? '#d69e2e' : '#3182ce'};
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        animation: slideInDown 0.3s ease;
-        text-align: center;
-        min-width: 300px;
-        max-width: 90%;
-        border: 2px solid ${type === 'success' ? '#2f855a' : type === 'error' ? '#c53030' : type === 'warning' ? '#b7791f' : '#2c5aa0'};
-    `;
-    
-    document.body.appendChild(alert);
-    
-    setTimeout(() => {
-        alert.style.animation = 'slideOutUp 0.3s ease';
-        setTimeout(() => alert.remove(), 300);
-    }, 3000);
-}
 // ==================== FUNÇÕES AUXILIARES ====================
 
 function calculateAge(birthDate) {
@@ -3612,7 +3597,7 @@ async function registerProfileVisit(visitedUserId) {
         // ✅ VERIFICAR SE USUÁRIO ESTÁ BLOQUEADO
         if (isUserBlocked(visitedUserId)) {
             console.log('🚫 Não é possível visitar perfil: Usuário bloqueado');
-            showAlert('🚫 Você bloqueou este usuário e não pode visitá-lo.', 'error');
+            showQuickToast('🚫 Você bloqueou este usuário e não pode visitá-lo.');
             return false;
         }
 
@@ -3691,7 +3676,6 @@ window.toggleMenu = toggleMenu;
 window.openReportModal = openReportModal;
 window.closeReportModal = closeReportModal;
 window.selectReportCategory = selectReportCategory;
-window.submitReport = submitReport; // ✅ ADICIONE ESTA LINHA!
 window.submitReport = submitReport;
 window.openBlockModal = openBlockModal;
 window.closeBlockModal = closeBlockModal;
@@ -3724,16 +3708,13 @@ style.textContent = `
     }
     .connection-good { background: #38a169; color: white; }
     .connection-slow { background: #d69e2e; color: white; }
-    .custom-alert { 
-        /* Estilos base já aplicados inline */
-    }
 `;
 if (!document.querySelector('#alert-animations')) {
     style.id = 'alert-animations';
     document.head.appendChild(style);
 }
 
-console.log('✅ Home.js CARREGADO E CORRIGIDO! Sistema de bloqueio ULTRA-RÁPIDO funcionando! 🎉');
+console.log('✅ Home.js COMPLETAMENTE CORRIGIDO! Sistema ULTRA-RÁPIDO funcionando! 🎉');
 </script>
 </body>
 </html>
