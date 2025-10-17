@@ -1,274 +1,3414 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home - Amor Conect</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home - Amor Conect</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+ <style>
+      * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+:root {
+  --bege: #f6ecc5;
+  --vermelho-rosado: #d1656d;
+  --lilas: #dfc9ed;
+  --branco: #ffffff;
+  --text: #444;
+  --text-light: #666;
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --transition: all 0.3s ease;
+  --error: #e53e3e;
+  --success: #38a169;
+}
+
+body {
+  background-color: var(--bege);
+  color: var(--text);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Header */
+header {
+  background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+  color: var(--branco);
+  padding: 0.8rem 0;
+  box-shadow: var(--shadow);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 70px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  justify-content: center;
+  flex: 1;
+}
+
+.logo img {
+  height: 220px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* TÍTULO REMOVIDO DO DESKTOP */
+.logo h1 {
+  display: none;
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--branco);
+  color: var(--vermelho-rosado);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.user-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: none;
+}
+
+.user-avatar-fallback {
+  font-size: 1.2rem;
+}
+
+.btn {
+  padding: 0.6rem 1rem;
+  border-radius: 30px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 2px solid var(--branco);
+  color: var(--branco);
+}
+
+.btn-primary {
+  background: var(--branco);
+  color: var(--vermelho-rosado);
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 2px solid var(--vermelho-rosado);
+  color: var(--vermelho-rosado);
+}
+
+.btn-premium {
+  background: linear-gradient(135deg, #ffd700, #ff6b00);
+  color: var(--branco);
+  border: none;
+  font-weight: 700;
+  box-shadow: 0 4px 15px rgba(255, 107, 0, 0.3);
+}
+/* ==================== BADGE FREE ==================== */
+.free-badge {
+  background: linear-gradient(135deg, #c0c0c0, #a0a0a0);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 30px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  white-space: nowrap;
+  border: 2px solid #d0d0d0;
+  cursor: default;
+  transition: var(--transition);
+}
+
+.free-badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(160, 160, 160, 0.3);
+}
+
+/* Ajuste para mobile */
+@media (max-width: 768px) {
+  .free-badge {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+    width: 100%;
+    text-align: center;
+  }
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.btn-premium:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 0, 0.4);
+}
+
+/* Main Content */
+.main-content {
+  padding: 2rem 0;
+}
+
+.welcome-section {
+  text-align: center;
+  margin-bottom: 3rem;
+  padding: 2rem;
+  background: var(--branco);
+  border-radius: 15px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--lilas);
+}
+
+.welcome-section h2 {
+  font-size: 2.5rem;
+  color: var(--vermelho-rosado);
+  margin-bottom: 1rem;
+}
+
+.welcome-section p {
+  color: var(--text-light);
+  font-size: 1.1rem;
+}
+
+.user-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.stat-card {
+  background: var(--branco);
+  padding: 1.5rem;
+  border-radius: 15px;
+  box-shadow: var(--shadow);
+  text-align: center;
+  transition: var(--transition);
+  border: 1px solid var(--lilas);
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+}
+
+.stat-number {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: var(--vermelho-rosado);
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  color: var(--text-light);
+  font-size: 0.9rem;
+}
+
+/* Users Grid */
+.users-section {
+  margin-bottom: 3rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.section-header h2 {
+  font-size: 2rem;
+  color: var(--vermelho-rosado);
+}
+
+.users-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.user-card {
+  background: var(--branco);
+  border-radius: 15px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+  text-align: center;
+  cursor: pointer;
+  border: 1px solid var(--lilas);
+  position: relative;
+}
+
+.user-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* ✅ AVATAR COM FOTO - ESTILOS ATUALIZADOS */
+.user-card-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+  color: var(--branco);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: bold;
+  margin: 0 auto 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.user-card-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: none;
+}
+
+.user-card-avatar-fallback {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.user-card-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--vermelho-rosado);
+  margin-bottom: 0.5rem;
+}
+
+.user-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 1rem;
+}
+
+.user-card-detail {
+  font-size: 0.9rem;
+  color: var(--text-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+.user-card-bio {
+  font-size: 0.9rem;
+  color: var(--text);
+  margin-bottom: 1.5rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 4.5rem;
+  line-height: 1.4;
+}
+
+/* ==================== SISTEMA DE REPORTE E BLOQUEIO - CARDS GRANDES ==================== */
+.user-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.user-card-menu {
+  position: relative;
+  display: inline-block;
+}
+
+.btn-more {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: var(--transition);
+  color: var(--text-light);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-more:hover {
+  background: var(--lilas);
+  color: var(--branco);
+  transform: translateY(-2px);
+}
+
+.menu-options {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--branco);
+  border: 1px solid var(--lilas);
+  border-radius: 10px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  padding: 0.5rem;
+  z-index: 100;
+  display: none;
+  min-width: 160px;
+  animation: fadeIn 0.2s ease;
+}
+
+.menu-options.show {
+  display: block;
+}
+
+.menu-options button {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: var(--transition);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text);
+}
+
+.menu-options button:hover {
+  background: var(--bege);
+}
+
+.menu-options .report-btn {
+  color: #e53e3e;
+}
+
+.menu-options .report-btn:hover {
+  background: #fed7d7;
+}
+
+.menu-options .block-btn {
+  color: #d1656d;
+}
+
+.menu-options .block-btn:hover {
+  background: #fbd5d5;
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+/* ==================== MODAIS DE REPORTE E BLOQUEIO ==================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.modal-overlay.show {
+  display: flex;
+}
+
+.modal-content {
+  background: var(--branco);
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: var(--shadow);
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--bege);
+}
+
+.modal-header h3 {
+  color: var(--vermelho-rosado);
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.close-modal {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--text-light);
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: var(--transition);
+}
+
+.close-modal:hover {
+  background: var(--bege);
+  color: var(--vermelho-rosado);
+}
+
+.report-categories {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.report-category {
+  padding: 1rem;
+  border: 2px solid var(--bege);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.report-category:hover {
+  border-color: var(--lilas);
+  background: var(--bege);
+}
+
+.report-category.selected {
+  border-color: var(--vermelho-rosado);
+  background: var(--bege);
+}
+
+.report-category input[type="radio"] {
+  margin: 0;
+}
+
+.report-details {
+  margin-bottom: 1.5rem;
+}
+
+.report-details textarea {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid var(--lilas);
+  border-radius: 10px;
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+.report-details textarea:focus {
+  outline: none;
+  border-color: var(--vermelho-rosado);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.modal-body {
+  margin-bottom: 1.5rem;
+}
+
+.modal-body p {
+  color: var(--text);
+  line-height: 1.5;
+}
+
+/* Quick Actions */
+.quick-actions {
+  background: var(--branco);
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: var(--shadow);
+  margin-bottom: 3rem;
+  border: 1px solid var(--lilas);
+}
+
+.quick-actions h2 {
+  margin-bottom: 1.5rem;
+  color: var(--vermelho-rosado);
+}
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.action-card {
+  background: var(--bege);
+  padding: 1.5rem;
+  border-radius: 10px;
+  text-align: center;
+  transition: var(--transition);
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid var(--lilas);
+}
+
+.action-card:hover {
+  background: var(--lilas);
+  transform: translateY(-3px);
+}
+
+.action-icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+/* Footer */
+footer {
+  background-color: var(--bege);
+  color: var(--text);
+  padding: 2rem 0 1rem;
+  border-top: 1px solid var(--lilas);
+}
+
+.footer-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.footer-column h3 {
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  color: var(--vermelho-rosado);
+}
+
+.footer-column ul {
+  list-style: none;
+}
+
+.footer-column ul li {
+  margin-bottom: 0.5rem;
+}
+
+.footer-column a {
+  color: var(--text);
+  text-decoration: none;
+  transition: var(--transition);
+  font-size: 0.9rem;
+}
+
+.footer-column a:hover {
+  color: var(--vermelho-rosado);
+}
+
+.copyright {
+  text-align: center;
+  padding-top: 1rem;
+  border-top: 1px solid var(--lilas);
+  font-size: 0.8rem;
+  color: var(--text-light);
+}
+
+/* Loading State */
+.loading {
+  text-align: center;
+  padding: 3rem;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--bege);
+  border-top: 4px solid var(--vermelho-rosado);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Estados Vazios */
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  background: var(--branco);
+  border-radius: 15px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--lilas);
+}
+
+.empty-state-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+/* Alertas */
+.alert {
+  padding: 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  text-align: center;
+  border: 1px solid;
+}
+
+.alert-info {
+  background-color: #bee3f8;
+  border-color: #90cdf4;
+  color: #2c5aa0;
+}
+
+/* Menu Hamburguer Mobile - CORRIGIDO */
+#hamburgerBtn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--branco);
+  font-size: 1.8rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  z-index: 1001;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#mobileMenu {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+  z-index: 1000;
+  padding: 1.5rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1rem;
+  overflow-y: auto;
+}
+
+#closeMobileMenu {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: var(--branco);
+  font-size: 2rem;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1002;
+}
+
+.mobile-user-info {
+  text-align: center;
+  color: var(--branco);
+  margin-bottom: 1rem;
+  margin-top: 2rem;
+}
+
+.mobile-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  width: 100%;
+  max-width: 280px;
+  flex: 1;
+  justify-content: flex-start;
+  padding-top: 1rem;
+}
+
+.mobile-nav .btn {
+  width: 100%;
+  text-align: center;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem;
+  font-size: 0.95rem;
+  border-radius: 10px;
+  min-height: 48px;
+}
+
+.mobile-nav .btn-premium {
+  background: linear-gradient(135deg, #ffd700, #ff6b00);
+  color: var(--branco);
+  border: none;
+  font-weight: 700;
+  box-shadow: 0 4px 15px rgba(255, 107, 0, 0.3);
+}
+
+/* BOTÃO SAIR DIFERENCIADO NO MOBILE */
+.mobile-nav .btn:last-child {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: var(--branco);
+  font-weight: 600;
+  position: relative;
+}
+
+.mobile-nav .btn:last-child::before {
+  content: "";
+  position: absolute;
+  top: -1rem;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.mobile-nav .btn:last-child:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.mobile-user-info .user-avatar {
+  width: 70px;
+  height: 70px;
+  font-size: 1.3rem;
+  margin: 0 auto 0.5rem;
+}
+
+.mobile-user-info #mobileUserNickname {
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  #hamburgerBtn {
+    display: flex;
+  }
+
+  .user-menu {
+    display: none;
+  }
+
+  .header-content {
+    flex-direction: row;
+    justify-content: space-between;
+    height: 80px;
+    padding: 0;
+  }
+
+  .logo {
+    justify-content: center;
+    flex: 1;
+    margin: 0 auto;
+  }
+
+  .logo img {
+    height: 180px !important;
+  }
+
+  .user-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .stat-card {
+    padding: 1rem;
+  }
+
+  .stat-number {
+    font-size: 1.8rem;
+  }
+
+  .users-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .user-card {
+    padding: 1.2rem;
+  }
+
+  .user-card-avatar {
+    width: 70px;
+    height: 70px;
+  }
+
+  .user-card-name {
+    font-size: 1.1rem;
+  }
+
+  .user-card-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .user-card-actions .btn {
+    width: 100%;
+  }
+
+  .actions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .action-card {
+    padding: 1.2rem;
+  }
+
+  .welcome-section {
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .welcome-section h2 {
+    font-size: 1.8rem;
+  }
+
+  .quick-actions {
+    padding: 1.5rem;
+  }
+
+  .section-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  /* Ajustes para modais mobile */
+  .modal-content {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .modal-actions .btn {
+    width: 100%;
+  }
+
+  /* Ajustes específicos para mobile menu em telas pequenas */
+  @media (max-height: 700px) {
+    #mobileMenu {
+      padding: 1rem;
+      gap: 0.5rem;
+    }
     
-    <!-- CSS ORGANIZADO -->
-    <link rel="stylesheet" href="css/globals.css">
-    <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/hamburger.css">
-    <style>
-        /* ==================== HOME.CSS ==================== */
-        /* Estilos específicos da página home - FICA AQUI MESMO */
-        
-        .main-content {
-            padding: 2rem 0;
-        }
+    .mobile-user-info {
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .mobile-nav .btn {
+      padding: 0.7rem;
+      min-height: 44px;
+      font-size: 0.9rem;
+    }
+    
+    .mobile-nav .btn:last-child {
+      margin-top: 1.5rem;
+      margin-bottom: 1rem;
+    }
+  }
+}
 
-        .welcome-section {
-            text-align: center;
-            margin-bottom: 3rem;
-            padding: 2rem;
-            background: var(--branco);
-            border-radius: 15px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--lilas);
-        }
+@media (max-width: 480px) {
+  .logo img {
+    height: 160px !important;
+  }
 
-        .welcome-section h2 {
-            font-size: 2.5rem;
-            color: var(--vermelho-rosado);
-            margin-bottom: 1rem;
-        }
+  .user-stats {
+    grid-template-columns: 1fr;
+  }
 
-        .welcome-section p {
-            color: var(--text-light);
-            font-size: 1.1rem;
-        }
+  .welcome-section h2 {
+    font-size: 1.5rem;
+  }
 
-        .user-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 3rem;
-        }
+  .stat-number {
+    font-size: 1.5rem;
+  }
 
-        /* ... (TODO O RESTANTE DO CSS ESPECÍFICO DA HOME) ... */
-    </style>
+  .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .header-content {
+    height: 70px;
+  }
+
+  /* Ajustes extras para mobile menu em telas muito pequenas */
+  #mobileMenu {
+    padding: 1rem;
+  }
+  
+  .mobile-nav {
+    max-width: 260px;
+  }
+  
+  .mobile-user-info .user-avatar {
+    width: 60px;
+    height: 60px;
+    font-size: 1.1rem;
+  }
+  
+  .mobile-user-info #mobileUserNickname {
+    font-size: 1rem;
+  }
+
+  /* Ajustes para cards em mobile muito pequeno */
+  .user-card-actions {
+    gap: 0.3rem;
+  }
+
+  .btn-more {
+    width: 35px;
+    height: 35px;
+    font-size: 1rem;
+  }
+}
+
+/* Animações para o menu mobile */
+#mobileMenu {
+  transition: opacity 0.3s ease;
+}
+
+/* ==================== SISTEMA DE VISITANTES ATUALIZADO ==================== */
+.visitors-section {
+    margin-bottom: 3rem;
+}
+
+.visitors-card {
+    background: var(--branco);
+    padding: 1.5rem;
+    border-radius: 15px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--lilas);
+    transition: var(--transition);
+}
+
+.visitors-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.visitors-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.visitors-header h2 {
+    font-size: 1.5rem;
+    color: var(--vermelho-rosado);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+}
+
+.visitors-count {
+    background: var(--lilas);
+    color: var(--branco);
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+/* NOVO: Grid de Cards Pequenos - IGUAL AO VISITANTE.HTML */
+.visitors-grid {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    padding: 0.5rem 0.2rem;
+    margin-bottom: 1.5rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--lilas) var(--bege);
+}
+
+.visitors-grid::-webkit-scrollbar {
+    height: 6px;
+}
+
+.visitors-grid::-webkit-scrollbar-track {
+    background: var(--bege);
+    border-radius: 3px;
+}
+
+.visitors-grid::-webkit-scrollbar-thumb {
+    background: var(--lilas);
+    border-radius: 3px;
+}
+
+/* Cards Pequenos - IGUAL AO VISITANTE.HTML */
+.visitor-card {
+    flex: 0 0 auto;
+    width: 120px;
+    background: var(--bege);
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    border: 2px solid transparent;
+    position: relative;
+}
+
+.visitor-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--lilas);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.visitor-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin: 0 auto 0.8rem;
+    position: relative;
+    overflow: hidden;
+    border: 3px solid var(--branco);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.visitor-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: none;
+}
+
+.visitor-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 0.3rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.visitor-location {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.visitor-time {
+    font-size: 0.7rem;
+    color: var(--vermelho-rosado);
+    margin-top: 0.3rem;
+    font-weight: 500;
+}
+
+.visitors-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.free-content {
+    text-align: center;
+    padding: 2rem;
+}
+
+.free-content .icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.7;
+}
+
+.free-content h3 {
+    color: var(--vermelho-rosado);
+    margin-bottom: 0.5rem;
+    font-size: 1.2rem;
+}
+
+.free-content p {
+    color: var(--text-light);
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+}
+
+.visitors-empty {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-light);
+    width: 100%;
+}
+
+.visitors-empty .icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.visitors-empty p {
+    margin-bottom: 1rem;
+}
+
+.visitors-loading {
+    text-align: center;
+    padding: 2rem;
+    width: 100%;
+}
+
+.visitors-spinner {
+    width: 30px;
+    height: 30px;
+    border: 3px solid var(--bege);
+    border-top: 3px solid var(--vermelho-rosado);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+/* ==================== SISTEMA DE STATUS ONLINE/OFFLINE ==================== */
+
+/* Bolinha Online (Verde) */
+.online-badge {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 12px;
+    height: 12px;
+    background: #48bb78; /* Verde */
+    border: 2px solid var(--branco);
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    animation: pulse-online 2s infinite;
+}
+
+/* Bolinha Offline (Cinza) */
+.offline-badge {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 12px;
+    height: 12px;
+    background: #a0aec0; /* Cinza */
+    border: 2px solid var(--branco);
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Animação para bolinha online */
+@keyframes pulse-online {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.7);
+    }
+    70% {
+        transform: scale(1.1);
+        box-shadow: 0 0 0 6px rgba(72, 187, 120, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(72, 187, 120, 0);
+    }
+}
+
+/* Ajustes para os avatares dos cards de usuário */
+.user-card-avatar {
+    position: relative;
+    overflow: visible !important;
+}
+
+.user-card-avatar .online-badge,
+.user-card-avatar .offline-badge {
+    bottom: 8px;
+    right: 8px;
+    width: 14px;
+    height: 14px;
+    border: 3px solid var(--branco);
+}
+
+/* Ajustes para os avatares dos visitantes */
+.visitor-avatar {
+    position: relative;
+    overflow: visible !important;
+}
+
+.visitor-avatar .online-badge,
+.visitor-avatar .offline-badge {
+    bottom: 5px;
+    right: 5px;
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--branco);
+}
+
+/* Ajustes para os avatares no header */
+.user-avatar {
+    position: relative;
+    overflow: visible !important;
+}
+
+.user-avatar .online-badge,
+.user-avatar .offline-badge {
+    bottom: 2px;
+    right: 2px;
+    width: 10px;
+    height: 10px;
+    border: 2px solid var(--branco);
+}
+
+/* Status no tooltip para melhor UX */
+.user-card:hover .online-badge::after,
+.visitor-card:hover .online-badge::after {
+    content: "Online";
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2d3748;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    white-space: nowrap;
+    z-index: 1000;
+}
+
+.user-card:hover .offline-badge::after,
+.visitor-card:hover .offline-badge::after {
+    content: "Offline";
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2d3748;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    white-space: nowrap;
+    z-index: 1000;
+}
+
+/* Versão mobile - bolinhas menores */
+@media (max-width: 768px) {
+    .user-card-avatar .online-badge,
+    .user-card-avatar .offline-badge {
+        width: 12px;
+        height: 12px;
+        bottom: 6px;
+        right: 6px;
+    }
+    
+    .visitor-avatar .online-badge,
+    .visitor-avatar .offline-badge {
+        width: 10px;
+        height: 10px;
+        bottom: 4px;
+        right: 4px;
+    }
+    
+    .user-avatar .online-badge,
+    .user-avatar .offline-badge {
+        width: 8px;
+        height: 8px;
+        bottom: 1px;
+        right: 1px;
+    }
+}
+
+/* Efeito de hover suave */
+.user-card-avatar:hover .online-badge,
+.visitor-avatar:hover .online-badge {
+    transform: scale(1.2);
+    transition: transform 0.2s ease;
+}
+
+.user-card-avatar:hover .offline-badge,
+.visitor-avatar:hover .offline-badge {
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
+}
+
+/* ==================== INDICADOR MODO INVISÍVEL ==================== */
+.invisible-status {
+    display: none; /* Inicialmente escondido */
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--lilas);
+    color: var(--branco);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    margin-left: auto;
+}
+
+.invisible-status .status-icon {
+    font-size: 1.1rem;
+}
+
+.invisible-status .status-text strong {
+    color: #ffeb3b;
+}
+
+/* ✅ CSS PARA CORRIGIR IMAGENS DOS VISITANTES NA HOME */
+.visitor-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block !important;
+}
+
+.visitor-avatar-fallback {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+/* Responsividade Visitantes */
+@media (max-width: 768px) {
+    .visitors-grid {
+        gap: 0.8rem;
+    }
+    
+    .visitor-card {
+        width: 110px;
+        padding: 0.8rem;
+    }
+    
+    .visitor-avatar {
+        width: 50px;
+        height: 50px;
+        font-size: 1rem;
+    }
+    
+    .visitors-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+    
+    .visitors-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .visitors-count {
+        align-self: flex-start;
+    }
+
+    .invisible-status {
+        margin-left: 0;
+        align-self: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .visitor-card {
+        width: 100px;
+    }
+    
+    .visitor-avatar {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .visitor-name {
+        font-size: 0.75rem;
+    }
+    
+    .visitor-location {
+        font-size: 0.65rem;
+    }
+    
+    .visitor-time {
+        font-size: 0.65rem;
+    }
+    
+    .free-content {
+        padding: 1.5rem;
+    }
+    
+    .free-content .icon {
+        font-size: 2.5rem;
+    }
+}
+
+/* ✅ CORREÇÃO DOS BOTÕES NÃO CLICÁVEIS */
+.user-card-actions {
+    position: relative;
+    z-index: 1000;
+}
+
+.user-card-actions button {
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 1001 !important;
+    cursor: pointer !important;
+}
+
+.user-card-actions .btn-more {
+    pointer-events: auto !important;
+    z-index: 1002 !important;
+}
+
+.menu-options {
+    z-index: 1003 !important;
+}
+
+/* Garante que os cards não bloqueiem cliques */
+.user-card {
+    position: relative;
+}
+
+.user-card > *:not(.user-card-actions) {
+    pointer-events: none;
+}
+
+.user-card-actions,
+.user-card-actions * {
+    pointer-events: auto !important;
+}
+</style>
+</style>
 </head>
 <body>
-    <!-- HEADER -->
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <button id="hamburgerBtn">☰</button>
-                <div class="logo">
-                    <img src="logoamorconect.png" alt="Amor Conect">
-                </div>
-                <div class="user-menu">
-                    <div class="user-info">
-                        <div class="user-avatar" id="userAvatar">
-                            <img class="user-avatar-img" src="" alt="Avatar" style="display: none;">
-                            <div class="user-avatar-fallback">U</div>
-                        </div>
-                        <span id="userNickname">Usuário</span>
-                    </div>
-                    <div id="freeBadge" class="free-badge" style="display: none;">Free</div>
-                    <a href="princing.html" id="premiumBtn" class="btn btn-premium" style="display: none;">Premium</a>
-                    <a href="mensagens.html" class="btn btn-outline">Mensagens</a>
-                    <a href="busca.html" class="btn btn-outline">Buscar</a>
-                    <a href="painel.html" class="btn btn-outline">Perfil</a>
-                    <a href="blocks.html" class="btn btn-outline">🚫 Bloqueados</a>
-                    <button class="btn btn-outline" id="logoutBtn">Sair</button>
-                </div>
+  <!-- Header -->
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <button id="hamburgerBtn">☰</button>
+        <div class="logo">
+          <img src="logoamorconect.png" alt="Amor Conect">
+        </div>
+        <div class="user-menu">
+          <div class="user-info">
+            <div class="user-avatar" id="userAvatar">
+              <img class="user-avatar-img" src="" alt="Avatar" style="display: none;">
+              <div class="user-avatar-fallback">U</div>
             </div>
+            <span id="userNickname">Usuário</span>
+          </div>
+          <!-- NOVO: Badge Free e Botão Premium -->
+          <div id="freeBadge" class="free-badge" style="display: none;">Free</div>
+          <a href="princing.html" id="premiumBtn" class="btn btn-premium" style="display: none;">Premium</a>
+          <a href="mensagens.html" class="btn btn-outline">Mensagens</a>
+          <a href="busca.html" class="btn btn-outline">Buscar</a>
+          <a href="painel.html" class="btn btn-outline">Perfil</a>
+          <!-- NOVO: Link para usuários bloqueados -->
+          <a href="blocks.html" class="btn btn-outline">🚫 Bloqueados</a>
+          <button class="btn btn-outline" id="logoutBtn">Sair</button>
         </div>
-    </header>
+      </div>
+    </div>
+  </header>
 
-    <!-- MENU MOBILE -->
-    <div id="mobileMenu">
-        <button id="closeMobileMenu">×</button>
-        
-        <div class="mobile-user-info">
-            <div class="user-avatar" id="mobileUserAvatar">
-                <img class="user-avatar-img" src="" alt="Avatar" style="display: none;">
-                <div class="user-avatar-fallback">U</div>
-            </div>
-            <div id="mobileUserNickname">Usuário</div>
-        </div>
-
-        <div class="mobile-nav">
-            <div id="mobileFreeBadge" class="free-badge" style="display: none;">Free</div>
-            <a href="princing.html" id="mobilePremiumBtn" class="btn btn-premium" style="display: none;">Premium</a>
-            <a href="busca.html" class="btn btn-outline">Buscar</a>
-            <a href="painel.html" class="btn btn-outline">Perfil</a>
-            <a href="mensagens.html" class="btn btn-outline">Mensagens</a>
-            <a href="blocks.html" class="btn btn-outline">🚫 Bloqueados</a>
-            <button class="btn btn-outline" id="mobileLogoutBtn">Sair</button>
-        </div>
+  <!-- Menu Mobile -->
+  <div id="mobileMenu">
+    <button id="closeMobileMenu">×</button>
+    
+    <div class="mobile-user-info">
+      <div class="user-avatar" id="mobileUserAvatar">
+        <img class="user-avatar-img" src="" alt="Avatar" style="display: none;">
+        <div class="user-avatar-fallback">U</div>
+      </div>
+      <div id="mobileUserNickname">Usuário</div>
     </div>
 
-    <!-- MAIN CONTENT -->
-    <main class="main-content">
-        <div class="container">
+    <div class="mobile-nav">
+      <!-- NOVO: Badge Free e Botão Premium Mobile -->
+      <div id="mobileFreeBadge" class="free-badge" style="display: none;">Free</div>
+      <a href="princing.html" id="mobilePremiumBtn" class="btn btn-premium" style="display: none;">Premium</a>
+      <a href="busca.html" class="btn btn-outline">Buscar</a>
+      <a href="painel.html" class="btn btn-outline">Perfil</a>
+      <a href="mensagens.html" class="btn btn-outline">Mensagens</a>
+      <!-- NOVO: Link para usuários bloqueados no mobile -->
+      <a href="blocks.html" class="btn btn-outline">🚫 Bloqueados</a>
+      <button class="btn btn-outline" id="mobileLogoutBtn">Sair</button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="container">
+      <!-- Welcome Section -->
+      <section class="welcome-section">
+        <h2>Olá, <span id="welcomeNickname">Amoroso</span>! ❤️</h2>
+        <p>Encontre conexões genuínas e construa relacionamentos significativos</p>
+        <div style="margin-top: 1.5rem;">
+          <a href="princing.html" class="btn btn-premium" style="padding: 0.8rem 2rem; font-size: 1rem;">
+            Desbloqueie Recursos Premium
+          </a>
+        </div>
+      </section>
+
+      <!-- User Stats -->
+      <div class="user-stats">
+        <div class="stat-card">
+          <div class="stat-number" id="usersOnline">0</div>
+          <div class="stat-label">Pessoas Online</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="totalUsers">0</div>
+          <div class="stat-label">Usuários na Plataforma</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="newMatches">0</div>
+          <div class="stat-label">Novos Matches</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="profileViews">0</div>
+          <div class="stat-label">Visualizações do Perfil</div>
+        </div>
+      </div>
+
+      <!-- NOVO: Card de Visitantes ATUALIZADO -->
+      <section class="visitors-section">
+        <div class="visitors-card">
+          <div class="visitors-header">
+            <h2>👀 Quem te visitou</h2>
+            <div class="visitors-count" id="visitorsCount">0 visitas</div>
+          </div>
+
+          <!-- Conteúdo Premium -->
+          <div class="premium-content" id="premiumVisitors" style="display: none;">
+            <!-- NOVO: Grid de Cards Pequenos -->
+            <div class="visitors-grid" id="visitorsGrid">
+              <div class="visitors-loading">
+                <div class="visitors-spinner"></div>
+                <p>Carregando visitantes...</p>
+              </div>
+            </div>
             
-            <!-- SEÇÃO DE BOAS-VINDAS -->
-            <section class="welcome-section">
-                <h2>Olá, <span id="welcomeNickname">Usuário</span>! ❤️</h2>
-                <p>Encontre conexões genuínas e construa relacionamentos significativos</p>
-            </section>
-
-            <!-- ESTATÍSTICAS -->
-            <div class="user-stats">
-                <div class="stat-card">
-                    <div class="stat-number" id="usersOnline">0</div>
-                    <div class="stat-label">Pessoas Online</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="totalUsers">0</div>
-                    <div class="stat-label">Usuários na Plataforma</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="newMatches">0</div>
-                    <div class="stat-label">Novos Matches</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="profileViews">0</div>
-                    <div class="stat-label">Visualizações do Perfil</div>
-                </div>
+            <div class="visitors-actions">
+              <button class="btn btn-primary" onclick="window.location.href='visitante.html'">
+                Ver todos os visitantes
+              </button>
             </div>
+          </div>
 
-            <!-- VISITANTES -->
-            <section class="visitors-section">
-                <div class="visitors-card">
-                    <div class="visitors-header">
-                        <h2>👀 Quem te visitou</h2>
-                        <div class="visitors-count" id="visitorsCount">0 visitas</div>
-                    </div>
-
-                    <!-- Conteúdo Premium -->
-                    <div class="premium-content" id="premiumVisitors" style="display: none;">
-                        <div class="visitors-grid" id="visitorsGrid">
-                            <div class="visitors-loading">
-                                <div class="visitors-spinner"></div>
-                                <p>Carregando visitantes...</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Conteúdo Free -->
-                    <div class="free-content" id="freeVisitors">
-                        <div class="icon">🔒</div>
-                        <h3>Descubra quem se interessou por você!</h3>
-                        <p>
-                            <span id="freeVisitorsCount">0 pessoas</span> visitaram seu perfil esta semana
-                        </p>
-                        <a href="princing.html" class="btn btn-premium">
-                            Seja Premium para ver
-                        </a>
-                    </div>
-                </div>
-            </section>
-
-            <!-- USUÁRIOS PARA CONHECER -->
-            <section class="users-section">
-                <div class="section-header">
-                    <h2>Conheça Novas Pessoas</h2>
-                    <a href="princing.html" class="btn btn-premium btn-sm">Premium</a>
-                </div>
-                <div class="users-grid" id="usersGrid">
-                    <div class="loading">
-                        <div class="spinner"></div>
-                        <p>Carregando usuários...</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- AÇÕES RÁPIDAS -->
-            <section class="quick-actions">
-                <h2>Ações Rápidas</h2>
-                <div class="actions-grid">
-                    <a href="painel.html" class="action-card">
-                        <div class="action-icon">👤</div>
-                        <h3>Completar Perfil</h3>
-                        <p>Adicione mais informações ao seu perfil</p>
-                    </a>
-                    <a href="busca.html" class="action-card">
-                        <div class="action-icon">🔍</div>
-                        <h3>Buscar Pessoas</h3>
-                        <p>Encontre pessoas com interesses similares</p>
-                    </a>
-                    <a href="mensagens.html" class="action-card">
-                        <div class="action-icon">💌</div>
-                        <h3>Minhas Mensagens</h3>
-                        <p>Ver e responder mensagens</p>
-                    </a>
-                    <a href="blocks.html" class="action-card" style="background: linear-gradient(135deg, #fed7d7, #feb2b2); border: 2px solid #e53e3e;">
-                        <div class="action-icon">🚫</div>
-                        <h3>Usuários Bloqueados</h3>
-                        <p>Gerencie usuários que você bloqueou</p>
-                    </a>
-                    <a href="princing.html" class="action-card" style="background: linear-gradient(135deg, #fff9c4, #ffecb3); border: 2px solid #ffd700;">
-                        <div class="action-icon">⭐</div>
-                        <h3>Plano Premium</h3>
-                        <p>Desbloqueie recursos exclusivos</p>
-                    </a>
-                </div>
-            </section>
-
+          <!-- Conteúdo Free -->
+          <div class="free-content" id="freeVisitors">
+            <div class="icon">🔒</div>
+            <h3>Descubra quem se interessou por você!</h3>
+            <p>
+              <span id="freeVisitorsCount">0 pessoas</span> visitaram seu perfil esta semana
+            </p>
+            <a href="princing.html" class="btn btn-premium">
+              Seja Premium para ver
+            </a>
+          </div>
         </div>
-    </main>
+      </section>
 
-    <!-- FOOTER -->
-    <footer>
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-column">
-                    <h3>Amor Conect</h3>
-                    <p>Uma plataforma segura e discreta para conectar corações e construir relacionamentos genuínos.</p>
-                </div>
-                <div class="footer-column">
-                    <h3>Links Rápidos</h3>
-                    <ul>
-                        <li><a href="index.html">Página Inicial</a></li>
-                        <li><a href="princing.html">Planos Premium</a></li>
-                        <li><a href="#como-funciona">Como Funciona</a></li>
-                        <li><a href="#depoimentos">Depoimentos</a></li>
-                    </ul>
-                </div>
-                <div class="footer-column">
-                    <h3>Suporte</h3>
-                    <ul>
-                        <li><a href="#">Central de Ajuda</a></li>
-                        <li><a href="#">Política de Privacidade</a></li>
-                        <li><a href="#">Termos de Uso</a></li>
-                        <li><a href="#" onclick="openSupportModal()">🚨 Reportar Problema</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="copyright">
-                <p>&copy; 2023 Amor Conect. Todos os direitos reservados.</p>
-            </div>
+      <!-- Users Grid -->
+      <section class="users-section">
+        <div class="section-header">
+          <h2>Conheça Novas Pessoas</h2>
+          <a href="princing.html" class="btn btn-premium btn-sm">Premium</a>
         </div>
-    </footer>
+        <div class="users-grid" id="usersGrid">
+          <div class="loading">
+            <div class="spinner"></div>
+            <p>Carregando usuários...</p>
+          </div>
+        </div>
+      </section>
 
-    <!-- MODAIS -->
-    <!-- Modal de Reporte -->
-    <div class="modal-overlay" id="reportModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>🚨 Reportar Usuário</h3>
-                <button class="close-modal" onclick="closeReportModal()">×</button>
-            </div>
-            <!-- Conteúdo do modal de reporte -->
+      <!-- Quick Actions -->
+      <section class="quick-actions">
+        <h2>Ações Rápidas</h2>
+        <div class="actions-grid">
+          <a href="painel.html" class="action-card">
+            <div class="action-icon">👤</div>
+            <h3>Completar Perfil</h3>
+            <p>Adicione mais informações ao seu perfil</p>
+          </a>
+          <a href="busca.html" class="action-card">
+            <div class="action-icon">🔍</div>
+            <h3>Buscar Pessoas</h3>
+            <p>Encontre pessoas com interesses similares</p>
+          </a>
+          <a href="mensagens.html" class="action-card">
+            <div class="action-icon">💌</div>
+            <h3>Minhas Mensagens</h3>
+            <p>Ver e responder mensagens</p>
+          </a>
+          <!-- NOVO: Card para usuários bloqueados -->
+          <a href="blocks.html" class="action-card" style="background: linear-gradient(135deg, #fed7d7, #feb2b2); border: 2px solid #e53e3e;">
+            <div class="action-icon">🚫</div>
+            <h3>Usuários Bloqueados</h3>
+            <p>Gerencie usuários que você bloqueou</p>
+          </a>
+          <a href="princing.html" class="action-card" style="background: linear-gradient(135deg, #fff9c4, #ffecb3); border: 2px solid #ffd700;">
+            <div class="action-icon">⭐</div>
+            <h3>Plano Premium</h3>
+            <p>Desbloqueie recursos exclusivos</p>
+          </a>
         </div>
+      </section>
     </div>
+  </main>
 
-    <!-- Modal de Bloqueio -->
-    <div class="modal-overlay" id="blockModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>🚫 Bloquear Usuário</h3>
-                <button class="close-modal" onclick="closeBlockModal()">×</button>
-            </div>
-            <!-- Conteúdo do modal de bloqueio -->
+  <!-- ==================== MODAIS DE REPORTE E BLOQUEIO ==================== -->
+  <!-- Modal de Reporte -->
+  <div class="modal-overlay" id="reportModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>🚨 Reportar Usuário</h3>
+        <button class="close-modal" onclick="closeReportModal()">×</button>
+      </div>
+      
+      <div id="reportModalContent">
+        <div class="modal-body">
+          <p>Você está reportando: <strong id="reportUserName">Usuário</strong></p>
         </div>
+        
+        <div class="report-categories">
+          <label class="report-category">
+            <input type="radio" name="reportReason" value="spam" onchange="selectReportCategory(this)">
+            <span>📧 Spam ou conteúdo comercial</span>
+          </label>
+          <label class="report-category">
+            <input type="radio" name="reportReason" value="harassment" onchange="selectReportCategory(this)">
+            <span>🚫 Assédio ou bullying</span>
+          </label>
+          <label class="report-category">
+            <input type="radio" name="reportReason" value="inappropriate" onchange="selectReportCategory(this)">
+            <span>🔞 Conteúdo inadequado</span>
+          </label>
+          <label class="report-category">
+            <input type="radio" name="reportReason" value="fake" onchange="selectReportCategory(this)">
+            <span>🤥 Perfil falso</span>
+          </label>
+          <label class="report-category">
+            <input type="radio" name="reportReason" value="other" onchange="selectReportCategory(this)">
+            <span>❌ Outro motivo</span>
+          </label>
+        </div>
+        
+        <div class="report-details">
+          <label for="reportDescription">Detalhes adicionais (opcional):</label>
+          <textarea 
+            id="reportDescription" 
+            placeholder="Descreva o motivo do reporte com mais detalhes..."
+          ></textarea>
+        </div>
+        
+        <div class="modal-actions">
+          <button class="btn btn-secondary" onclick="closeReportModal()">Cancelar</button>
+          <button class="btn btn-primary" onclick="submitReport()" id="submitReportBtn" disabled>
+            Enviar Reporte
+          </button>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <!-- SCRIPTS -->
-    <script src="js/globals.js"></script>
-    <script src="js/home.js"></script>
+  <!-- Modal de Confirmação de Bloqueio -->
+  <div class="modal-overlay" id="blockModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>🚫 Bloquear Usuário</h3>
+        <button class="close-modal" onclick="closeBlockModal()">×</button>
+      </div>
+      
+      <div class="modal-body">
+        <p>Você está bloqueando: <strong id="blockUserName">Usuário</strong></p>
+        <p style="color: var(--text-light); font-size: 0.9rem; margin-top: 1rem;">
+          ⚠️ Ao bloquear este usuário:
+        </p>
+        <ul style="color: var(--text-light); font-size: 0.9rem; margin: 0.5rem 0 0 1.5rem;">
+          <li>Ele não poderá mais enviar mensagens para você</li>
+          <li>Não aparecerá mais nos seus resultados de busca</li>
+          <li>Não poderá ver seu perfil</li>
+          <li>Esta ação pode ser revertida a qualquer momento</li>
+          <li>Para gerenciar bloqueios, acesse <strong>"🚫 Bloqueados"</strong> no menu</li>
+        </ul>
+      </div>
+      
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeBlockModal()">Cancelar</button>
+        <button class="btn btn-primary" onclick="confirmBlock()" id="confirmBlockBtn">
+          Confirmar Bloqueio
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmação Geral -->
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="confirmModalTitle">Confirmação</h3>
+        <button class="close-modal" onclick="closeConfirmModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <p id="confirmModalMessage">Tem certeza que deseja realizar esta ação?</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeConfirmModal()">Cancelar</button>
+        <button class="btn btn-primary" id="confirmModalAction">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-column">
+          <h3>Amor Conect</h3>
+          <p>Uma plataforma segura e discreta para conectar corações e construir relacionamentos genuínos.</p>
+        </div>
+        <div class="footer-column">
+          <h3>Links Rápidos</h3>
+          <ul>
+            <li><a href="index.html">Página Inicial</a></li>
+            <li><a href="princing.html">Planos Premium</a></li>
+            <li><a href="#como-funciona">Como Funciona</a></li>
+            <li><a href="#depoimentos">Depoimentos</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h3>Suporte</h3>
+          <ul>
+            <li><a href="#">Central de Ajuda</a></li>
+            <li><a href="#">Política de Privacidade</a></li>
+            <li><a href="#">Termos de Uso</a></li>
+            <li><a href="#" onclick="openSupportModal()">🚨 Reportar Problema</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="copyright">
+        <p>&copy; 2023 Amor Conect. Todos os direitos reservados.</p>
+      </div>
+    </div>
+  </footer>
+
+<script>
+// Configuração do Supabase
+const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Estado da aplicação
+let currentUser = null;
+let userProfile = null;
+
+// Sistema de bloqueio
+let blockedUserIdsSet = new Set();
+let currentReportUserId = null;
+let currentBlockUserId = null;
+let currentReportUserName = null;
+let currentBlockUserName = null;
+
+// Cache de bloqueios
+const blockCache = {
+    get: () => {
+        const cached = localStorage.getItem(`blocked_cache_${currentUser?.id}`);
+        return cached ? new Set(JSON.parse(cached)) : new Set();
+    },
+    set: (blockedIds) => {
+        localStorage.setItem(`blocked_cache_${currentUser?.id}`, JSON.stringify([...blockedIds]));
+    }
+};
+
+// ==================== INICIALIZAÇÃO DA APLICAÇÃO ====================
+
+document.addEventListener('DOMContentLoaded', function() {
+    checkAuth();
+    setupEventListeners();
+    setupMobileMenu();
+});
+
+// Verificar autenticação
+async function checkAuth() {
+    try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error) throw error;
+        
+        if (!user) {
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        currentUser = user;
+        
+        // Carregamento paralelo para máxima velocidade
+        await Promise.all([
+            loadUserData(),
+            loadRealUsers(), 
+            loadVisitorsSystem(),
+            initializeBlockSystem()
+        ]);
+        
+        updateStats();
+        startStatsAutoUpdate();
+        startOnlineStatusUpdater();
+        setupInvisibleModeSyncListener();
+        
+    } catch (error) {
+        console.error('Erro na autenticação:', error);
+        window.location.href = 'login.html';
+    }
+}
+
+// Configurar event listeners
+function setupEventListeners() {
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', logout);
+    }
+    
+    document.addEventListener('touchstart', function() {}, { passive: true });
+}
+
+// Logout
+async function logout() {
+    try {
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+        
+        window.location.href = 'index.html';
+    } catch (error) {
+        console.error('Erro ao fazer logout:', error);
+        alert('Erro ao fazer logout. Tente novamente.');
+    }
+}
+
+// ==================== SISTEMA DE BLOQUEIO ULTRA-RÁPIDO ====================
+
+// ✅ INICIALIZAÇÃO DO SISTEMA DE BLOQUEIO
+async function initializeBlockSystem() {
+    try {
+        console.log('⚡ Inicializando sistema de bloqueio ULTRA-RÁPIDO...');
+        
+        // 1. Carrega do cache local (INSTANTÂNEO)
+        const cached = blockCache.get();
+        if (cached.size > 0) {
+            blockedUserIdsSet = cached;
+            console.log(`⚡ Cache carregado: ${blockedUserIdsSet.size} usuários bloqueados`);
+        }
+        
+        // 2. Atualiza do banco em background
+        await loadBlockedIdsForHome();
+        console.log(`✅ Sistema de bloqueio pronto: ${blockedUserIdsSet.size} usuários bloqueados`);
+        
+    } catch (error) {
+        console.error('❌ Erro ao inicializar bloqueio:', error);
+    }
+}
+
+// ✅ CARREGAR IDs BLOQUEADOS DO BANCO
+async function loadBlockedIdsForHome() {
+    try {
+        if (!currentUser) return;
+        
+        const { data: blocks, error } = await supabase
+            .from('user_blocks')
+            .select('blocked_user_id')
+            .eq('blocker_id', currentUser.id);
+
+        if (error) throw error;
+
+        blockedUserIdsSet = new Set(blocks.map(b => b.blocked_user_id));
+        blockCache.set(blockedUserIdsSet);
+        
+    } catch (error) {
+        console.error('❌ Erro ao carregar IDs bloqueados:', error);
+    }
+}
+
+// ✅ VERIFICAR SE USUÁRIO ESTÁ BLOQUEADO
+function isUserBlocked(userId) {
+    return blockedUserIdsSet.has(userId);
+}
+
+// ✅ BLOQUEIO ULTRA-RÁPIDO - FUNÇÃO PRINCIPAL
+async function confirmBlock() {
+    if (!currentBlockUserId) return;
+    
+    const userId = currentBlockUserId;
+    const userName = currentBlockUserName;
+    const startTime = Date.now();
+    
+    console.log('⚡ BLOQUEIO ULTRA-RÁPIDO iniciado:', userName);
+    
+    // 1. FEEDBACK VISUAL IMEDIATO (0ms)
+    showAlert('⚡ Bloqueando...', 'warning');
+    
+    // 2. REMOVE DA UI INSTANTANEAMENTE (0ms)
+    removeUserCardImmediately(userId);
+    
+    // 3. ATUALIZA CACHE LOCAL (0ms)
+    blockedUserIdsSet.add(userId);
+    blockCache.set(blockedUserIdsSet);
+    
+    try {
+        // 4. TENTA BLOQUEIO NO BANCO (em background)
+        const { data, error } = await supabase.rpc('block_user_instant', {
+            p_blocker_id: currentUser.id,
+            p_blocked_id: userId
+        });
+        
+        const responseTime = Date.now() - startTime;
+        console.log(`✅ Bloqueio concluído em ${responseTime}ms`);
+
+        if (error) {
+            if (error.code === '23505') {
+                console.log('ℹ️ Usuário já estava bloqueado');
+                showAlert('ℹ️ Usuário já estava bloqueado', 'info');
+            } else {
+                throw error;
+            }
+        } else if (data && data.success) {
+            showAlert(`✅ ${userName} bloqueado com sucesso!`, 'success');
+        } else {
+            throw new Error(data?.error || 'Erro desconhecido');
+        }
+
+    } catch (error) {
+        console.error('❌ Falha no bloqueio:', error);
+        
+        if (error.message?.includes('Timeout') || error.message?.includes('Network')) {
+            // ✅ BLOQUEIO OFFLINE - usuário fica bloqueado localmente
+            showAlert('⚠️ Bloqueado localmente (sem internet)', 'warning');
+            
+            // Tenta novamente em background silenciosamente
+            setTimeout(async () => {
+                try {
+                    await supabase.rpc('block_user_instant', {
+                        p_blocker_id: currentUser.id,
+                        p_blocked_id: userId
+                    });
+                    console.log('✅ Bloqueio concluído em background');
+                } catch (bgError) {
+                    console.log('❌ Bloqueio em background falhou:', bgError);
+                }
+            }, 1000);
+        } else {
+            showAlert('❌ Falha no bloqueio. Tente novamente.', 'error');
+        }
+    } finally {
+        closeBlockModal();
+    }
+}
+
+// ✅ REMOÇÃO IMEDIATA DA UI
+function removeUserCardImmediately(userId) {
+    console.log('🗑️ Removendo card imediatamente:', userId);
+    
+    let removed = false;
+    
+    // Método 1: Busca por data-user-id (MAIS RÁPIDO)
+    const cardsWithData = document.querySelectorAll(`[data-user-id="${userId}"]`);
+    cardsWithData.forEach(card => {
+        animateCardRemoval(card);
+        removed = true;
+    });
+    
+    // Método 2: Busca por onclick (fallback)
+    if (!removed) {
+        document.querySelectorAll('.user-card').forEach(card => {
+            const buttons = card.querySelectorAll('[onclick*="openBlockModal"]');
+            buttons.forEach(button => {
+                if (button.getAttribute('onclick').includes(userId)) {
+                    animateCardRemoval(card);
+                    removed = true;
+                }
+            });
+        });
+    }
+    
+    if (!removed) {
+        console.log('⚠️ Card não encontrado para remoção:', userId);
+    }
+}
+
+// ✅ ANIMAÇÃO DE REMOÇÃO
+function animateCardRemoval(card) {
+    if (card.classList.contains('removing')) return;
+    
+    card.classList.add('removing');
+    card.style.transition = 'all 0.3s ease';
+    card.style.opacity = '0.5';
+    card.style.transform = 'scale(0.95)';
+    card.style.pointerEvents = 'none';
+    
+    setTimeout(() => {
+        card.style.opacity = '0';
+        card.style.height = '0';
+        card.style.margin = '0';
+        card.style.padding = '0';
+        card.style.overflow = 'hidden';
+        card.style.border = 'none';
+        
+        setTimeout(() => {
+            if (card.parentNode) {
+                card.remove();
+                console.log('✅ Card removido da UI');
+                
+                // Verifica se ficou vazio
+                const remainingCards = document.querySelectorAll('.user-card:not(.removing)').length;
+                if (remainingCards === 0) {
+                    showEmptyState('Todos os usuários foram carregados ou bloqueados.');
+                }
+            }
+        }, 300);
+    }, 150);
+}
+
+// ==================== SISTEMA DE REPORTE ====================
+
+// Função para toggle do menu de ações
+function toggleMenu(button) {
+    const menu = button.nextElementSibling;
+    const isShowing = menu.classList.contains('show');
+    
+    // Fechar todos os menus abertos
+    document.querySelectorAll('.menu-options').forEach(m => {
+        m.classList.remove('show');
+    });
+    
+    // Abrir/fechar o menu clicado
+    if (!isShowing) {
+        menu.classList.add('show');
+        
+        // Fechar menu ao clicar fora
+        setTimeout(() => {
+            document.addEventListener('click', closeAllMenus);
+        }, 100);
+    }
+}
+
+// Fechar todos os menus
+function closeAllMenus(event) {
+    if (!event || !event.target.closest('.user-card-menu')) {
+        document.querySelectorAll('.menu-options').forEach(menu => {
+            menu.classList.remove('show');
+        });
+        document.removeEventListener('click', closeAllMenus);
+    }
+}
+
+// Abrir modal de reporte
+function openReportModal(userId, userName) {
+    console.log('📝 Abrindo modal de reporte para:', userId, userName);
+    
+    currentReportUserId = userId;
+    currentReportUserName = userName;
+    
+    document.getElementById('reportUserName').textContent = userName;
+    
+    // Resetar formulário
+    document.querySelectorAll('input[name="reportReason"]').forEach(radio => {
+        radio.checked = false;
+        radio.parentElement.classList.remove('selected');
+    });
+    document.getElementById('reportDescription').value = '';
+    document.getElementById('submitReportBtn').disabled = true;
+    
+    document.getElementById('reportModal').classList.add('show');
+}
+
+// Fechar modal de reporte
+function closeReportModal() {
+    document.getElementById('reportModal').classList.remove('show');
+    currentReportUserId = null;
+    currentReportUserName = null;
+}
+
+// Selecionar categoria de reporte
+function selectReportCategory(radio) {
+    document.querySelectorAll('.report-category').forEach(category => {
+        category.classList.remove('selected');
+    });
+    
+    radio.parentElement.classList.add('selected');
+    document.getElementById('submitReportBtn').disabled = false;
+}
+
+// Enviar reporte
+async function submitReport() {
+    try {
+        const reason = document.querySelector('input[name="reportReason"]:checked')?.value;
+        const description = document.getElementById('reportDescription').value;
+        
+        if (!reason) {
+            alert('⚠️ Selecione um motivo para o reporte.');
+            return;
+        }
+        
+        console.log('🔄 Enviando reporte:', {
+            userId: currentReportUserId,
+            userName: currentReportUserName,
+            reason: reason,
+            description: description
+        });
+        
+        const { data, error } = await supabase
+            .from('user_reports')
+            .insert({
+                reporter_id: currentUser.id,
+                reported_user_id: currentReportUserId,
+                reason: reason,
+                category: reason,
+                evidence: description || null,
+                status: 'pending'
+            });
+            
+        if (error) throw error;
+        
+        console.log('✅ Reporte enviado com sucesso!');
+        showAlert('✅ Reporte enviado com sucesso! Nossa equipe irá analisar.', 'success');
+        closeReportModal();
+        
+    } catch (error) {
+        console.error('❌ Erro ao enviar reporte:', error);
+        showAlert('❌ Erro ao enviar reporte. Tente novamente.', 'error');
+    }
+}
+
+// Abrir modal de bloqueio
+function openBlockModal(userId, userName) {
+    console.log('🚫 Abrindo modal de bloqueio para:', userId, userName);
+    
+    currentBlockUserId = userId;
+    currentBlockUserName = userName;
+    
+    document.getElementById('blockUserName').textContent = userName;
+    document.getElementById('blockModal').classList.add('show');
+}
+
+// Fechar modal de bloqueio
+function closeBlockModal() {
+    document.getElementById('blockModal').classList.remove('show');
+    currentBlockUserId = null;
+    currentBlockUserName = null;
+}
+
+// Funções auxiliares dos modais
+function closeConfirmModal() {
+    document.getElementById('confirmModal').classList.remove('show');
+}
+
+function openSupportModal() {
+    alert('📞 Entre em contato com nosso suporte: suporte@amorconect.com');
+}
+
+// ==================== SISTEMA DE USUÁRIOS E PERFIS ====================
+
+// Carregar dados do usuário atual
+async function loadUserData() {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', currentUser.id)
+            .single();
+
+        userProfile = profile;
+
+        let displayName = 'Usuário';
+        
+        if (user.user_metadata?.nickname) {
+            displayName = user.user_metadata.nickname;
+        } else if (user.user_metadata?.full_name) {
+            displayName = user.user_metadata.full_name;
+        } else if (user.email) {
+            displayName = user.email.split('@')[0];
+        }
+
+        await updateUserAvatar(displayName, profile);
+
+        document.getElementById('userNickname').textContent = displayName;
+        document.getElementById('mobileUserNickname').textContent = displayName;
+        document.getElementById('welcomeNickname').textContent = displayName;
+
+        // Mostrar Free ou Premium no header
+        const isPremium = profile?.is_premium || false;
+        const freeBadge = document.getElementById('freeBadge');
+        const premiumBtn = document.getElementById('premiumBtn');
+        const mobileFreeBadge = document.getElementById('mobileFreeBadge');
+        const mobilePremiumBtn = document.getElementById('mobilePremiumBtn');
+        
+        if (isPremium) {
+            if (premiumBtn) premiumBtn.style.display = 'inline-block';
+            if (freeBadge) freeBadge.style.display = 'none';
+            if (mobilePremiumBtn) mobilePremiumBtn.style.display = 'flex';
+            if (mobileFreeBadge) mobileFreeBadge.style.display = 'none';
+        } else {
+            if (freeBadge) freeBadge.style.display = 'inline-block';
+            if (premiumBtn) premiumBtn.style.display = 'none';
+            if (mobileFreeBadge) mobileFreeBadge.style.display = 'flex';
+            if (mobilePremiumBtn) mobilePremiumBtn.style.display = 'none';
+        }
+        
+    } catch (error) {
+        console.error('Erro ao carregar dados do usuário:', error);
+    }
+}
+
+// Atualizar avatar do usuário
+async function updateUserAvatar(displayName, profile) {
+    const avatarElements = [
+        document.getElementById('userAvatar'),
+        document.getElementById('mobileUserAvatar')
+    ];
+
+    for (const avatarElement of avatarElements) {
+        if (!avatarElement) continue;
+        
+        const userAvatarFallback = avatarElement.querySelector('.user-avatar-fallback');
+        const userAvatarImg = avatarElement.querySelector('.user-avatar-img');
+        
+        if (!userAvatarFallback || !userAvatarImg) continue;
+
+        userAvatarImg.style.display = 'none';
+        userAvatarFallback.style.display = 'flex';
+        
+        if (profile?.avatar_url) {
+            const photoUrl = await loadUserPhoto(profile.avatar_url);
+            if (photoUrl) {
+                userAvatarImg.src = photoUrl;
+                userAvatarImg.style.display = 'block';
+                userAvatarFallback.style.display = 'none';
+            }
+        }
+        
+        userAvatarFallback.textContent = displayName.charAt(0).toUpperCase();
+    }
+}
+
+// Carregar foto do usuário
+async function loadUserPhoto(avatarUrl) {
+    try {
+        if (!avatarUrl) return null;
+
+        const { data } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(avatarUrl);
+
+        return data?.publicUrl || null;
+
+    } catch (error) {
+        console.error('Erro ao carregar foto:', error);
+        return null;
+    }
+}
+
+// Carregar usuários reais do banco
+async function loadRealUsers() {
+    try {
+        const limit = window.innerWidth <= 768 ? 4 : 8;
+        
+        const { data: users, error } = await supabase
+            .from('profiles')
+            .select(`
+                id,
+                nickname,
+                full_name,
+                birth_date,
+                avatar_url,
+                last_online_at,
+                is_invisible,
+                user_details (
+                    gender,
+                    zodiac,
+                    profession,
+                    interests,
+                    looking_for,
+                    description
+                )
+            `)
+            .neq('id', currentUser.id)
+            .limit(limit)
+            .order('created_at', { ascending: false });
+
+        const usersGrid = document.getElementById('usersGrid');
+        
+        if (error) {
+            console.error('Erro ao carregar usuários:', error);
+            showEmptyState('Erro ao carregar usuários. Tente novamente.');
+            return;
+        }
+
+        if (!users || users.length === 0) {
+            showEmptyState('Ainda não há outros usuários cadastrados. Seja o primeiro!');
+            return;
+        }
+        
+        await displayUsersWithPhotos(users);
+
+    } catch (error) {
+        console.error('Erro ao carregar usuários:', error);
+        showEmptyState('Erro ao carregar usuários. Tente novamente.');
+    }
+}
+
+// Exibir usuários com fotos
+async function displayUsersWithPhotos(users) {
+    const usersGrid = document.getElementById('usersGrid');
+    
+    const userCards = [];
+    for (const user of users) {
+        // ✅ VERIFICA SE USUÁRIO NÃO ESTÁ BLOQUEADO ANTES DE CRIAR CARD
+        if (!isUserBlocked(user.id)) {
+            const card = await createUserCardWithPhoto(user);
+            userCards.push(card);
+        }
+    }
+    
+    usersGrid.innerHTML = userCards.join('');
+    
+    if (userCards.length === 0) {
+        showEmptyState('Todos os usuários disponíveis foram bloqueados ou não há usuários para mostrar.');
+    }
+}
+
+// Criar card de usuário com foto
+async function createUserCardWithPhoto(user) {
+    if (!user.user_details || !user.nickname) {
+        return '';
+    }
+
+    const nickname = user.nickname || user.full_name?.split(' ')[0] || 'Usuário';
+    const age = user.birth_date ? calculateAge(user.birth_date) : null;
+    const details = user.user_details || {};
+    
+    // Status online
+    const isOnline = isUserOnline(user, currentUser.id);
+    const onlineBadge = isOnline ? 
+        '<div class="online-badge" title="Online"></div>' : 
+        '<div class="offline-badge" title="Offline"></div>';
+    
+    let avatarHtml = '';
+    let photoUrl = null;
+    
+    if (user.avatar_url) {
+        photoUrl = await loadUserPhoto(user.avatar_url);
+    }
+    
+    if (photoUrl) {
+        avatarHtml = `
+            <div class="user-card-avatar" style="background-image: url('${photoUrl}'); background-size: cover; background-position: center;">
+                ${onlineBadge}
+                <div class="user-card-avatar-fallback" style="display: none;">${nickname.charAt(0).toUpperCase()}</div>
+            </div>
+        `;
+    } else {
+        avatarHtml = `
+            <div class="user-card-avatar">
+                ${onlineBadge}
+                <div class="user-card-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
+            </div>
+        `;
+    }
+
+    const zodiac = details.zodiac ? getZodiacIcon(details.zodiac) + ' ' + formatZodiac(details.zodiac) : null;
+    const profession = details.profession || null;
+    const interests = details.interests ? details.interests.slice(0, 2).join(', ') : null;
+    const lookingFor = details.looking_for ? formatLookingFor(details.looking_for) : null;
+    const bio = details.description || 'Este usuário ainda não adicionou uma descrição.';
+
+    return `
+        <div class="user-card" data-user-id="${user.id}" onclick="viewProfile('${user.id}')">
+            ${avatarHtml}
+            <div class="user-card-name">${nickname}${age ? `, ${age}` : ''}</div>
+            
+            <div class="user-card-info">
+                ${zodiac ? `<div class="user-card-detail">${zodiac}</div>` : ''}
+                ${profession ? `<div class="user-card-detail">💼 ${profession}</div>` : ''}
+                ${lookingFor ? `<div class="user-card-detail">🎯 ${lookingFor}</div>` : ''}
+            </div>
+            
+            <div class="user-card-bio">${bio}</div>
+            
+            <div class="user-card-actions">
+                <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); sendMessage('${user.id}')">
+                    💌 Mensagem
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewProfile('${user.id}')">
+                    👀 Ver Perfil
+                </button>
+                <!-- Menu de ações -->
+                <div class="user-card-menu">
+                    <button class="btn-more" onclick="event.stopPropagation(); toggleMenu(this)">
+                        ⋯
+                    </button>
+                    <div class="menu-options">
+                        <button class="report-btn" onclick="event.stopPropagation(); openReportModal('${user.id}', '${nickname}')">
+                            🚨 Reportar
+                        </button>
+                        <button class="block-btn" onclick="event.stopPropagation(); openBlockModal('${user.id}', '${nickname}')">
+                            🚫 Bloquear
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// ==================== SISTEMA DE VISITANTES ====================
+
+// Carregar sistema de visitantes
+async function loadVisitorsSystem() {
+    try {
+        const isPremium = await checkPremiumStatus();
+        
+        if (isPremium) {
+            await loadPremiumVisitors();
+            await checkInvisibleStatusHome();
+        } else {
+            await loadFreeVisitorsStats();
+        }
+        
+    } catch (error) {
+        console.error('Erro no sistema de visitantes:', error);
+    }
+}
+
+// Verificar status premium
+async function checkPremiumStatus() {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return false;
+        
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_premium')
+            .eq('id', user.id)
+            .single();
+            
+        return profile?.is_premium || false;
+    } catch (error) {
+        console.error('Erro ao verificar premium:', error);
+        return false;
+    }
+}
+
+// ✅ FUNÇÃO CORRIGIDA PARA HOME - Compatível com visitante.html
+async function loadPremiumVisitors() {
+    try {
+        console.log('🔄 Carregando visitantes para HOME...');
+        
+        // Mostrar seção premium
+        document.getElementById('premiumVisitors').style.display = 'block';
+        document.getElementById('freeVisitors').style.display = 'none';
+        
+        const visitorsGrid = document.getElementById('visitorsGrid');
+        const visitorsCount = document.getElementById('visitorsCount');
+        
+        // ✅ USA A MESMA CONSULTA DA VISITANTE.HTML (que funciona)
+        const { data: visits, error } = await supabase
+            .from('profile_visits')
+            .select('*')
+            .eq('visited_id', currentUser.id)  // Onde ELE foi visitado
+            .order('visited_at', { ascending: false })
+            .limit(8);
+
+        if (error) {
+            console.error('❌ Erro ao carregar visitas:', error);
+            visitorsGrid.innerHTML = `
+                <div class="visitors-empty">
+                    <div class="icon">👀</div>
+                    <h3>Nenhuma visita recente</h3>
+                    <p>Seu perfil ainda não foi visitado</p>
+                </div>
+            `;
+            return;
+        }
+
+        console.log(`✅ ${visits?.length || 0} visitas encontradas na HOME:`, visits);
+
+        // Atualizar contador
+        const visitCount = visits?.length || 0;
+        if (visitorsCount) {
+            visitorsCount.textContent = `${visitCount} visita${visitCount !== 1 ? 's' : ''}`;
+        }
+
+        if (!visits || visits.length === 0) {
+            visitorsGrid.innerHTML = `
+                <div class="visitors-empty">
+                    <div class="icon">👀</div>
+                    <h3>Nenhuma visita ainda</h3>
+                    <p>Seu perfil ainda não foi visitado por outros usuários</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Criar cards dos visitantes - MESMO MÉTODO DA VISITANTE.HTML
+        let visitorsHTML = '';
+        let cardsCarregados = 0;
+        
+        for (const visit of visits) {
+            try {
+                const cardHTML = await createVisitorCardForHome(visit);
+                if (cardHTML) {
+                    visitorsHTML += cardHTML;
+                    cardsCarregados++;
+                }
+            } catch (error) {
+                console.error('Erro ao criar card:', error);
+                // Continua mesmo com erro em um card
+            }
+        }
+        
+        if (cardsCarregados > 0) {
+            visitorsGrid.innerHTML = visitorsHTML;
+            console.log(`✅ ${cardsCarregados} visitantes carregados na HOME`);
+        } else {
+            visitorsGrid.innerHTML = `
+                <div class="visitors-empty">
+                    <div class="icon">👀</div>
+                    <h3>Nenhuma visita recente</h3>
+                    <p>Seu perfil ainda não foi visitado</p>
+                </div>
+            `;
+        }
+
+    } catch (error) {
+        console.error('❌ Erro geral ao carregar visitantes:', error);
+        const visitorsGrid = document.getElementById('visitorsGrid');
+        visitorsGrid.innerHTML = `
+            <div class="visitors-empty">
+                <div class="icon">👀</div>
+                <h3>Nenhuma visita recente</h3>
+                <p>Seu perfil ainda não foi visitado</p>
+            </div>
+        `;
+    }
+}
+
+// ✅ FUNÇÃO AUXILIAR CORRIGIDA - Criar card para HOME com DEBUG
+async function createVisitorCardForHome(visit) {
+    try {
+        console.log('🎯 DEBUG CARD PEQUENO - Processando visita de:', visit.visitor_id);
+        
+        // Busca perfil do visitante
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('id, nickname, full_name, avatar_url, city')
+            .eq('id', visit.visitor_id)
+            .single();
+
+        console.log('🎯 DEBUG - Perfil encontrado:', profile);
+        console.log('🎯 DEBUG - Avatar URL:', profile?.avatar_url);
+
+        if (error || !profile) {
+            console.log('🎯 DEBUG - Perfil não encontrado, criando card básico');
+            return createBasicCardForHome(visit);
+        }
+
+        const nickname = profile.nickname || 
+                        profile.full_name?.split(' ')[0] || 
+                        'Usuário';
+        
+        const city = profile.city || 'Cidade não informada';
+        const timeAgo = getTimeAgo(visit.visited_at);
+        const initial = nickname.charAt(0).toUpperCase();
+
+        // ✅✅✅ CORREÇÃO: Carregar foto com DEBUG
+        let avatarContent = '';
+        if (profile.avatar_url) {
+            console.log('🎯 DEBUG - Tentando carregar foto:', profile.avatar_url);
+            const photoUrl = await loadUserPhoto(profile.avatar_url);
+            console.log('🎯 DEBUG - Photo URL result:', photoUrl);
+            
+            if (photoUrl) {
+                avatarContent = `
+                    <img class="visitor-avatar-img" src="${photoUrl}" alt="${nickname}" style="display: block;">
+                `;
+                console.log('🎯 DEBUG - ✅ Usando IMG com foto carregada');
+            } else {
+                avatarContent = `<div class="visitor-avatar-fallback">${initial}</div>`;
+                console.log('🎯 DEBUG - ❌ Usando fallback (foto não carregada)');
+            }
+        } else {
+            avatarContent = `<div class="visitor-avatar-fallback">${initial}</div>`;
+            console.log('🎯 DEBUG - ❌ Usando fallback (sem avatar_url no perfil)');
+        }
+
+        console.log('🎯 DEBUG - Card criado com sucesso para:', nickname);
+
+        return `
+            <div class="visitor-card" onclick="viewProfile('${visit.visitor_id}')">
+                <div class="visitor-avatar">
+                    ${avatarContent}
+                </div>
+                <div class="visitor-name">${nickname}</div>
+                <div class="visitor-location">${city}</div>
+                <div class="visitor-time">${timeAgo}</div>
+            </div>
+        `;
+
+    } catch (error) {
+        console.error('🎯 DEBUG - Erro ao criar card:', error);
+        return createBasicCardForHome(visit);
+    }
+}
+
+// ✅ FUNÇÃO AUXILIAR - Card básico para HOME
+function createBasicCardForHome(visit) {
+    return `
+        <div class="visitor-card" onclick="viewProfile('${visit.visitor_id}')">
+            <div class="visitor-avatar">
+                <div class="visitor-avatar-fallback">👤</div>
+            </div>
+            <div class="visitor-name">Usuário</div>
+            <div class="visitor-location">---</div>
+            <div class="visitor-time">${getTimeAgo(visit.visited_at)}</div>
+        </div>
+    `;
+}
+
+// ✅ FUNÇÃO CORRIGIDA - Carregar foto ESPECÍFICA PARA HOME
+async function loadUserPhoto(avatarUrl) {
+    try {
+        if (!avatarUrl) {
+            console.log('❌ HOME - Avatar URL vazio');
+            return null;
+        }
+
+        console.log('📸 HOME - Carregando foto:', avatarUrl);
+        
+        const { data } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(avatarUrl);
+
+        if (data?.publicUrl) {
+            console.log('✅ HOME - URL pública gerada:', data.publicUrl);
+            // ✅ Adiciona timestamp para evitar cache
+            const finalUrl = data.publicUrl + '?t=' + Date.now();
+            console.log('✅ HOME - URL final com cache bust:', finalUrl);
+            return finalUrl;
+        } else {
+            console.log('❌ HOME - Nenhuma URL pública retornada');
+            return null;
+        }
+    } catch (error) {
+        console.error('❌ HOME - Erro ao carregar foto:', error);
+        return null;
+    }
+}
+
+// Enviar mensagem
+async function sendMessage(userId, event) {
+    if (event) event.stopPropagation();
+    
+    console.log('💌 Iniciando conversa com usuário:', userId);
+
+    // ✅ VERIFICAR SE USUÁRIO ESTÁ BLOQUEADO
+    if (isUserBlocked(userId)) {
+        showAlert('🚫 Você bloqueou este usuário e não pode enviar mensagens.', 'error');
+        return;
+    }
+    
+    if (!isProfileComplete()) {
+        alert('Complete seu perfil primeiro para enviar mensagens!');
+        window.location.href = 'painel.html';
+        return;
+    }
+    
+    // REDIRECIONAR IMEDIATAMENTE
+    localStorage.setItem('openChatWithUserId', userId);
+    window.location.href = 'mensagens.html';
+    
+    // CRIAR MENSAGEM EM BACKGROUND (NÃO BLOQUEIA)
+    setTimeout(async () => {
+        try {
+            console.log('🔄 Criando conversa REAL em background:', userId);
+            
+            const { error: messageError } = await supabase
+                .from('messages')
+                .insert({
+                    sender_id: currentUser.id,
+                    receiver_id: userId,
+                    content: '👋 Iniciou uma conversa',
+                    is_read: false
+                });
+
+            if (messageError) {
+                console.error('❌ Erro ao criar conversa:', messageError);
+            } else {
+                console.log('✅ Conversa criada com sucesso em background');
+            }
+        } catch (error) {
+            console.error('❌ Erro ao enviar mensagem em background:', error);
+        }
+    }, 100);
+}
+// Visualizar perfil
+async function viewProfile(userId, event) {
+    if (event) event.stopPropagation();
+
+    // ✅ VERIFICAR SE USUÁRIO ESTÁ BLOQUEADO
+    if (isUserBlocked(userId)) {
+        showAlert('🚫 Você bloqueou este usuário e não pode visualizar o perfil.', 'error');
+        return;
+    }
+    
+    if (!isProfileComplete()) {
+        alert('Complete seu perfil primeiro para ver outros perfis!');
+        window.location.href = 'painel.html';
+        return;
+    }
+    
+    // REDIRECIONAR IMEDIATAMENTE (SEM ESPERAR NADA)
+    localStorage.setItem('viewingProfileId', userId);
+    window.location.href = 'perfil.html';
+    
+    // REGISTRAR VISITA EM BACKGROUND (NÃO BLOQUEIA REDIRECIONAMENTO)
+    setTimeout(async () => {
+        try {
+            console.log('👀 Registrando visita em background para:', userId);
+            const visitRegistered = await registerProfileVisit(userId);
+            console.log('✅ Visita registrada em background:', visitRegistered);
+        } catch (visitError) {
+            console.log('⚠️ Visita não registrada (background):', visitError);
+        }
+    }, 100);
+}
+
+// Verificar se perfil está completo
+function isProfileComplete() {
+    return userProfile &&
+            userProfile.full_name &&
+            userProfile.full_name.trim() !== '' &&
+            userProfile.birth_date;
+}
+
+// Verificar se usuário está online
+function isUserOnline(userProfile, currentUserId) {
+    if (!userProfile.last_online_at) return false;
+    
+    const lastOnline = new Date(userProfile.last_online_at);
+    const now = new Date();
+    const minutesDiff = (now - lastOnline) / (1000 * 60);
+    
+    // Considera online se esteve ativo nos últimos 5 minutos
+    const isActuallyOnline = minutesDiff <= 5;
+    
+    // Se é o próprio usuário, sempre mostra online
+    if (userProfile.id === currentUserId) return true;
+    
+    // Se o usuário está invisível, mostra como offline para outros
+    if (userProfile.is_invisible && userProfile.id !== currentUserId) {
+        return false;
+    }
+    
+    return isActuallyOnline;
+}
+
+// ==================== SISTEMA DE STATUS ONLINE ====================
+
+// Atualizar status online
+async function updateOnlineStatus() {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { error } = await supabase
+            .from('profiles')
+            .update({ 
+                last_online_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', user.id);
+
+        if (error) {
+            console.error('Erro ao atualizar status online:', error);
+        }
+        
+    } catch (error) {
+        console.error('Erro no sistema de status online:', error);
+    }
+}
+
+// Iniciar atualização periódica do status
+function startOnlineStatusUpdater() {
+    // Atualizar imediatamente
+    updateOnlineStatus();
+    
+    // Atualizar a cada 1 minuto
+    setInterval(updateOnlineStatus, 60000);
+    
+    // Atualizar também quando a página ganha foco
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            updateOnlineStatus();
+        }
+    });
+    
+    // Atualizar em interações do usuário
+    ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => {
+        document.addEventListener(event, updateOnlineStatus, { passive: true });
+    });
+}
+
+// Sistema de sincronização do modo invisível
+function setupInvisibleModeSyncListener() {
+    try {
+        console.log('👂 Configurando ouvinte de sincronização do modo invisível...');
+        
+        window.addEventListener('invisibleModeUpdated', function(event) {
+            console.log('🔄 Evento de modo invisível recebido:', event.detail);
+            handleInvisibleModeChangeInHome(event.detail.isInvisible);
+        });
+        
+        window.addEventListener('storage', function(event) {
+            if (event.key === 'invisibleModeChanged') {
+                const isInvisible = localStorage.getItem('invisibleModeStatus') === 'true';
+                handleInvisibleModeChangeInHome(isInvisible);
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ Erro ao configurar sincronização:', error);
+    }
+}
+
+// Processar mudança do modo invisível
+async function handleInvisibleModeChangeInHome(isInvisible) {
+    try {
+        console.log(`🔄 Processando mudança do modo invisível para: ${isInvisible}`);
+        
+        const statusElement = document.getElementById('invisibleStatusHome');
+        if (statusElement) {
+            if (isInvisible) {
+                statusElement.style.display = 'flex';
+                statusElement.querySelector('strong').textContent = 'Ativo';
+            } else {
+                statusElement.style.display = 'none';
+            }
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro ao processar mudança do modo invisível:', error);
+    }
+}
+
+// Verificar status do modo invisível
+async function checkInvisibleStatusHome() {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_invisible')
+            .eq('id', user.id)
+            .single();
+            
+        const statusElement = document.getElementById('invisibleStatusHome');
+        if (statusElement && profile) {
+            if (profile.is_invisible) {
+                statusElement.style.display = 'flex';
+                statusElement.querySelector('strong').textContent = 'Ativo';
+            } else {
+                statusElement.style.display = 'none';
+            }
+        }
+    } catch (error) {
+        console.error('Erro ao verificar modo invisível:', error);
+    }
+}
+
+// ==================== ESTATÍSTICAS E UTILITÁRIOS ====================
+
+// Atualizar estatísticas
+async function updateStats() {
+    // Mostra valores instantâneos primeiro
+    document.getElementById('totalUsers').textContent = '...';
+    document.getElementById('newMatches').textContent = '0';
+    document.getElementById('usersOnline').textContent = '...';
+    document.getElementById('profileViews').textContent = '...';
+
+    // Carrega dados reais em paralelo
+    try {
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+        
+        const [totalResult, messagesResult, viewsResult, onlineResult] = await Promise.all([
+            supabase.from('profiles').select('*', { count: 'exact', head: true }),
+            supabase.from('messages').select('*', { count: 'exact', head: true })
+                .eq('receiver_id', currentUser.id)
+                .eq('is_read', false),
+            supabase.rpc('count_user_visits', {
+                p_user_id: currentUser.id,
+                p_days: 7
+            }),
+            supabase.from('profiles').select('*', { count: 'exact', head: true })
+                .gte('last_online_at', fiveMinutesAgo)
+                .eq('is_invisible', false)
+                .neq('id', currentUser.id)
+        ]);
+
+        // Atualiza com dados reais
+        document.getElementById('totalUsers').textContent = totalResult.count || 1;
+        document.getElementById('newMatches').textContent = messagesResult.count || 0;
+        document.getElementById('usersOnline').textContent = onlineResult.count || 0;
+        document.getElementById('profileViews').textContent = viewsResult.data || 0;
+
+    } catch (error) {
+        console.error('Erro ao atualizar estatísticas:', error);
+        document.getElementById('totalUsers').textContent = '1';
+        document.getElementById('newMatches').textContent = '0';
+        document.getElementById('usersOnline').textContent = '0';
+        document.getElementById('profileViews').textContent = '0';
+    }
+}
+
+// Iniciar atualização automática de estatísticas
+function startStatsAutoUpdate() {
+    setInterval(updateStats, 30000);
+}
+
+// Mostrar estado vazio
+function showEmptyState(message) {
+    const usersGrid = document.getElementById('usersGrid');
+    usersGrid.innerHTML = `
+        <div class="empty-state">
+            <div class="empty-state-icon">👥</div>
+            <h3>Nenhum usuário encontrado</h3>
+            <p>${message}</p>
+            <button class="btn btn-primary" onclick="window.location.href='busca.html'">
+                🔍 Ir para Busca
+            </button>
+        </div>
+    `;
+}
+
+// Alertas visíveis
+function showAlert(message, type = 'success') {
+    const existing = document.querySelectorAll('.custom-alert');
+    existing.forEach(alert => alert.remove());
+    
+    const alert = document.createElement('div');
+    alert.className = `custom-alert ${type}`;
+    alert.textContent = message;
+    alert.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1001;
+        padding: 1rem 2rem;
+        border-radius: 10px;
+        color: white;
+        font-weight: 600;
+        background: ${type === 'success' ? '#38a169' : type === 'error' ? '#e53e3e' : type === 'warning' ? '#d69e2e' : '#3182ce'};
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        animation: slideInDown 0.3s ease;
+        text-align: center;
+        min-width: 300px;
+        max-width: 90%;
+        border: 2px solid ${type === 'success' ? '#2f855a' : type === 'error' ? '#c53030' : type === 'warning' ? '#b7791f' : '#2c5aa0'};
+    `;
+    
+    document.body.appendChild(alert);
+    
+    setTimeout(() => {
+        alert.style.animation = 'slideOutUp 0.3s ease';
+        setTimeout(() => alert.remove(), 300);
+    }, 3000);
+}
+
+// ==================== FUNÇÕES AUXILIARES ====================
+
+function calculateAge(birthDate) {
+    if (!birthDate) return null;
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--;
+    }
+    
+    return age;
+}
+
+function getZodiacIcon(zodiac) {
+    const icons = {
+        'aries': '♈', 'touro': '♉', 'gemeos': '♊', 'cancer': '♋',
+        'leao': '♌', 'virgem': '♍', 'libra': '♎', 'escorpiao': '♏',
+        'sagitario': '♐', 'capricornio': '♑', 'aquario': '♒', 'peixes': '♓'
+    };
+    return icons[zodiac] || '⭐';
+}
+
+function formatZodiac(zodiac) {
+    const names = {
+        'aries': 'Áries', 'touro': 'Touro', 'gemeos': 'Gêmeos', 'cancer': 'Câncer',
+        'leao': 'Leão', 'virgem': 'Virgem', 'libra': 'Libra', 'escorpiao': 'Escorpião',
+        'sagitario': 'Sagitário', 'capricornio': 'Capricórnio', 'aquario': 'Aquário', 'peixes': 'Peixes'
+    };
+    return names[zodiac] || zodiac;
+}
+
+function formatLookingFor(lookingFor) {
+    const options = {
+        'amizade': 'Amizade',
+        'namoro': 'Namoro',
+        'relacionamento_serio': 'Relacionamento Sério',
+        'conversa': 'Apenas Conversa'
+    };
+    return options[lookingFor] || lookingFor;
+}
+
+function getTimeAgo(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'Agora';
+    if (diffMins < 60) return `${diffMins}min`;
+    if (diffHours < 24) return `${diffHours}h`;
+    if (diffDays < 7) return `${diffDays}d`;
+    return `${Math.floor(diffDays / 7)}sem`;
+}
+
+// ==================== MENU MOBILE ====================
+
+function setupMobileMenu() {
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    const closeMobileMenu = document.getElementById('closeMobileMenu');
+    const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+
+    if (!hamburgerBtn || !mobileMenu) return;
+
+    hamburgerBtn.addEventListener('click', () => {
+        mobileMenu.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    });
+
+    closeMobileMenu.addEventListener('click', () => {
+        mobileMenu.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    });
+
+    if (mobileLogoutBtn) {
+        mobileLogoutBtn.addEventListener('click', logout);
+    }
+
+    mobileMenu.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+            mobileMenu.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        });
+    });
+
+    function checkScreenSize() {
+        if (window.innerWidth <= 768) {
+            document.querySelector('.user-menu').style.display = 'none';
+            hamburgerBtn.style.display = 'flex';
+        } else {
+            document.querySelector('.user-menu').style.display = 'flex';
+            hamburgerBtn.style.display = 'none';
+            mobileMenu.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    }
+
+    window.addEventListener('resize', checkScreenSize);
+    checkScreenSize();
+}
+
+// ==================== FUNÇÕES QUE ESTÃO FALTANDO ====================
+
+// Carregar estatísticas para free users
+async function loadFreeVisitorsStats() {
+    try {
+        document.getElementById('premiumVisitors').style.display = 'none';
+        document.getElementById('freeVisitors').style.display = 'block';
+        
+        const { data: visitCount, error } = await supabase.rpc('count_user_visits', {
+            p_user_id: currentUser.id,
+            p_days: 7
+        });
+        
+        const count = visitCount || 0;
+        const countText = count === 1 ? '1 pessoa' : `${count} pessoas`;
+        
+        document.getElementById('freeVisitorsCount').textContent = countText;
+        document.getElementById('visitorsCount').textContent = `${count} visita${count !== 1 ? 's' : ''}`;
+        
+    } catch (error) {
+        console.error('Erro ao carregar estatísticas free:', error);
+        document.getElementById('freeVisitorsCount').textContent = '0 pessoas';
+        document.getElementById('visitorsCount').textContent = '0 visitas';
+    }
+}
+
+// Registrar visita ao perfil
+async function registerProfileVisit(visitedUserId) {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            console.error('❌ Usuário não autenticado');
+            return false;
+        }
+
+        if (user.id === visitedUserId) {
+            console.log('⚠️ Não pode visitar próprio perfil');
+            return false;
+        }
+        
+        // ✅ VERIFICAR SE USUÁRIO ESTÁ BLOQUEADO
+        if (isUserBlocked(visitedUserId)) {
+            console.log('🚫 Não é possível visitar perfil: Usuário bloqueado');
+            showAlert('🚫 Você bloqueou este usuário e não pode visitá-lo.', 'error');
+            return false;
+        }
+
+        console.log('🔄 Registrando visita:', {
+            visitor: user.id,
+            visited: visitedUserId
+        });
+
+        const { data, error } = await supabase.rpc('register_visit_simple', {
+            p_visitor_id: user.id,
+            p_visited_id: visitedUserId
+        });
+
+        if (error) {
+            console.error('❌ Erro ao registrar visita:', error);
+            return false;
+        }
+
+        console.log('✅ Visita registrada com sucesso:', data);
+        return data.success;
+
+    } catch (error) {
+        console.error('❌ Erro no registro de visita:', error);
+        return false;
+    }
+}
+
+// ✅ ADICIONAR TAMBÉM ESTA FUNÇÃO QUE ESTÁ FALTANDO:
+function setupInvisibleModeSyncListener() {
+    try {
+        console.log('👂 Configurando ouvinte de sincronização do modo invisível...');
+        
+        window.addEventListener('invisibleModeUpdated', function(event) {
+            console.log('🔄 Evento de modo invisível recebido:', event.detail);
+            handleInvisibleModeChangeInHome(event.detail.isInvisible);
+        });
+        
+        window.addEventListener('storage', function(event) {
+            if (event.key === 'invisibleModeChanged') {
+                const isInvisible = localStorage.getItem('invisibleModeStatus') === 'true';
+                handleInvisibleModeChangeInHome(isInvisible);
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ Erro ao configurar sincronização:', error);
+    }
+}
+
+// ✅ E ESTA TAMBÉM:
+async function handleInvisibleModeChangeInHome(isInvisible) {
+    try {
+        console.log(`🔄 Processando mudança do modo invisível para: ${isInvisible}`);
+        
+        const statusElement = document.getElementById('invisibleStatusHome');
+        if (statusElement) {
+            if (isInvisible) {
+                statusElement.style.display = 'flex';
+                statusElement.querySelector('strong').textContent = 'Ativo';
+            } else {
+                statusElement.style.display = 'none';
+            }
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro ao processar mudança do modo invisível:', error);
+    }
+}
+
+// ==================== EXPORTAR FUNÇÕES GLOBAIS ====================
+
+window.sendMessage = sendMessage;
+window.viewProfile = viewProfile;
+window.registerProfileVisit = registerProfileVisit;
+window.toggleMenu = toggleMenu;
+window.openReportModal = openReportModal;
+window.closeReportModal = closeReportModal;
+window.selectReportCategory = selectReportCategory;
+window.submitReport = submitReport; // ✅ ADICIONE ESTA LINHA!
+window.submitReport = submitReport;
+window.openBlockModal = openBlockModal;
+window.closeBlockModal = closeBlockModal;
+window.confirmBlock = confirmBlock;
+window.closeConfirmModal = closeConfirmModal;
+window.openSupportModal = openSupportModal;
+
+// ==================== CSS PARA ANIMAÇÕES ====================
+
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideInDown {
+        from { transform: translate(-50%, -100%); opacity: 0; }
+        to { transform: translate(-50%, 0); opacity: 1; }
+    }
+    @keyframes slideOutUp {
+        from { transform: translate(-50%, 0); opacity: 1; }
+        to { transform: translate(-50%, -100%); opacity: 0; }
+    }
+    .connection-status {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        z-index: 1000;
+        transition: all 0.3s ease;
+    }
+    .connection-good { background: #38a169; color: white; }
+    .connection-slow { background: #d69e2e; color: white; }
+    .custom-alert { 
+        /* Estilos base já aplicados inline */
+    }
+`;
+if (!document.querySelector('#alert-animations')) {
+    style.id = 'alert-animations';
+    document.head.appendChild(style);
+}
+
+console.log('✅ Home.js CARREGADO E CORRIGIDO! Sistema de bloqueio ULTRA-RÁPIDO funcionando! 🎉');
+</script>
 </body>
-</html>
+</html> 
