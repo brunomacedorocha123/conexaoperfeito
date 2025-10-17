@@ -1684,44 +1684,59 @@ async function uploadGalleryImage(file) {
 }
 
 // Carregar galeria do usuário
+// ✅ CORREÇÃO DEFINITIVA: Carregar galeria do usuário
 async function loadUserGallery() {
     try {
-        // Obter usuário atual
+        console.log('🔄 Carregando galeria do usuário...');
+        
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
             console.error('❌ Usuário não autenticado');
             return;
         }
 
-        const { data: images, error } = await supabase
-            .from('user_gallery')
-            .select('*')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false });
-        
+        // ✅ MÉTODO DIRETO: Listar arquivos do storage (SEM tabela user_gallery)
+        const { data: files, error } = await supabase.storage
+            .from('gallery')
+            .list(user.id + '/');
+
         if (error) {
-            console.error('❌ Erro ao carregar galeria:', error);
-            // Se a tabela não existir, mostrar galeria vazia
-            if (error.code === '42P01') {
-                console.log('ℹ️ Tabela user_gallery não existe ainda');
+            console.error('❌ Erro ao listar arquivos:', error);
+            
+            // Se a pasta não existe, mostrar galeria vazia
+            if (error.message?.includes('not found')) {
+                console.log('📁 Pasta da galeria não existe - será criada automaticamente');
                 currentGalleryImages = [];
                 displayGallery([]);
                 return;
             }
             throw error;
         }
+
+        // ✅ Converter arquivos para o formato esperado
+        const images = files
+            .filter(file => file.name !== '.emptyFolderPlaceholder')
+            .map(file => ({
+                id: file.id || file.name,
+                image_url: `${user.id}/${file.name}`,
+                image_name: file.name,
+                created_at: file.created_at
+            }));
+
+        console.log(`✅ ${images.length} imagens encontradas no storage`);
+        currentGalleryImages = images;
         
-        currentGalleryImages = images || [];
-        displayGallery(images || []);
+        displayGallery(images);
         await updateStorageDisplay();
         
     } catch (error) {
         console.error('❌ Erro ao carregar galeria:', error);
-        showNotification('❌ Erro ao carregar galeria', 'error');
+        currentGalleryImages = [];
+        displayGallery([]);
     }
 }
 
-// Exibir galeria na tela
+// ✅ CORREÇÃO: Exibir galeria na tela
 function displayGallery(images) {
     const galleryGrid = document.getElementById('galleryGrid');
     
@@ -1740,43 +1755,31 @@ function displayGallery(images) {
         <div class="gallery-item" data-index="${index}">
             <img src="" data-src="${image.image_url}" alt="Imagem da galeria" class="gallery-image" loading="lazy">
             <div class="gallery-actions">
-                <button class="gallery-btn" onclick="deleteGalleryImage('${image.id}')" title="Excluir">
+                <button class="gallery-btn" onclick="deleteGalleryImage('${image.image_url}')" title="Excluir">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
         </div>
     `).join('');
     
-    // Carregar imagens lazy
-    loadGalleryImagesLazy();
+    // ✅ Carregar imagens imediatamente
+    loadGalleryImagesImmediately();
 }
 
-// Carregar imagens com lazy loading
-function loadGalleryImagesLazy() {
+// ✅ NOVA FUNÇÃO: Carregar imagens imediatamente
+function loadGalleryImagesImmediately() {
     const images = document.querySelectorAll('.gallery-image[data-src]');
     
-    const imageObserver = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const img = entry.target;
-                loadGalleryImage(img);
-                observer.unobserve(img);
-            }
-        });
+    images.forEach(async (img) => {
+        const imageUrl = img.getAttribute('data-src');
+        await loadGalleryImage(img, imageUrl);
     });
-    
-    images.forEach(img => imageObserver.observe(img));
 }
 
-// Carregar uma imagem específica
-async function loadGalleryImage(imgElement) {
-    const imageUrl = imgElement.getAttribute('data-src');
-    
+// ✅ CORREÇÃO: Carregar uma imagem específica
+async function loadGalleryImage(imgElement, imageUrl) {
     try {
-        if (!imageUrl) {
-            console.error('❌ URL da imagem não encontrada');
-            return;
-        }
+        if (!imageUrl) return;
         
         const { data, error } = await supabase.storage
             .from('gallery')
@@ -1790,57 +1793,27 @@ async function loadGalleryImage(imgElement) {
         if (data && data.publicUrl) {
             imgElement.src = data.publicUrl;
             imgElement.removeAttribute('data-src');
+            console.log('✅ Imagem carregada:', data.publicUrl);
         }
     } catch (error) {
         console.error('❌ Erro ao carregar imagem:', error);
     }
 }
 
-// Excluir imagem da galeria
-async function deleteGalleryImage(imageId) {
+// ✅ CORREÇÃO: Excluir imagem da galeria (APENAS do storage)
+async function deleteGalleryImage(imagePath) {
     if (!confirm('Tem certeza que deseja excluir esta imagem?')) return;
     
     try {
-        // Obter usuário atual
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            throw new Error('Usuário não autenticado');
-        }
-
-        // Buscar informações da imagem
-        const { data: image, error: fetchError } = await supabase
-            .from('user_gallery')
-            .select('*')
-            .eq('id', imageId)
-            .eq('user_id', user.id)
-            .single();
-        
-        if (fetchError) {
-            if (fetchError.code === 'PGRST116') {
-                showNotification('❌ Imagem não encontrada', 'error');
-                return;
-            }
-            throw fetchError;
-        }
-        
-        // Excluir do storage
+        // Excluir apenas do storage (mais simples e confiável)
         const { error: storageError } = await supabase.storage
             .from('gallery')
-            .remove([image.image_url]);
+            .remove([imagePath]);
         
         if (storageError) throw storageError;
         
-        // Excluir do banco
-        const { error: dbError } = await supabase
-            .from('user_gallery')
-            .delete()
-            .eq('id', imageId)
-            .eq('user_id', user.id);
-        
-        if (dbError) throw dbError;
-        
         showNotification('✅ Imagem excluída com sucesso', 'success');
-        await loadUserGallery();
+        await loadUserGallery(); // Recarregar a galeria
         
     } catch (error) {
         console.error('❌ Erro ao excluir imagem:', error);
@@ -1848,32 +1821,27 @@ async function deleteGalleryImage(imageId) {
     }
 }
 
-// Obter uso de storage
+// ✅ CORREÇÃO: Obter uso de storage
 async function getStorageUsage() {
     try {
-        // Obter usuário atual
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return 0;
 
-        const { data: usage, error } = await supabase
-            .from('user_gallery')
-            .select('file_size_bytes')
-            .eq('user_id', user.id);
+        // Listar arquivos e somar tamanhos
+        const { data: files, error } = await supabase.storage
+            .from('gallery')
+            .list(user.id + '/');
         
-        if (error) {
-            // Se a tabela não existir, retorna 0
-            if (error.code === '42P01') return 0;
-            throw error;
-        }
+        if (error) return 0;
         
-        return usage.reduce((total, img) => total + (img.file_size_bytes || 0), 0);
+        return files.reduce((total, file) => total + (file.metadata?.size || 0), 0);
     } catch (error) {
         console.error('❌ Erro ao calcular uso de storage:', error);
         return 0;
     }
 }
 
-// Atualizar display do storage
+// ✅ CORREÇÃO: Atualizar display do storage
 async function updateStorageDisplay() {
     const storageUsed = await getStorageUsage();
     const storageUsedMB = (storageUsed / (1024 * 1024)).toFixed(1);
@@ -1881,7 +1849,6 @@ async function updateStorageDisplay() {
     
     document.getElementById('storageUsed').textContent = `${storageUsedMB}MB`;
     document.getElementById('storageFill').style.width = `${Math.min(storagePercentage, 100)}%`;
-
 }
 
 /// ==================== EXCLUSÃO DE CONTA ====================
