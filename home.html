@@ -2218,7 +2218,6 @@ function setupEventListeners() {
     
     document.addEventListener('touchstart', function() {}, { passive: true });
 }
-
 // Logout
 async function logout() {
     try {
@@ -2280,7 +2279,7 @@ function isUserBlocked(userId) {
     return blockedUserIdsSet.has(userId);
 }
 
-// ✅ BLOQUEIO ULTRA-RÁPIDO - FUNÇÃO PRINCIPAL
+// ✅ BLOQUEIO ULTRA-RÁPIDO - FUNÇÃO PRINCIPAL CORRIGIDA
 async function confirmBlock() {
     if (!currentBlockUserId) return;
     
@@ -2300,13 +2299,16 @@ async function confirmBlock() {
     blockedUserIdsSet.add(userId);
     blockCache.set(blockedUserIdsSet);
     
+    // ✅ 4. BLOQUEIO DIRETO E RÁPIDO NO BANCO (1-2s)
     try {
-        // 4. TENTA BLOQUEIO NO BANCO (em background)
-        const { data, error } = await supabase.rpc('block_user_instant', {
-            p_blocker_id: currentUser.id,
-            p_blocked_id: userId
-        });
-        
+        const { error } = await supabase
+            .from('user_blocks')
+            .insert({
+                blocker_id: currentUser.id,
+                blocked_user_id: userId,
+                created_at: new Date().toISOString()
+            });
+
         const responseTime = Date.now() - startTime;
         console.log(`✅ Bloqueio concluído em ${responseTime}ms`);
 
@@ -2317,31 +2319,15 @@ async function confirmBlock() {
             } else {
                 throw error;
             }
-        } else if (data && data.success) {
-            showAlert(`✅ ${userName} bloqueado com sucesso!`, 'success');
         } else {
-            throw new Error(data?.error || 'Erro desconhecido');
+            showAlert(`✅ ${userName} bloqueado com sucesso!`, 'success');
         }
 
     } catch (error) {
         console.error('❌ Falha no bloqueio:', error);
         
         if (error.message?.includes('Timeout') || error.message?.includes('Network')) {
-            // ✅ BLOQUEIO OFFLINE - usuário fica bloqueado localmente
             showAlert('⚠️ Bloqueado localmente (sem internet)', 'warning');
-            
-            // Tenta novamente em background silenciosamente
-            setTimeout(async () => {
-                try {
-                    await supabase.rpc('block_user_instant', {
-                        p_blocker_id: currentUser.id,
-                        p_blocked_id: userId
-                    });
-                    console.log('✅ Bloqueio concluído em background');
-                } catch (bgError) {
-                    console.log('❌ Bloqueio em background falhou:', bgError);
-                }
-            }, 1000);
         } else {
             showAlert('❌ Falha no bloqueio. Tente novamente.', 'error');
         }
@@ -2416,7 +2402,7 @@ function animateCardRemoval(card) {
 
 // ==================== SISTEMA DE REPORTE ====================
 
-// Função para toggle do menu de ações
+// Função para toggle do menu de ações - CORRIGIDA PARA MOBILE
 function toggleMenu(button) {
     const menu = button.nextElementSibling;
     const isShowing = menu.classList.contains('show');
@@ -2429,6 +2415,13 @@ function toggleMenu(button) {
     // Abrir/fechar o menu clicado
     if (!isShowing) {
         menu.classList.add('show');
+        
+        // ✅ MELHORIA: Fechar menu após 5 segundos no mobile
+        if (window.innerWidth <= 768) {
+            setTimeout(() => {
+                menu.classList.remove('show');
+            }, 5000);
+        }
         
         // Fechar menu ao clicar fora
         setTimeout(() => {
