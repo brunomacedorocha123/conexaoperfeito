@@ -2189,7 +2189,7 @@ async function initializeApp() {
         // 2. Carregar dados do usuário
         await loadUserData();
         
-        // 3. Carregar usuários
+        // 3. Carregar usuários OTIMIZADO
         await loadRealUsers();
         
         // 4. Carregar visitantes
@@ -2226,6 +2226,7 @@ async function logout() {
         console.error('Erro ao fazer logout:', error);
     }
 }
+
 function showQuickToast(message) {
     document.querySelectorAll('.quick-toast').forEach(toast => toast.remove());
     
@@ -2358,43 +2359,29 @@ async function loadUserPhoto(avatarUrl) {
     }
 }
 
-// ✅ CORREÇÃO CRÍTICA: Carregar usuários
+// ✅✅✅ CORREÇÃO CRÍTICA: Carregar usuários OTIMIZADO com função SQL
 async function loadRealUsers() {
     try {
-        console.log('👥 Carregando usuários...');
+        console.log('👥 Carregando usuários OTIMIZADO...');
         
         const limit = window.innerWidth <= 768 ? 4 : 8;
         
-        const { data: users, error } = await supabase
-            .from('profiles')
-            .select(`
-                id,
-                nickname,
-                full_name,
-                birth_date,
-                avatar_url,
-                last_online_at,
-                is_invisible,
-                user_details (
-                    gender,
-                    zodiac,
-                    profession,
-                    interests,
-                    looking_for,
-                    description
-                )
-            `)
-            .neq('id', currentUser.id)
-            .limit(limit)
-            .order('created_at', { ascending: false });
+        // ✅ USAR A FUNÇÃO SQL OTIMIZADA QUE JÁ FILTRA BLOQUEIOS
+        const { data: users, error } = await supabase.rpc(
+            'get_home_users_optimized', {
+                current_user_uuid: currentUser.id,
+                limit_count: limit
+            }
+        );
 
         if (error) {
-            console.error('Erro ao carregar usuários:', error);
-            showEmptyState('Erro ao carregar usuários.');
+            console.error('Erro ao carregar usuários otimizado:', error);
+            // Fallback para query normal
+            await loadRealUsersFallback(limit);
             return;
         }
 
-        console.log(`✅ ${users?.length || 0} usuários encontrados`);
+        console.log(`✅ ${users?.length || 0} usuários encontrados (OTIMIZADO)`);
 
         if (!users || users.length === 0) {
             showEmptyState('Ainda não há outros usuários cadastrados.');
@@ -2409,6 +2396,38 @@ async function loadRealUsers() {
     }
 }
 
+// ✅ FALLBACK se a função SQL falhar
+async function loadRealUsersFallback(limit) {
+    console.log('🔄 Usando fallback...');
+    
+    const { data: users, error } = await supabase
+        .from('profiles')
+        .select(`
+            id,
+            nickname,
+            full_name,
+            birth_date,
+            avatar_url,
+            last_online_at,
+            is_invisible,
+            user_details (
+                gender,
+                zodiac,
+                profession,
+                interests,
+                looking_for,
+                description
+            )
+        `)
+        .neq('id', currentUser.id)
+        .limit(limit)
+        .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    
+    await displayUsersWithPhotos(users);
+}
+
 // Exibir usuários com fotos
 async function displayUsersWithPhotos(users) {
     const usersGrid = document.getElementById('usersGrid');
@@ -2420,6 +2439,7 @@ async function displayUsersWithPhotos(users) {
     const userCards = [];
     
     for (const user of users) {
+        // ✅ AGORA O FILTRO DE BLOQUEIO É FEITO NO SQL, SEM VERIFICAÇÃO AQUI
         const card = await createUserCardWithPhoto(user);
         if (card) userCards.push(card);
     }
@@ -2436,11 +2456,18 @@ async function displayUsersWithPhotos(users) {
 // ✅ CORREÇÃO: Criar card com FOTOS REAIS como IMG (igual perfil.html)
 async function createUserCardWithPhoto(user) {
     try {
-        if (!user || !user.nickname) return '';
-
+        // ✅ CORREÇÃO: A função SQL retorna campos diferentes, precisamos adaptar
+        const userId = user.user_id || user.id;
         const nickname = user.nickname || user.full_name?.split(' ')[0] || 'Usuário';
         const age = user.birth_date ? calculateAge(user.birth_date) : null;
-        const details = user.user_details || {};
+        
+        // ✅ CORREÇÃO: Dados podem vir de user_details JSONB ou do objeto principal
+        let details = {};
+        if (user.user_details) {
+            details = user.user_details; // Veio da função SQL
+        } else if (user.user_details) {
+            details = user.user_details; // Veio do fallback
+        }
         
         // Status online
         const isOnline = isUserOnline(user, currentUser.id);
@@ -2473,29 +2500,29 @@ async function createUserCardWithPhoto(user) {
             `;
         }
 
-        const zodiac = details.zodiac ? getZodiacIcon(details.zodiac) + ' ' + formatZodiac(details.zodiac) : null;
-        const profession = details.profession || null;
-        const lookingFor = details.looking_for ? formatLookingFor(details.looking_for) : null;
-        const bio = details.description || 'Este usuário ainda não adicionou uma descrição.';
+        const zodiac = details.zodiac || user.zodiac;
+        const profession = details.profession || user.profession;
+        const lookingFor = details.looking_for || user.looking_for;
+        const bio = details.description || user.description || 'Este usuário ainda não adicionou uma descrição.';
 
         return `
-            <div class="user-card" data-user-id="${user.id}" onclick="viewProfile('${user.id}')">
+            <div class="user-card" data-user-id="${userId}" onclick="viewProfile('${userId}')">
                 ${avatarHtml}
                 <div class="user-card-name">${nickname}${age ? `, ${age}` : ''}</div>
                 
                 <div class="user-card-info">
-                    ${zodiac ? `<div class="user-card-detail">${zodiac}</div>` : ''}
+                    ${zodiac ? `<div class="user-card-detail">${getZodiacIcon(zodiac)} ${formatZodiac(zodiac)}</div>` : ''}
                     ${profession ? `<div class="user-card-detail">💼 ${profession}</div>` : ''}
-                    ${lookingFor ? `<div class="user-card-detail">🎯 ${lookingFor}</div>` : ''}
+                    ${lookingFor ? `<div class="user-card-detail">🎯 ${formatLookingFor(lookingFor)}</div>` : ''}
                 </div>
                 
                 <div class="user-card-bio">${bio}</div>
                 
                 <div class="user-card-actions">
-                    <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); sendMessage('${user.id}')">
+                    <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); sendMessage('${userId}')">
                         💌 Mensagem
                     </button>
-                    <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewProfile('${user.id}')">
+                    <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewProfile('${userId}')">
                         👀 Ver Perfil
                     </button>
                     <div class="user-card-menu">
@@ -2503,10 +2530,10 @@ async function createUserCardWithPhoto(user) {
                             ⋯
                         </button>
                         <div class="menu-options">
-                            <button class="report-btn" onclick="event.stopPropagation(); openReportModal('${user.id}', '${nickname}')">
+                            <button class="report-btn" onclick="event.stopPropagation(); openReportModal('${userId}', '${nickname}')">
                                 🚨 Reportar
                             </button>
-                            <button class="block-btn" onclick="event.stopPropagation(); openBlockModal('${user.id}', '${nickname}')">
+                            <button class="block-btn" onclick="event.stopPropagation(); openBlockModal('${userId}', '${nickname}')">
                                 🚫 Bloquear
                             </button>
                         </div>
@@ -2999,7 +3026,6 @@ function startOnlineStatusUpdater() {
         document.addEventListener(event, updateOnlineStatus, { passive: true });
     });
 }
-
 // ==================== ESTATÍSTICAS ====================
 
 async function updateStats() {
