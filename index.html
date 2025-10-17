@@ -4,37 +4,199 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Amor Conect - Encontre seu par ideal</title>
-    
-    <!-- CSS GLOBAIS -->
-    <link rel="stylesheet" href="globals.css">
-    <link rel="stylesheet" href="components.css">
-    
     <style>
-        /* ==================== ESTILOS ESPECÍFICOS DA INDEX ==================== */
-        
+        /* Reset e configurações gerais */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --bege: #f6ecc5;
+            --vermelho-rosado: #d1656d;
+            --lilas: #dfc9ed;
+            --branco: #ffffff;
+            --text: #444;
+            --text-light: #666;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            background-color: var(--bege);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            color: var(--branco);
+            padding: 0.8rem 0;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .logo img {
+            height: 180px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .logo h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--branco);
+            white-space: nowrap;
+        }
+
+        /* Menu Hamburguer */
+        .menu-toggle {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            gap: 4px;
+            padding: 8px;
+        }
+
+        .menu-toggle span {
+            width: 25px;
+            height: 3px;
+            background: var(--branco);
+            transition: var(--transition);
+            border-radius: 2px;
+        }
+
+        .menu-toggle.active span:nth-child(1) {
+            transform: rotate(45deg) translate(6px, 6px);
+        }
+
+        .menu-toggle.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .menu-toggle.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(6px, -6px);
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        nav a {
+            color: var(--branco);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            padding: 0.5rem 1rem;
+            border-radius: 30px;
+        }
+
+        nav a:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border-radius: 30px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--branco);
+            color: var(--branco);
+        }
+
+        .btn-primary {
+            background: var(--branco);
+            color: var(--vermelho-rosado);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
         /* Hero Section */
         .hero {
             padding: 5rem 0;
-            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
-            color: var(--branco);
+            background: 
+                linear-gradient(
+                    rgba(246, 236, 197, 0.85), 
+                    rgba(246, 236, 197, 0.92)
+                ),
+                url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23d1656d;stop-opacity:0.1" /><stop offset="100%" style="stop-color:%23dfc9ed;stop-opacity:0.1" /></linearGradient></defs><rect width="1200" height="600" fill="url(%23grad)"/><path d="M300,250 Q600,200 900,250" stroke="%23d1656d" stroke-width="2" fill="none" opacity="0.3"/><circle cx="400" cy="280" r="80" fill="%23d1656d" opacity="0.1"/><circle cx="800" cy="280" r="80" fill="%23dfc9ed" opacity="0.1"/><text x="600" y="320" text-anchor="middle" font-family="Arial" font-size="24" fill="%23d1656d" opacity="0.5">❤️ Amor Conect ❤️</text></svg>') center/cover no-repeat;
             text-align: center;
+            position: relative;
         }
 
         .hero-content {
             max-width: 800px;
             margin: 0 auto;
+            position: relative;
+            z-index: 2;
         }
 
         .hero h2 {
             font-size: 3rem;
             margin-bottom: 1.5rem;
+            color: var(--vermelho-rosado);
             line-height: 1.2;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .hero p {
             font-size: 1.2rem;
             margin-bottom: 2rem;
-            opacity: 0.9;
+            color: var(--text-light);
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+        }
+
+        .btn-large {
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
         }
 
         /* Features Section */
@@ -66,6 +228,37 @@
             gap: 2rem;
         }
 
+        .feature-card {
+            background: var(--branco);
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            border: 1px solid var(--lilas);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 25px rgba(209, 101, 109, 0.15);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            color: var(--vermelho-rosado);
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--vermelho-rosado);
+        }
+
+        .feature-card p {
+            text-align: center;
+        }
+
         /* How It Works */
         .how-it-works {
             padding: 5rem 0;
@@ -85,6 +278,10 @@
             min-width: 250px;
             text-align: center;
             padding: 2rem 1rem;
+            background: var(--branco);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--lilas);
         }
 
         .step-number {
@@ -122,11 +319,20 @@
             gap: 2rem;
         }
 
+        .testimonial-card {
+            background: var(--bege);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--lilas);
+        }
+
         .testimonial-text {
             font-style: italic;
             margin-bottom: 1.5rem;
             color: var(--text);
             text-align: justify;
+            text-justify: inter-word;
         }
 
         .testimonial-author {
@@ -182,61 +388,45 @@
             color: var(--vermelho-rosado);
         }
 
-        .btn-light:hover {
-            background: var(--bege);
-            transform: translateY(-2px);
+        /* Footer */
+        footer {
+            background-color: var(--bege);
+            color: var(--text);
+            padding: 3rem 0 1.5rem;
+            border-top: 1px solid var(--lilas);
         }
 
-        /* Navigation */
-        nav ul {
-            display: flex;
-            list-style: none;
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 2rem;
+            margin-bottom: 2rem;
         }
 
-        nav a {
-            color: var(--branco);
+        .footer-column h3 {
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+            color: var(--vermelho-rosado);
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-column a {
+            color: var(--text);
             text-decoration: none;
-            font-weight: 500;
             transition: var(--transition);
-            padding: 0.5rem 1rem;
-            border-radius: 30px;
         }
 
-        nav a:hover {
-            background-color: rgba(255, 255, 255, 0.2);
+        .footer-column a:hover {
+            color: var(--vermelho-rosado);
         }
 
-        /* Menu Hamburguer */
-        .menu-toggle {
-            display: none;
-            flex-direction: column;
-            cursor: pointer;
-            gap: 4px;
-            padding: 8px;
-        }
-
-        .menu-toggle span {
-            width: 25px;
-            height: 3px;
-            background: var(--branco);
-            transition: var(--transition);
-            border-radius: 2px;
-        }
-
-        .menu-toggle.active span:nth-child(1) {
-            transform: rotate(45deg) translate(6px, 6px);
-        }
-
-        .menu-toggle.active span:nth-child(2) {
-            opacity: 0;
-        }
-
-        .menu-toggle.active span:nth-child(3) {
-            transform: rotate(-45deg) translate(6px, -6px);
-        }
-
-        /* Social Links */
         .social-links {
             display: flex;
             gap: 1rem;
@@ -254,7 +444,6 @@
             transition: var(--transition);
             color: var(--branco);
             text-decoration: none;
-            font-weight: bold;
         }
 
         .social-icon:hover {
@@ -262,7 +451,113 @@
             transform: translateY(-3px);
         }
 
-        /* ==================== RESPONSIVIDADE ==================== */
+        .copyright {
+            text-align: center;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--lilas);
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        /* ========== ANIMAÇÃO DE ABERTURA ========== */
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+
+        .splash-logo {
+            width: 200px;
+            height: 200px;
+            margin-bottom: 2rem;
+            animation: pulse 2s infinite;
+        }
+
+        .splash-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .splash-text {
+            color: var(--branco);
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 1rem;
+            opacity: 0;
+            animation: fadeInUp 1s ease 0.5s forwards;
+        }
+
+        .splash-subtext {
+            color: var(--branco);
+            font-size: 1.2rem;
+            text-align: center;
+            opacity: 0;
+            animation: fadeInUp 1s ease 1s forwards;
+        }
+
+        .loading-bar {
+            width: 200px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            margin-top: 2rem;
+            overflow: hidden;
+            opacity: 0;
+            animation: fadeIn 1s ease 1.5s forwards;
+        }
+
+        .loading-progress {
+            width: 0%;
+            height: 100%;
+            background: var(--branco);
+            border-radius: 2px;
+            animation: loading 2s ease 1.5s forwards;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes loading {
+            from { width: 0%; }
+            to { width: 100%; }
+        }
+
+        .splash-hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        /* ========== MOBILE - APENAS LOGO CORRIGIDA ========== */
         @media (max-width: 768px) {
             .header-content {
                 flex-wrap: wrap;
@@ -272,13 +567,14 @@
                 align-items: center;
             }
 
+            /* LOGO - TAMANHO NORMAL PARA MOBILE */
             .logo {
                 order: 1;
                 flex: 0 0 auto;
             }
 
             .logo img {
-                height: 120px !important;
+                height: 150px !important;
                 width: auto !important;
                 max-width: 150px !important;
                 object-fit: contain;
@@ -360,11 +656,25 @@
             .cta {
                 padding: 3rem 0;
             }
+
+            /* Ajustes para splash screen mobile */
+            .splash-logo {
+                width: 150px;
+                height: 150px;
+            }
+
+            .splash-text {
+                font-size: 2rem;
+            }
+
+            .splash-subtext {
+                font-size: 1rem;
+            }
         }
 
         @media (max-width: 480px) {
             .logo img {
-                height: 100px !important;
+                height: 90px !important;
                 max-width: 140px !important;
             }
 
@@ -380,11 +690,20 @@
             .hero p {
                 font-size: 1rem;
             }
+
+            .splash-logo {
+                width: 120px;
+                height: 120px;
+            }
+
+            .splash-text {
+                font-size: 1.8rem;
+            }
         }
 
         @media (max-width: 360px) {
             .logo img {
-                height: 90px !important;
+                height: 80px !important;
                 max-width: 130px !important;
             }
 
@@ -392,10 +711,41 @@
                 padding: 0.3rem 0.6rem;
                 font-size: 0.75rem;
             }
+
+            .splash-text {
+                font-size: 1.5rem;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Tela de Abertura -->
+    <div class="splash-screen" id="splashScreen">
+        <div class="splash-logo">
+            <!-- Logo em SVG para carregamento instantâneo -->
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="heartGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#d1656d" />
+                        <stop offset="100%" stop-color="#dfc9ed" />
+                    </linearGradient>
+                </defs>
+                <path d="M100,40 C80,20 50,25 50,55 C50,85 100,120 100,120 C100,120 150,85 150,55 C150,25 120,20 100,40 Z" 
+                      fill="url(#heartGradient)" 
+                      stroke="#ffffff" 
+                      stroke-width="3"/>
+                <text x="100" y="160" text-anchor="middle" fill="#ffffff" font-family="Arial" font-size="16" font-weight="bold">
+                    Amor Conect
+                </text>
+            </svg>
+        </div>
+        <div class="splash-text">Amor Conect</div>
+        <div class="splash-subtext">Conectando corações</div>
+        <div class="loading-bar">
+            <div class="loading-progress"></div>
+        </div>
+    </div>
+
     <!-- Header -->
     <header>
         <div class="container">
@@ -410,7 +760,6 @@
                     <a href="cadastro.html" class="btn btn-primary">Cadastre-se</a>
                 </div>
 
-                <!-- Menu Hamburguer -->
                 <div class="menu-toggle">
                     <span></span>
                     <span></span>
@@ -434,7 +783,7 @@
             <div class="hero-content">
                 <h2>Encontre a conexão que seu coração procura</h2>
                 <p>Uma plataforma segura e discreta para conhecer pessoas especiais e construir relacionamentos genuínos.</p>
-                <a href="cadastro.html" class="btn btn-light btn-lg">Comece sua jornada</a>
+                <a href="cadastro.html" class="btn btn-primary btn-large">Comece sua jornada</a>
             </div>
         </div>
     </section>
@@ -447,17 +796,17 @@
                 <p>Nossa plataforma foi desenvolvida pensando em sua segurança e privacidade, oferecendo uma experiência única de conexão.</p>
             </div>
             <div class="features-grid">
-                <div class="feature-card card">
+                <div class="feature-card">
                     <div class="feature-icon">🔒</div>
                     <h3>Segurança Total</h3>
                     <p>Perfis verificados e ambiente controlado para sua tranquilidade.</p>
                 </div>
-                <div class="feature-card card">
+                <div class="feature-card">
                     <div class="feature-icon">💌</div>
                     <h3>Conexões Autênticas</h3>
                     <p>Conheça pessoas reais com interesses compatíveis com os seus.</p>
                 </div>
-                <div class="feature-card card">
+                <div class="feature-card">
                     <div class="feature-icon">🌟</div>
                     <h3>Experiência Personalizada</h3>
                     <p>Encontre pessoas que compartilham seus valores e objetivos.</p>
@@ -474,22 +823,22 @@
                 <p>Em poucos passos, você estará conectado com pessoas incríveis.</p>
             </div>
             <div class="steps">
-                <div class="step card">
+                <div class="step">
                     <div class="step-number">1</div>
                     <h3>Crie seu Perfil</h3>
                     <p>Cadastre-se fornecendo informações básicas e crie um perfil autêntico.</p>
                 </div>
-                <div class="step card">
+                <div class="step">
                     <div class="step-number">2</div>
                     <h3>Complete seu Perfil</h3>
                     <p>Adicione informações complementares para aumentar suas conexões.</p>
                 </div>
-                <div class="step card">
+                <div class="step">
                     <div class="step-number">3</div>
                     <h3>Encontre Pessoas</h3>
                     <p>Explore perfis compatíveis com seus interesses e valores.</p>
                 </div>
-                <div class="step card">
+                <div class="step">
                     <div class="step-number">4</div>
                     <h3>Conecte-se</h3>
                     <p>Envie mensagens e construa relacionamentos significativos.</p>
@@ -506,7 +855,7 @@
                 <p>Conheça relatos reais de pessoas que encontraram sua conexão perfeita.</p>
             </div>
             <div class="testimonial-grid">
-                <div class="testimonial-card card">
+                <div class="testimonial-card">
                     <p class="testimonial-text">"Depois de anos tentando aplicativos tradicionais, finalmente encontrei alguém com valores compatíveis. Hoje estamos juntos há 6 meses!"</p>
                     <div class="testimonial-author">
                         <div class="author-avatar">M</div>
@@ -516,7 +865,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="testimonial-card card">
+                <div class="testimonial-card">
                     <p class="testimonial-text">"A plataforma me permitiu conhecer pessoas genuínas. A conexão que fiz aqui foi diferente de qualquer outra experiência online."</p>
                     <div class="testimonial-author">
                         <div class="author-avatar">R</div>
@@ -526,7 +875,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="testimonial-card card">
+                <div class="testimonial-card">
                     <p class="testimonial-text">"Adorei a privacidade e o respeito que encontrei na plataforma. Conheci alguém especial sem pressão e no meu tempo."</p>
                     <div class="testimonial-author">
                         <div class="author-avatar">C</div>
@@ -545,7 +894,7 @@
         <div class="container">
             <h2>Pronto para encontrar sua conexão perfeita?</h2>
             <p>Junte-se a milhares de pessoas que já descobriram relacionamentos significativos através da nossa plataforma.</p>
-            <a href="cadastro.html" class="btn btn-light btn-lg">Comece Agora</a>
+            <a href="cadastro.html" class="btn btn-light btn-large">Comece Agora</a>
         </div>
     </section>
 
@@ -588,8 +937,20 @@
     </footer>
 
     <script>
-        // ==================== JAVASCRIPT DA INDEX ====================
         document.addEventListener('DOMContentLoaded', function() {
+            // Animação de Abertura
+            const splashScreen = document.getElementById('splashScreen');
+            
+            // Esconde a tela de abertura após 3 segundos
+            setTimeout(() => {
+                splashScreen.classList.add('splash-hidden');
+                
+                // Remove completamente do DOM após a animação
+                setTimeout(() => {
+                    splashScreen.remove();
+                }, 800);
+            }, 3000);
+
             // Menu Hamburguer
             const menuToggle = document.querySelector('.menu-toggle');
             const nav = document.querySelector('nav');
@@ -636,7 +997,50 @@
                 }
             });
 
-            console.log('✅ Index.html carregada com sucesso!');
+            // Efeito parallax suave no hero
+            window.addEventListener('scroll', function() {
+                const scrolled = window.pageYOffset;
+                const hero = document.querySelector('.hero');
+                if (hero) {
+                    hero.style.backgroundPosition = `center ${scrolled * 0.5}px`;
+                }
+            });
+
+            // Animação de entrada dos elementos
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, observerOptions);
+
+            // Observar elementos para animação
+            document.querySelectorAll('.feature-card, .step, .testimonial-card').forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(30px)';
+                el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                observer.observe(el);
+            });
+        });
+
+        // Preload da imagem de fundo
+        window.addEventListener('load', function() {
+            const hero = document.querySelector('.hero');
+            if (hero) {
+                // Adiciona uma imagem de fallback SVG com gradiente suave
+                hero.style.backgroundImage = `linear-gradient(
+                    rgba(246, 236, 197, 0.85), 
+                    rgba(246, 236, 197, 0.92)
+                ), 
+                url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600"><defs><linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23d1656d;stop-opacity:0.08" /><stop offset="100%" style="stop-color:%23dfc9ed;stop-opacity:0.08" /></linearGradient></defs><rect width="1200" height="600" fill="url(%23bgGrad)"/><path d="M200,300 Q600,250 1000,300" stroke="%23d1656d" stroke-width="2" fill="none" opacity="0.2"/><circle cx="300" cy="320" r="100" fill="%23d1656d" opacity="0.05"/><circle cx="900" cy="320" r="100" fill="%23dfc9ed" opacity="0.05"/></svg>')`;
+            }
         });
     </script>
 </body>
