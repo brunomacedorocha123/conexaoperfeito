@@ -2590,6 +2590,7 @@ async function displayUsersWithPhotos(users) {
 }
 
 // Criar card de usuário
+// ✅ CORREÇÃO: Criar card com FOTOS REAIS como IMG (igual perfil.html)
 async function createUserCardWithPhoto(user) {
     try {
         if (!user || !user.nickname) return '';
@@ -2604,24 +2605,27 @@ async function createUserCardWithPhoto(user) {
             '<div class="online-badge" title="Online"></div>' : 
             '<div class="offline-badge" title="Offline"></div>';
         
+        // ✅ CORREÇÃO CRÍTICA: Usar IMG tag igual no perfil.html
         let avatarHtml = '';
         if (user.avatar_url) {
             const photoUrl = await loadUserPhoto(user.avatar_url);
             if (photoUrl) {
                 avatarHtml = `
-                    <div class="user-card-avatar" style="background-image: url('${photoUrl}')">
-                        ${onlineBadge}
+                    <div class="user-card-avatar">
+                        <img class="user-card-avatar-img" src="${photoUrl}" alt="${nickname}" style="display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
                         <div class="user-card-avatar-fallback" style="display: none;">${nickname.charAt(0).toUpperCase()}</div>
+                        ${onlineBadge}
                     </div>
                 `;
             }
         }
         
+        // ✅ Fallback apenas se não tiver foto
         if (!avatarHtml) {
             avatarHtml = `
                 <div class="user-card-avatar">
-                    ${onlineBadge}
                     <div class="user-card-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
+                    ${onlineBadge}
                 </div>
             `;
         }
@@ -2724,7 +2728,6 @@ function selectReportCategory(radio) {
     radio.parentElement.classList.add('selected');
     document.getElementById('submitReportBtn').disabled = false;
 }
-
 async function submitReport() {
     try {
         const reason = document.querySelector('input[name="reportReason"]:checked')?.value;
