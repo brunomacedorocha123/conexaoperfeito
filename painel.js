@@ -1753,7 +1753,10 @@ function displayGallery(images) {
     
     galleryGrid.innerHTML = images.map((image, index) => `
         <div class="gallery-item" data-index="${index}">
-            <img src="" data-src="${image.image_url}" alt="Imagem da galeria" class="gallery-image" loading="lazy">
+            <div class="gallery-image-container">
+                <img src="" data-src="${image.image_url}" alt="Imagem da galeria" class="gallery-image">
+                <div class="image-loading">Carregando...</div>
+            </div>
             <div class="gallery-actions">
                 <button class="gallery-btn" onclick="deleteGalleryImage('${image.image_url}')" title="Excluir">
                     <i class="fas fa-trash"></i>
@@ -1776,28 +1779,60 @@ function loadGalleryImagesImmediately() {
     });
 }
 
-// ✅ CORREÇÃO: Carregar uma imagem específica
+// ✅ CORREÇÃO DEFINITIVA: Carregar uma imagem específica - VERSÃO SIMPLIFICADA E FUNCIONAL
 async function loadGalleryImage(imgElement, imageUrl) {
     try {
         if (!imageUrl) return;
         
+        console.log('🔄 Carregando imagem:', imageUrl);
+        
+        // ✅ MÉTODO ÚNICO: URL assinada (para buckets privados)
         const { data, error } = await supabase.storage
             .from('gallery')
-            .getPublicUrl(imageUrl);
+            .createSignedUrl(imageUrl, 3600); // 1 hora de expiração
         
         if (error) {
-            console.error('❌ Erro ao obter URL pública:', error);
+            console.error('❌ Erro na URL assinada:', error);
+            showFallbackImage(imgElement);
             return;
         }
         
-        if (data && data.publicUrl) {
-            imgElement.src = data.publicUrl;
+        if (data && data.signedUrl) {
+            console.log('✅ URL assinada criada com sucesso');
+            
+            imgElement.src = data.signedUrl;
             imgElement.removeAttribute('data-src');
-            console.log('✅ Imagem carregada:', data.publicUrl);
+            imgElement.style.display = 'block';
+            imgElement.style.opacity = '1';
+            
+            // Esconder loading
+            const loading = imgElement.parentElement.querySelector('.image-loading');
+            if (loading) loading.style.display = 'none';
+            
+            console.log('✅ Imagem carregada via URL assinada');
         }
+        
     } catch (error) {
         console.error('❌ Erro ao carregar imagem:', error);
+        showFallbackImage(imgElement);
     }
+}
+
+// ✅ FALLBACK: Mostrar placeholder
+function showFallbackImage(imgElement) {
+    console.log('🔄 Mostrando fallback...');
+    imgElement.style.background = 'linear-gradient(135deg, var(--lilas), var(--vermelho-rosado))';
+    imgElement.style.display = 'flex';
+    imgElement.style.alignItems = 'center';
+    imgElement.style.justifyContent = 'center';
+    imgElement.style.color = 'white';
+    imgElement.style.fontSize = '2rem';
+    imgElement.innerHTML = '🖼️';
+    imgElement.removeAttribute('data-src');
+    
+    // Esconder loading
+    const loading = imgElement.parentElement.querySelector('.image-loading');
+    if (loading) loading.style.display = 'none';
 }
 
 // ✅ CORREÇÃO: Excluir imagem da galeria (APENAS do storage)
@@ -1853,9 +1888,7 @@ async function updateStorageDisplay() {
 
 /// ==================== EXCLUSÃO DE CONTA ====================
 
-// ==================== EXCLUSÃO DE CONTA - VERSÃO DEFINITIVA CORRIGIDA ====================
-
-// Aguardar o DOM carregar completamente
+// ✅ CORREÇÃO DEFINITIVA: Sistema de exclusão de conta
 document.addEventListener('DOMContentLoaded', function() {
     
     // Elementos do modal de exclusão
@@ -1875,13 +1908,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Abrir modal de exclusão
     if (deleteAccountBtn && deleteAccountModal) {
         deleteAccountBtn.addEventListener('click', function() {
-            if (isExcluding) return; // ✅ BLOQUEAR DURANTE EXCLUSÃO
+            if (isExcluding) return;
             
             deleteFlowStep = 1;
             if (confirmationStep) confirmationStep.style.display = 'none';
             if (confirmDelete) {
                 confirmDelete.disabled = false;
-                confirmDelete.textContent = 'Sim, Excluir Minha Conta';
                 confirmDelete.innerHTML = '<i class="fas fa-trash-alt"></i> Sim, Excluir Minha Conta';
             }
             if (confirmPassword) confirmPassword.value = '';
@@ -1910,7 +1942,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Primeira confirmação - mostrar campo de senha
     if (confirmDelete) {
         confirmDelete.addEventListener('click', function() {
-            if (isExcluding) return; // ✅ BLOQUEAR DURANTE EXCLUSÃO
+            if (isExcluding) return;
             
             if (deleteFlowStep === 1) {
                 // Primeiro clique - mostrar campo de senha
@@ -1920,7 +1952,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 if (confirmDelete) {
                     confirmDelete.disabled = true;
-                    confirmDelete.textContent = 'Confirmar Exclusão';
                     confirmDelete.innerHTML = '<i class="fas fa-trash-alt"></i> Confirmar Exclusão';
                 }
             } else {
@@ -1933,7 +1964,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Validar senha em tempo real
     if (confirmPassword) {
         confirmPassword.addEventListener('input', async function() {
-            if (isExcluding) return; // ✅ BLOQUEAR DURANTE EXCLUSÃO
+            if (isExcluding) return;
             await validatePassword();
         });
     }
@@ -1994,7 +2025,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Permitir enviar com Enter
     if (confirmPassword) {
         confirmPassword.addEventListener('keypress', async function(e) {
-            if (isExcluding) return; // ✅ BLOQUEAR DURANTE EXCLUSÃO
+            if (isExcluding) return;
             
             if (e.key === 'Enter') {
                 const isValid = await validatePassword();
@@ -2005,7 +2036,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ✅✅✅ FUNÇÃO PRINCIPAL DE EXCLUSÃO - COMPLETAMENTE CORRIGIDA
+    // ✅ FUNÇÃO PRINCIPAL DE EXCLUSÃO
     async function executeAccountDeletion() {
         if (!confirmPassword || !confirmDelete || isExcluding) {
             console.error('Elementos não encontrados ou exclusão em andamento');
@@ -2039,17 +2070,17 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data) {
                 console.log('✅ Conta excluída com sucesso no banco');
                 
-                // ✅ 1. FECHAR MODAL PRIMEIRO (ANTES DE QUALQUER COISA)
+                // ✅ 1. FECHAR MODAL PRIMEIRO
                 closeDeleteModalFunc();
                 
                 // ✅ 2. NOTIFICAÇÃO RÁPIDA
                 showNotification('Conta excluída com sucesso', 'success');
                 
-                // ✅ 3. REDIRECIONAMENTO ULTRA-RÁPIDO E SEGURO
+                // ✅ 3. REDIRECIONAMENTO
                 setTimeout(() => {
                     console.log('🔄 Iniciando limpeza e redirecionamento...');
                     
-                    // ✅ LIMPAR STORAGE SILENCIOSAMENTE
+                    // Limpar storage
                     try {
                         localStorage.clear();
                         sessionStorage.clear();
@@ -2057,13 +2088,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         console.log('⚠️ Erro ao limpar storage:', e);
                     }
                     
-                    // ✅ LOGOUT SILENCIOSO (NÃO ESPERAR)
+                    // Logout e redirecionamento
                     supabase.auth.signOut().catch(() => {});
-                    
-                    // ✅ REDIRECIONAMENTO FORÇADO - EVITA HISTORY
                     window.location.replace('index.html');
                     
-                }, 800); // ✅ TEMPO OTIMIZADO: 800ms
+                }, 800);
                 
             } else {
                 throw new Error('Senha incorreta');
@@ -2087,7 +2116,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Fechar modal clicando fora
     if (deleteAccountModal) {
         deleteAccountModal.addEventListener('click', function(e) {
-            if (isExcluding) return; // ✅ BLOQUEAR DURANTE EXCLUSÃO
+            if (isExcluding) return;
             
             if (e.target === this) {
                 closeDeleteModalFunc();
@@ -2097,7 +2126,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ✅ PREVENÇÃO EXTRA: BLOQUEAR EVENTOS DURANTE REDIRECIONAMENTO
     window.addEventListener('beforeunload', function() {
-        isExcluding = true; // ✅ BLOQUEAR TUDO DURANTE DESCARREGAMENTO
+        isExcluding = true;
     });
 
 });
