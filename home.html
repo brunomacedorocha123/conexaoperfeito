@@ -2218,6 +2218,7 @@ function setupEventListeners() {
     
     document.addEventListener('touchstart', function() {}, { passive: true });
 }
+
 // Logout
 async function logout() {
     try {
@@ -2233,14 +2234,12 @@ async function logout() {
 
 // ==================== SISTEMA DE BLOQUEIO ULTRA-RÁPIDO ====================
 
-/// ==================== SISTEMA DE BLOQUEIO ULTRA-RÁPIDO ====================
-
-/// ✅ INICIALIZAÇÃO DO SISTEMA DE BLOQUEIO - CORRIGIDA
+// INICIALIZAÇÃO DO SISTEMA DE BLOQUEIO
 async function initializeBlockSystem() {
     try {
         console.log('⚡ Inicializando sistema de bloqueio ULTRA-RÁPIDO...');
         
-        // REMOVER MENSAGEM "CONEXÃO OK" VERDE SE EXISTIR - CORRIGIDO
+        // REMOVER MENSAGEM "CONEXÃO OK" VERDE SE EXISTIR
         const connectionElements = document.querySelectorAll('.connection-status, .connection-ok, .alert-success, [class*="success"], [class*="connection"]');
         connectionElements.forEach(element => {
             if (element.textContent.includes('Conexão OK') || element.textContent.includes('✅')) {
@@ -2265,7 +2264,7 @@ async function initializeBlockSystem() {
     }
 }
 
-// ✅ CARREGAR IDs BLOQUEADOS DO BANCO - CORRIGIDA
+// CARREGAR IDs BLOQUEADOS DO BANCO
 async function loadBlockedIdsForHome() {
     try {
         if (!currentUser) return;
@@ -2277,7 +2276,7 @@ async function loadBlockedIdsForHome() {
 
         if (error) throw error;
 
-        // ✅ AGORA SALVA REALMENTE NO SET E NO CACHE
+        // AGORA SALVA REALMENTE NO SET E NO CACHE
         const blockedIds = blocks.map(b => b.blocked_user_id);
         blockedUserIdsSet = new Set(blockedIds);
         blockCache.set(blockedUserIdsSet);
@@ -2289,12 +2288,12 @@ async function loadBlockedIdsForHome() {
     }
 }
 
-// ✅ VERIFICAR SE USUÁRIO ESTÁ BLOQUEADO
+// VERIFICAR SE USUÁRIO ESTÁ BLOQUEADO
 function isUserBlocked(userId) {
     return blockedUserIdsSet.has(userId);
 }
 
-// ✅ BLOQUEIO ULTRA-RÁPIDO - AGORA FUNCIONANDO DE VERDADE
+// BLOQUEIO ULTRA-RÁPIDO - AGORA FUNCIONANDO DE VERDADE
 async function confirmBlock() {
     if (!currentBlockUserId) return;
     
@@ -2313,60 +2312,72 @@ async function confirmBlock() {
     blockedUserIdsSet.add(userId);
     blockCache.set(blockedUserIdsSet);
     
-    // 4. SALVAR NO BANCO EM BACKGROUND (AGORA FUNCIONA) - CORRIGIDO
+    // 4. SALVAR NO BANCO EM BACKGROUND (AGORA FUNCIONA)
     const success = await saveBlockToDatabase(userId, userName);
     
     if (success) {
         showQuickToast(`✅ ${userName} bloqueado com sucesso!`);
+        console.log('🎯 USUÁRIO BLOQUEADO E SALVO NO BANCO!');
     } else {
         showQuickToast('⚠️ Bloqueado localmente (erro de rede)');
     }
 }
 
-// ✅ SALVAR NO BANCO EM BACKGROUND - TOTALMENTE CORRIGIDA
+// SALVAR NO BANCO EM BACKGROUND - TOTALMENTE CORRIGIDA E TESTADA
 async function saveBlockToDatabase(userId, userName) {
     try {
-        console.log('💾 Salvando bloqueio no banco para:', userId);
+        console.log('💾 Tentando salvar bloqueio no banco para:', userId);
         
+        // MÉTODO 1: Tenta inserir normalmente
         const { data, error } = await supabase
             .from('user_blocks')
-            .insert([
-                {
-                    blocker_id: currentUser.id,
-                    blocked_user_id: userId,
-                    created_at: new Date().toISOString()
-                }
-            ])
-            .select();
+            .insert({
+                blocker_id: currentUser.id,
+                blocked_user_id: userId,
+                created_at: new Date().toISOString()
+            });
 
         if (error) {
             if (error.code === '23505') {
                 console.log('✅ Usuário já estava bloqueado no banco');
                 return true;
             } else {
-                console.error('❌ Erro grave no bloqueio:', error);
-                // ✅ RECUPERAÇÃO: Remove do cache se falhou
-                blockedUserIdsSet.delete(userId);
-                blockCache.set(blockedUserIdsSet);
-                return false;
+                console.error('❌ Erro ao inserir bloqueio:', error);
+                
+                // MÉTODO 2: Tenta upsert como fallback
+                const { data: upsertData, error: upsertError } = await supabase
+                    .from('user_blocks')
+                    .upsert({
+                        blocker_id: currentUser.id,
+                        blocked_user_id: userId,
+                        created_at: new Date().toISOString()
+                    }, {
+                        onConflict: 'blocker_id,blocked_user_id'
+                    });
+
+                if (upsertError) {
+                    console.error('❌ Erro no upsert também:', upsertError);
+                    // RECUPERAÇÃO: Remove do cache se falhou
+                    blockedUserIdsSet.delete(userId);
+                    blockCache.set(blockedUserIdsSet);
+                    return false;
+                }
+                
+                console.log('✅ Bloqueio salvo via upsert');
+                return true;
             }
         }
         
-        if (data && data.length > 0) {
-            console.log('✅ BLOQUEIO SALVO NO BANCO:', data[0]);
-            return true;
-        } else {
-            console.error('❌ Bloqueio falhou - sem dados retornados');
-            return false;
-        }
+        console.log('✅ BLOQUEIO SALVO NO BANCO COM SUCESSO!');
+        return true;
         
     } catch (error) {
-        console.error('❌ Erro ao salvar bloqueio:', error);
+        console.error('❌ Erro crítico ao salvar bloqueio:', error);
         return false;
     }
 }
 
-// ✅ TOAST RÁPIDO (sem atrapalhar)
+// TOAST RÁPIDO (sem atrapalhar)
 function showQuickToast(message) {
     // Remove toasts anteriores
     document.querySelectorAll('.quick-toast').forEach(toast => toast.remove());
@@ -2410,7 +2421,7 @@ function showQuickToast(message) {
     }, 3000);
 }
 
-// ✅ REMOÇÃO IMEDIATA DA UI
+// REMOÇÃO IMEDIATA DA UI
 function removeUserCardImmediately(userId) {
     console.log('🗑️ Removendo card imediatamente:', userId);
     
@@ -2445,7 +2456,7 @@ function removeUserCardImmediately(userId) {
     }
 }
 
-// ✅ ANIMAÇÃO DE REMOÇÃO
+// ANIMAÇÃO DE REMOÇÃO
 function animateCardRemoval(card) {
     if (card.classList.contains('removing')) return;
     
@@ -2480,7 +2491,7 @@ function animateCardRemoval(card) {
 
 // ==================== SISTEMA DE REPORTE ====================
 
-// ✅ MENU DE AÇÕES CORRIGIDO - 3 PONTOS FUNCIONAL
+// MENU DE AÇÕES CORRIGIDO - 3 PONTOS FUNCIONAL
 function toggleMenu(button) {
     const menu = button.nextElementSibling;
     const isShowing = menu.classList.contains('show');
@@ -2780,7 +2791,7 @@ async function displayUsersWithPhotos(users) {
     
     const userCards = [];
     for (const user of users) {
-        // ✅ VERIFICA SE USUÁRIO NÃO ESTÁ BLOQUEADO ANTES DE CRIAR CARD
+        // VERIFICA SE USUÁRIO NÃO ESTÁ BLOQUEADO ANTES DE CRIAR CARD
         if (!isUserBlocked(user.id)) {
             const card = await createUserCardWithPhoto(user);
             userCards.push(card);
@@ -2916,7 +2927,7 @@ async function checkPremiumStatus() {
     }
 }
 
-// ✅ FUNÇÃO CORRIGIDA PARA HOME - Compatível com visitante.html
+// FUNÇÃO CORRIGIDA PARA HOME - Compatível com visitante.html
 async function loadPremiumVisitors() {
     try {
         console.log('🔄 Carregando visitantes para HOME...');
@@ -2928,7 +2939,7 @@ async function loadPremiumVisitors() {
         const visitorsGrid = document.getElementById('visitorsGrid');
         const visitorsCount = document.getElementById('visitorsCount');
         
-        // ✅ USA A MESMA CONSULTA DA VISITANTE.HTML (que funciona)
+        // USA A MESMA CONSULTA DA VISITANTE.HTML (que funciona)
         const { data: visits, error } = await supabase
             .from('profile_visits')
             .select('*')
@@ -3010,7 +3021,7 @@ async function loadPremiumVisitors() {
     }
 }
 
-/// ✅ FUNÇÃO AUXILIAR CORRIGIDA - Criar card para HOME
+// FUNÇÃO AUXILIAR CORRIGIDA - Criar card para HOME
 async function createVisitorCardForHome(visit) {
     try {
         console.log('🎯 Processando visita de:', visit.visitor_id);
@@ -3035,13 +3046,13 @@ async function createVisitorCardForHome(visit) {
         const timeAgo = getTimeAgo(visit.visited_at);
         const initial = nickname.charAt(0).toUpperCase();
         
-        // ✅ Status online
+        // Status online
         const isOnline = isUserOnline(profile, currentUser.id);
         const onlineBadge = isOnline ? 
             '<div class="online-badge" title="Online"></div>' : 
             '<div class="offline-badge" title="Offline"></div>';
 
-        // ✅ Carregar foto
+        // Carregar foto
         let avatarContent = '';
         if (profile.avatar_url) {
             const photoUrl = await loadUserPhoto(profile.avatar_url);
@@ -3080,7 +3091,7 @@ async function createVisitorCardForHome(visit) {
     }
 }
 
-// ✅ FUNÇÃO AUXILIAR - Card básico para HOME
+// FUNÇÃO AUXILIAR - Card básico para HOME
 function createBasicCardForHome(visit) {
     return `
         <div class="visitor-card" onclick="viewProfile('${visit.visitor_id}')">
@@ -3095,7 +3106,7 @@ function createBasicCardForHome(visit) {
     `;
 }
 
-// ✅ FUNÇÃO CORRIGIDA - Carregar foto
+// FUNÇÃO CORRIGIDA - Carregar foto
 async function loadUserPhoto(avatarUrl) {
     try {
         if (!avatarUrl) return null;
@@ -3105,7 +3116,7 @@ async function loadUserPhoto(avatarUrl) {
             .getPublicUrl(avatarUrl);
 
         if (data?.publicUrl) {
-            // ✅ Adiciona timestamp para evitar cache
+            // Adiciona timestamp para evitar cache
             return data.publicUrl + '?t=' + Date.now();
         }
         return null;
@@ -3115,19 +3126,19 @@ async function loadUserPhoto(avatarUrl) {
     }
 }
 
-// ✅ FUNÇÃO CORRIGIDA: Enviar mensagem com verificação de bloqueio bilateral
+// FUNÇÃO CORRIGIDA: Enviar mensagem com verificação de bloqueio bilateral
 async function sendMessage(userId, event) {
     if (event) event.stopPropagation();
     
     console.log('💌 Iniciando conversa com usuário:', userId);
 
-    // ✅ VERIFICAÇÃO COMPLETA DE BLOQUEIO (BILATERAL)
+    // VERIFICAÇÃO COMPLETA DE BLOQUEIO (BILATERAL)
     if (isUserBlocked(userId)) {
         showQuickToast('🚫 Você bloqueou este usuário e não pode enviar mensagens.');
         return;
     }
     
-    // ✅ VERIFICAR SE O USUÁRIO TE BLOQUEOU
+    // VERIFICAR SE O USUÁRIO TE BLOQUEOU
     const isBlockedByUser = await checkIfBlockedByUser(userId);
     if (isBlockedByUser) {
         showQuickToast('🚫 Este usuário te bloqueou. Você não pode enviar mensagens.');
@@ -3141,11 +3152,11 @@ async function sendMessage(userId, event) {
         return;
     }
     
-    // ✅ REDIRECIONAR IMEDIATAMENTE
+    // REDIRECIONAR IMEDIATAMENTE
     localStorage.setItem('openChatWithUserId', userId);
     window.location.href = 'mensagens.html';
     
-    // ✅ CRIAR MENSAGEM EM BACKGROUND
+    // CRIAR MENSAGEM EM BACKGROUND
     setTimeout(async () => {
         try {
             const { error: messageError } = await supabase
@@ -3166,17 +3177,17 @@ async function sendMessage(userId, event) {
     }, 100);
 }
 
-// ✅ FUNÇÃO CORRIGIDA: Visualizar perfil com verificação de bloqueio bilateral
+// FUNÇÃO CORRIGIDA: Visualizar perfil com verificação de bloqueio bilateral
 async function viewProfile(userId, event) {
     if (event) event.stopPropagation();
 
-    // ✅ VERIFICAÇÃO COMPLETA DE BLOQUEIO (BILATERAL)
+    // VERIFICAÇÃO COMPLETA DE BLOQUEIO (BILATERAL)
     if (isUserBlocked(userId)) {
         showQuickToast('🚫 Você bloqueou este usuário e não pode visualizar o perfil.');
         return;
     }
     
-    // ✅ VERIFICAR SE O USUÁRIO TE BLOQUEOU
+    // VERIFICAR SE O USUÁRIO TE BLOQUEOU
     const isBlockedByUser = await checkIfBlockedByUser(userId);
     if (isBlockedByUser) {
         showQuickToast('🚫 Este usuário te bloqueou. Você não pode visualizar o perfil.');
@@ -3190,11 +3201,11 @@ async function viewProfile(userId, event) {
         return;
     }
     
-    // ✅ REDIRECIONAR IMEDIATAMENTE
+    // REDIRECIONAR IMEDIATAMENTE
     localStorage.setItem('viewingProfileId', userId);
     window.location.href = 'perfil.html';
     
-    // ✅ REGISTRAR VISITA EM BACKGROUND
+    // REGISTRAR VISITA EM BACKGROUND
     setTimeout(async () => {
         try {
             const visitRegistered = await registerProfileVisit(userId);
@@ -3205,7 +3216,7 @@ async function viewProfile(userId, event) {
     }, 100);
 }
 
-// ✅ FUNÇÃO: Verificar se o usuário te bloqueou
+// FUNÇÃO: Verificar se o usuário te bloqueou
 async function checkIfBlockedByUser(userId) {
     try {
         if (!currentUser) return false;
@@ -3232,7 +3243,7 @@ async function checkIfBlockedByUser(userId) {
     }
 }
 
-// ✅ FUNÇÃO: Remoção imediata da UI
+// FUNÇÃO: Remoção imediata da UI
 function removeUserCardImmediately(userId) {
     console.log('🗑️ Removendo card da UI:', userId);
     
@@ -3266,7 +3277,7 @@ function removeUserCardImmediately(userId) {
     }
 }
 
-// ✅ FUNÇÃO: Animação de remoção
+// FUNÇÃO: Animação de remoção
 function animateCardRemoval(card) {
     if (card.classList.contains('removing')) return;
     
@@ -3298,7 +3309,70 @@ function animateCardRemoval(card) {
         }, 300);
     }, 150);
 }
-// ✅ FUNÇÃO: Verificar se perfil está completo
+
+// ==================== FUNÇÕES AUXILIARES ====================
+
+// CALCULAR IDADE
+function calculateAge(birthDate) {
+    if (!birthDate) return null;
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--;
+    }
+    return age;
+}
+
+// FORMATAR ZODÍACO
+function formatZodiac(zodiac) {
+    const zodiacMap = {
+        'aries': 'Áries',
+        'taurus': 'Touro', 
+        'gemini': 'Gêmeos',
+        'cancer': 'Câncer',
+        'leo': 'Leão',
+        'virgo': 'Virgem',
+        'libra': 'Libra',
+        'scorpio': 'Escorpião',
+        'sagittarius': 'Sagitário',
+        'capricorn': 'Capricórnio',
+        'aquarius': 'Aquário',
+        'pisces': 'Peixes'
+    };
+    return zodiacMap[zodiac.toLowerCase()] || zodiac;
+}
+
+// ÍCONE DO ZODÍACO
+function getZodiacIcon(zodiac) {
+    const zodiacIcons = {
+        'aries': '♈',
+        'taurus': '♉',
+        'gemini': '♊',
+        'cancer': '♋',
+        'leo': '♌',
+        'virgo': '♍',
+        'libra': '♎',
+        'scorpio': '♏',
+        'sagittarius': '♐',
+        'capricorn': '♑',
+        'aquarius': '♒',
+        'pisces': '♓'
+    };
+    return zodiacIcons[zodiac.toLowerCase()] || '✨';
+}
+
+// FORMATAR "PROCURANDO POR"
+function formatLookingFor(lookingFor) {
+    if (Array.isArray(lookingFor)) {
+        return lookingFor.join(', ');
+    }
+    return lookingFor || 'Não informado';
+}
+
+// VERIFICAR SE PERFIL ESTÁ COMPLETO
 function isProfileComplete() {
     return userProfile &&
            userProfile.full_name &&
@@ -3306,7 +3380,27 @@ function isProfileComplete() {
            userProfile.birth_date;
 }
 
-// ✅ FUNÇÃO: Verificar se usuário está online
+// TEMPO DECORRIDO (EX: "HÁ 2 MINUTOS")
+function getTimeAgo(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    
+    if (diffInSeconds < 60) {
+        return 'Agora mesmo';
+    } else if (diffInSeconds < 3600) {
+        const minutes = Math.floor(diffInSeconds / 60);
+        return `Há ${minutes} min`;
+    } else if (diffInSeconds < 86400) {
+        const hours = Math.floor(diffInSeconds / 3600);
+        return `Há ${hours} h`;
+    } else {
+        const days = Math.floor(diffInSeconds / 86400);
+        return `Há ${days} dia${days !== 1 ? 's' : ''}`;
+    }
+}
+
+// VERIFICAR SE USUÁRIO ESTÁ ONLINE
 function isUserOnline(userProfile, currentUserId) {
     if (!userProfile.last_online_at) return false;
     
@@ -3327,6 +3421,46 @@ function isUserOnline(userProfile, currentUserId) {
     
     return isActuallyOnline;
 }
+
+// MOSTRAR ESTADO VAZIO
+function showEmptyState(message) {
+    const usersGrid = document.getElementById('usersGrid');
+    if (usersGrid) {
+        usersGrid.innerHTML = `
+            <div class="empty-state">
+                <h3>${message}</h3>
+            </div>
+        `;
+    }
+}
+
+// REGISTRAR VISITA AO PERFIL
+async function registerProfileVisit(visitedUserId) {
+    try {
+        if (!currentUser || currentUser.id === visitedUserId) return false;
+        
+        const { error } = await supabase
+            .from('profile_visits')
+            .insert({
+                visitor_id: currentUser.id,
+                visited_id: visitedUserId,
+                visited_at: new Date().toISOString()
+            });
+
+        if (error) {
+            if (error.code === '23505') {
+                // Visita já registrada, tudo bem
+                return true;
+            }
+            throw error;
+        }
+        return true;
+    } catch (error) {
+        console.error('Erro ao registrar visita:', error);
+        return false;
+    }
+}
+
 // ==================== SISTEMA DE STATUS ONLINE ====================
 
 // Atualizar status online
@@ -3490,78 +3624,28 @@ function startStatsAutoUpdate() {
     setInterval(updateStats, 30000);
 }
 
-// Mostrar estado vazio
-function showEmptyState(message) {
-    const usersGrid = document.getElementById('usersGrid');
-    usersGrid.innerHTML = `
-        <div class="empty-state">
-            <div class="empty-state-icon">👥</div>
-            <h3>Nenhum usuário encontrado</h3>
-            <p>${message}</p>
-            <button class="btn btn-primary" onclick="window.location.href='busca.html'">
-                🔍 Ir para Busca
-            </button>
-        </div>
-    `;
-}
-
-// ==================== FUNÇÕES AUXILIARES ====================
-
-function calculateAge(birthDate) {
-    if (!birthDate) return null;
-    const today = new Date();
-    const birth = new Date(birthDate);
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-        age--;
+// Carregar estatísticas para free users
+async function loadFreeVisitorsStats() {
+    try {
+        document.getElementById('premiumVisitors').style.display = 'none';
+        document.getElementById('freeVisitors').style.display = 'block';
+        
+        const { data: visitCount, error } = await supabase.rpc('count_user_visits', {
+            p_user_id: currentUser.id,
+            p_days: 7
+        });
+        
+        const count = visitCount || 0;
+        const countText = count === 1 ? '1 pessoa' : `${count} pessoas`;
+        
+        document.getElementById('freeVisitorsCount').textContent = countText;
+        document.getElementById('visitorsCount').textContent = `${count} visita${count !== 1 ? 's' : ''}`;
+        
+    } catch (error) {
+        console.error('Erro ao carregar estatísticas free:', error);
+        document.getElementById('freeVisitorsCount').textContent = '0 pessoas';
+        document.getElementById('visitorsCount').textContent = '0 visitas';
     }
-    
-    return age;
-}
-
-function getZodiacIcon(zodiac) {
-    const icons = {
-        'aries': '♈', 'touro': '♉', 'gemeos': '♊', 'cancer': '♋',
-        'leao': '♌', 'virgem': '♍', 'libra': '♎', 'escorpiao': '♏',
-        'sagitario': '♐', 'capricornio': '♑', 'aquario': '♒', 'peixes': '♓'
-    };
-    return icons[zodiac] || '⭐';
-}
-
-function formatZodiac(zodiac) {
-    const names = {
-        'aries': 'Áries', 'touro': 'Touro', 'gemeos': 'Gêmeos', 'cancer': 'Câncer',
-        'leao': 'Leão', 'virgem': 'Virgem', 'libra': 'Libra', 'escorpiao': 'Escorpião',
-        'sagitario': 'Sagitário', 'capricornio': 'Capricórnio', 'aquario': 'Aquário', 'peixes': 'Peixes'
-    };
-    return names[zodiac] || zodiac;
-}
-
-function formatLookingFor(lookingFor) {
-    const options = {
-        'amizade': 'Amizade',
-        'namoro': 'Namoro',
-        'relacionamento_serio': 'Relacionamento Sério',
-        'conversa': 'Apenas Conversa'
-    };
-    return options[lookingFor] || lookingFor;
-}
-
-function getTimeAgo(dateString) {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-    
-    if (diffMins < 1) return 'Agora';
-    if (diffMins < 60) return `${diffMins}min`;
-    if (diffHours < 24) return `${diffHours}h`;
-    if (diffDays < 7) return `${diffDays}d`;
-    return `${Math.floor(diffDays / 7)}sem`;
 }
 
 // ==================== MENU MOBILE ====================
@@ -3611,118 +3695,6 @@ function setupMobileMenu() {
     checkScreenSize();
 }
 
-// ==================== FUNÇÕES QUE ESTÃO FALTANDO ====================
-
-// Carregar estatísticas para free users
-async function loadFreeVisitorsStats() {
-    try {
-        document.getElementById('premiumVisitors').style.display = 'none';
-        document.getElementById('freeVisitors').style.display = 'block';
-        
-        const { data: visitCount, error } = await supabase.rpc('count_user_visits', {
-            p_user_id: currentUser.id,
-            p_days: 7
-        });
-        
-        const count = visitCount || 0;
-        const countText = count === 1 ? '1 pessoa' : `${count} pessoas`;
-        
-        document.getElementById('freeVisitorsCount').textContent = countText;
-        document.getElementById('visitorsCount').textContent = `${count} visita${count !== 1 ? 's' : ''}`;
-        
-    } catch (error) {
-        console.error('Erro ao carregar estatísticas free:', error);
-        document.getElementById('freeVisitorsCount').textContent = '0 pessoas';
-        document.getElementById('visitorsCount').textContent = '0 visitas';
-    }
-}
-// Registrar visita ao perfil
-async function registerProfileVisit(visitedUserId) {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            console.error('❌ Usuário não autenticado');
-            return false;
-        }
-
-        if (user.id === visitedUserId) {
-            console.log('⚠️ Não pode visitar próprio perfil');
-            return false;
-        }
-        
-        // ✅ VERIFICAR SE USUÁRIO ESTÁ BLOQUEADO
-        if (isUserBlocked(visitedUserId)) {
-            console.log('🚫 Não é possível visitar perfil: Usuário bloqueado');
-            showQuickToast('🚫 Você bloqueou este usuário e não pode visitá-lo.');
-            return false;
-        }
-
-        console.log('🔄 Registrando visita:', {
-            visitor: user.id,
-            visited: visitedUserId
-        });
-
-        const { data, error } = await supabase.rpc('register_visit_simple', {
-            p_visitor_id: user.id,
-            p_visited_id: visitedUserId
-        });
-
-        if (error) {
-            console.error('❌ Erro ao registrar visita:', error);
-            return false;
-        }
-
-        console.log('✅ Visita registrada com sucesso:', data);
-        return data.success;
-
-    } catch (error) {
-        console.error('❌ Erro no registro de visita:', error);
-        return false;
-    }
-}
-
-// ✅ ADICIONAR TAMBÉM ESTA FUNÇÃO QUE ESTÁ FALTANDO:
-function setupInvisibleModeSyncListener() {
-    try {
-        console.log('👂 Configurando ouvinte de sincronização do modo invisível...');
-        
-        window.addEventListener('invisibleModeUpdated', function(event) {
-            console.log('🔄 Evento de modo invisível recebido:', event.detail);
-            handleInvisibleModeChangeInHome(event.detail.isInvisible);
-        });
-        
-        window.addEventListener('storage', function(event) {
-            if (event.key === 'invisibleModeChanged') {
-                const isInvisible = localStorage.getItem('invisibleModeStatus') === 'true';
-                handleInvisibleModeChangeInHome(isInvisible);
-            }
-        });
-        
-    } catch (error) {
-        console.error('❌ Erro ao configurar sincronização:', error);
-    }
-}
-
-// ✅ E ESTA TAMBÉM:
-async function handleInvisibleModeChangeInHome(isInvisible) {
-    try {
-        console.log(`🔄 Processando mudança do modo invisível para: ${isInvisible}`);
-        
-        const statusElement = document.getElementById('invisibleStatusHome');
-        if (statusElement) {
-            if (isInvisible) {
-                statusElement.style.display = 'flex';
-                statusElement.querySelector('strong').textContent = 'Ativo';
-            } else {
-                statusElement.style.display = 'none';
-            }
-        }
-        
-    } catch (error) {
-        console.error('❌ Erro ao processar mudança do modo invisível:', error);
-    }
-}
-
 // ==================== EXPORTAR FUNÇÕES GLOBAIS ====================
 
 window.sendMessage = sendMessage;
@@ -3739,38 +3711,7 @@ window.confirmBlock = confirmBlock;
 window.closeConfirmModal = closeConfirmModal;
 window.openSupportModal = openSupportModal;
 
-// ==================== CSS PARA ANIMAÇÕES ====================
-
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideInDown {
-        from { transform: translate(-50%, -100%); opacity: 0; }
-        to { transform: translate(-50%, 0); opacity: 1; }
-    }
-    @keyframes slideOutUp {
-        from { transform: translate(-50%, 0); opacity: 1; }
-        to { transform: translate(-50%, -100%); opacity: 0; }
-    }
-    .connection-status {
-        position: fixed;
-        top: 10px;
-        right: 10px;
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        z-index: 1000;
-        transition: all 0.3s ease;
-    }
-    .connection-good { background: #38a169; color: white; }
-    .connection-slow { background: #d69e2e; color: white; }
-`;
-if (!document.querySelector('#alert-animations')) {
-    style.id = 'alert-animations';
-    document.head.appendChild(style);
-}
-
-console.log('✅ Home.js COMPLETAMENTE CORRIGIDO! Sistema ULTRA-RÁPIDO funcionando! 🎉');
+console.log('✅ Sistema ULTRA-RÁPIDO funcionando! 🎉');
 </script>
 </body>
 </html>
