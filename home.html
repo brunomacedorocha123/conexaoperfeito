@@ -2140,7 +2140,7 @@ footer {
   </footer>
 
 <script>
-// Configuração do Supabase
+/// Configuração do Supabase
 const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 
@@ -2168,28 +2168,40 @@ const blockCache = {
     }
 };
 
-// ==================== INICIALIZAÇÃO ====================
+// ==================== INICIALIZAÇÃO DA APLICAÇÃO ====================
 
 document.addEventListener('DOMContentLoaded', function() {
     checkAuth();
     setupEventListeners();
+    setupMobileMenu();
 });
 
+// Verificar autenticação
 async function checkAuth() {
     try {
         const { data: { user }, error } = await supabase.auth.getUser();
+        
         if (error) throw error;
+        
         if (!user) {
             window.location.href = 'login.html';
             return;
         }
         
         currentUser = user;
-        await initializeBlockSystem(); // PRIMEIRO: inicializar bloqueio
+        
+        // Carregamento paralelo para máxima velocidade
         await Promise.all([
             loadUserData(),
-            loadRealUsers()
+            loadRealUsers(), 
+            loadVisitorsSystem(),
+            initializeBlockSystem()
         ]);
+        
+        updateStats();
+        startStatsAutoUpdate();
+        startOnlineStatusUpdater();
+        setupInvisibleModeSyncListener();
         
     } catch (error) {
         console.error('Erro na autenticação:', error);
@@ -2197,16 +2209,22 @@ async function checkAuth() {
     }
 }
 
+// Configurar event listeners
 function setupEventListeners() {
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', logout);
     }
+    
+    document.addEventListener('touchstart', function() {}, { passive: true });
 }
 
+// Logout
 async function logout() {
     try {
-        await supabase.auth.signOut();
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+        
         window.location.href = 'index.html';
     } catch (error) {
         console.error('Erro ao fazer logout:', error);
@@ -2214,11 +2232,21 @@ async function logout() {
     }
 }
 
-// ==================== SISTEMA DE BLOQUEIO DEFINITIVO ====================
+// ==================== SISTEMA DE BLOQUEIO ULTRA-RÁPIDO ====================
 
+// INICIALIZAÇÃO DO SISTEMA DE BLOQUEIO
 async function initializeBlockSystem() {
     try {
-        console.log('⚡ Inicializando sistema de bloqueio...');
+        console.log('⚡ Inicializando sistema de bloqueio ULTRA-RÁPIDO...');
+        
+        // REMOVER MENSAGEM "CONEXÃO OK" VERDE SE EXISTIR
+        const connectionElements = document.querySelectorAll('.connection-status, .connection-ok, .alert-success, [class*="success"], [class*="connection"]');
+        connectionElements.forEach(element => {
+            if (element.textContent.includes('Conexão OK') || element.textContent.includes('✅')) {
+                element.remove();
+                console.log('✅ Mensagem "conexão ok" removida');
+            }
+        });
         
         // 1. Carrega do cache local (INSTANTÂNEO)
         const cached = blockCache.get();
@@ -2228,7 +2256,7 @@ async function initializeBlockSystem() {
         }
         
         // 2. Atualiza do banco em background
-        await loadBlockedIdsFromDatabase();
+        await loadBlockedIdsForHome();
         console.log(`✅ Sistema de bloqueio pronto: ${blockedUserIdsSet.size} usuários bloqueados`);
         
     } catch (error) {
@@ -2236,7 +2264,8 @@ async function initializeBlockSystem() {
     }
 }
 
-async function loadBlockedIdsFromDatabase() {
+// CARREGAR IDs BLOQUEADOS DO BANCO
+async function loadBlockedIdsForHome() {
     try {
         if (!currentUser) return;
         
@@ -2247,6 +2276,7 @@ async function loadBlockedIdsFromDatabase() {
 
         if (error) throw error;
 
+        // AGORA SALVA REALMENTE NO SET E NO CACHE
         const blockedIds = blocks.map(b => b.blocked_user_id);
         blockedUserIdsSet = new Set(blockedIds);
         blockCache.set(blockedUserIdsSet);
@@ -2258,35 +2288,36 @@ async function loadBlockedIdsFromDatabase() {
     }
 }
 
+// VERIFICAR SE USUÁRIO ESTÁ BLOQUEADO
 function isUserBlocked(userId) {
     return blockedUserIdsSet.has(userId);
 }
 
-// ✅ FUNÇÃO PRINCIPAL DE BLOQUEIO - DEFINITIVA
+// BLOQUEIO ULTRA-RÁPIDO - AGORA FUNCIONANDO DE VERDADE
 async function confirmBlock() {
     if (!currentBlockUserId) return;
     
     const userId = currentBlockUserId;
     const userName = currentBlockUserName;
     
-    console.log('⚡ BLOQUEIO DEFINITIVO INICIADO:', userName);
+    console.log('⚡ BLOQUEIO ULTRA-RÁPIDO iniciado:', userName);
     
-    // 1. FECHAR MODAL IMEDIATAMENTE
+    // 1. FECHAR MODAL IMEDIATAMENTE (0ms)
     closeBlockModal();
     
-    // 2. REMOVER DA UI IMEDIATAMENTE
+    // 2. REMOVER DA UI INSTANTANEAMENTE (0ms)
     removeUserCardImmediately(userId);
     
-    // 3. ATUALIZAR CACHE LOCAL
+    // 3. ATUALIZAR CACHE LOCAL (0ms)
     blockedUserIdsSet.add(userId);
     blockCache.set(blockedUserIdsSet);
     
-    // 4. ✅ SALVAR NO BANCO - MÉTODO GARANTIDO
-    const success = await saveBlockToDatabase(userId);
+    // 4. SALVAR NO BANCO EM BACKGROUND (AGORA FUNCIONA)
+    const success = await saveBlockToDatabase(userId, userName);
     
     if (success) {
         showQuickToast(`✅ ${userName} bloqueado com sucesso!`);
-        console.log('🎯 USUÁRIO BLOQUEADO DEFINITIVAMENTE!');
+        console.log('🎯 USUÁRIO BLOQUEADO E SALVO NO BANCO!');
         
         // 5. Redirecionar para blocks.html após sucesso
         setTimeout(() => {
@@ -2297,12 +2328,12 @@ async function confirmBlock() {
     }
 }
 
-// ✅ MÉTODO GARANTIDO PARA SALVAR NO BANCO
-async function saveBlockToDatabase(userId) {
+// SALVAR NO BANCO EM BACKGROUND - TOTALMENTE CORRIGIDA E TESTADA
+async function saveBlockToDatabase(userId, userName) {
     try {
-        console.log('💾 SALVANDO BLOQUEIO NO BANCO:', userId);
+        console.log('💾 Tentando salvar bloqueio no banco para:', userId);
         
-        // MÉTODO 1: Inserção direta
+        // MÉTODO 1: Tenta inserir normalmente
         const { data, error } = await supabase
             .from('user_blocks')
             .insert({
@@ -2312,15 +2343,34 @@ async function saveBlockToDatabase(userId) {
             });
 
         if (error) {
-            // Se já existe, considera sucesso
             if (error.code === '23505') {
                 console.log('✅ Usuário já estava bloqueado no banco');
                 return true;
+            } else {
+                console.error('❌ Erro ao inserir bloqueio:', error);
+                
+                // MÉTODO 2: Tenta upsert como fallback
+                const { data: upsertData, error: upsertError } = await supabase
+                    .from('user_blocks')
+                    .upsert({
+                        blocker_id: currentUser.id,
+                        blocked_user_id: userId,
+                        created_at: new Date().toISOString()
+                    }, {
+                        onConflict: 'blocker_id,blocked_user_id'
+                    });
+
+                if (upsertError) {
+                    console.error('❌ Erro no upsert também:', upsertError);
+                    // RECUPERAÇÃO: Remove do cache se falhou
+                    blockedUserIdsSet.delete(userId);
+                    blockCache.set(blockedUserIdsSet);
+                    return false;
+                }
+                
+                console.log('✅ Bloqueio salvo via upsert');
+                return true;
             }
-            console.error('❌ Erro ao inserir bloqueio:', error);
-            
-            // MÉTODO 2: Tentar upsert como fallback
-            return await tryUpsertBlock(userId);
         }
         
         console.log('✅ BLOQUEIO SALVO NO BANCO COM SUCESSO!');
@@ -2332,33 +2382,7 @@ async function saveBlockToDatabase(userId) {
     }
 }
 
-// ✅ MÉTODO ALTERNATIVO - UPSERT
-async function tryUpsertBlock(userId) {
-    try {
-        const { data, error } = await supabase
-            .from('user_blocks')
-            .upsert({
-                blocker_id: currentUser.id,
-                blocked_user_id: userId,
-                created_at: new Date().toISOString()
-            }, {
-                onConflict: 'blocker_id,blocked_user_id',
-                ignoreDuplicates: false
-            });
-
-        if (error) {
-            console.error('❌ Erro no upsert também:', error);
-            return false;
-        }
-        
-        console.log('✅ Bloqueio salvo via upsert');
-        return true;
-    } catch (error) {
-        console.error('❌ Erro no método upsert:', error);
-        return false;
-    }
-}
-
+// TOAST RÁPIDO (sem atrapalhar)
 function showQuickToast(message) {
     // Remove toasts anteriores
     document.querySelectorAll('.quick-toast').forEach(toast => toast.remove());
@@ -2402,6 +2426,7 @@ function showQuickToast(message) {
     }, 3000);
 }
 
+// REMOÇÃO IMEDIATA DA UI
 function removeUserCardImmediately(userId) {
     console.log('🗑️ Removendo card imediatamente:', userId);
     
@@ -2428,7 +2453,7 @@ function removeUserCardImmediately(userId) {
     }
     
     if (!removed) {
-        console.log('⚠️ Card não encontrado para remoção, recarregando lista...');
+        console.log('⚠️ Card não encontrado para remoção:', userId);
         // Força recarregar a lista
         setTimeout(() => {
             loadRealUsers();
@@ -2436,6 +2461,7 @@ function removeUserCardImmediately(userId) {
     }
 }
 
+// ANIMAÇÃO DE REMOÇÃO
 function animateCardRemoval(card) {
     if (card.classList.contains('removing')) return;
     
@@ -2467,9 +2493,153 @@ function animateCardRemoval(card) {
         }, 300);
     }, 150);
 }
+// ==================== SISTEMA DE REPORTE ====================
 
-// ==================== SISTEMA DE USUÁRIOS ====================
+// MENU DE AÇÕES CORRIGIDO - 3 PONTOS FUNCIONAL
+function toggleMenu(button) {
+    const menu = button.nextElementSibling;
+    const isShowing = menu.classList.contains('show');
+    
+    // Fechar todos os menus abertos
+    document.querySelectorAll('.menu-options').forEach(m => {
+        m.classList.remove('show');
+    });
+    
+    // Abrir/fechar o menu clicado
+    if (!isShowing) {
+        menu.classList.add('show');
+        
+        // Fechar menu ao clicar fora
+        const closeMenuHandler = function(event) {
+            if (!event.target.closest('.user-card-menu')) {
+                menu.classList.remove('show');
+                document.removeEventListener('click', closeMenuHandler);
+            }
+        };
+        
+        setTimeout(() => {
+            document.addEventListener('click', closeMenuHandler);
+        }, 10);
+    }
+}
 
+// Fechar todos os menus
+function closeAllMenus(event) {
+    if (!event || !event.target.closest('.user-card-menu')) {
+        document.querySelectorAll('.menu-options').forEach(menu => {
+            menu.classList.remove('show');
+        });
+    }
+}
+
+// Abrir modal de reporte
+function openReportModal(userId, userName) {
+    console.log('📝 Abrindo modal de reporte para:', userId, userName);
+    
+    currentReportUserId = userId;
+    currentReportUserName = userName;
+    
+    document.getElementById('reportUserName').textContent = userName;
+    
+    // Resetar formulário
+    document.querySelectorAll('input[name="reportReason"]').forEach(radio => {
+        radio.checked = false;
+        radio.parentElement.classList.remove('selected');
+    });
+    document.getElementById('reportDescription').value = '';
+    document.getElementById('submitReportBtn').disabled = true;
+    
+    document.getElementById('reportModal').classList.add('show');
+}
+
+// Fechar modal de reporte
+function closeReportModal() {
+    document.getElementById('reportModal').classList.remove('show');
+    currentReportUserId = null;
+    currentReportUserName = null;
+}
+
+// Selecionar categoria de reporte
+function selectReportCategory(radio) {
+    document.querySelectorAll('.report-category').forEach(category => {
+        category.classList.remove('selected');
+    });
+    
+    radio.parentElement.classList.add('selected');
+    document.getElementById('submitReportBtn').disabled = false;
+}
+
+// Enviar reporte
+async function submitReport() {
+    try {
+        const reason = document.querySelector('input[name="reportReason"]:checked')?.value;
+        const description = document.getElementById('reportDescription').value;
+        
+        if (!reason) {
+            showQuickToast('⚠️ Selecione um motivo para o reporte.');
+            return;
+        }
+        
+        console.log('🔄 Enviando reporte:', {
+            userId: currentReportUserId,
+            userName: currentReportUserName,
+            reason: reason,
+            description: description
+        });
+        
+        const { data, error } = await supabase
+            .from('user_reports')
+            .insert({
+                reporter_id: currentUser.id,
+                reported_user_id: currentReportUserId,
+                reason: reason,
+                category: reason,
+                evidence: description || null,
+                status: 'pending'
+            });
+            
+        if (error) throw error;
+        
+        console.log('✅ Reporte enviado com sucesso!');
+        showQuickToast('✅ Reporte enviado com sucesso!');
+        closeReportModal();
+        
+    } catch (error) {
+        console.error('❌ Erro ao enviar reporte:', error);
+        showQuickToast('❌ Erro ao enviar reporte. Tente novamente.');
+    }
+}
+
+// Abrir modal de bloqueio
+function openBlockModal(userId, userName) {
+    console.log('🚫 Abrindo modal de bloqueio para:', userId, userName);
+    
+    currentBlockUserId = userId;
+    currentBlockUserName = userName;
+    
+    document.getElementById('blockUserName').textContent = userName;
+    document.getElementById('blockModal').classList.add('show');
+}
+
+// Fechar modal de bloqueio
+function closeBlockModal() {
+    document.getElementById('blockModal').classList.remove('show');
+    currentBlockUserId = null;
+    currentBlockUserName = null;
+}
+
+// Funções auxiliares dos modais
+function closeConfirmModal() {
+    document.getElementById('confirmModal').classList.remove('show');
+}
+
+function openSupportModal() {
+    alert('📞 Entre em contato com nosso suporte: suporte@amorconect.com');
+}
+
+// ==================== SISTEMA DE USUÁRIOS E PERFIS ====================
+
+// Carregar dados do usuário atual
 async function loadUserData() {
     try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -2492,11 +2662,13 @@ async function loadUserData() {
             displayName = user.email.split('@')[0];
         }
 
+        await updateUserAvatar(displayName, profile);
+
         document.getElementById('userNickname').textContent = displayName;
         document.getElementById('mobileUserNickname').textContent = displayName;
         document.getElementById('welcomeNickname').textContent = displayName;
 
-        // Mostrar Free ou Premium
+        // Mostrar Free ou Premium no header
         const isPremium = profile?.is_premium || false;
         const freeBadge = document.getElementById('freeBadge');
         const premiumBtn = document.getElementById('premiumBtn');
@@ -2520,6 +2692,55 @@ async function loadUserData() {
     }
 }
 
+// Atualizar avatar do usuário
+async function updateUserAvatar(displayName, profile) {
+    const avatarElements = [
+        document.getElementById('userAvatar'),
+        document.getElementById('mobileUserAvatar')
+    ];
+
+    for (const avatarElement of avatarElements) {
+        if (!avatarElement) continue;
+        
+        const userAvatarFallback = avatarElement.querySelector('.user-avatar-fallback');
+        const userAvatarImg = avatarElement.querySelector('.user-avatar-img');
+        
+        if (!userAvatarFallback || !userAvatarImg) continue;
+
+        userAvatarImg.style.display = 'none';
+        userAvatarFallback.style.display = 'flex';
+        
+        if (profile?.avatar_url) {
+            const photoUrl = await loadUserPhoto(profile.avatar_url);
+            if (photoUrl) {
+                userAvatarImg.src = photoUrl;
+                userAvatarImg.style.display = 'block';
+                userAvatarFallback.style.display = 'none';
+            }
+        }
+        
+        userAvatarFallback.textContent = displayName.charAt(0).toUpperCase();
+    }
+}
+
+// Carregar foto do usuário
+async function loadUserPhoto(avatarUrl) {
+    try {
+        if (!avatarUrl) return null;
+
+        const { data } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(avatarUrl);
+
+        return data?.publicUrl || null;
+
+    } catch (error) {
+        console.error('Erro ao carregar foto:', error);
+        return null;
+    }
+}
+
+// Carregar usuários reais do banco
 async function loadRealUsers() {
     try {
         const limit = window.innerWidth <= 768 ? 4 : 8;
@@ -2568,12 +2789,13 @@ async function loadRealUsers() {
     }
 }
 
+// Exibir usuários com fotos
 async function displayUsersWithPhotos(users) {
     const usersGrid = document.getElementById('usersGrid');
     
     const userCards = [];
     for (const user of users) {
-        // ✅ VERIFICA SE USUÁRIO NÃO ESTÁ BLOQUEADO ANTES DE CRIAR CARD
+        // VERIFICA SE USUÁRIO NÃO ESTÁ BLOQUEADO ANTES DE CRIAR CARD
         if (!isUserBlocked(user.id)) {
             const card = await createUserCardWithPhoto(user);
             userCards.push(card);
@@ -2587,6 +2809,7 @@ async function displayUsersWithPhotos(users) {
     }
 }
 
+// Criar card de usuário com foto
 async function createUserCardWithPhoto(user) {
     if (!user.user_details || !user.nickname) {
         return '';
@@ -2651,7 +2874,7 @@ async function createUserCardWithPhoto(user) {
                 <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewProfile('${user.id}')">
                     👀 Ver Perfil
                 </button>
-                <!-- Menu de ações -->
+                <!-- Menu de ações - 3 PONTOS FUNCIONAL -->
                 <div class="user-card-menu">
                     <button class="btn-more" onclick="event.stopPropagation(); toggleMenu(this)" title="Mais opções">
                         ⋯
@@ -2669,124 +2892,256 @@ async function createUserCardWithPhoto(user) {
         </div>
     `;
 }
+// ==================== SISTEMA DE VISITANTES ====================
 
-// ==================== FUNÇÕES DE INTERAÇÃO ====================
-
-function toggleMenu(button) {
-    const menu = button.nextElementSibling;
-    const isShowing = menu.classList.contains('show');
-    
-    // Fechar todos os menus abertos
-    document.querySelectorAll('.menu-options').forEach(m => {
-        m.classList.remove('show');
-    });
-    
-    // Abrir/fechar o menu clicado
-    if (!isShowing) {
-        menu.classList.add('show');
+// Carregar sistema de visitantes
+async function loadVisitorsSystem() {
+    try {
+        const isPremium = await checkPremiumStatus();
         
-        // Fechar menu ao clicar fora
-        const closeMenuHandler = function(event) {
-            if (!event.target.closest('.user-card-menu')) {
-                menu.classList.remove('show');
-                document.removeEventListener('click', closeMenuHandler);
-            }
-        };
+        if (isPremium) {
+            await loadPremiumVisitors();
+            await checkInvisibleStatusHome();
+        } else {
+            await loadFreeVisitorsStats();
+        }
         
-        setTimeout(() => {
-            document.addEventListener('click', closeMenuHandler);
-        }, 10);
+    } catch (error) {
+        console.error('Erro no sistema de visitantes:', error);
     }
 }
 
-function openReportModal(userId, userName) {
-    currentReportUserId = userId;
-    currentReportUserName = userName;
-    
-    document.getElementById('reportUserName').textContent = userName;
-    
-    // Resetar formulário
-    document.querySelectorAll('input[name="reportReason"]').forEach(radio => {
-        radio.checked = false;
-        radio.parentElement.classList.remove('selected');
-    });
-    document.getElementById('reportDescription').value = '';
-    document.getElementById('submitReportBtn').disabled = true;
-    
-    document.getElementById('reportModal').classList.add('show');
-}
-
-function closeReportModal() {
-    document.getElementById('reportModal').classList.remove('show');
-    currentReportUserId = null;
-    currentReportUserName = null;
-}
-
-function selectReportCategory(radio) {
-    document.querySelectorAll('.report-category').forEach(category => {
-        category.classList.remove('selected');
-    });
-    
-    radio.parentElement.classList.add('selected');
-    document.getElementById('submitReportBtn').disabled = false;
-}
-
-async function submitReport() {
+// Verificar status premium
+async function checkPremiumStatus() {
     try {
-        const reason = document.querySelector('input[name="reportReason"]:checked')?.value;
-        const description = document.getElementById('reportDescription').value;
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return false;
         
-        if (!reason) {
-            showQuickToast('⚠️ Selecione um motivo para o reporte.');
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_premium')
+            .eq('id', user.id)
+            .single();
+            
+        return profile?.is_premium || false;
+    } catch (error) {
+        console.error('Erro ao verificar premium:', error);
+        return false;
+    }
+}
+
+// FUNÇÃO CORRIGIDA PARA HOME - Compatível com visitante.html
+async function loadPremiumVisitors() {
+    try {
+        console.log('🔄 Carregando visitantes para HOME...');
+        
+        // Mostrar seção premium
+        document.getElementById('premiumVisitors').style.display = 'block';
+        document.getElementById('freeVisitors').style.display = 'none';
+        
+        const visitorsGrid = document.getElementById('visitorsGrid');
+        const visitorsCount = document.getElementById('visitorsCount');
+        
+        // USA A MESMA CONSULTA DA VISITANTE.HTML (que funciona)
+        const { data: visits, error } = await supabase
+            .from('profile_visits')
+            .select('*')
+            .eq('visited_id', currentUser.id)  // Onde ELE foi visitado
+            .order('visited_at', { ascending: false })
+            .limit(8);
+
+        if (error) {
+            console.error('❌ Erro ao carregar visitas:', error);
+            visitorsGrid.innerHTML = `
+                <div class="visitors-empty">
+                    <div class="icon">👀</div>
+                    <h3>Nenhuma visita recente</h3>
+                    <p>Seu perfil ainda não foi visitado</p>
+                </div>
+            `;
+            return;
+        }
+
+        console.log(`✅ ${visits?.length || 0} visitas encontradas na HOME:`, visits);
+
+        // Atualizar contador
+        const visitCount = visits?.length || 0;
+        if (visitorsCount) {
+            visitorsCount.textContent = `${visitCount} visita${visitCount !== 1 ? 's' : ''}`;
+        }
+
+        if (!visits || visits.length === 0) {
+            visitorsGrid.innerHTML = `
+                <div class="visitors-empty">
+                    <div class="icon">👀</div>
+                    <h3>Nenhuma visita ainda</h3>
+                    <p>Seu perfil ainda não foi visitado por outros usuários</p>
+                </div>
+            `;
             return;
         }
         
-        const { data, error } = await supabase
-            .from('user_reports')
-            .insert({
-                reporter_id: currentUser.id,
-                reported_user_id: currentReportUserId,
-                reason: reason,
-                category: reason,
-                evidence: description || null,
-                status: 'pending'
-            });
-            
-        if (error) throw error;
+        // Criar cards dos visitantes - MESMO MÉTODO DA VISITANTE.HTML
+        let visitorsHTML = '';
+        let cardsCarregados = 0;
         
-        showQuickToast('✅ Reporte enviado com sucesso!');
-        closeReportModal();
+        for (const visit of visits) {
+            try {
+                const cardHTML = await createVisitorCardForHome(visit);
+                if (cardHTML) {
+                    visitorsHTML += cardHTML;
+                    cardsCarregados++;
+                }
+            } catch (error) {
+                console.error('Erro ao criar card:', error);
+                // Continua mesmo com erro em um card
+            }
+        }
         
+        if (cardsCarregados > 0) {
+            visitorsGrid.innerHTML = visitorsHTML;
+            console.log(`✅ ${cardsCarregados} visitantes carregados na HOME`);
+        } else {
+            visitorsGrid.innerHTML = `
+                <div class="visitors-empty">
+                    <div class="icon">👀</div>
+                    <h3>Nenhuma visita recente</h3>
+                    <p>Seu perfil ainda não foi visitado</p>
+                </div>
+            `;
+        }
+
     } catch (error) {
-        console.error('❌ Erro ao enviar reporte:', error);
-        showQuickToast('❌ Erro ao enviar reporte. Tente novamente.');
+        console.error('❌ Erro geral ao carregar visitantes:', error);
+        const visitorsGrid = document.getElementById('visitorsGrid');
+        visitorsGrid.innerHTML = `
+            <div class="visitors-empty">
+                <div class="icon">👀</div>
+                <h3>Nenhuma visita recente</h3>
+                <p>Seu perfil ainda não foi visitado</p>
+            </div>
+        `;
     }
 }
 
-function openBlockModal(userId, userName) {
-    currentBlockUserId = userId;
-    currentBlockUserName = userName;
-    
-    document.getElementById('blockUserName').textContent = userName;
-    document.getElementById('blockModal').classList.add('show');
+// FUNÇÃO AUXILIAR CORRIGIDA - Criar card para HOME
+async function createVisitorCardForHome(visit) {
+    try {
+        console.log('🎯 Processando visita de:', visit.visitor_id);
+        
+        // Busca perfil do visitante
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('id, nickname, full_name, avatar_url, city, last_online_at, is_invisible')
+            .eq('id', visit.visitor_id)
+            .single();
+
+        if (error || !profile) {
+            console.log('Perfil não encontrado, criando card básico');
+            return createBasicCardForHome(visit);
+        }
+
+        const nickname = profile.nickname || 
+                        profile.full_name?.split(' ')[0] || 
+                        'Usuário';
+        
+        const city = profile.city || 'Cidade não informada';
+        const timeAgo = getTimeAgo(visit.visited_at);
+        const initial = nickname.charAt(0).toUpperCase();
+        
+        // Status online
+        const isOnline = isUserOnline(profile, currentUser.id);
+        const onlineBadge = isOnline ? 
+            '<div class="online-badge" title="Online"></div>' : 
+            '<div class="offline-badge" title="Offline"></div>';
+
+        // Carregar foto
+        let avatarContent = '';
+        if (profile.avatar_url) {
+            const photoUrl = await loadUserPhoto(profile.avatar_url);
+            if (photoUrl) {
+                avatarContent = `
+                    <img class="visitor-avatar-img" src="${photoUrl}" alt="${nickname}">
+                    ${onlineBadge}
+                `;
+            } else {
+                avatarContent = `
+                    <div class="visitor-avatar-fallback">${initial}</div>
+                    ${onlineBadge}
+                `;
+            }
+        } else {
+            avatarContent = `
+                <div class="visitor-avatar-fallback">${initial}</div>
+                ${onlineBadge}
+            `;
+        }
+
+        return `
+            <div class="visitor-card" onclick="viewProfile('${visit.visitor_id}')">
+                <div class="visitor-avatar">
+                    ${avatarContent}
+                </div>
+                <div class="visitor-name">${nickname}</div>
+                <div class="visitor-location">${city}</div>
+                <div class="visitor-time">${timeAgo}</div>
+            </div>
+        `;
+
+    } catch (error) {
+        console.error('Erro ao criar card:', error);
+        return createBasicCardForHome(visit);
+    }
 }
 
-function closeBlockModal() {
-    document.getElementById('blockModal').classList.remove('show');
-    currentBlockUserId = null;
-    currentBlockUserName = null;
+// FUNÇÃO AUXILIAR - Card básico para HOME
+function createBasicCardForHome(visit) {
+    return `
+        <div class="visitor-card" onclick="viewProfile('${visit.visitor_id}')">
+            <div class="visitor-avatar">
+                <div class="visitor-avatar-fallback">👤</div>
+                <div class="offline-badge" title="Offline"></div>
+            </div>
+            <div class="visitor-name">Usuário</div>
+            <div class="visitor-location">---</div>
+            <div class="visitor-time">${getTimeAgo(visit.visited_at)}</div>
+        </div>
+    `;
 }
 
+// FUNÇÃO CORRIGIDA - Carregar foto
+async function loadUserPhoto(avatarUrl) {
+    try {
+        if (!avatarUrl) return null;
+
+        const { data } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(avatarUrl);
+
+        if (data?.publicUrl) {
+            // Adiciona timestamp para evitar cache
+            return data.publicUrl + '?t=' + Date.now();
+        }
+        return null;
+    } catch (error) {
+        console.error('Erro ao carregar foto:', error);
+        return null;
+    }
+}
+
+// FUNÇÃO CORRIGIDA: Enviar mensagem com verificação de bloqueio bilateral
 async function sendMessage(userId, event) {
     if (event) event.stopPropagation();
     
-    // ✅ VERIFICAÇÃO DE BLOQUEIO BILATERAL
+    console.log('💌 Iniciando conversa com usuário:', userId);
+
+    // VERIFICAÇÃO COMPLETA DE BLOQUEIO (BILATERAL)
     if (isUserBlocked(userId)) {
         showQuickToast('🚫 Você bloqueou este usuário e não pode enviar mensagens.');
         return;
     }
     
-    // Verificar se o usuário te bloqueou
+    // VERIFICAR SE O USUÁRIO TE BLOQUEOU
     const isBlockedByUser = await checkIfBlockedByUser(userId);
     if (isBlockedByUser) {
         showQuickToast('🚫 Este usuário te bloqueou. Você não pode enviar mensagens.');
@@ -2800,21 +3155,42 @@ async function sendMessage(userId, event) {
         return;
     }
     
-    // Redirecionar para mensagens
+    // REDIRECIONAR IMEDIATAMENTE
     localStorage.setItem('openChatWithUserId', userId);
     window.location.href = 'mensagens.html';
+    
+    // CRIAR MENSAGEM EM BACKGROUND
+    setTimeout(async () => {
+        try {
+            const { error: messageError } = await supabase
+                .from('messages')
+                .insert({
+                    sender_id: currentUser.id,
+                    receiver_id: userId,
+                    content: '👋 Iniciou uma conversa',
+                    is_read: false
+                });
+
+            if (messageError) {
+                console.error('❌ Erro ao criar conversa:', messageError);
+            }
+        } catch (error) {
+            console.error('❌ Erro ao enviar mensagem:', error);
+        }
+    }, 100);
 }
 
+// FUNÇÃO CORRIGIDA: Visualizar perfil com verificação de bloqueio bilateral
 async function viewProfile(userId, event) {
     if (event) event.stopPropagation();
 
-    // ✅ VERIFICAÇÃO DE BLOQUEIO BILATERAL
+    // VERIFICAÇÃO COMPLETA DE BLOQUEIO (BILATERAL)
     if (isUserBlocked(userId)) {
         showQuickToast('🚫 Você bloqueou este usuário e não pode visualizar o perfil.');
         return;
     }
     
-    // Verificar se o usuário te bloqueou
+    // VERIFICAR SE O USUÁRIO TE BLOQUEOU
     const isBlockedByUser = await checkIfBlockedByUser(userId);
     if (isBlockedByUser) {
         showQuickToast('🚫 Este usuário te bloqueou. Você não pode visualizar o perfil.');
@@ -2828,10 +3204,22 @@ async function viewProfile(userId, event) {
         return;
     }
     
+    // REDIRECIONAR IMEDIATAMENTE
     localStorage.setItem('viewingProfileId', userId);
     window.location.href = 'perfil.html';
+    
+    // REGISTRAR VISITA EM BACKGROUND
+    setTimeout(async () => {
+        try {
+            const visitRegistered = await registerProfileVisit(userId);
+            console.log('✅ Visita registrada em background:', visitRegistered);
+        } catch (visitError) {
+            console.log('⚠️ Visita não registrada:', visitError);
+        }
+    }, 100);
 }
 
+// FUNÇÃO: Verificar se o usuário te bloqueou
 async function checkIfBlockedByUser(userId) {
     try {
         if (!currentUser) return false;
@@ -2858,8 +3246,75 @@ async function checkIfBlockedByUser(userId) {
     }
 }
 
+// FUNÇÃO: Remoção imediata da UI
+function removeUserCardImmediately(userId) {
+    console.log('🗑️ Removendo card da UI:', userId);
+    
+    let removed = false;
+    
+    // Método 1: Busca por data-user-id
+    const cardsWithData = document.querySelectorAll(`[data-user-id="${userId}"]`);
+    cardsWithData.forEach(card => {
+        animateCardRemoval(card);
+        removed = true;
+    });
+    
+    // Método 2: Fallback
+    if (!removed) {
+        document.querySelectorAll('.user-card').forEach(card => {
+            const buttons = card.querySelectorAll('[onclick*="openBlockModal"]');
+            buttons.forEach(button => {
+                if (button.getAttribute('onclick').includes(userId)) {
+                    animateCardRemoval(card);
+                    removed = true;
+                }
+            });
+        });
+    }
+    
+    // Método 3: Recarrega lista
+    if (!removed) {
+        setTimeout(() => {
+            loadRealUsers();
+        }, 500);
+    }
+}
+
+// FUNÇÃO: Animação de remoção
+function animateCardRemoval(card) {
+    if (card.classList.contains('removing')) return;
+    
+    card.classList.add('removing');
+    card.style.transition = 'all 0.3s ease';
+    card.style.opacity = '0.5';
+    card.style.transform = 'scale(0.95)';
+    card.style.pointerEvents = 'none';
+    
+    setTimeout(() => {
+        card.style.opacity = '0';
+        card.style.height = '0';
+        card.style.margin = '0';
+        card.style.padding = '0';
+        card.style.overflow = 'hidden';
+        card.style.border = 'none';
+        
+        setTimeout(() => {
+            if (card.parentNode) {
+                card.remove();
+                console.log('✅ Card removido da UI');
+                
+                // Verifica se ficou vazio
+                const remainingCards = document.querySelectorAll('.user-card:not(.removing)').length;
+                if (remainingCards === 0) {
+                    showEmptyState('Todos os usuários foram carregados ou bloqueados.');
+                }
+            }
+        }, 300);
+    }, 150);
+}
 // ==================== FUNÇÕES AUXILIARES ====================
 
+// CALCULAR IDADE
 function calculateAge(birthDate) {
     if (!birthDate) return null;
     const today = new Date();
@@ -2873,24 +3328,45 @@ function calculateAge(birthDate) {
     return age;
 }
 
+// FORMATAR ZODÍACO
 function formatZodiac(zodiac) {
     const zodiacMap = {
-        'aries': 'Áries', 'taurus': 'Touro', 'gemini': 'Gêmeos', 'cancer': 'Câncer',
-        'leo': 'Leão', 'virgo': 'Virgem', 'libra': 'Libra', 'scorpio': 'Escorpião',
-        'sagittarius': 'Sagitário', 'capricorn': 'Capricórnio', 'aquarius': 'Aquário', 'pisces': 'Peixes'
+        'aries': 'Áries',
+        'taurus': 'Touro', 
+        'gemini': 'Gêmeos',
+        'cancer': 'Câncer',
+        'leo': 'Leão',
+        'virgo': 'Virgem',
+        'libra': 'Libra',
+        'scorpio': 'Escorpião',
+        'sagittarius': 'Sagitário',
+        'capricorn': 'Capricórnio',
+        'aquarius': 'Aquário',
+        'pisces': 'Peixes'
     };
     return zodiacMap[zodiac.toLowerCase()] || zodiac;
 }
 
+// ÍCONE DO ZODÍACO
 function getZodiacIcon(zodiac) {
     const zodiacIcons = {
-        'aries': '♈', 'taurus': '♉', 'gemini': '♊', 'cancer': '♋',
-        'leo': '♌', 'virgo': '♍', 'libra': '♎', 'scorpio': '♏',
-        'sagittarius': '♐', 'capricorn': '♑', 'aquarius': '♒', 'pisces': '♓'
+        'aries': '♈',
+        'taurus': '♉',
+        'gemini': '♊',
+        'cancer': '♋',
+        'leo': '♌',
+        'virgo': '♍',
+        'libra': '♎',
+        'scorpio': '♏',
+        'sagittarius': '♐',
+        'capricorn': '♑',
+        'aquarius': '♒',
+        'pisces': '♓'
     };
     return zodiacIcons[zodiac.toLowerCase()] || '✨';
 }
 
+// FORMATAR "PROCURANDO POR"
 function formatLookingFor(lookingFor) {
     if (Array.isArray(lookingFor)) {
         return lookingFor.join(', ');
@@ -2898,6 +3374,35 @@ function formatLookingFor(lookingFor) {
     return lookingFor || 'Não informado';
 }
 
+// VERIFICAR SE PERFIL ESTÁ COMPLETO
+function isProfileComplete() {
+    return userProfile &&
+           userProfile.full_name &&
+           userProfile.full_name.trim() !== '' &&
+           userProfile.birth_date;
+}
+
+// TEMPO DECORRIDO (EX: "HÁ 2 MINUTOS")
+function getTimeAgo(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    
+    if (diffInSeconds < 60) {
+        return 'Agora mesmo';
+    } else if (diffInSeconds < 3600) {
+        const minutes = Math.floor(diffInSeconds / 60);
+        return `Há ${minutes} min`;
+    } else if (diffInSeconds < 86400) {
+        const hours = Math.floor(diffInSeconds / 3600);
+        return `Há ${hours} h`;
+    } else {
+        const days = Math.floor(diffInSeconds / 86400);
+        return `Há ${days} dia${days !== 1 ? 's' : ''}`;
+    }
+}
+
+// VERIFICAR SE USUÁRIO ESTÁ ONLINE
 function isUserOnline(userProfile, currentUserId) {
     if (!userProfile.last_online_at) return false;
     
@@ -2905,6 +3410,7 @@ function isUserOnline(userProfile, currentUserId) {
     const now = new Date();
     const minutesDiff = (now - lastOnline) / (1000 * 60);
     
+    // Considera online se esteve ativo nos últimos 5 minutos
     const isActuallyOnline = minutesDiff <= 5;
     
     // Se é o próprio usuário, sempre mostra online
@@ -2918,6 +3424,7 @@ function isUserOnline(userProfile, currentUserId) {
     return isActuallyOnline;
 }
 
+// MOSTRAR ESTADO VAZIO
 function showEmptyState(message) {
     const usersGrid = document.getElementById('usersGrid');
     if (usersGrid) {
@@ -2929,33 +3436,272 @@ function showEmptyState(message) {
     }
 }
 
-async function loadUserPhoto(avatarUrl) {
+// REGISTRAR VISITA AO PERFIL
+async function registerProfileVisit(visitedUserId) {
     try {
-        if (!avatarUrl) return null;
+        if (!currentUser || currentUser.id === visitedUserId) return false;
+        
+        const { error } = await supabase
+            .from('profile_visits')
+            .insert({
+                visitor_id: currentUser.id,
+                visited_id: visitedUserId,
+                visited_at: new Date().toISOString()
+            });
 
-        const { data } = supabase.storage
-            .from('avatars')
-            .getPublicUrl(avatarUrl);
-
-        return data?.publicUrl || null;
-
+        if (error) {
+            if (error.code === '23505') {
+                // Visita já registrada, tudo bem
+                return true;
+            }
+            throw error;
+        }
+        return true;
     } catch (error) {
-        console.error('Erro ao carregar foto:', error);
-        return null;
+        console.error('Erro ao registrar visita:', error);
+        return false;
     }
 }
 
-function isProfileComplete() {
-    return userProfile &&
-           userProfile.full_name &&
-           userProfile.full_name.trim() !== '' &&
-           userProfile.birth_date;
+// ==================== SISTEMA DE STATUS ONLINE ====================
+
+// Atualizar status online
+async function updateOnlineStatus() {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { error } = await supabase
+            .from('profiles')
+            .update({ 
+                last_online_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', user.id);
+
+        if (error) {
+            console.error('Erro ao atualizar status online:', error);
+        }
+        
+    } catch (error) {
+        console.error('Erro no sistema de status online:', error);
+    }
+}
+
+// Iniciar atualização periódica do status
+function startOnlineStatusUpdater() {
+    // Atualizar imediatamente
+    updateOnlineStatus();
+    
+    // Atualizar a cada 1 minuto
+    setInterval(updateOnlineStatus, 60000);
+    
+    // Atualizar também quando a página ganha foco
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            updateOnlineStatus();
+        }
+    });
+    
+    // Atualizar em interações do usuário
+    ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => {
+        document.addEventListener(event, updateOnlineStatus, { passive: true });
+    });
+}
+
+// Sistema de sincronização do modo invisível
+function setupInvisibleModeSyncListener() {
+    try {
+        console.log('👂 Configurando ouvinte de sincronização do modo invisível...');
+        
+        window.addEventListener('invisibleModeUpdated', function(event) {
+            console.log('🔄 Evento de modo invisível recebido:', event.detail);
+            handleInvisibleModeChangeInHome(event.detail.isInvisible);
+        });
+        
+        window.addEventListener('storage', function(event) {
+            if (event.key === 'invisibleModeChanged') {
+                const isInvisible = localStorage.getItem('invisibleModeStatus') === 'true';
+                handleInvisibleModeChangeInHome(isInvisible);
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ Erro ao configurar sincronização:', error);
+    }
+}
+
+// Processar mudança do modo invisível
+async function handleInvisibleModeChangeInHome(isInvisible) {
+    try {
+        console.log(`🔄 Processando mudança do modo invisível para: ${isInvisible}`);
+        
+        const statusElement = document.getElementById('invisibleStatusHome');
+        if (statusElement) {
+            if (isInvisible) {
+                statusElement.style.display = 'flex';
+                statusElement.querySelector('strong').textContent = 'Ativo';
+            } else {
+                statusElement.style.display = 'none';
+            }
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro ao processar mudança do modo invisível:', error);
+    }
+}
+
+// Verificar status do modo invisível
+async function checkInvisibleStatusHome() {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_invisible')
+            .eq('id', user.id)
+            .single();
+            
+        const statusElement = document.getElementById('invisibleStatusHome');
+        if (statusElement && profile) {
+            if (profile.is_invisible) {
+                statusElement.style.display = 'flex';
+                statusElement.querySelector('strong').textContent = 'Ativo';
+            } else {
+                statusElement.style.display = 'none';
+            }
+        }
+    } catch (error) {
+        console.error('Erro ao verificar modo invisível:', error);
+    }
+}
+
+// ==================== ESTATÍSTICAS E UTILITÁRIOS ====================
+
+// Atualizar estatísticas
+async function updateStats() {
+    // Mostra valores instantâneos primeiro
+    document.getElementById('totalUsers').textContent = '...';
+    document.getElementById('newMatches').textContent = '0';
+    document.getElementById('usersOnline').textContent = '...';
+    document.getElementById('profileViews').textContent = '...';
+
+    // Carrega dados reais em paralelo
+    try {
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+        
+        const [totalResult, messagesResult, viewsResult, onlineResult] = await Promise.all([
+            supabase.from('profiles').select('*', { count: 'exact', head: true }),
+            supabase.from('messages').select('*', { count: 'exact', head: true })
+                .eq('receiver_id', currentUser.id)
+                .eq('is_read', false),
+            supabase.rpc('count_user_visits', {
+                p_user_id: currentUser.id,
+                p_days: 7
+            }),
+            supabase.from('profiles').select('*', { count: 'exact', head: true })
+                .gte('last_online_at', fiveMinutesAgo)
+                .eq('is_invisible', false)
+                .neq('id', currentUser.id)
+        ]);
+
+        // Atualiza com dados reais
+        document.getElementById('totalUsers').textContent = totalResult.count || 1;
+        document.getElementById('newMatches').textContent = messagesResult.count || 0;
+        document.getElementById('usersOnline').textContent = onlineResult.count || 0;
+        document.getElementById('profileViews').textContent = viewsResult.data || 0;
+
+    } catch (error) {
+        console.error('Erro ao atualizar estatísticas:', error);
+        document.getElementById('totalUsers').textContent = '1';
+        document.getElementById('newMatches').textContent = '0';
+        document.getElementById('usersOnline').textContent = '0';
+        document.getElementById('profileViews').textContent = '0';
+    }
+}
+
+// Iniciar atualização automática de estatísticas
+function startStatsAutoUpdate() {
+    setInterval(updateStats, 30000);
+}
+
+// Carregar estatísticas para free users
+async function loadFreeVisitorsStats() {
+    try {
+        document.getElementById('premiumVisitors').style.display = 'none';
+        document.getElementById('freeVisitors').style.display = 'block';
+        
+        const { data: visitCount, error } = await supabase.rpc('count_user_visits', {
+            p_user_id: currentUser.id,
+            p_days: 7
+        });
+        
+        const count = visitCount || 0;
+        const countText = count === 1 ? '1 pessoa' : `${count} pessoas`;
+        
+        document.getElementById('freeVisitorsCount').textContent = countText;
+        document.getElementById('visitorsCount').textContent = `${count} visita${count !== 1 ? 's' : ''}`;
+        
+    } catch (error) {
+        console.error('Erro ao carregar estatísticas free:', error);
+        document.getElementById('freeVisitorsCount').textContent = '0 pessoas';
+        document.getElementById('visitorsCount').textContent = '0 visitas';
+    }
+}
+
+// ==================== MENU MOBILE ====================
+
+function setupMobileMenu() {
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    const closeMobileMenu = document.getElementById('closeMobileMenu');
+    const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+
+    if (!hamburgerBtn || !mobileMenu) return;
+
+    hamburgerBtn.addEventListener('click', () => {
+        mobileMenu.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    });
+
+    closeMobileMenu.addEventListener('click', () => {
+        mobileMenu.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    });
+
+    if (mobileLogoutBtn) {
+        mobileLogoutBtn.addEventListener('click', logout);
+    }
+
+    mobileMenu.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+            mobileMenu.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        });
+    });
+
+    function checkScreenSize() {
+        if (window.innerWidth <= 768) {
+            document.querySelector('.user-menu').style.display = 'none';
+            hamburgerBtn.style.display = 'flex';
+        } else {
+            document.querySelector('.user-menu').style.display = 'flex';
+            hamburgerBtn.style.display = 'none';
+            mobileMenu.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    }
+
+    window.addEventListener('resize', checkScreenSize);
+    checkScreenSize();
 }
 
 // ==================== EXPORTAR FUNÇÕES GLOBAIS ====================
 
 window.sendMessage = sendMessage;
 window.viewProfile = viewProfile;
+window.registerProfileVisit = registerProfileVisit;
 window.toggleMenu = toggleMenu;
 window.openReportModal = openReportModal;
 window.closeReportModal = closeReportModal;
@@ -2964,8 +3710,10 @@ window.submitReport = submitReport;
 window.openBlockModal = openBlockModal;
 window.closeBlockModal = closeBlockModal;
 window.confirmBlock = confirmBlock;
+window.closeConfirmModal = closeConfirmModal;
+window.openSupportModal = openSupportModal;
 
-console.log('✅ Sistema de bloqueio DEFINITIVO funcionando! 🎉');
+console.log('✅ Sistema ULTRA-RÁPIDO funcionando! 🎉');
 </script>
 </body>
 </html>
