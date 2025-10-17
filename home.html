@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Home - Amor Conect</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="home.block.js"></script>
  <style>
       * {
   margin: 0;
@@ -1823,7 +1824,6 @@ footer {
     pointer-events: auto !important;
 }
 </style>
-</style>
 </head>
 <body>
   <!-- Header -->
@@ -2150,23 +2150,9 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let currentUser = null;
 let userProfile = null;
 
-// Sistema de bloqueio
-let blockedUserIdsSet = new Set();
+// Sistema de reporte
 let currentReportUserId = null;
-let currentBlockUserId = null;
 let currentReportUserName = null;
-let currentBlockUserName = null;
-
-// Cache de bloqueios
-const blockCache = {
-    get: () => {
-        const cached = localStorage.getItem(`blocked_cache_${currentUser?.id}`);
-        return cached ? new Set(JSON.parse(cached)) : new Set();
-    },
-    set: (blockedIds) => {
-        localStorage.setItem(`blocked_cache_${currentUser?.id}`, JSON.stringify([...blockedIds]));
-    }
-};
 
 // ==================== INICIALIZAÇÃO CORRIGIDA ====================
 
@@ -2196,19 +2182,20 @@ async function initializeApp() {
         console.log('✅ Usuário autenticado:', user.id);
         currentUser = user;
         
+        // ✅✅✅ NOVO: Inicializar sistema de bloqueio separado
+        window.blockSystem = new HomeBlockSystem(supabase, currentUser);
+        await window.blockSystem.initialize();
+        
         // 2. Carregar dados do usuário
         await loadUserData();
         
-        // 3. Carregar usuários (IMPORTANTE: antes do bloqueio)
+        // 3. Carregar usuários
         await loadRealUsers();
         
-        // 4. Inicializar sistema de bloqueio em background
-        initializeBlockSystem().catch(console.error);
-        
-        // 5. Carregar visitantes
+        // 4. Carregar visitantes
         loadVisitorsSystem().catch(console.error);
         
-        // 6. Configurar sistemas secundários
+        // 5. Configurar sistemas secundários
         setupEventListeners();
         setupMobileMenu();
         updateStats();
@@ -2218,7 +2205,6 @@ async function initializeApp() {
         
     } catch (error) {
         console.error('❌ Erro crítico na inicialização:', error);
-        // Não redireciona para evitar loop
         showQuickToast('Erro ao carregar a página. Recarregue.');
     }
 }
@@ -2240,116 +2226,6 @@ async function logout() {
         console.error('Erro ao fazer logout:', error);
     }
 }
-
-// ==================== SISTEMA DE BLOQUEIO CORRIGIDO ====================
-
-async function initializeBlockSystem() {
-    try {
-        if (!currentUser) return;
-        
-        console.log('⚡ Inicializando sistema de bloqueio...');
-        
-        // Carrega do cache local
-        const cached = blockCache.get();
-        if (cached.size > 0) {
-            blockedUserIdsSet = cached;
-            console.log(`⚡ Cache carregado: ${blockedUserIdsSet.size} bloqueados`);
-        }
-        
-        // Atualiza do banco
-        await loadBlockedIdsForHome();
-        console.log(`✅ Sistema de bloqueio pronto: ${blockedUserIdsSet.size} bloqueados`);
-        
-    } catch (error) {
-        console.error('❌ Erro no sistema de bloqueio:', error);
-    }
-}
-
-async function loadBlockedIdsForHome() {
-    try {
-        if (!currentUser) return;
-        
-        const { data: blocks, error } = await supabase
-            .from('user_blocks')
-            .select('blocked_user_id')
-            .eq('blocker_id', currentUser.id);
-
-        if (error) throw error;
-
-        const blockedIds = blocks.map(b => b.blocked_user_id);
-        blockedUserIdsSet = new Set(blockedIds);
-        blockCache.set(blockedUserIdsSet);
-        
-        console.log(`✅ ${blockedIds.length} bloqueados carregados`);
-        
-    } catch (error) {
-        console.error('❌ Erro ao carregar bloqueados:', error);
-    }
-}
-
-function isUserBlocked(userId) {
-    return blockedUserIdsSet.has(userId);
-}
-
-// ✅ FUNÇÃO PRINCIPAL DE BLOQUEIO
-async function confirmBlock() {
-    if (!currentBlockUserId) return;
-    
-    const userId = currentBlockUserId;
-    const userName = currentBlockUserName;
-    
-    console.log('⚡ BLOQUEIO INICIADO:', userName);
-    
-    // 1. Fechar modal
-    closeBlockModal();
-    
-    // 2. Remover da UI
-    removeUserCardImmediately(userId);
-    
-    // 3. Atualizar cache
-    blockedUserIdsSet.add(userId);
-    blockCache.set(blockedUserIdsSet);
-    
-    // 4. Salvar no banco
-    const success = await saveBlockToDatabase(userId);
-    
-    if (success) {
-        showQuickToast(`✅ ${userName} bloqueado!`);
-        
-        // 5. Redirecionar após sucesso
-        setTimeout(() => {
-            window.location.href = 'blocks.html';
-        }, 1000);
-    } else {
-        showQuickToast('⚠️ Bloqueado localmente (erro de rede)');
-    }
-}
-
-async function saveBlockToDatabase(userId) {
-    try {
-        const { error } = await supabase
-            .from('user_blocks')
-            .insert({
-                blocker_id: currentUser.id,
-                blocked_user_id: userId,
-                created_at: new Date().toISOString()
-            });
-
-        if (error) {
-            if (error.code === '23505') {
-                return true; // Já existe
-            }
-            throw error;
-        }
-        
-        return true;
-        
-    } catch (error) {
-        console.error('❌ Erro ao salvar bloqueio:', error);
-        return false;
-    }
-}
-
 function showQuickToast(message) {
     document.querySelectorAll('.quick-toast').forEach(toast => toast.remove());
     
@@ -2371,36 +2247,6 @@ function showQuickToast(message) {
         setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
-
-function removeUserCardImmediately(userId) {
-    console.log('🗑️ Removendo card:', userId);
-    
-    const cards = document.querySelectorAll(`[data-user-id="${userId}"]`);
-    cards.forEach(card => {
-        animateCardRemoval(card);
-    });
-}
-
-function animateCardRemoval(card) {
-    card.style.transition = 'all 0.3s ease';
-    card.style.opacity = '0.5';
-    card.style.transform = 'scale(0.95)';
-    
-    setTimeout(() => {
-        card.style.opacity = '0';
-        card.style.height = '0';
-        card.style.margin = '0';
-        card.style.padding = '0';
-        card.style.overflow = 'hidden';
-        
-        setTimeout(() => {
-            if (card.parentNode) {
-                card.remove();
-            }
-        }, 300);
-    }, 150);
-}
-// ==================== SISTEMA DE USUÁRIOS CORRIGIDO ====================
 
 // ✅ CORREÇÃO: Carregar dados do usuário
 async function loadUserData() {
@@ -2512,7 +2358,7 @@ async function loadUserPhoto(avatarUrl) {
     }
 }
 
-// ✅ CORREÇÃO CRÍTICA: Carregar usuários SEM bloqueio
+// ✅ CORREÇÃO CRÍTICA: Carregar usuários
 async function loadRealUsers() {
     try {
         console.log('👥 Carregando usuários...');
@@ -2574,18 +2420,15 @@ async function displayUsersWithPhotos(users) {
     const userCards = [];
     
     for (const user of users) {
-        // ✅ CORREÇÃO: Verificar bloqueio APENAS na exibição
-        if (!isUserBlocked(user.id)) {
-            const card = await createUserCardWithPhoto(user);
-            if (card) userCards.push(card);
-        }
+        const card = await createUserCardWithPhoto(user);
+        if (card) userCards.push(card);
     }
     
     console.log(`🎯 Exibindo ${userCards.length} cards`);
     usersGrid.innerHTML = userCards.join('');
     
     if (userCards.length === 0) {
-        showEmptyState('Todos os usuários disponíveis foram bloqueados.');
+        showEmptyState('Nenhum usuário disponível no momento.');
     }
 }
 
@@ -2728,6 +2571,7 @@ function selectReportCategory(radio) {
     radio.parentElement.classList.add('selected');
     document.getElementById('submitReportBtn').disabled = false;
 }
+
 async function submitReport() {
     try {
         const reason = document.querySelector('input[name="reportReason"]:checked')?.value;
@@ -2761,17 +2605,24 @@ async function submitReport() {
 }
 
 function openBlockModal(userId, userName) {
-    currentBlockUserId = userId;
-    currentBlockUserName = userName;
-    
-    document.getElementById('blockUserName').textContent = userName;
-    document.getElementById('blockModal').classList.add('show');
+    // Esta função será gerenciada pelo home.block.js
+    if (window.blockSystem) {
+        window.blockSystem.openBlockModal(userId, userName);
+    }
 }
 
 function closeBlockModal() {
-    document.getElementById('blockModal').classList.remove('show');
-    currentBlockUserId = null;
-    currentBlockUserName = null;
+    // Esta função será gerenciada pelo home.block.js
+    if (window.blockSystem) {
+        window.blockSystem.closeBlockModal();
+    }
+}
+
+function confirmBlock() {
+    // Esta função será gerenciada pelo home.block.js
+    if (window.blockSystem) {
+        window.blockSystem.confirmBlock();
+    }
 }
 
 function closeConfirmModal() {
@@ -2781,15 +2632,16 @@ function closeConfirmModal() {
 function openSupportModal() {
     alert('📞 Entre em contato com nosso suporte: suporte@amorconect.com');
 }
+
 // ==================== FUNÇÕES DE INTERAÇÃO ====================
 
 async function sendMessage(userId, event) {
     if (event) event.stopPropagation();
     
     console.log('💌 Enviando mensagem para:', userId);
-
-    // Verificação de bloqueio
-    if (isUserBlocked(userId)) {
+    
+    // Verificação de bloqueio será feita pelo home.block.js
+    if (window.blockSystem && window.blockSystem.isUserBlocked(userId)) {
         showQuickToast('🚫 Você bloqueou este usuário.');
         return;
     }
@@ -2798,7 +2650,9 @@ async function sendMessage(userId, event) {
     const isBlockedByUser = await checkIfBlockedByUser(userId);
     if (isBlockedByUser) {
         showQuickToast('🚫 Este usuário te bloqueou.');
-        removeUserCardImmediately(userId);
+        if (window.blockSystem) {
+            window.blockSystem.removeUserCardImmediately(userId);
+        }
         return;
     }
     
@@ -2815,8 +2669,8 @@ async function sendMessage(userId, event) {
 async function viewProfile(userId, event) {
     if (event) event.stopPropagation();
 
-    // Verificação de bloqueio
-    if (isUserBlocked(userId)) {
+    // Verificação de bloqueio será feita pelo home.block.js
+    if (window.blockSystem && window.blockSystem.isUserBlocked(userId)) {
         showQuickToast('🚫 Você bloqueou este usuário.');
         return;
     }
@@ -2825,7 +2679,9 @@ async function viewProfile(userId, event) {
     const isBlockedByUser = await checkIfBlockedByUser(userId);
     if (isBlockedByUser) {
         showQuickToast('🚫 Este usuário te bloqueou.');
-        removeUserCardImmediately(userId);
+        if (window.blockSystem) {
+            window.blockSystem.removeUserCardImmediately(userId);
+        }
         return;
     }
     
