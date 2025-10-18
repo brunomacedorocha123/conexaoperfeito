@@ -4,20 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro Realizado - Amor Conect</title>
-    
-    <!-- CSS MODULAR -->
-    <link rel="stylesheet" href="css/globals.css">
-    <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/auth.css">
-    
     <style>
-        /* Estilos específicos da página de sucesso */
+        /* Use o mesmo CSS do cadastro */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --bege: #f6ecc5;
+            --vermelho-rosado: #d1656d;
+            --lilas: #dfc9ed;
+            --branco: #ffffff;
+            --text: #444;
+            --text-light: #666;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+
         body {
-            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            background-color: var(--bege);
+            color: var(--text);
+            line-height: 1.6;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
+            text-align: center;
             padding: 2rem;
         }
 
@@ -27,51 +42,23 @@
             border-radius: 20px;
             box-shadow: var(--shadow);
             max-width: 500px;
-            text-align: center;
             border: 1px solid var(--lilas);
-            animation: successSlideIn 0.5s ease;
-        }
-
-        @keyframes successSlideIn {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
         }
 
         .success-icon {
             font-size: 4rem;
-            color: var(--success);
+            color: #22c55e;
             margin-bottom: 1rem;
-            animation: bounce 1s ease;
-        }
-
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% {
-                transform: translateY(0);
-            }
-            40% {
-                transform: translateY(-10px);
-            }
-            60% {
-                transform: translateY(-5px);
-            }
         }
 
         h1 {
             color: var(--vermelho-rosado);
             margin-bottom: 1rem;
-            font-size: 2.2rem;
         }
 
         p {
             margin-bottom: 2rem;
             color: var(--text-light);
-            line-height: 1.6;
         }
 
         .btn {
@@ -85,47 +72,11 @@
             text-decoration: none;
             display: inline-block;
             transition: var(--transition);
-            font-weight: 600;
         }
 
         .btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            background: var(--lilas);
-        }
-
-        @media (max-width: 768px) {
-            .success-container {
-                padding: 2rem;
-                margin: 1rem;
-            }
-
-            h1 {
-                font-size: 1.8rem;
-            }
-
-            .success-icon {
-                font-size: 3rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .success-container {
-                padding: 1.5rem;
-            }
-
-            h1 {
-                font-size: 1.6rem;
-            }
-
-            p {
-                font-size: 0.9rem;
-            }
-
-            .btn {
-                padding: 0.8rem 1.5rem;
-                font-size: 1rem;
-            }
         }
     </style>
 </head>
@@ -137,7 +88,5 @@
         <p><strong>Dica:</strong> Verifique também sua pasta de spam caso não encontre o e-mail.</p>
         <a href="login.html" class="btn">Fazer Login</a>
     </div>
-
-    <script src="js/globals.js"></script>
 </body>
 </html>
