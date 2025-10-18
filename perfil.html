@@ -617,15 +617,134 @@ let currentProfileGallery = [];
 let currentModalIndex = 0;
 let currentProfileId = null;
 
-// ==================== SISTEMA DE VISITAS CORRIGIDO ====================
+// ==================== SISTEMA DE GALERIA CORRIGIDO ====================
 
-// 👀 TRACKER DE VISITAS
+class GallerySystem {
+    constructor() {
+        this.bucketName = 'gallery';
+    }
+
+    // ✅ CORREÇÃO CRÍTICA: Gerar URL pública CORRETA
+    async getGalleryImageUrl(imagePath) {
+        try {
+            if (!imagePath) {
+                console.log('❌ imagePath está vazio');
+                return null;
+            }
+
+            console.log('🔄 Gerando URL para:', imagePath);
+            
+            // CORREÇÃO: Usar getPublicUrl do Supabase
+            const { data } = supabase.storage
+                .from(this.bucketName)
+                .getPublicUrl(imagePath);
+            
+            const publicUrl = data?.publicUrl;
+            console.log('✅ URL gerada:', publicUrl);
+            
+            return publicUrl || null;
+        } catch (error) {
+            console.error('❌ Erro ao gerar URL da galeria:', error);
+            return null;
+        }
+    }
+
+    // ✅ CORREÇÃO: Carregar galeria do usuário
+    async loadUserGallery(userId) {
+        try {
+            console.log('🖼️ Carregando galeria para usuário:', userId);
+            
+            const { data: gallery, error } = await supabase
+                .from('user_gallery')
+                .select('*')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('❌ Erro ao carregar galeria:', error);
+                return [];
+            }
+
+            if (!gallery || gallery.length === 0) {
+                console.log('📭 Galeria vazia para usuário:', userId);
+                return [];
+            }
+
+            console.log(`📸 ${gallery.length} imagens encontradas na galeria`);
+
+            // ✅ CORREÇÃO: Gerar URLs públicas para TODAS as imagens
+            const galleryWithUrls = await Promise.all(
+                gallery.map(async (item) => {
+                    const publicUrl = await this.getGalleryImageUrl(item.image_url);
+                    
+                    console.log(`🖼️ Imagem ${item.image_name}:`, publicUrl ? 'URL OK' : 'URL FALHA');
+                    
+                    return {
+                        ...item,
+                        public_url: publicUrl,
+                        display_url: publicUrl,
+                        image_object_url: publicUrl // URL direta para a imagem
+                    };
+                })
+            );
+
+            console.log(`✅ Galeria carregada: ${galleryWithUrls.length} imagens`);
+            return galleryWithUrls;
+
+        } catch (error) {
+            console.error('❌ Erro crítico ao carregar galeria:', error);
+            return [];
+        }
+    }
+
+    // ✅ CORREÇÃO: Criar grid da galeria VISÍVEL
+    async createGalleryGrid(images) {
+        if (!images || images.length === 0) {
+            return `
+                <div class="empty-gallery">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">📸</div>
+                    <p>Nenhuma foto na galeria</p>
+                </div>
+            `;
+        }
+
+        let gridHTML = '';
+        let loadedImages = 0;
+        
+        for (let i = 0; i < images.length; i++) {
+            const image = images[i];
+            
+            // ✅ CORREÇÃO: Usar a URL pública DIRETAMENTE
+            const imageUrl = image.display_url || image.public_url || image.image_object_url;
+            
+            if (imageUrl) {
+                gridHTML += `
+                    <div class="gallery-item" onclick="openGalleryModal(${i})" style="position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); transition: all 0.3s ease; cursor: pointer; background: #dfc9ed;">
+                        <img src="${imageUrl}" alt="Foto ${i + 1}" class="gallery-image" 
+                             style="width: 100%; height: 100%; object-fit: cover; display: block;"
+                             loading="lazy" 
+                             onerror="console.error('❌ Erro ao carregar imagem:', this.src); this.style.display='none';"
+                             onload="console.log('✅ Imagem ${i + 1} carregada com sucesso')">
+                    </div>
+                `;
+                loadedImages++;
+            } else {
+                console.log('❌ Imagem sem URL válida:', image);
+            }
+        }
+
+        console.log(`🎨 Grid criado: ${loadedImages} imagens visíveis`);
+        return gridHTML;
+    }
+}
+
+// ==================== SISTEMA DE VISITAS ====================
+
 class VisitTracker {
     static async trackVisit(visitedUserId) {
         try {
             const { data: { user } } = await supabase.auth.getUser();
             
-            // Não registra se for o próprio usuário ou não estiver logado
             if (!user || user.id === visitedUserId) return;
 
             console.log(`👀 Registrando visita: ${user.id} → ${visitedUserId}`);
@@ -638,7 +757,7 @@ class VisitTracker {
                     visited_at: new Date().toISOString()
                 });
 
-            if (error && error.code !== '23505') { // Ignora violação de unique
+            if (error && error.code !== '23505') {
                 console.error('❌ Erro ao registrar visita:', error);
             } else {
                 console.log('✅ Visita registrada com sucesso');
@@ -650,7 +769,7 @@ class VisitTracker {
     }
 }
 
-// ✅ VERIFICADOR DE STATUS PREMIUM CORRIGIDO
+// ✅ VERIFICADOR DE STATUS PREMIUM
 const PremiumManager = {
     async verifyPremiumStatus(userId) {
         try {
@@ -676,250 +795,6 @@ const PremiumManager = {
             console.error('❌ Erro na verificação premium:', error);
             return false;
         }
-    },
-
-    async getProfileVisits(userId) {
-        try {
-            console.log('📥 Buscando visitas para:', userId);
-            
-            const { data, error } = await supabase
-                .from('profile_visits')
-                .select(`
-                    visited_at,
-                    visitor:visitor_id (
-                        id,
-                        nickname,
-                        avatar_url,
-                        city,
-                        last_online_at
-                    )
-                `)
-                .eq('visited_id', userId)
-                .order('visited_at', { ascending: false })
-                .limit(12);
-
-            if (error) {
-                console.error('❌ Erro ao buscar visitas:', error);
-                return [];
-            }
-
-            console.log(`✅ ${data?.length || 0} visitas encontradas`);
-            
-            // Processar dados para incluir URLs das fotos
-            const processedVisits = await Promise.all(
-                (data || []).map(async (visit) => {
-                    let avatarUrl = null;
-                    if (visit.visitor?.avatar_url) {
-                        const { data } = supabase.storage.from('avatars').getPublicUrl(visit.visitor.avatar_url);
-                        avatarUrl = data?.publicUrl || null;
-                    }
-                    
-                    return {
-                        ...visit,
-                        visitor: {
-                            ...visit.visitor,
-                            avatarUrl: avatarUrl,
-                            isOnline: this.isVisitorOnline(visit.visitor),
-                            initial: (visit.visitor?.nickname || 'U').charAt(0).toUpperCase(),
-                            timeAgo: this.getTimeAgo(visit.visited_at)
-                        }
-                    };
-                })
-            );
-            
-            return processedVisits;
-        } catch (error) {
-            console.error('❌ Erro ao carregar visitas:', error);
-            return [];
-        }
-    },
-
-    isVisitorOnline(visitor) {
-        if (!visitor?.last_online_at) return false;
-        const lastOnline = new Date(visitor.last_online_at);
-        const now = new Date();
-        const minutesDiff = (now - lastOnline) / (1000 * 60);
-        return minutesDiff <= 5;
-    },
-
-    getTimeAgo(dateString) {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffInSeconds = Math.floor((now - date) / 1000);
-        
-        if (diffInSeconds < 60) return 'Agora mesmo';
-        else if (diffInSeconds < 3600) return `Há ${Math.floor(diffInSeconds / 60)} min`;
-        else if (diffInSeconds < 86400) return `Há ${Math.floor(diffInSeconds / 3600)} h`;
-        else return `Há ${Math.floor(diffInSeconds / 86400)} dia${Math.floor(diffInSeconds / 86400) !== 1 ? 's' : ''}`;
-    }
-};
-
-// ==================== SISTEMA DE GALERIA CORRIGIDO ====================
-
-class GallerySystem {
-    constructor() {
-        this.bucketName = 'gallery';
-    }
-
-    // ✅ CORREÇÃO CRÍTICA: Gerar URL pública CORRETA para galeria
-    async getGalleryImageUrl(imagePath) {
-        try {
-            if (!imagePath) {
-                console.log('❌ imagePath está vazio');
-                return null;
-            }
-
-            console.log('🔄 Gerando URL para:', imagePath);
-            
-            // CORREÇÃO: Usar getPublicUrl do Supabase
-            const { data } = supabase.storage
-                .from(this.bucketName)
-                .getPublicUrl(imagePath);
-            
-            const publicUrl = data?.publicUrl;
-            console.log('✅ URL gerada:', publicUrl ? 'SUCESSO' : 'FALHA');
-            
-            return publicUrl || null;
-        } catch (error) {
-            console.error('❌ Erro ao gerar URL da galeria:', error);
-            return null;
-        }
-    }
-
-    // ✅ CORREÇÃO: Carregar galeria do usuário com URLs válidas
-    async loadUserGallery(userId) {
-        try {
-            console.log('🖼️ Carregando galeria para usuário:', userId);
-            
-            const { data: gallery, error } = await supabase
-                .from('user_gallery')
-                .select('*')
-                .eq('user_id', userId)
-                .order('created_at', { ascending: false });
-
-            if (error) {
-                console.error('❌ Erro ao carregar galeria:', error);
-                return [];
-            }
-
-            if (!gallery || gallery.length === 0) {
-                console.log('📭 Galeria vazia para usuário:', userId);
-                return [];
-            }
-
-            console.log(`📸 ${gallery.length} imagens encontradas na galeria`);
-
-            // ✅ CORREÇÃO: Gerar URLs públicas para todas as imagens
-            const galleryWithUrls = await Promise.all(
-                gallery.map(async (item) => {
-                    const publicUrl = await this.getGalleryImageUrl(item.image_url);
-                    
-                    console.log(`🖼️ Imagem ${item.image_name}:`, publicUrl ? 'URL OK' : 'URL FALHA');
-                    
-                    return {
-                        ...item,
-                        public_url: publicUrl,
-                        display_url: publicUrl
-                    };
-                })
-            );
-
-            // Filtrar apenas imagens com URLs válidas
-            const validGallery = galleryWithUrls.filter(item => item.display_url);
-            console.log(`✅ Galeria carregada: ${validGallery.length}/${gallery.length} imagens válidas`);
-            
-            return validGallery;
-
-        } catch (error) {
-            console.error('❌ Erro crítico ao carregar galeria:', error);
-            return [];
-        }
-    }
-
-    // ✅ CORREÇÃO: Carregar avatar do usuário
-    async loadUserAvatar(userId) {
-        try {
-            // Primeiro, buscar o perfil do usuário
-            const { data: profile, error } = await supabase
-                .from('profiles')
-                .select('avatar_url, nickname, full_name')
-                .eq('id', userId)
-                .single();
-
-            if (error || !profile) {
-                console.log('❌ Perfil não encontrado:', userId);
-                return { hasAvatar: false, fallback: 'U' };
-            }
-
-            // Se tem avatar_url, gerar URL pública
-            if (profile.avatar_url) {
-                const { data } = supabase.storage.from('avatars').getPublicUrl(profile.avatar_url);
-                const avatarUrl = data?.publicUrl;
-                
-                if (avatarUrl) {
-                    return {
-                        hasAvatar: true,
-                        url: avatarUrl,
-                        fallback: (profile.nickname || profile.full_name || 'U').charAt(0).toUpperCase()
-                    };
-                }
-            }
-
-            // Fallback para inicial
-            return {
-                hasAvatar: false,
-                fallback: (profile.nickname || profile.full_name || 'U').charAt(0).toUpperCase()
-            };
-
-        } catch (error) {
-            console.error('Erro ao carregar avatar:', error);
-            return { hasAvatar: false, fallback: 'U' };
-        }
-    }
-
-    // ✅ CORREÇÃO: Criar grid da galeria com tratamento de erro
-    async createGalleryGrid(images) {
-        if (!images || images.length === 0) {
-            return `
-                <div class="empty-gallery">
-                    <i class="fas fa-images"></i>
-                    <p>Nenhuma foto na galeria</p>
-                </div>
-            `;
-        }
-
-        let gridHTML = '';
-        let loadedImages = 0;
-        
-        for (let i = 0; i < images.length; i++) {
-            const image = images[i];
-            
-            // Usar a URL pública que já foi gerada
-            const imageUrl = image.display_url;
-            
-            if (imageUrl) {
-                gridHTML += `
-                    <div class="gallery-item" onclick="openGalleryModal(${i})">
-                        <img src="${imageUrl}" alt="Foto ${i + 1}" class="gallery-image" 
-                             loading="lazy" 
-                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                             onload="console.log('✅ Imagem ${i + 1} carregada')">
-                        <div class="image-fallback" style="display: none; width: 100%; height: 100%; background: var(--lilas); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">
-                            📷
-                        </div>
-                    </div>
-                `;
-                loadedImages++;
-            }
-        }
-
-        console.log(`🎨 Grid criado: ${loadedImages}/${images.length} imagens`);
-        return gridHTML || `
-            <div class="empty-gallery">
-                <i class="fas fa-exclamation-triangle"></i>
-                <p>Nenhuma imagem pôde ser carregada</p>
-            </div>
-        `;
     }
 }
 
@@ -934,7 +809,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setupGalleryModal();
 });
 
-// ✅ CARREGAR PERFIL DO USUÁRIO SELECIONADO COM GALERIA CORRIGIDA
+// ✅ CARREGAR PERFIL DO USUÁRIO SELECIONADO
 async function loadProfile() {
     try {
         const profileId = localStorage.getItem('viewingProfileId');
@@ -961,7 +836,7 @@ async function loadProfile() {
             }
         }
 
-        // Buscar dados PÚBLICOS do perfil INCLUINDO avatar_url
+        // Buscar dados do perfil
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select(`
@@ -1011,7 +886,7 @@ async function loadProfile() {
     }
 }
 
-// ✅ CARREGAR FOTO DO PERFIL DO STORAGE CORRIGIDO
+// ✅ CARREGAR FOTO DO PERFIL
 async function loadProfilePhoto(avatarUrl) {
     try {
         if (!avatarUrl) {
@@ -1021,7 +896,6 @@ async function loadProfilePhoto(avatarUrl) {
 
         console.log('🔄 Buscando foto do perfil:', avatarUrl);
         
-        // CORREÇÃO: Usar getPublicUrl em vez de download
         const { data } = supabase.storage
             .from('avatars')
             .getPublicUrl(avatarUrl);
@@ -1042,100 +916,38 @@ async function loadProfilePhoto(avatarUrl) {
     }
 }
 
-// ✅ MOSTRAR PERFIL NA TELA COM GALERIA CORRIGIDA
+// ✅ MOSTRAR PERFIL NA TELA COM GALERIA VISÍVEL
 async function displayProfile(profile) {
     const profileContent = document.getElementById('profileContent');
     const details = profile.user_details || {};
     
-    // Nome para exibição (apenas primeiro nome por segurança)
     const displayName = profile.nickname || profile.full_name?.split(' ')[0] || 'Usuário';
     const age = profile.birth_date ? calculateAge(profile.birth_date) : null;
 
-    // ✅ CARREGAR FOTO DO PERFIL CORRIGIDA
+    // ✅ CARREGAR FOTO DO PERFIL
     let avatarHtml = '';
-    const avatarData = await gallerySystem.loadUserAvatar(profile.id);
+    const avatarUrl = await loadProfilePhoto(profile.avatar_url);
     
-    if (avatarData.hasAvatar && avatarData.url) {
+    if (avatarUrl) {
         avatarHtml = `
             <div class="profile-avatar" style="background: none;">
-                <img src="${avatarData.url}" alt="${displayName}" class="profile-avatar-img" 
-                     style="display: block;"
+                <img src="${avatarUrl}" alt="${displayName}" class="profile-avatar-img" 
+                     style="display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"
                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
                      onload="console.log('✅ Avatar carregado')">
-                <div class="profile-avatar-fallback" style="display: none;">${avatarData.fallback}</div>
+                <div class="profile-avatar-fallback" style="display: none;">${displayName.charAt(0).toUpperCase()}</div>
             </div>
         `;
     } else {
-        // Sem foto, mostrar apenas a letra inicial
         avatarHtml = `
             <div class="profile-avatar">
-                <div class="profile-avatar-fallback">${avatarData.fallback}</div>
+                <div class="profile-avatar-fallback">${displayName.charAt(0).toUpperCase()}</div>
             </div>
         `;
     }
 
-    // ✅ VERIFICAR SE É O PRÓPRIO USUÁRIO E SE É PREMIUM PARA MOSTRAR VISITAS
-    let visitsSection = '';
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (user && user.id === profile.id) {
-        const isPremium = await PremiumManager.verifyPremiumStatus(user.id);
-        
-        if (isPremium) {
-            console.log('⭐ Carregando visitas para usuário premium');
-            const visits = await PremiumManager.getProfileVisits(user.id);
-            
-            visitsSection = `
-                <div class="info-card">
-                    <h3>👀 Quem Visitou Meu Perfil</h3>
-                    <div class="visitors-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 1rem; margin-top: 1rem;">
-                        ${visits.length > 0 ? 
-                            visits.map(visit => `
-                                <div class="visitor-card" onclick="viewVisitorProfile('${visit.visitor?.id}')" style="text-align: center; cursor: pointer; padding: 0.5rem; border-radius: 10px; background: var(--bege); transition: var(--transition);">
-                                    <div class="visitor-avatar" style="width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 0.5rem; position: relative; overflow: hidden; background: var(--lilas);">
-                                        ${visit.visitor?.avatarUrl ? 
-                                            `<img src="${visit.visitor.avatarUrl}" alt="${visit.visitor.nickname}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
-                                            ''
-                                        }
-                                        <div class="visitor-avatar-fallback" style="${visit.visitor?.avatarUrl ? 'display: none;' : 'display: flex;'} width: 100%; height: 100%; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.2rem;">
-                                            ${visit.visitor?.initial || 'U'}
-                                        </div>
-                                        ${visit.visitor?.isOnline ? 
-                                            '<div class="online-badge" style="position: absolute; bottom: 5px; right: 5px; width: 12px; height: 12px; background: #48bb78; border: 2px solid white; border-radius: 50%;" title="Online"></div>' : 
-                                            '<div class="offline-badge" style="position: absolute; bottom: 5px; right: 5px; width: 12px; height: 12px; background: #a0aec0; border: 2px solid white; border-radius: 50%;" title="Offline"></div>'
-                                        }
-                                    </div>
-                                    <div class="visitor-name" style="font-size: 0.9rem; font-weight: 600; margin-bottom: 0.3rem;">${visit.visitor?.nickname || 'Usuário'}</div>
-                                    <div class="visitor-time" style="font-size: 0.7rem; color: var(--text-light);">${visit.visitor?.timeAgo || ''}</div>
-                                </div>
-                            `).join('') 
-                            : `
-                            <div class="visitors-empty" style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-light);">
-                                <div class="icon" style="font-size: 2rem; margin-bottom: 1rem;">👀</div>
-                                <h4 style="margin-bottom: 0.5rem;">Nenhuma visita ainda</h4>
-                                <p>Seu perfil ainda não foi visitado</p>
-                            </div>
-                            `
-                        }
-                    </div>
-                </div>
-            `;
-        } else {
-            // Mostrar promoção premium
-            visitsSection = `
-                <div class="info-card" style="text-align: center;">
-                    <h3>⭐ Seja Premium</h3>
-                    <p style="margin-bottom: 1rem;">Descubra quem visitou seu perfil com cards visuais!</p>
-                    <button class="btn btn-primary" onclick="goPremium()">
-                        🔓 Tornar-se Premium
-                    </button>
-                </div>
-            `;
-        }
-    }
-
-    // ✅ CARREGAR E MOSTRAR GALERIA CORRIGIDA
-    const gallerySection = await createGallerySection(profile.id, user);
+    // ✅ CARREGAR E MOSTRAR GALERIA CORRIGIDA - AGORA VISÍVEL PARA TODOS
+    const gallerySection = await createGallerySection(profile.id);
 
     profileContent.innerHTML = `
         <div class="profile-card">
@@ -1235,12 +1047,9 @@ async function displayProfile(profile) {
                         </div>
                     ` : ''}
                 </div>
-
-                <!-- SEÇÃO DE VISITAS (APENAS PARA O PRÓPRIO USUÁRIO) -->
-                ${visitsSection}
             </div>
 
-            <!-- SEÇÃO DA GALERIA -->
+            <!-- ✅ SEÇÃO DA GALERIA - AGORA VISÍVEL PARA TODOS -->
             ${gallerySection}
 
             <div class="profile-actions">
@@ -1254,109 +1063,48 @@ async function displayProfile(profile) {
         </div>
     `;
 }
-// ✅ CRIAR SEÇÃO DA GALERIA CORRIGIDA
-async function createGallerySection(profileId, currentUser) {
+
+// ✅ CRIAR SEÇÃO DA GALERIA CORRIGIDA - VISÍVEL PARA TODOS
+async function createGallerySection(profileId) {
     try {
-        console.log('=== 🎯 INICIANDO GALERIA ===');
+        console.log('=== 🎯 INICIANDO GALERIA VISÍVEL ===');
         console.log('🔍 Perfil visitado:', profileId);
-        console.log('🔍 Usuário atual:', currentUser?.id);
         
-        // Buscar imagens do perfil específico usando o sistema corrigido
+        // Buscar imagens do perfil específico
         const galleryImages = await gallerySystem.loadUserGallery(profileId);
         console.log('🔍 Imagens processadas:', galleryImages.length);
 
         // ✅ ATRIBUIR À VARIÁVEL GLOBAL DO MODAL
         currentProfileGallery = galleryImages;
 
-        // Verificar status do usuário
-        const isOwner = currentUser && currentUser.id === profileId;
-        const isPremium = currentUser ? await PremiumManager.verifyPremiumStatus(currentUser.id) : false;
-
-        console.log('🔍 Status - Dono:', isOwner, 'Premium:', isPremium);
-
-        // SE GALERIA ESTÁ VAZIA (NENHUMA FOTO MESMO)
+        // SE GALERIA ESTÁ VAZIA
         if (galleryImages.length === 0) {
             console.log('🔍 GALERIA VAZIA PARA ESTE USUÁRIO');
-            
-            if (isOwner) {
-                // Dono do perfil vê mensagem para adicionar fotos
-                return `
-                    <div class="gallery-section">
-                        <h3>🖼️ Galeria de Fotos</h3>
-                        <div class="empty-gallery" style="text-align: center; padding: 2rem;">
-                            <div style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;">📸</div>
-                            <h4 style="margin-bottom: 0.5rem;">Sua galeria está vazia</h4>
-                            <p style="margin-bottom: 1.5rem;">Adicione fotos para mostrar mais sobre você!</p>
-                            <button class="btn btn-primary" onclick="window.location.href='painel.html'">
-                                📸 Adicionar Fotos
-                            </button>
-                        </div>
-                    </div>
-                `;
-            } else {
-                // Visitante free vê mensagem de upgrade MESMO quando galeria está vazia
-                return `
-                    <div class="gallery-section">
-                        <h3>🖼️ Galeria de Fotos</h3>
-                        <div class="free-gallery-preview">
-                            <div class="preview-overlay">
-                                <div style="font-size: 3rem; margin-bottom: 1rem;">🔒</div>
-                                <h4 style="margin-bottom: 0.5rem;">Conteúdo Exclusivo Premium</h4>
-                                <p style="margin-bottom: 1.5rem;">Torne-se Premium para visualizar galerias de outros usuários</p>
-                                <a href="princing.html" class="btn btn-primary" style="text-decoration: none; display: inline-block;">
-                                    🔓 Tornar-se Premium
-                                </a>
-                            </div>
-                            <div class="blurred-gallery">
-                                <div class="blurred-image"></div>
-                                <div class="blurred-image"></div>
-                                <div class="blurred-image"></div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-
-        console.log('=== 🎯 GALERIA FINALIZADA ===');
-
-        // Usuário premium ou dono: mostra galeria completa
-        if (isPremium || isOwner) {
-            console.log('⭐ MOSTRANDO GALERIA COMPLETA -', galleryImages.length, 'imagens');
-            const galleryGrid = await gallerySystem.createGalleryGrid(galleryImages);
-            return `
-                <div class="gallery-section">
-                    <h3>🖼️ Galeria de Fotos (${galleryImages.length})</h3>
-                    <div class="premium-gallery-view">
-                        <div class="gallery-grid">
-                            ${galleryGrid}
-                        </div>
-                    </div>
-                </div>
-            `;
-        } 
-        // Usuário free: mostra preview bloqueado
-        else {
-            console.log('🔒 MOSTRANDO PREVIEW BLOQUEADO -', galleryImages.length, 'imagens');
             return `
                 <div class="gallery-section">
                     <h3>🖼️ Galeria de Fotos</h3>
-                    <div class="free-gallery-preview">
-                        <div class="preview-overlay">
-                            <div style="font-size: 3rem; margin-bottom: 1rem;">🔒</div>
-                            <h4 style="margin-bottom: 0.5rem;">Conteúdo Exclusivo Premium</h4>
-                            <p style="margin-bottom: 1.5rem;">Faça upgrade para visualizar ${galleryImages.length} foto(s) na galeria</p>
-                            <a href="princing.html" class="btn btn-primary" style="text-decoration: none; display: inline-block;">
-                                🔓 Tornar-se Premium
-                            </a>
-                        </div>
-                        <div class="blurred-gallery">
-                            ${createBlurredPreview(galleryImages)}
-                        </div>
+                    <div class="empty-gallery" style="text-align: center; padding: 2rem;">
+                        <div style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;">📸</div>
+                        <h4 style="margin-bottom: 0.5rem;">Galeria vazia</h4>
+                        <p>Este usuário ainda não adicionou fotos à galeria</p>
                     </div>
                 </div>
             `;
         }
+
+        console.log('⭐ MOSTRANDO GALERIA COMPLETA -', galleryImages.length, 'imagens');
+        const galleryGrid = await gallerySystem.createGalleryGrid(galleryImages);
+        
+        return `
+            <div class="gallery-section">
+                <h3>🖼️ Galeria de Fotos (${galleryImages.length})</h3>
+                <div class="premium-gallery-view">
+                    <div class="gallery-grid">
+                        ${galleryGrid}
+                    </div>
+                </div>
+            </div>
+        `;
 
     } catch (error) {
         console.error('❌ Erro crítico na galeria:', error);
@@ -1372,18 +1120,6 @@ async function createGallerySection(profileId, currentUser) {
     }
 }
 
-// ✅ CRIAR PREVIEW COM BLUR
-function createBlurredPreview(images) {
-    const previewCount = Math.min(images.length, 6);
-    let blurredHTML = '';
-    
-    for (let i = 0; i < previewCount; i++) {
-        blurredHTML += '<div class="blurred-image"></div>';
-    }
-    
-    return blurredHTML;
-}
-
 // ✅ CONFIGURAR MODAL DA GALERIA
 function setupGalleryModal() {
     const modal = document.getElementById('galleryModal');
@@ -1395,14 +1131,12 @@ function setupGalleryModal() {
     if (modalPrev) modalPrev.addEventListener('click', showPrevImage);
     if (modalNext) modalNext.addEventListener('click', showNextImage);
 
-    // Fechar modal com ESC
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && modal.style.display === 'flex') {
             closeGalleryModal();
         }
     });
 
-    // Fechar modal clicando fora da imagem
     modal.addEventListener('click', function(e) {
         if (e.target === modal) {
             closeGalleryModal();
@@ -1410,7 +1144,7 @@ function setupGalleryModal() {
     });
 }
 
-// ✅ ABRIR MODAL DA GALERIA CORRIGIDO
+// ✅ ABRIR MODAL DA GALERIA
 function openGalleryModal(index) {
     const modal = document.getElementById('galleryModal');
     const modalImage = document.getElementById('modalImage');
@@ -1432,13 +1166,6 @@ function openGalleryModal(index) {
     modalImage.src = image.display_url;
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
-    
-    // Adicionar tratamento de erro para a imagem do modal
-    modalImage.onerror = function() {
-        console.error('❌ Erro ao carregar imagem no modal:', image.display_url);
-        modalImage.src = ''; // Limpar src para evitar loop
-        modalImage.alt = 'Erro ao carregar imagem';
-    };
 }
 
 // ✅ FECHAR MODAL DA GALERIA
@@ -1472,14 +1199,7 @@ function showNextImage() {
     }
 }
 
-// ✅ VISUALIZAR PERFIL DO VISITANTE
-function viewVisitorProfile(visitorId) {
-    console.log('👀 Visualizando perfil do visitante:', visitorId);
-    localStorage.setItem('viewingProfileId', visitorId);
-    window.location.href = 'perfil.html';
-}
-
-// ✅ ENVIAR MENSAGEM CORRIGIDA
+// ✅ ENVIAR MENSAGEM
 async function sendMessage(userId) {
     console.log('💌 Iniciando conversa com usuário:', userId);
     
@@ -1504,7 +1224,6 @@ async function sendMessage(userId) {
             return;
         }
         
-        // Criar mensagem inicial
         const { error: messageError } = await supabase
             .from('messages')
             .insert({
@@ -1516,7 +1235,6 @@ async function sendMessage(userId) {
 
         if (messageError) {
             console.error('❌ Erro ao criar conversa:', messageError);
-            // Mesmo com erro, redireciona para mensagens
         } else {
             console.log('✅ Conversa criada com sucesso');
         }
@@ -1529,11 +1247,6 @@ async function sendMessage(userId) {
         localStorage.setItem('openChatWithUserId', userId);
         window.location.href = 'mensagens.html';
     }
-}
-
-// ✅ IR PARA PÁGINA PREMIUM
-function goPremium() {
-    window.location.href = 'princing.html';
 }
 
 // ✅ MOSTRAR ERRO
@@ -1707,27 +1420,13 @@ function formatPets(hasPets, petsDetails) {
 
 // ==================== FUNÇÕES GLOBAIS ====================
 
-// Exportar funções para uso global
 window.openGalleryModal = openGalleryModal;
 window.closeGalleryModal = closeGalleryModal;
 window.showPrevImage = showPrevImage;
 window.showNextImage = showNextImage;
-window.viewVisitorProfile = viewVisitorProfile;
 window.sendMessage = sendMessage;
-window.goPremium = goPremium;
 
 console.log('✅ perfil.js carregado com sucesso!');
-
-// Debug: Verificar se todas as funções estão disponíveis
-setTimeout(() => {
-    console.log('🔍 Debug - Funções disponíveis:', {
-        openGalleryModal: typeof openGalleryModal,
-        closeGalleryModal: typeof closeGalleryModal,
-        sendMessage: typeof sendMessage,
-        goPremium: typeof goPremium,
-        gallerySystem: typeof gallerySystem
-    });
-}, 1000);
 </script>
 </body>
 </html>
