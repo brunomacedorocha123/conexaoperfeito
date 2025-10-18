@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verificar E-mail - Conexão Perfeita Amor</title>
+    <title>Verificar E-mail - Amor Conect</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
@@ -14,7 +14,7 @@
         }
         
         body {
-            background: linear-gradient(135deg, #ff6b8b, #a78bfa);
+            background: linear-gradient(135deg, #d1656d, #dfc9ed);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -33,12 +33,18 @@
         }
         
         h1 {
-            color: #4a044e;
+            color: #d1656d;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+        
+        .logo {
+            font-size: 3rem;
             margin-bottom: 1rem;
         }
         
         .btn {
-            background: linear-gradient(135deg, #ff6b8b, #a78bfa);
+            background: linear-gradient(135deg, #d1656d, #dfc9ed);
             color: white;
             border: none;
             padding: 1rem 2rem;
@@ -48,65 +54,219 @@
             margin: 1rem 0;
             text-decoration: none;
             display: inline-block;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(209, 101, 109, 0.4);
         }
         
         .alert {
-            padding: 1rem;
+            padding: 1.5rem;
             border-radius: 10px;
             margin: 1rem 0;
+            text-align: left;
         }
         
         .alert-success {
             background: #f0fff4;
-            border: 1px solid #9ae6b4;
+            border: 2px solid #9ae6b4;
             color: #276749;
         }
         
         .alert-error {
             background: #fed7d7;
-            border: 1px solid #feb2b2;
+            border: 2px solid #feb2b2;
             color: #c53030;
+        }
+        
+        .alert-warning {
+            background: #fffaf0;
+            border: 2px solid #faf089;
+            color: #744210;
+        }
+        
+        .alert-info {
+            background: #ebf8ff;
+            border: 2px solid #90cdf4;
+            color: #2c5aa0;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #d1656d;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 1rem auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .input-token {
+            width: 100%;
+            padding: 1rem;
+            margin: 1rem 0;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+        
+        .input-token:focus {
+            outline: none;
+            border-color: #d1656d;
+        }
+        
+        .resend-section {
+            margin: 1.5rem 0;
+            padding: 1rem;
+            background: #f7fafc;
+            border-radius: 10px;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+        
+        .step {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #e2e8f0;
+        }
+        
+        .step.active {
+            background: #d1656d;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🔐 Verificação de E-mail</h1>
+        <div class="logo">💌</div>
+        <h1>Verificação de E-mail</h1>
+        <p>Estamos quase lá! Verifique seu e-mail para começar.</p>
         
+        <!-- Indicador de Passos -->
+        <div class="step-indicator">
+            <div class="step active"></div>
+            <div class="step"></div>
+            <div class="step"></div>
+        </div>
+        
+        <!-- Verificação Automática -->
         <div id="autoVerification">
-            <p>Verificando automaticamente...</p>
+            <div class="alert alert-info">
+                <strong>🔍 Verificando automaticamente...</strong>
+                <p>Aguarde enquanto verificamos seu e-mail.</p>
+            </div>
             <div class="spinner"></div>
         </div>
         
+        <!-- Verificação Manual -->
         <div id="manualVerification" style="display: none;">
-            <p>⚠️ Verificação automática falhou.</p>
-            <p>Copie o token do e-mail e cole abaixo:</p>
-            <input type="text" id="tokenInput" placeholder="Cole o token aqui" style="width: 100%; padding: 1rem; margin: 1rem 0; border: 2px solid #e2e8f0; border-radius: 10px;">
-            <button class="btn" onclick="verifyManual()">Verificar E-mail</button>
+            <div class="alert alert-warning">
+                <strong>📧 Verificação Manual</strong>
+                <p>Copie o código de 6 dígitos do e-mail e cole abaixo:</p>
+            </div>
+            
+            <input type="text" 
+                   id="tokenInput" 
+                   placeholder="Ex: 123456" 
+                   maxlength="6"
+                   class="input-token"
+                   oninput="formatToken(this)">
+            
+            <button class="btn" onclick="verifyManual()">
+                ✅ Verificar E-mail
+            </button>
+            
+            <div class="resend-section">
+                <p>Não recebeu o e-mail?</p>
+                <button class="btn" onclick="resendVerification()" style="background: #718096;">
+                    🔄 Reenviar Código
+                </button>
+            </div>
         </div>
         
+        <!-- Sucesso -->
         <div id="successMessage" class="alert alert-success" style="display: none;">
-            ✅ E-mail verificado com sucesso! <a href="login.html" class="btn">Fazer Login</a>
+            <strong>🎉 Parabéns!</strong>
+            <p>Seu e-mail foi verificado com sucesso.</p>
+            <a href="login.html" class="btn">🚀 Começar a Usar</a>
         </div>
         
+        <!-- Erro -->
         <div id="errorMessage" class="alert alert-error" style="display: none;">
-            ❌ Erro na verificação
+            <strong>❌ Erro na Verificação</strong>
+            <p id="errorText">Ocorreu um erro ao verificar seu e-mail.</p>
+            <button class="btn" onclick="showManualVerification()" style="background: #e53e3e;">
+                🛠️ Tentar Novamente
+            </button>
+        </div>
+        
+        <!-- Email Banido -->
+        <div id="bannedMessage" class="alert alert-error" style="display: none;">
+            <strong>🚫 Acesso Bloqueado</strong>
+            <p id="bannedText">Este e-mail foi permanentemente banido.</p>
+            <button class="btn" onclick="goToHome()" style="background: #2d3748;">
+                🏠 Página Inicial
+            </button>
         </div>
     </div>
 
     <script>
+        // ==================== CONFIGURAÇÃO SUPABASE ====================
         const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Tentar verificação automática pela URL
+        // ==================== FUNÇÕES PRINCIPAIS ====================
+
+        // ✅ VERIFICAR SE EMAIL ESTÁ BANIDO
+        async function verificarEmailBanido(email) {
+            try {
+                console.log('🔍 Verificando se email está banido:', email);
+                
+                const { data, error } = await supabase.rpc('is_email_banned', {
+                    email_to_check: email
+                });
+                
+                if (error) {
+                    console.warn('⚠️ Não foi possível verificar email banido:', error);
+                    return false; // Em caso de erro, permite continuar
+                }
+                
+                console.log('📧 Resultado verificação banimento:', data);
+                return data; // true = banido, false = liberado
+                
+            } catch (erro) {
+                console.error('❌ Erro crítico na verificação:', erro);
+                return false; // Em caso de erro crítico, permite continuar
+            }
+        }
+
+        // ✅ TENTAR VERIFICAÇÃO AUTOMÁTICA
         async function attemptAutoVerification() {
+            console.log('🔄 Iniciando verificação automática...');
+            
             const urlParams = new URLSearchParams(window.location.hash.substring(1));
             const accessToken = urlParams.get('access_token');
             const type = urlParams.get('type');
             
             if (accessToken && type === 'email') {
                 try {
+                    console.log('📨 Token encontrado na URL, verificando...');
+                    
                     const { data, error } = await supabase.auth.verifyOtp({
                         token_hash: accessToken,
                         type: 'email'
@@ -114,32 +274,46 @@
                     
                     if (error) throw error;
                     
-                    document.getElementById('autoVerification').style.display = 'none';
-                    document.getElementById('successMessage').style.display = 'block';
+                    // ✅ VERIFICAR SE EMAIL ESTÁ BANIDO APÓS VERIFICAÇÃO
+                    const userEmail = data.user?.email;
+                    if (userEmail) {
+                        const estaBanido = await verificarEmailBanido(userEmail);
+                        if (estaBanido) {
+                            showBannedMessage(userEmail);
+                            return;
+                        }
+                    }
+                    
+                    // ✅ SUCESSO - EMAIL VERIFICADO E NÃO BANIDO
+                    showSuccessMessage();
                     
                 } catch (error) {
-                    console.error('Erro verificação automática:', error);
+                    console.error('❌ Erro verificação automática:', error);
                     showManualVerification();
                 }
             } else {
+                console.log('📭 Token não encontrado na URL');
                 showManualVerification();
             }
         }
 
-        function showManualVerification() {
-            document.getElementById('autoVerification').style.display = 'none';
-            document.getElementById('manualVerification').style.display = 'block';
-        }
-
+        // ✅ VERIFICAÇÃO MANUAL
         async function verifyManual() {
             const token = document.getElementById('tokenInput').value.trim();
             
             if (!token) {
-                alert('Por favor, cole o token do e-mail');
+                showError('Por favor, digite o código de verificação');
+                return;
+            }
+            
+            if (token.length !== 6) {
+                showError('O código deve ter 6 dígitos');
                 return;
             }
             
             try {
+                console.log('🔐 Verificando token manual:', token);
+                
                 const { data, error } = await supabase.auth.verifyOtp({
                     token_hash: token,
                     type: 'email'
@@ -147,17 +321,145 @@
                 
                 if (error) throw error;
                 
-                document.getElementById('manualVerification').style.display = 'none';
-                document.getElementById('successMessage').style.display = 'block';
+                // ✅ VERIFICAR SE EMAIL ESTÁ BANIDO
+                const userEmail = data.user?.email;
+                if (userEmail) {
+                    const estaBanido = await verificarEmailBanido(userEmail);
+                    if (estaBanido) {
+                        showBannedMessage(userEmail);
+                        return;
+                    }
+                }
+                
+                // ✅ SUCESSO
+                showSuccessMessage();
                 
             } catch (error) {
-                document.getElementById('errorMessage').style.display = 'block';
-                document.getElementById('errorMessage').textContent = '❌ Erro: ' + error.message;
+                console.error('❌ Erro verificação manual:', error);
+                showError('Código inválido ou expirado. Tente novamente.');
             }
         }
 
-        // Iniciar verificação quando página carregar
-        document.addEventListener('DOMContentLoaded', attemptAutoVerification);
+        // ✅ REENVIAR CÓDIGO DE VERIFICAÇÃO
+        async function resendVerification() {
+            try {
+                const { data: { user }, error } = await supabase.auth.getUser();
+                
+                if (error || !user) {
+                    showError('Sessão expirada. Faça login novamente.');
+                    return;
+                }
+                
+                const { error: resendError } = await supabase.auth.resend({
+                    type: 'signup',
+                    email: user.email,
+                });
+                
+                if (resendError) throw resendError;
+                
+                showInfo('📧 Código reenviado! Verifique sua caixa de entrada.');
+                
+            } catch (error) {
+                console.error('❌ Erro ao reenviar:', error);
+                showError('Erro ao reenviar código. Tente novamente.');
+            }
+        }
+
+        // ==================== FUNÇÕES DE UI ====================
+
+        function showManualVerification() {
+            document.getElementById('autoVerification').style.display = 'none';
+            document.getElementById('manualVerification').style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+            
+            // Focar no input
+            setTimeout(() => {
+                document.getElementById('tokenInput').focus();
+            }, 100);
+        }
+
+        function showSuccessMessage() {
+            document.getElementById('autoVerification').style.display = 'none';
+            document.getElementById('manualVerification').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'block';
+            
+            // Atualizar steps
+            document.querySelectorAll('.step').forEach(step => step.classList.add('active'));
+        }
+
+        function showError(mensagem) {
+            document.getElementById('errorText').textContent = mensagem;
+            document.getElementById('errorMessage').style.display = 'block';
+        }
+
+        function showInfo(mensagem) {
+            // Criar alerta temporário
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-info';
+            alert.innerHTML = `<strong>ℹ️ Informação</strong><p>${mensagem}</p>`;
+            alert.style.marginTop = '1rem';
+            
+            document.querySelector('.container').appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+
+        function showBannedMessage(email) {
+            document.getElementById('autoVerification').style.display = 'none';
+            document.getElementById('manualVerification').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+            
+            document.getElementById('bannedText').textContent = 
+                `O e-mail ${email} foi permanentemente banido do Amor Conect devido a violação grave das regras da comunidade.`;
+            document.getElementById('bannedMessage').style.display = 'block';
+            
+            // Fazer logout do usuário
+            setTimeout(() => {
+                supabase.auth.signOut();
+            }, 1000);
+        }
+
+        function formatToken(input) {
+            // Permitir apenas números
+            input.value = input.value.replace(/\D/g, '');
+            
+            // Limitar a 6 caracteres
+            if (input.value.length > 6) {
+                input.value = input.value.slice(0, 6);
+            }
+        }
+
+        function goToHome() {
+            window.location.href = 'index.html';
+        }
+
+        // ==================== INICIALIZAÇÃO ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Página de verificação iniciada');
+            attemptAutoVerification();
+            
+            // Permitir Enter no input
+            document.getElementById('tokenInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    verifyManual();
+                }
+            });
+        });
+
+        // ==================== DEBUG ====================
+        // Função para testar verificação de email banido
+        async function debugVerificacaoBanido() {
+            const testEmail = 'teste@exemplo.com';
+            const resultado = await verificarEmailBanido(testEmail);
+            console.log(`🔍 Debug - Email ${testEmail} banido?`, resultado);
+        }
+
+        // Executar debug após carregamento
+        setTimeout(debugVerificacaoBanido, 3000);
     </script>
 </body>
 </html>
