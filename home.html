@@ -1993,7 +1993,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
 });
 
-// ✅ CORREÇÃO CRÍTICA: Inicialização sem loop
+// ✅ CORREÇÃO CRÍTICA: Inicialização com timeout para visitantes
 async function initializeApp() {
     try {
         // 1. Verificar autenticação UMA VEZ
@@ -2018,21 +2018,28 @@ async function initializeApp() {
         window.blockSystem = new HomeBlockSystem(supabase, currentUser);
         await window.blockSystem.initialize();
         
-        // ✅✅✅ NOVO: Inicializar sistema de visitantes separado
-        if (window.inicializarSistemaVisitantes) {
-            await window.inicializarSistemaVisitantes(supabase, currentUser);
-        }
-        
         // 2. Carregar dados do usuário
         await loadUserData();
         
         // 3. Carregar usuários OTIMIZADO
         await loadRealUsers();
         
+        // ✅✅✅ CORREÇÃO: Inicializar sistema de visitantes com delay
+        setTimeout(async () => {
+            if (window.inicializarSistemaVisitantes) {
+                console.log('🎯 Inicializando sistema de visitantes...');
+                await window.inicializarSistemaVisitantes(supabase, currentUser);
+            } else {
+                console.error('❌ Sistema de visitantes não carregou!');
+            }
+        }, 100);
+        
         // 4. Configurar sistemas secundários
         setupEventListeners();
         setupMobileMenu();
-        updateStats();
+        
+        // ✅ CORREÇÃO: Atualizar stats depois de carregar visitantes
+        setTimeout(updateStats, 500);
         startOnlineStatusUpdater();
         
         console.log('🎯 Aplicação carregada com sucesso!');
@@ -2814,12 +2821,14 @@ async function updateStats() {
         document.getElementById('newMatches').textContent = messagesResult.count || 0;
         document.getElementById('usersOnline').textContent = onlineResult.count || 0;
         
-        // ✅ VISUALIZAÇÕES AGORA VEM DO SISTEMA DE VISITANTES
-        if (window.visitanteSystem) {
+        // ✅ CORREÇÃO: VISUALIZAÇÕES DO SISTEMA DE VISITANTES
+        if (window.visitanteSystem && typeof window.visitanteSystem.getVisitCount === 'function') {
             const visitCount = window.visitanteSystem.getVisitCount();
             document.getElementById('profileViews').textContent = visitCount;
+            console.log('📊 Visualizações do perfil:', visitCount);
         } else {
             document.getElementById('profileViews').textContent = '0';
+            console.warn('⚠️ Sistema de visitantes não disponível para stats');
         }
 
     } catch (error) {
