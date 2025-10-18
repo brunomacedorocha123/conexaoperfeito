@@ -2077,7 +2077,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
 });
 
-// ✅ CORREÇÃO CRÍTICA: Inicialização com timeout para visitantes
+// ✅ CORREÇÃO CRÍTICA: Inicialização garantida para visitantes
 async function initializeApp() {
     try {
         // 1. Verificar autenticação UMA VEZ
@@ -2110,14 +2110,27 @@ async function initializeApp() {
         // 3. Carregar usuários OTIMIZADO
         await loadRealUsers();
         
-        // ✅✅✅ CORREÇÃO CRÍTICA: Inicializar sistema de visitantes CORRETAMENTE
+        // ✅✅✅ CORREÇÃO DEFINITIVA: Sistema de visitantes com garantia
         console.log('🎯 Inicializando sistema de visitantes...');
-        if (window.inicializarSistemaVisitantes) {
-            await window.inicializarSistemaVisitantes(supabase, currentUser);
-        } else {
-            console.error('❌ Sistema de visitantes não carregou!');
-            // Fallback: criar sistema básico
-            await criarSistemaVisitantesFallback();
+        
+        // Aguardar o arquivo home-visitante.js carregar
+        let tentativas = 0;
+        while (tentativas < 8) {
+            if (window.inicializarSistemaVisitantes) {
+                console.log('✅ Sistema de visitantes encontrado! Inicializando...');
+                await window.inicializarSistemaVisitantes(supabase, currentUser);
+                console.log('✅ Sistema de visitantes inicializado com sucesso!');
+                break;
+            }
+            
+            console.log('⏳ Aguardando sistema de visitantes...', tentativas + 1);
+            await new Promise(resolve => setTimeout(resolve, 300));
+            tentativas++;
+            
+            if (tentativas === 8) {
+                console.error('❌ Sistema de visitantes não carregou após 8 tentativas');
+                await criarSistemaVisitantesFallback();
+            }
         }
         
         // 4. Configurar sistemas secundários
