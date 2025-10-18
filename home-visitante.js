@@ -219,6 +219,11 @@ class HomeVisitanteSystem {
             }
 
             console.log('✅ Visita registrada com sucesso');
+            
+            // Atualizar contador após registrar visita
+            this.visitCount++;
+            this.atualizarUI();
+            
             return true;
             
         } catch (error) {
@@ -252,9 +257,11 @@ class HomeVisitanteSystem {
     atualizarUI() {
         console.log('🎨 Atualizando UI...', {
             isPremium: this.isPremium,
-            visitCount: this.visitCount
+            visitCount: this.visitCount,
+            visitantes: this.visitantes.length
         });
 
+        // ✅ CORREÇÃO CRÍTICA: Garantir que elementos existem
         const premiumSection = document.getElementById('premiumVisitors');
         const freeSection = document.getElementById('freeVisitors');
         const freeVisitorsCount = document.getElementById('freeVisitorsCount');
@@ -262,10 +269,19 @@ class HomeVisitanteSystem {
 
         if (!premiumSection || !freeSection) {
             console.error('❌ Elementos da UI não encontrados!');
+            console.log('Procurando elementos:', {
+                premiumSection: !!premiumSection,
+                freeSection: !!freeSection,
+                freeVisitorsCount: !!freeVisitorsCount,
+                visitorsCount: !!visitorsCount
+            });
             return;
         }
 
+        console.log('📋 Elementos encontrados, atualizando...');
+
         if (this.isPremium) {
+            console.log('🔄 Mostrando seção PREMIUM');
             premiumSection.style.display = 'block';
             freeSection.style.display = 'none';
             
@@ -273,33 +289,51 @@ class HomeVisitanteSystem {
             if (visitorsGrid) {
                 if (this.visitantes.length === 0) {
                     visitorsGrid.innerHTML = this.criarHTMLEstadoVazio();
+                    console.log('📭 Mostrando estado vazio para premium');
                 } else {
                     visitorsGrid.innerHTML = this.criarHTMLVisitantes();
+                    console.log(`👥 Renderizando ${this.visitantes.length} visitantes`);
                 }
+            } else {
+                console.error('❌ visitorsGrid não encontrado');
             }
         } else {
+            console.log('🔄 Mostrando seção FREE');
             premiumSection.style.display = 'none';
             freeSection.style.display = 'block';
             
             const countText = this.visitCount === 1 ? '1 pessoa' : `${this.visitCount} pessoas`;
-            if (freeVisitorsCount) freeVisitorsCount.textContent = countText;
+            if (freeVisitorsCount) {
+                freeVisitorsCount.textContent = countText;
+                console.log('🔢 Free visitors count atualizado:', countText);
+            } else {
+                console.error('❌ freeVisitorsCount não encontrado');
+            }
         }
 
         if (visitorsCount) {
             visitorsCount.textContent = `${this.visitCount} visita${this.visitCount !== 1 ? 's' : ''}`;
+            console.log('📊 Visitors count atualizado:', visitorsCount.textContent);
+        } else {
+            console.error('❌ visitorsCount não encontrado');
         }
 
         console.log('✅ UI atualizada com sucesso!');
     }
 
     criarHTMLVisitantes() {
+        console.log('🎨 Criando HTML para visitantes:', this.visitantes.length);
+        
         return this.visitantes.map(visitante => `
             <div class="visitor-card" onclick="window.viewProfile('${visitante.id}')">
                 <div class="visitor-avatar">
                     ${visitante.avatarUrl ? 
-                        `<img class="visitor-avatar-img" src="${visitante.avatarUrl}" alt="${visitante.nickname}">` :
-                        `<div class="visitor-avatar-fallback">${visitante.initial}</div>`
+                        `<img class="visitor-avatar-img" src="${visitante.avatarUrl}" alt="${visitante.nickname}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
+                        ''
                     }
+                    <div class="visitor-avatar-fallback" style="${visitante.avatarUrl ? 'display: none;' : ''}">
+                        ${visitante.initial}
+                    </div>
                     ${visitante.isOnline ? 
                         '<div class="online-badge" title="Online"></div>' : 
                         '<div class="offline-badge" title="Offline"></div>'
@@ -365,6 +399,7 @@ class HomeVisitanteSystem {
 
     // ==================== MÉTODOS PÚBLICOS ====================
     async recarregar() {
+        console.log('🔄 Recarregando sistema de visitantes...');
         await this.carregarSistemaVisitantes();
     }
 
@@ -380,7 +415,9 @@ class HomeVisitanteSystem {
 // ==================== INICIALIZAÇÃO GLOBAL ====================
 async function inicializarSistemaVisitantes(supabase, currentUser) {
     console.log('🌐 inicializarSistemaVisitantes CHAMADA!');
-    
+    console.log('📡 Supabase:', supabase ? 'OK' : 'FALHO');
+    console.log('👤 CurrentUser:', currentUser);
+
     if (!supabase || !currentUser) {
         console.error('❌ Parâmetros inválidos para inicialização');
         return null;
@@ -393,7 +430,7 @@ async function inicializarSistemaVisitantes(supabase, currentUser) {
         // Expor globalmente
         window.visitanteSystem = sistema;
         
-        console.log('✅ Sistema de visitantes inicializado!');
+        console.log('✅ Sistema de visitantes inicializado!', sistema);
         return sistema;
         
     } catch (error) {
