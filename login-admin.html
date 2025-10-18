@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acesso Admin - Amor Conect</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #d1656d 0%, #dfc9ed 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .login-container {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        
+        .logo {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        h1 {
+            color: #d1656d;
+            margin-bottom: 0.5rem;
+            font-size: 1.8rem;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 2rem;
+            font-size: 1rem;
+        }
+        
+        .input-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #d1656d;
+        }
+        
+        .login-btn {
+            background: #d1656d;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s;
+            margin-bottom: 1rem;
+        }
+        
+        .login-btn:hover {
+            background: #b8555d;
+        }
+        
+        .error {
+            color: #e53e3e;
+            background: #fed7d7;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: none;
+            font-size: 0.9rem;
+        }
+        
+        .footer {
+            margin-top: 2rem;
+            color: #666;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">👑</div>
+        <h1>Painel Administrativo</h1>
+        <p class="subtitle">Amor Conect - Acesso Restrito</p>
+        
+        <div class="input-group">
+            <label for="username">Usuário:</label>
+            <input type="text" id="username" placeholder="Digite seu usuário">
+        </div>
+        
+        <div class="input-group">
+            <label for="password">Senha:</label>
+            <input type="password" id="password" placeholder="Digite sua senha">
+        </div>
+        
+        <button class="login-btn" onclick="fazerLogin()">🔓 Acessar Painel</button>
+        
+        <div class="error" id="errorMsg">Usuário ou senha incorretos!</div>
+        
+        <div class="footer">
+            Acesso exclusivo para administradores
+        </div>
+    </div>
+
+    <script>
+        function fazerLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('errorMsg');
+            
+            // SUAS CREDENCIAIS AQUI ✅
+            const usuarioCorreto = 'bruno666333';
+            const senhaCorreta = 'A14800707zx$';
+            
+            if (username === usuarioCorreto && password === senhaCorreta) {
+                // Login bem-sucedido - vai para o admin.html
+                window.location.href = 'admin.html';
+            } else {
+                errorMsg.style.display = 'block';
+                document.getElementById('password').value = '';
+                document.getElementById('password').focus();
+            }
+        }
+        
+        // Enter para enviar
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                fazerLogin();
+            }
+        });
+    </script>
+</body>
+</html>
