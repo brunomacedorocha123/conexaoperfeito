@@ -308,7 +308,7 @@
     </div>
 
     <script>
-           // ==================== CONEXÃO COM BANCO ====================
+              // ==================== CONEXÃO COM BANCO ====================
     const supabaseUrl = 'https://gcukalndarlgydmgmmmt.supabase.co';
     const supabaseChave = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
     const supabase = window.supabase.createClient(supabaseUrl, supabaseChave);
@@ -446,26 +446,15 @@
                 await supabase.from('user_reports').delete().eq('reporter_id', idUsuario);
                 await supabase.from('user_reports').delete().eq('reported_user_id', idUsuario);
                 
-                // 🚫 Tenta banir de forma segura
-                const dadosAtualizacao = {
-                    nickname: 'Usuário Banido',
-                    bio: 'Esta conta foi removida por violação das regras da comunidade',
-                    avatar_url: null,
-                    updated_at: new Date().toISOString()
-                };
-
-                // Tenta adicionar campos de banimento se existirem
-                try {
-                    dadosAtualizacao.status = 'banned';
-                    dadosAtualizacao.banned_at = new Date().toISOString();
-                    dadosAtualizacao.banned_reason = 'Violação de regras - Conta banida pelo administrador';
-                } catch (e) {
-                    console.log('Campos de banimento não disponíveis, usando método básico');
-                }
-
+                // 🚫 Marca como banido - MÉTODO SIMPLES QUE FUNCIONA
                 const { error } = await supabase
                     .from('profiles')
-                    .update(dadosAtualizacao)
+                    .update({
+                        nickname: 'Usuário Banido',
+                        bio: 'Esta conta foi removida por violação das regras da comunidade',
+                        avatar_url: null,
+                        updated_at: new Date().toISOString()
+                    })
                     .eq('id', idUsuario);
 
                 if (error) throw error;
@@ -482,20 +471,21 @@
                     
                 const motivo = reporte?.evidence || reporte?.reason || 'Violação de regras';
                 
-                // Salvar advertência
-                const { error: warnError } = await supabase
-                    .from('user_warnings')
-                    .insert({
-                        user_id: idUsuario,
-                        reason: `⚠️ ADVERTÊNCIA: ${motivo}`,
-                        severity: 'medium', 
-                        created_at: new Date().toISOString(),
-                        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-                    });
+                // Salvar advertência - SE a tabela existir
+                try {
+                    const { error: warnError } = await supabase
+                        .from('user_warnings')
+                        .insert({
+                            user_id: idUsuario,
+                            reason: `⚠️ ADVERTÊNCIA: ${motivo}`,
+                            severity: 'medium', 
+                            created_at: new Date().toISOString(),
+                            expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+                        });
 
-                if (warnError) {
-                    // Se a tabela user_warnings não existir, apenas registra no console
-                    console.warn('Tabela user_warnings não encontrada, apenas resolvendo reporte:', warnError);
+                    if (warnError) console.warn('Tabela de advertências não disponível:', warnError);
+                } catch (e) {
+                    console.warn('Advertência não pôde ser salva, continuando...');
                 }
             }
             
