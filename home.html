@@ -932,6 +932,7 @@ footer {
     margin-bottom: 1.5rem;
     scrollbar-width: thin;
     scrollbar-color: var(--lilas) var(--bege);
+    min-height: 180px;
 }
 
 .visitors-grid::-webkit-scrollbar {
@@ -960,6 +961,7 @@ footer {
     transition: var(--transition);
     border: 2px solid transparent;
     position: relative;
+    display: block !important;
 }
 
 .visitor-card:hover {
@@ -1030,6 +1032,11 @@ footer {
 .free-content {
     text-align: center;
     padding: 2rem;
+    display: none;
+}
+
+.free-content.visible {
+    display: block;
 }
 
 .free-content .icon {
@@ -1660,6 +1667,83 @@ footer {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ==================== CORREÇÃO CRÍTICA - SISTEMA DE VISITANTES ==================== */
+
+/* ✅ CORREÇÃO: Seções de visitantes controladas por JavaScript */
+#premiumVisitors {
+    display: none;
+}
+
+#premiumVisitors.visible {
+    display: block !important;
+}
+
+#freeVisitors {
+    display: none;
+}
+
+#freeVisitors.visible {
+    display: block !important;
+}
+
+/* ✅ CORREÇÃO: Garantir que elementos estão visíveis quando ativos */
+.visitors-card {
+    display: block !important;
+}
+
+.visitors-grid {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* ✅ CORREÇÃO: Estado de loading sempre visível quando ativo */
+.visitors-loading {
+    display: block !important;
+}
+
+/* ✅ CORREÇÃO: Estado vazio sempre visível quando ativo */
+.visitors-empty {
+    display: block !important;
+}
+
+/* ✅ CORREÇÃO: Conteúdo free sempre visível quando ativo */
+.free-content {
+    display: none;
+}
+
+.free-content.visible {
+    display: block !important;
+}
+
+/* ✅ CORREÇÃO: Garantir que os cards de visitantes são sempre visíveis */
+.visitor-card {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* ✅ CORREÇÃO: Avatar dos visitantes sempre visível */
+.visitor-avatar {
+    display: flex !important;
+}
+
+.visitor-avatar-img {
+    display: none; /* Controlado por JavaScript */
+}
+
+.visitor-avatar-img.visible {
+    display: block !important;
+}
+
+.visitor-avatar-fallback {
+    display: flex !important;
+}
+
+.visitor-avatar-fallback.hidden {
+    display: none !important;
+}
 </style>
 </head>
 <body>
@@ -2015,8 +2099,10 @@ async function initializeApp() {
         currentUser = user;
         
         // ✅✅✅ NOVO: Inicializar sistema de bloqueio separado
-        window.blockSystem = new HomeBlockSystem(supabase, currentUser);
-        await window.blockSystem.initialize();
+        if (window.HomeBlockSystem) {
+            window.blockSystem = new HomeBlockSystem(supabase, currentUser);
+            await window.blockSystem.initialize();
+        }
         
         // 2. Carregar dados do usuário
         await loadUserData();
@@ -2024,22 +2110,22 @@ async function initializeApp() {
         // 3. Carregar usuários OTIMIZADO
         await loadRealUsers();
         
-        // ✅✅✅ CORREÇÃO: Inicializar sistema de visitantes com delay
-        setTimeout(async () => {
-            if (window.inicializarSistemaVisitantes) {
-                console.log('🎯 Inicializando sistema de visitantes...');
-                await window.inicializarSistemaVisitantes(supabase, currentUser);
-            } else {
-                console.error('❌ Sistema de visitantes não carregou!');
-            }
-        }, 100);
+        // ✅✅✅ CORREÇÃO CRÍTICA: Inicializar sistema de visitantes CORRETAMENTE
+        console.log('🎯 Inicializando sistema de visitantes...');
+        if (window.inicializarSistemaVisitantes) {
+            await window.inicializarSistemaVisitantes(supabase, currentUser);
+        } else {
+            console.error('❌ Sistema de visitantes não carregou!');
+            // Fallback: criar sistema básico
+            await criarSistemaVisitantesFallback();
+        }
         
         // 4. Configurar sistemas secundários
         setupEventListeners();
         setupMobileMenu();
         
         // ✅ CORREÇÃO: Atualizar stats depois de carregar visitantes
-        setTimeout(updateStats, 500);
+        setTimeout(updateStats, 1000);
         startOnlineStatusUpdater();
         
         console.log('🎯 Aplicação carregada com sucesso!');
@@ -2047,6 +2133,47 @@ async function initializeApp() {
     } catch (error) {
         console.error('❌ Erro crítico na inicialização:', error);
         showQuickToast('Erro ao carregar a página. Recarregue.');
+    }
+}
+
+// ✅ FALLBACK para sistema de visitantes
+async function criarSistemaVisitantesFallback() {
+    console.log('🔄 Criando fallback para sistema de visitantes...');
+    
+    // Sistema básico que atualiza apenas o contador
+    try {
+        const { data: visits, error } = await supabase
+            .from('profile_visits')
+            .select('id', { count: 'exact' })
+            .eq('visited_id', currentUser.id);
+
+        const visitCount = visits?.length || 0;
+        
+        // Atualizar UI manualmente
+        const visitorsCount = document.getElementById('visitorsCount');
+        const freeVisitorsCount = document.getElementById('freeVisitorsCount');
+        const premiumSection = document.getElementById('premiumVisitors');
+        const freeSection = document.getElementById('freeVisitors');
+        
+        if (visitorsCount) {
+            visitorsCount.textContent = `${visitCount} visita${visitCount !== 1 ? 's' : ''}`;
+        }
+        
+        if (freeVisitorsCount) {
+            const countText = visitCount === 1 ? '1 pessoa' : `${visitCount} pessoas`;
+            freeVisitorsCount.textContent = countText;
+        }
+        
+        // Sempre mostrar seção FREE no fallback
+        if (premiumSection && freeSection) {
+            premiumSection.style.display = 'none';
+            freeSection.style.display = 'block';
+        }
+        
+        console.log('✅ Fallback de visitantes configurado:', visitCount);
+        
+    } catch (error) {
+        console.error('❌ Erro no fallback:', error);
     }
 }
 
@@ -2580,6 +2707,12 @@ function openBlockModal(userId, userName) {
     // Esta função será gerenciada pelo home.block.js
     if (window.blockSystem) {
         window.blockSystem.openBlockModal(userId, userName);
+    } else {
+        // Fallback básico
+        currentReportUserId = userId;
+        currentReportUserName = userName;
+        document.getElementById('blockUserName').textContent = userName;
+        document.getElementById('blockModal').classList.add('show');
     }
 }
 
@@ -2587,6 +2720,8 @@ function closeBlockModal() {
     // Esta função será gerenciada pelo home.block.js
     if (window.blockSystem) {
         window.blockSystem.closeBlockModal();
+    } else {
+        document.getElementById('blockModal').classList.remove('show');
     }
 }
 
@@ -2594,6 +2729,9 @@ function confirmBlock() {
     // Esta função será gerenciada pelo home.block.js
     if (window.blockSystem) {
         window.blockSystem.confirmBlock();
+    } else {
+        showQuickToast('🚫 Sistema de bloqueio não disponível');
+        closeBlockModal();
     }
 }
 
@@ -2665,7 +2803,7 @@ async function viewProfile(userId, event) {
     
     // ✅ REGISTRAR VISITA usando o novo sistema
     if (window.registrarVisitaPerfil) {
-        window.registrarVisitaPerfil(userId);
+        await window.registrarVisitaPerfil(userId);
     }
     
     localStorage.setItem('viewingProfileId', userId);
@@ -2827,8 +2965,15 @@ async function updateStats() {
             document.getElementById('profileViews').textContent = visitCount;
             console.log('📊 Visualizações do perfil:', visitCount);
         } else {
-            document.getElementById('profileViews').textContent = '0';
-            console.warn('⚠️ Sistema de visitantes não disponível para stats');
+            // Fallback: contar diretamente
+            const { data: visits, error } = await supabase
+                .from('profile_visits')
+                .select('id', { count: 'exact' })
+                .eq('visited_id', currentUser.id);
+
+            const visitCount = visits?.length || 0;
+            document.getElementById('profileViews').textContent = visitCount;
+            console.log('📊 Visualizações (fallback):', visitCount);
         }
 
     } catch (error) {
