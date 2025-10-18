@@ -2076,10 +2076,15 @@ async function initializeApp() {
         console.log('✅ Usuário autenticado:', user.id);
         currentUser = user;
         
-        // ✅✅✅ NOVO: Inicializar sistema de bloqueio separado
+        // ✅✅✅ CORREÇÃO: Inicializar sistema de bloqueio COM VERIFICAÇÃO
         if (window.HomeBlockSystem) {
             window.blockSystem = new HomeBlockSystem(supabase, currentUser);
             await window.blockSystem.initialize();
+            console.log('✅ Sistema de bloqueio inicializado!');
+        } else {
+            console.error('❌ HomeBlockSystem não carregado - verifique home.block.js');
+            // Fallback emergencial
+            initializeBlockSystemFallback();
         }
         
         // 2. Carregar dados do usuário
@@ -2124,6 +2129,101 @@ async function initializeApp() {
     } catch (error) {
         console.error('❌ Erro crítico na inicialização:', error);
         showQuickToast('Erro ao carregar a página. Recarregue.');
+    }
+}
+
+// ✅ FALLBACK PARA SISTEMA DE BLOQUEIO (EMERGÊNCIA)
+function initializeBlockSystemFallback() {
+    console.log('🔄 Inicializando fallback de bloqueio...');
+    
+    window.blockSystem = {
+        async openBlockModal(userId, userName) {
+            console.log('🚫 Fallback: Abrindo modal para', userName);
+            document.getElementById('blockUserName').textContent = userName;
+            document.getElementById('blockModal').classList.add('show');
+            
+            // Configurar confirmação direta
+            const confirmBtn = document.getElementById('confirmBlockBtn');
+            if (confirmBtn) {
+                confirmBtn.onclick = async function() {
+                    await blockUserDirect(userId, userName);
+                };
+            }
+        },
+        
+        closeBlockModal() {
+            document.getElementById('blockModal').classList.remove('show');
+        },
+        
+        async confirmBlock() {
+            console.log('⚠️ Use blockUserDirect diretamente');
+        },
+        
+        isUserBlocked(userId) {
+            return false;
+        },
+        
+        removeUserCardImmediately(userId) {
+            const cards = document.querySelectorAll(`[data-user-id="${userId}"]`);
+            cards.forEach(card => {
+                card.style.transition = 'all 0.3s ease';
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.8)';
+                setTimeout(() => card.remove(), 300);
+            });
+        }
+    };
+}
+
+// ✅ FUNÇÃO DE BLOQUEIO DIRETO (GARANTIDA)
+async function blockUserDirect(userId, userName) {
+    console.log('🚫 BLOQUEIO DIRETO:', userName);
+    
+    try {
+        // 1. Fechar modal
+        document.getElementById('blockModal').classList.remove('show');
+        
+        // 2. Remover card IMEDIATAMENTE
+        const cards = document.querySelectorAll(`[data-user-id="${userId}"]`);
+        cards.forEach(card => {
+            card.style.transition = 'all 0.4s ease';
+            card.style.opacity = '0.3';
+            card.style.transform = 'scale(0.9)';
+            card.style.pointerEvents = 'none';
+            
+            setTimeout(() => {
+                card.style.height = '0';
+                card.style.margin = '0';
+                card.style.padding = '0';
+                card.style.overflow = 'hidden';
+                
+                setTimeout(() => card.remove(), 300);
+            }, 400);
+        });
+        
+        // 3. Salvar no banco
+        const { error } = await supabase
+            .from('user_blocks')
+            .insert({
+                blocker_id: currentUser.id,
+                blocked_user_id: userId,
+                created_at: new Date().toISOString()
+            });
+        
+        if (error) {
+            if (error.code === '23505') {
+                console.log('ℹ️ Usuário já estava bloqueado');
+            } else {
+                throw error;
+            }
+        }
+        
+        showQuickToast(`✅ ${userName} bloqueado com sucesso!`);
+        console.log('✅ Bloqueio realizado:', userName);
+        
+    } catch (error) {
+        console.error('❌ Erro no bloqueio direto:', error);
+        showQuickToast('⚠️ Bloqueado localmente (erro de rede)');
     }
 }
 
@@ -2694,22 +2794,31 @@ async function registerReportEvent(reportedUserId, reason) {
     }
 }
 
+// ✅✅✅ CORREÇÃO DAS FUNÇÕES DE BLOQUEIO
 function openBlockModal(userId, userName) {
-    // Esta função será gerenciada pelo home.block.js
-    if (window.blockSystem) {
+    console.log('🚫 Abrindo modal de bloqueio para:', userName);
+    
+    // Usar sistema principal se disponível
+    if (window.blockSystem && window.blockSystem.openBlockModal) {
         window.blockSystem.openBlockModal(userId, userName);
     } else {
-        // Fallback básico
-        currentReportUserId = userId;
-        currentReportUserName = userName;
+        // Fallback direto
+        console.log('🔄 Usando fallback de bloqueio');
         document.getElementById('blockUserName').textContent = userName;
         document.getElementById('blockModal').classList.add('show');
+        
+        // Configurar confirmação
+        const confirmBtn = document.getElementById('confirmBlockBtn');
+        if (confirmBtn) {
+            confirmBtn.onclick = async function() {
+                await blockUserDirect(userId, userName);
+            };
+        }
     }
 }
 
 function closeBlockModal() {
-    // Esta função será gerenciada pelo home.block.js
-    if (window.blockSystem) {
+    if (window.blockSystem && window.blockSystem.closeBlockModal) {
         window.blockSystem.closeBlockModal();
     } else {
         document.getElementById('blockModal').classList.remove('show');
@@ -2717,12 +2826,10 @@ function closeBlockModal() {
 }
 
 function confirmBlock() {
-    // Esta função será gerenciada pelo home.block.js
-    if (window.blockSystem) {
+    if (window.blockSystem && window.blockSystem.confirmBlock) {
         window.blockSystem.confirmBlock();
     } else {
-        showQuickToast('🚫 Sistema de bloqueio não disponível');
-        closeBlockModal();
+        showQuickToast('🚫 Use o botão "Confirmar Bloqueio" no modal');
     }
 }
 
