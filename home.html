@@ -948,7 +948,7 @@ footer {
     border-radius: 3px;
 }
 
-/* ✅ CARDS PEQUENOS CORRIGIDOS - SEM CONFLITOS */
+/* Cards Pequenos - IGUAL AO VISITANTE.HTML */
 .visitor-card {
     flex: 0 0 auto;
     width: 120px;
@@ -969,35 +969,27 @@ footer {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
-/* ✅ AVATAR CORRIGIDO - SEM CONFLITOS DE VISIBILIDADE */
+/* ✅ AVATAR CORRIGIDO - SÓ MOSTRA FOTO OU SÓ MOSTRA FALLBACK (NUNCA OS DOIS) */
 .visitor-avatar {
     width: 60px;
     height: 60px;
     border-radius: 50%;
     margin: 0 auto 0.8rem;
     position: relative;
-    overflow: hidden;
+    overflow: hidden; /* ✅ IMPEDE que apareça coisa do lado */
     border: 3px solid var(--branco);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* ✅ IMAGEM DO AVATAR - CONTROLE CORRETO */
+/* ✅ IMAGEM - quando tem foto */
 .visitor-avatar-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     border-radius: 50%;
-    display: none; /* ✅ Começa escondida */
-    position: absolute;
-    top: 0;
-    left: 0;
 }
 
-.visitor-avatar-img.visible {
-    display: block; /* ✅ Só mostra quando tem foto */
-}
-
-/* ✅ FALLBACK DO AVATAR - POSICIONAMENTO CORRETO */
+/* ✅ FALLBACK - quando NÃO tem foto */
 .visitor-avatar-fallback {
     width: 100%;
     height: 100%;
@@ -1009,13 +1001,16 @@ footer {
     color: white;
     font-weight: bold;
     font-size: 1.2rem;
-    position: absolute;
-    top: 0;
-    left: 0;
 }
 
-.visitor-avatar-fallback.hidden {
-    display: none; /* ✅ Esconde quando tem foto */
+/* ✅ REGRA CRÍTICA: Quando a imagem existe, ESCONDER o fallback */
+.visitor-avatar:has(.visitor-avatar-img[src]) .visitor-avatar-fallback {
+    display: none !important;
+}
+
+/* ✅ REGRA CRÍTICA: Quando NÃO tem imagem, MOSTRAR o fallback */
+.visitor-avatar:not(:has(.visitor-avatar-img[src])) .visitor-avatar-fallback {
+    display: flex !important;
 }
 
 .visitor-name {
@@ -1126,7 +1121,6 @@ footer {
     border-radius: 50%;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     animation: pulse-online 2s infinite;
-    z-index: 10;
 }
 
 /* Bolinha Offline (Cinza) */
@@ -1140,7 +1134,6 @@ footer {
     border: 2px solid var(--branco);
     border-radius: 50%;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    z-index: 10;
 }
 
 /* Animação para bolinha online */
@@ -1729,8 +1722,6 @@ footer {
 .visitor-avatar {
     display: flex !important;
 }
-
-/* ✅ REMOVIDO: Classes conflitantes duplicadas */
 </style>
 </head>
 <body>
