@@ -3150,6 +3150,139 @@ setTimeout(() => {
     debugReportSystem().catch(console.error);
 }, 5000);
 
+// ✅ CORREÇÃO CRÍTICA: Inicialização garantida para visitantes
+async function initializeApp() {
+    try {
+        // 1. Verificar autenticação
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error || !user) {
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        currentUser = user;
+        
+        // 2. Carregar dados do usuário
+        await loadUserData();
+        
+        // 3. Carregar usuários
+        await loadRealUsers();
+        
+        // ✅✅✅ CORREÇÃO DEFINITIVA: Sistema de visitantes com timeout
+        console.log('🎯 Inicializando sistema de visitantes...');
+        
+        // Aguardar o arquivo home-visitante.js carregar
+        let tentativas = 0;
+        const maxTentativas = 10;
+        
+        const carregarVisitantes = setInterval(async () => {
+            tentativas++;
+            
+            if (window.inicializarSistemaVisitantes) {
+                clearInterval(carregarVisitantes);
+                console.log('✅ Sistema de visitantes encontrado! Inicializando...');
+                await window.inicializarSistemaVisitantes(supabase, currentUser);
+                console.log('✅ Sistema de visitantes inicializado com sucesso!');
+            } else if (tentativas >= maxTentativas) {
+                clearInterval(carregarVisitantes);
+                console.error('❌ Sistema de visitantes não carregou');
+                await criarSistemaVisitantesFallback();
+            } else {
+                console.log('⏳ Aguardando sistema de visitantes...', tentativas);
+            }
+        }, 500);
+        
+        // 4. Configurar sistemas secundários
+        setupEventListeners();
+        setupMobileMenu();
+        
+        // 5. Atualizar stats
+        setTimeout(updateStats, 2000);
+        startOnlineStatusUpdater();
+        
+        console.log('🎯 Aplicação carregada com sucesso!');
+        
+    } catch (error) {
+        console.error('❌ Erro crítico na inicialização:', error);
+    }
+}
+
+// ✅ FALLBACK para sistema de visitantes
+async function criarSistemaVisitantesFallback() {
+    console.log('🔄 Criando fallback para sistema de visitantes...');
+    
+    try {
+        const { data: visits, error } = await supabase
+            .from('profile_visits')
+            .select('id', { count: 'exact' })
+            .eq('visited_id', currentUser.id);
+
+        const visitCount = visits?.length || 0;
+        
+        // Atualizar UI manualmente
+        const visitorsCount = document.getElementById('visitorsCount');
+        const freeVisitorsCount = document.getElementById('freeVisitorsCount');
+        const premiumSection = document.getElementById('premiumVisitors');
+        const freeSection = document.getElementById('freeVisitors');
+        
+        if (visitorsCount) {
+            visitorsCount.textContent = `${visitCount} visita${visitCount !== 1 ? 's' : ''}`;
+        }
+        
+        if (freeVisitorsCount) {
+            const countText = visitCount === 1 ? '1 pessoa' : `${visitCount} pessoas`;
+            freeVisitorsCount.textContent = countText;
+        }
+        
+        // Sempre mostrar seção FREE no fallback
+        if (premiumSection && freeSection) {
+            premiumSection.style.display = 'none';
+            freeSection.style.display = 'block';
+        }
+        
+        console.log('✅ Fallback de visitantes configurado:', visitCount);
+        
+    } catch (error) {
+        console.error('❌ Erro no fallback:', error);
+    }
+}
+
+// ✅ CORREÇÃO: Atualizar função viewProfile para registrar visitas
+async function viewProfile(userId, event) {
+    if (event) event.stopPropagation();
+
+    // Verificação de bloqueio
+    if (window.blockSystem && window.blockSystem.isUserBlocked(userId)) {
+        showQuickToast('🚫 Você bloqueou este usuário.');
+        return;
+    }
+    
+    // Verificar se o usuário te bloqueou
+    const isBlockedByUser = await checkIfBlockedByUser(userId);
+    if (isBlockedByUser) {
+        showQuickToast('🚫 Este usuário te bloqueou.');
+        if (window.blockSystem) {
+            window.blockSystem.removeUserCardImmediately(userId);
+        }
+        return;
+    }
+    
+    if (!isProfileComplete()) {
+        showQuickToast('Complete seu perfil primeiro!');
+        window.location.href = 'painel.html';
+        return;
+    }
+    
+    // ✅ REGISTRAR VISITA usando o sistema
+    if (window.registrarVisitaPerfil) {
+        await window.registrarVisitaPerfil(userId);
+    }
+    
+    localStorage.setItem('viewingProfileId', userId);
+    window.location.href = 'perfil.html';
+}
+
 console.log('✅ SISTEMA HOME.HTML CARREGADO COM SUCESSO! 🎉');
 console.log('👤 Usuário:', currentUser?.email);
 console.log('🆔 User ID:', currentUser?.id);

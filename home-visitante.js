@@ -1,4 +1,4 @@
-// home-visitante.js - SISTEMA COMPLETO DE VISITANTES CORRIGIDO
+// home-visitante.js - SISTEMA COMPLETO E FUNCIONAL
 console.log('🚀 home-visitante.js carregando...');
 
 class HomeVisitanteSystem {
@@ -19,36 +19,36 @@ class HomeVisitanteSystem {
             // 1. Verificar status premium
             await this.verificarStatusPremium();
             
-            // 2. Carregar dados baseados no status
-            await this.carregarSistemaVisitantes();
+            // 2. Carregar contador de visitas
+            await this.carregarContadorVisitas();
             
-            // 3. Atualizar UI IMEDIATAMENTE
+            // 3. Se for premium, carregar visitantes
+            if (this.isPremium) {
+                await this.carregarVisitantesPremium();
+            }
+            
+            // 4. Atualizar UI
             this.atualizarUI();
             
             this.initialized = true;
-            console.log('✅ Sistema de visitantes inicializado com sucesso!');
+            console.log('✅ Sistema de visitantes inicializado!');
             
         } catch (error) {
             console.error('❌ Erro ao inicializar:', error);
             this.visitCount = 0;
-            this.visitantes = [];
-            this.atualizarUI(); // Atualizar mesmo com erro
+            this.atualizarUI();
         }
     }
 
     async verificarStatusPremium() {
         try {
-            console.log('⭐ Verificando status premium...');
             const { data: profile, error } = await this.supabase
                 .from('profiles')
                 .select('is_premium')
                 .eq('id', this.currentUser.id)
                 .single();
 
-            if (error) {
-                console.error('Erro ao verificar premium:', error);
-                throw error;
-            }
+            if (error) throw error;
             
             this.isPremium = profile?.is_premium || false;
             console.log(`✅ Status Premium: ${this.isPremium}`);
@@ -59,21 +59,10 @@ class HomeVisitanteSystem {
         }
     }
 
-    async carregarSistemaVisitantes() {
-        console.log('📥 Carregando sistema de visitantes...');
-        
-        if (this.isPremium) {
-            await this.carregarVisitantesPremium();
-        } else {
-            await this.carregarEstatisticasFree();
-        }
-    }
-
-    async carregarEstatisticasFree() {
+    async carregarContadorVisitas() {
         try {
-            console.log('🔢 Carregando estatísticas FREE...');
-            let visitCount = 0;
-
+            console.log('🔢 Carregando contador de visitas...');
+            
             // Estratégia 1: Tentar função RPC
             try {
                 const { data: rpcCount, error: rpcError } = await this.supabase.rpc(
@@ -83,50 +72,30 @@ class HomeVisitanteSystem {
                     }
                 );
                 
-                if (!rpcError && rpcCount !== null && rpcCount !== undefined) {
-                    visitCount = rpcCount;
-                    console.log('✅ RPC funcionou:', visitCount);
-                } else {
-                    throw new Error('RPC retornou erro ou valor inválido');
+                if (!rpcError && rpcCount !== null) {
+                    this.visitCount = rpcCount;
+                    console.log('✅ RPC funcionou:', this.visitCount);
+                    return;
                 }
-                
             } catch (rpcError) {
-                console.warn('⚠️ RPC falhou, tentando contagem direta:', rpcError);
-                
-                // Estratégia 2: Contar diretamente da tabela
-                const sevenDaysAgo = new Date();
-                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-                
-                const { data: visits, error } = await this.supabase
-                    .from('profile_visits')
-                    .select('id')
-                    .eq('visited_id', this.currentUser.id)
-                    .gte('visited_at', sevenDaysAgo.toISOString());
-
-                if (!error) {
-                    visitCount = visits?.length || 0;
-                    console.log('✅ Contagem direta (7 dias):', visitCount);
-                } else {
-                    console.warn('⚠️ Contagem direta falhou, tentando total:', error);
-                    
-                    // Estratégia 3: Contar total de visitas
-                    const { data: totalVisits, error: totalError } = await this.supabase
-                        .from('profile_visits')
-                        .select('id', { count: 'exact' })
-                        .eq('visited_id', this.currentUser.id);
-
-                    if (!totalError) {
-                        visitCount = totalVisits?.length || 0;
-                        console.log('✅ Contagem total:', visitCount);
-                    }
-                }
+                console.warn('⚠️ RPC falhou, tentando contagem direta');
             }
+            
+            // Estratégia 2: Contar diretamente
+            const { data: visits, error } = await this.supabase
+                .from('profile_visits')
+                .select('id', { count: 'exact' })
+                .eq('visited_id', this.currentUser.id);
 
-            this.visitCount = visitCount;
-            console.log('🎯 Contador final FREE:', this.visitCount);
+            if (!error) {
+                this.visitCount = visits?.length || 0;
+                console.log('✅ Contagem direta:', this.visitCount);
+            } else {
+                this.visitCount = 0;
+            }
             
         } catch (error) {
-            console.error('❌ Erro ao carregar estatísticas FREE:', error);
+            console.error('❌ Erro ao carregar contador:', error);
             this.visitCount = 0;
         }
     }
@@ -135,6 +104,25 @@ class HomeVisitanteSystem {
         try {
             console.log('⭐ Carregando visitantes premium...');
             
+            // Estratégia 1: Usar função RPC otimizada
+            try {
+                const { data: visitors, error } = await this.supabase.rpc(
+                    'get_recent_visitors', {
+                        p_user_id: this.currentUser.id,
+                        p_limit: 12
+                    }
+                );
+
+                if (!error && visitors) {
+                    this.visitantes = await this.processarVisitantesRPC(visitors);
+                    console.log(`✅ RPC visitors: ${this.visitantes.length}`);
+                    return;
+                }
+            } catch (rpcError) {
+                console.warn('⚠️ RPC falhou, usando query direta:', rpcError);
+            }
+
+            // Estratégia 2: Query direta
             const { data: visits, error } = await this.supabase
                 .from('profile_visits')
                 .select(`
@@ -147,181 +135,100 @@ class HomeVisitanteSystem {
                         full_name,
                         avatar_url,
                         city,
-                        last_online_at,
-                        is_invisible
+                        state,
+                        last_online_at
                     )
                 `)
                 .eq('visited_id', this.currentUser.id)
                 .order('visited_at', { ascending: false })
                 .limit(12);
 
-            if (error) {
-                console.error('❌ Erro no carregamento premium:', error);
-                throw error;
-            }
+            if (error) throw error;
 
-            console.log(`📊 ${visits?.length || 0} visitas encontradas`);
-
-            // Processar visitantes
             this.visitantes = await this.processarVisitantes(visits || []);
-            this.visitCount = this.visitantes.length;
-            
-            console.log(`✅ ${this.visitantes.length} visitantes processados`);
+            console.log(`✅ Visitantes carregados: ${this.visitantes.length}`);
 
         } catch (error) {
-            console.error('❌ Erro crítico no carregamento premium:', error);
+            console.error('❌ Erro ao carregar visitantes premium:', error);
             this.visitantes = [];
-            this.visitCount = 0;
         }
     }
 
+    async processarVisitantesRPC(visitors) {
+        const visitantesProcessados = [];
+        
+        for (const visitor of visitors) {
+            try {
+                const visitante = {
+                    id: visitor.visitor_id,
+                    nickname: visitor.visitor_nickname,
+                    city: visitor.visitor_city,
+                    timeAgo: this.getTimeAgo(visitor.visited_at),
+                    initial: visitor.visitor_nickname?.charAt(0).toUpperCase() || 'U',
+                    isOnline: visitor.is_online,
+                    avatarUrl: visitor.visitor_avatar_url ? 
+                        await this.loadUserPhoto(visitor.visitor_avatar_url) : null,
+                    visited_at: visitor.visited_at
+                };
+                
+                visitantesProcessados.push(visitante);
+            } catch (error) {
+                console.warn('⚠️ Erro ao processar visitante RPC:', error);
+            }
+        }
+
+        return visitantesProcessados;
+    }
+
     async processarVisitantes(visits) {
-        console.log('🔧 Processando visitantes...');
         const visitantesProcessados = [];
         
         for (const visit of visits) {
             try {
-                const visitante = await this.criarDadosVisitante(visit);
-                if (visitante) {
-                    visitantesProcessados.push(visitante);
+                const profile = visit.profiles;
+                if (!profile) continue;
+
+                const nickname = profile.nickname || 
+                                profile.full_name?.split(' ')[0] || 
+                                'Usuário';
+                
+                const city = profile.city || 'Cidade não informada';
+                const timeAgo = this.getTimeAgo(visit.visited_at);
+                const initial = nickname.charAt(0).toUpperCase();
+                const isOnline = this.isUserOnline(profile);
+
+                let avatarUrl = null;
+                if (profile.avatar_url) {
+                    avatarUrl = await this.loadUserPhoto(profile.avatar_url);
                 }
+
+                visitantesProcessados.push({
+                    id: visit.visitor_id,
+                    nickname: nickname,
+                    city: city,
+                    timeAgo: timeAgo,
+                    initial: initial,
+                    isOnline: isOnline,
+                    avatarUrl: avatarUrl,
+                    visited_at: visit.visited_at
+                });
+
             } catch (error) {
                 console.warn('⚠️ Erro ao processar visitante:', error);
             }
         }
 
-        console.log(`✅ ${visitantesProcessados.length} visitantes processados com sucesso`);
         return visitantesProcessados;
-    }
-
-    async criarDadosVisitante(visit) {
-        const profile = visit.profiles;
-        if (!profile) {
-            console.warn('⚠️ Perfil do visitante não encontrado');
-            return null;
-        }
-
-        try {
-            const nickname = profile.nickname || profile.full_name?.split(' ')[0] || 'Usuário';
-            const city = profile.city || 'Cidade não informada';
-            const timeAgo = this.getTimeAgo(visit.visited_at);
-            const initial = nickname.charAt(0).toUpperCase();
-            const isOnline = this.isUserOnline(profile);
-
-            // Carregar URL do avatar
-            let avatarUrl = null;
-            if (profile.avatar_url) {
-                avatarUrl = await this.loadUserPhoto(profile.avatar_url);
-            }
-
-            return {
-                id: visit.visitor_id,
-                nickname: nickname,
-                city: city,
-                timeAgo: timeAgo,
-                initial: initial,
-                isOnline: isOnline,
-                avatarUrl: avatarUrl,
-                visited_at: visit.visited_at
-            };
-        } catch (error) {
-            console.error('❌ Erro ao criar dados do visitante:', error);
-            return null;
-        }
-    }
-
-    async registrarVisita(perfilVisitadoId) {
-        try {
-            console.log(`👀 Tentando registrar visita para: ${perfilVisitadoId}`);
-            
-            // Validações básicas
-            if (!this.currentUser) {
-                console.error('❌ Usuário não autenticado');
-                return false;
-            }
-            
-            if (perfilVisitadoId === this.currentUser.id) {
-                console.log('ℹ️ Não pode visitar próprio perfil');
-                return false;
-            }
-
-            const visitaData = {
-                visitor_id: this.currentUser.id,
-                visited_id: perfilVisitadoId,
-                visited_at: new Date().toISOString()
-            };
-
-            console.log('📤 Enviando dados da visita:', visitaData);
-
-            const { data, error } = await this.supabase
-                .from('profile_visits')
-                .insert(visitaData)
-                .select()
-                .single();
-
-            if (error) {
-                if (error.code === '23505') {
-                    // Visita duplicada - atualizar timestamp
-                    console.log('🔄 Visita duplicada, atualizando...');
-                    return await this.atualizarVisitaExistente(perfilVisitadoId);
-                }
-                console.error('❌ Erro ao registrar visita:', error);
-                throw error;
-            }
-
-            console.log('✅ Visita registrada com sucesso');
-            
-            // Atualizar contador local se for o próprio usuário
-            if (perfilVisitadoId === this.currentUser.id) {
-                this.visitCount++;
-                this.atualizarUI();
-            }
-            
-            return true;
-            
-        } catch (error) {
-            console.error('❌ Erro ao registrar visita:', error);
-            return false;
-        }
-    }
-
-    async atualizarVisitaExistente(perfilVisitadoId) {
-        try {
-            const { error } = await this.supabase
-                .from('profile_visits')
-                .update({ 
-                    visited_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                })
-                .eq('visitor_id', this.currentUser.id)
-                .eq('visited_id', perfilVisitadoId);
-
-            if (error) throw error;
-
-            console.log('✅ Visita atualizada com sucesso');
-            return true;
-            
-        } catch (error) {
-            console.error('❌ Erro ao atualizar visita:', error);
-            return false;
-        }
     }
 
     atualizarUI() {
         console.log('🎨 Atualizando UI do sistema de visitantes...');
-        console.log('📊 Dados:', {
-            isPremium: this.isPremium,
-            visitCount: this.visitCount,
-            visitantes: this.visitantes.length,
-            initialized: this.initialized
-        });
-
-        // Aguardar o DOM estar completamente carregado
+        
+        // Aguardar o DOM estar pronto
         if (document.readyState === 'loading') {
-            console.log('⏳ DOM ainda carregando, aguardando...');
             document.addEventListener('DOMContentLoaded', () => this.executarAtualizacaoUI());
         } else {
-            this.executarAtualizacaoUI();
+            setTimeout(() => this.executarAtualizacaoUI(), 100);
         }
     }
 
@@ -329,7 +236,6 @@ class HomeVisitanteSystem {
         try {
             console.log('🔄 Executando atualização da UI...');
             
-            // ✅ CORREÇÃO CRÍTICA: Garantir que elementos existem
             const premiumSection = document.getElementById('premiumVisitors');
             const freeSection = document.getElementById('freeVisitors');
             const freeVisitorsCount = document.getElementById('freeVisitorsCount');
@@ -339,26 +245,22 @@ class HomeVisitanteSystem {
             console.log('🔍 Elementos encontrados:', {
                 premiumSection: !!premiumSection,
                 freeSection: !!freeSection,
-                freeVisitorsCount: !!freeVisitorsCount,
                 visitorsCount: !!visitorsCount,
                 visitorsGrid: !!visitorsGrid
             });
 
             if (!premiumSection || !freeSection) {
-                console.error('❌ Elementos principais da UI não encontrados!');
-                console.log('Tentando novamente em 1 segundo...');
-                setTimeout(() => this.executarAtualizacaoUI(), 1000);
+                console.error('❌ Elementos da UI não encontrados!');
                 return;
             }
 
-            // ✅ CORREÇÃO CRÍTICA: Atualizar contador geral
+            // ✅ ATUALIZAR CONTADOR GERAL
             if (visitorsCount) {
                 const countText = this.visitCount === 1 ? '1 visita' : `${this.visitCount} visitas`;
                 visitorsCount.textContent = countText;
-                console.log('📊 Visitors count atualizado:', countText);
             }
 
-            // ✅ CORREÇÃO CRÍTICA: Mostrar seção correta
+            // ✅ MOSTRAR SEÇÃO CORRETA
             if (this.isPremium) {
                 console.log('🔄 Mostrando seção PREMIUM');
                 premiumSection.style.display = 'block';
@@ -367,10 +269,8 @@ class HomeVisitanteSystem {
                 if (visitorsGrid) {
                     if (this.visitantes.length === 0) {
                         visitorsGrid.innerHTML = this.criarHTMLEstadoVazio();
-                        console.log('📭 Mostrando estado vazio para premium');
                     } else {
                         visitorsGrid.innerHTML = this.criarHTMLVisitantes();
-                        console.log(`👥 Renderizando ${this.visitantes.length} visitantes`);
                     }
                 }
             } else {
@@ -381,7 +281,6 @@ class HomeVisitanteSystem {
                 if (freeVisitorsCount) {
                     const countText = this.visitCount === 1 ? '1 pessoa' : `${this.visitCount} pessoas`;
                     freeVisitorsCount.textContent = countText;
-                    console.log('🔢 Free visitors count atualizado:', countText);
                 }
             }
 
@@ -393,8 +292,6 @@ class HomeVisitanteSystem {
     }
 
     criarHTMLVisitantes() {
-        console.log('🎨 Criando HTML para visitantes:', this.visitantes.length);
-        
         if (this.visitantes.length === 0) {
             return this.criarHTMLEstadoVazio();
         }
@@ -432,6 +329,59 @@ class HomeVisitanteSystem {
         `;
     }
 
+    // ==================== FUNÇÕES DE REGISTRO DE VISITAS ====================
+    async registrarVisita(perfilVisitadoId) {
+        try {
+            console.log(`👀 Registrando visita para: ${perfilVisitadoId}`);
+            
+            if (!this.currentUser || perfilVisitadoId === this.currentUser.id) {
+                return false;
+            }
+
+            // Usar função RPC do SQL
+            const { data, error } = await this.supabase.rpc(
+                'register_visit_simple', {
+                    p_visitor_id: this.currentUser.id,
+                    p_visited_id: perfilVisitadoId
+                }
+            );
+
+            if (error) {
+                console.error('❌ Erro RPC:', error);
+                // Fallback para insert direto
+                return await this.registrarVisitaFallback(perfilVisitadoId);
+            }
+
+            console.log('✅ Visita registrada:', data);
+            return data?.success || false;
+            
+        } catch (error) {
+            console.error('❌ Erro ao registrar visita:', error);
+            return false;
+        }
+    }
+
+    async registrarVisitaFallback(perfilVisitadoId) {
+        try {
+            const { error } = await this.supabase
+                .from('profile_visits')
+                .upsert({
+                    visitor_id: this.currentUser.id,
+                    visited_id: perfilVisitadoId,
+                    visited_at: new Date().toISOString(),
+                    visit_date: new Date().toISOString().split('T')[0]
+                }, {
+                    onConflict: 'visitor_id,visited_id,visit_date',
+                    ignoreDuplicates: false
+                });
+
+            return !error;
+        } catch (error) {
+            console.error('❌ Erro no fallback:', error);
+            return false;
+        }
+    }
+
     // ==================== UTILITÁRIOS ====================
     async loadUserPhoto(avatarUrl) {
         try {
@@ -439,7 +389,6 @@ class HomeVisitanteSystem {
             const { data } = this.supabase.storage.from('avatars').getPublicUrl(avatarUrl);
             return data?.publicUrl || null;
         } catch (error) {
-            console.error('❌ Erro ao carregar foto:', error);
             return null;
         }
     }
@@ -450,11 +399,7 @@ class HomeVisitanteSystem {
             const lastOnline = new Date(userProfile.last_online_at);
             const now = new Date();
             const minutesDiff = (now - lastOnline) / (1000 * 60);
-            const isActuallyOnline = minutesDiff <= 5;
-            
-            if (userProfile.id === this.currentUser.id) return true;
-            if (userProfile.is_invisible && userProfile.id !== this.currentUser.id) return false;
-            return isActuallyOnline;
+            return minutesDiff <= 5;
         } catch (error) {
             return false;
         }
@@ -464,13 +409,16 @@ class HomeVisitanteSystem {
         try {
             const date = new Date(dateString);
             const now = new Date();
-            const diffInSeconds = Math.floor((now - date) / 1000);
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
             
-            if (diffInSeconds < 60) return 'Agora mesmo';
-            else if (diffInSeconds < 3600) return `Há ${Math.floor(diffInSeconds / 60)} min`;
-            else if (diffInSeconds < 86400) return `Há ${Math.floor(diffInSeconds / 3600)} h`;
-            else if (diffInSeconds < 2592000) return `Há ${Math.floor(diffInSeconds / 86400)} dia${Math.floor(diffInSeconds / 86400) !== 1 ? 's' : ''}`;
-            else return `Há ${Math.floor(diffInSeconds / 2592000)} mês${Math.floor(diffInSeconds / 2592000) !== 1 ? 'es' : ''}`;
+            if (diffMins < 1) return 'Agora mesmo';
+            if (diffMins < 60) return `${diffMins} min`;
+            if (diffHours < 24) return `${diffHours} h`;
+            if (diffDays < 7) return `${diffDays} dia${diffDays !== 1 ? 's' : ''}`;
+            return `${Math.floor(diffDays / 7)} semana${Math.floor(diffDays / 7) !== 1 ? 's' : ''}`;
         } catch (error) {
             return 'Recentemente';
         }
@@ -486,7 +434,10 @@ class HomeVisitanteSystem {
     // ==================== MÉTODOS PÚBLICOS ====================
     async recarregar() {
         console.log('🔄 Recarregando sistema de visitantes...');
-        await this.carregarSistemaVisitantes();
+        await this.carregarContadorVisitas();
+        if (this.isPremium) {
+            await this.carregarVisitantesPremium();
+        }
         this.atualizarUI();
     }
 
@@ -501,22 +452,12 @@ class HomeVisitanteSystem {
     getVisitantes() {
         return this.visitantes;
     }
-
-    // ✅ NOVO: Atualizar estatísticas para Free users
-    async atualizarEstatisticasFree() {
-        if (!this.isPremium) {
-            await this.carregarEstatisticasFree();
-            this.atualizarUI();
-        }
-    }
 }
 
 // ==================== INICIALIZAÇÃO GLOBAL ====================
 async function inicializarSistemaVisitantes(supabase, currentUser) {
     console.log('🌐 inicializarSistemaVisitantes CHAMADA!');
-    console.log('📡 Supabase:', supabase ? 'OK' : 'FALHO');
-    console.log('👤 CurrentUser:', currentUser?.id);
-
+    
     if (!supabase || !currentUser) {
         console.error('❌ Parâmetros inválidos para inicialização');
         return null;
@@ -546,7 +487,6 @@ function registrarVisitaPerfil(perfilVisitadoId) {
         return window.visitanteSystem.registrarVisita(perfilVisitadoId);
     } else {
         console.warn('⚠️ Sistema de visitantes não disponível');
-        console.error('❌ Não é possível registrar visita sem sistema inicializado');
         return Promise.resolve(false);
     }
 }
@@ -555,7 +495,6 @@ function recarregarVisitantes() {
     if (window.visitanteSystem) {
         return window.visitanteSystem.recarregar();
     }
-    console.warn('⚠️ Sistema de visitantes não disponível para recarregar');
     return Promise.resolve();
 }
 
@@ -566,28 +505,11 @@ function getContadorVisitantes() {
     return 0;
 }
 
-function atualizarEstatisticasVisitantes() {
-    if (window.visitanteSystem) {
-        return window.visitanteSystem.atualizarEstatisticasFree();
-    }
-    return Promise.resolve();
-}
-
 // ==================== EXPORTAÇÕES GLOBAIS ====================
 window.HomeVisitanteSystem = HomeVisitanteSystem;
 window.inicializarSistemaVisitantes = inicializarSistemaVisitantes;
 window.registrarVisitaPerfil = registrarVisitaPerfil;
 window.recarregarVisitantes = recarregarVisitantes;
 window.getContadorVisitantes = getContadorVisitantes;
-window.atualizarEstatisticasVisitantes = atualizarEstatisticasVisitantes;
 
 console.log('✅ home-visitante.js carregado e pronto!');
-
-// Auto-inicialização quando o DOM estiver pronto
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('🏠 DOM carregado - Sistema de visitantes pronto para inicialização');
-    });
-} else {
-    console.log('🏠 DOM já carregado - Sistema de visitantes pronto para inicialização');
-}
