@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acesso Admin - Amor Conect</title>
     <style>
-        /* (MANTENHA O MESMO CSS QUE VOCÊ GOSTOU) */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI'; }
         body { background: linear-gradient(135deg, #d1656d 0%, #dfc9ed 100%); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
         .login-container { background: white; padding: 3rem; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); text-align: center; max-width: 400px; width: 100%; }
@@ -53,12 +52,15 @@
             const password = document.getElementById('password').value;
             const errorMsg = document.getElementById('errorMsg');
             
-            // 🔐 SENHA OFUSCADA - DIFÍCIL DE IDENTIFICAR NO CÓDIGO
+            // 🔐 SENHA CORRIGIDA - AGORA FUNCIONA!
             const usuarioCorreto = 'bruno' + '666' + '333';
-            const parte1 = 'A1' + (4 + 4) + '8'; // A148
-            const parte2 = '00' + (5 + 2) + '0' + (5 + 2); // 00707  
+            const parte1 = 'A' + '1' + '4' + '8'; // A148
+            const parte2 = '0' + '0' + '7' + '0' + '7'; // 00707  
             const parte3 = 'z' + 'x' + '$';
             const senhaCorreta = parte1 + parte2 + parte3;
+            
+            console.log('Senha esperada:', senhaCorreta); // A14800707zx$
+            console.log('Senha digitada:', password);
             
             if (username === usuarioCorreto && password === senhaCorreta) {
                 window.location.href = 'admin.html';
