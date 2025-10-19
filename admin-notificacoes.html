@@ -839,7 +839,7 @@
                 <div style="max-width: 800px; margin: 0 auto;">
                     <h3 style="color: var(--primary); margin-bottom: 2rem;">✉️ Enviar Notificação</h3>
                     
-                    <form onsubmit="enviarNotificacaoAvancada(event)">
+                    <form id="sendNotificationForm" onsubmit="enviarNotificacaoAvancada(event)">
                         
                         <!-- SELEÇÃO DE DESTINATÁRIOS -->
                         <div style="background: var(--light-gray); padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem;">
@@ -1209,6 +1209,13 @@
         event.preventDefault();
         
         const tipoEnvio = document.getElementById('tipoEnvio').value;
+        
+        // VALIDAÇÃO ADICIONADA
+        if (!tipoEnvio) {
+            alert('Selecione o tipo de envio (destinatários)');
+            return;
+        }
+        
         let userIDs = [];
         
         // Coletar IDs baseado no tipo de envio
@@ -1245,7 +1252,6 @@
             message: document.getElementById('mensagemNotificacao').value,
             priority: document.getElementById('prioridadeNotificacao').value,
             retention_days: parseInt(document.getElementById('retencaoNotificacao').value)
-            // CORREÇÃO: REMOVIDO created_by: 'admin' - CAUSAVA O ERRO
         };
         
         // Confirmação para envio em massa
@@ -1271,9 +1277,15 @@
             
             alert(`✅ Notificação enviada para ${userIDs.length} usuário(s)!`);
             
-            // Limpar formulário
-            document.getElementById('sendNotificationForm').reset();
+            // CORREÇÃO DO ERRO: Limpar formulário corretamente
+            const form = document.getElementById('sendNotificationForm');
+            if (form) {
+                form.reset();
+            }
+            
+            // Limpar seleções
             localStorage.removeItem('usuarioSelecionado');
+            document.getElementById('resultadosBusca').innerHTML = '';
             
             // Atualizar estatísticas
             carregarEstatisticas();
@@ -1373,6 +1385,6 @@
         console.log('👑 Painel Admin iniciado');
         inicializarAdmin();
     });
-</script>
-</body>
-</html>
+    </script>
+    </body>
+    </html>
