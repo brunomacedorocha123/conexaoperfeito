@@ -405,394 +405,409 @@
     </div>
 
     <script>
-        // ==================== CONFIGURAÇÃO SUPABASE ====================
-        const supabaseUrl = 'https://gcukalndarlgydmgmmmt.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    // ==================== CONFIGURAÇÃO SUPABASE ====================
+    const supabaseUrl = 'https://gcukalndarlgydmgmmmt.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        let currentAdmin = null;
+    let currentAdmin = null;
 
-        // ==================== FUNÇÕES PRINCIPAIS ====================
-
-        async function inicializarAdmin() {
-            try {
-                // Verificar se é admin
-                const { data: { user }, error } = await supabase.auth.getUser();
-                if (error || !user) {
-                    window.location.href = 'login.html';
-                    return;
-                }
-                currentAdmin = user;
-
-                // Carregar dados iniciais
-                await carregarEstatisticas();
-                await carregarVisaoGeral();
-                
-                // Atualizar a cada 30 segundos
-                setInterval(carregarEstatisticas, 30000);
-
-            } catch (error) {
-                console.error('Erro na inicialização:', error);
-                mostrarErro('overviewContent', 'Erro ao carregar painel administrativo');
+    // ==================== VERIFICAÇÃO DE AUTENTICAÇÃO ====================
+    async function verificarAutenticacao() {
+        try {
+            const { data: { user }, error } = await supabase.auth.getUser();
+            if (error || !user) {
+                window.location.href = 'login-admin.html';
+                return false;
             }
+            return true;
+        } catch (error) {
+            console.error('Erro na autenticação:', error);
+            window.location.href = 'login-admin.html';
+            return false;
         }
+    }
 
-        async function carregarEstatisticas() {
-            try {
-                // Total de notificações
-                const { count: totalNotificacoes } = await supabase
-                    .from('user_notifications')
-                    .select('*', { count: 'exact', head: true });
+    // ==================== FUNÇÕES PRINCIPAIS ====================
 
-                // Notificações não lidas
-                const { count: naoLidas } = await supabase
-                    .from('user_notifications')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('is_read', false);
+    async function inicializarAdmin() {
+        try {
+            currentAdmin = (await supabase.auth.getUser()).data.user;
 
-                // Total de usuários
-                const { count: totalUsuarios } = await supabase
-                    .from('profiles')
-                    .select('*', { count: 'exact', head: true });
-
-                // Templates ativos
-                const { count: templatesAtivos } = await supabase
-                    .from('notification_templates')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('is_active', true);
-
-                // Atualizar interface
-                document.getElementById('totalNotifications').textContent = totalNotificacoes || 0;
-                document.getElementById('unreadNotifications').textContent = naoLidas || 0;
-                document.getElementById('totalUsers').textContent = totalUsuarios || 0;
-                document.getElementById('activeTemplates').textContent = templatesAtivos || 0;
-
-                document.getElementById('lastUpdate').textContent = 
-                    `Última atualização: ${new Date().toLocaleString('pt-BR')}`;
-
-            } catch (error) {
-                console.error('Erro ao carregar estatísticas:', error);
-            }
-        }
-
-        async function carregarVisaoGeral() {
-            const container = document.getElementById('overviewContent');
+            // Carregar dados iniciais
+            await carregarEstatisticas();
+            await carregarVisaoGeral();
             
-            try {
-                // Buscar últimas notificações
-                const { data: notificacoes, error } = await supabase
-                    .from('user_notifications')
-                    .select(`
-                        *,
-                        user:user_id(nickname, avatar_url),
-                        created_by_admin:created_by(nickname)
-                    `)
-                    .order('created_at', { ascending: false })
-                    .limit(10);
+            // Atualizar a cada 30 segundos
+            setInterval(carregarEstatisticas, 30000);
 
-                if (error) throw error;
-
-                let html = '<h3 style="margin-bottom: 1rem; color: var(--primary);">Últimas Notificações</h3>';
-                
-                if (!notificacoes || notificacoes.length === 0) {
-                    html += `
-                        <div class="empty-state">
-                            <div class="icon">📭</div>
-                            <p>Nenhuma notificação no sistema</p>
-                        </div>
-                    `;
-                } else {
-                    html += '<div class="notifications-grid">';
-                    
-                    notificacoes.forEach(notificacao => {
-                        html += `
-                            <div class="notification-item">
-                                <div class="notification-header">
-                                    <div class="notification-title">${notificacao.title}</div>
-                                    <div class="notification-meta">
-                                        <span class="notification-badge">${notificacao.category}</span>
-                                        <span>${formatarData(notificacao.created_at)}</span>
-                                        ${notificacao.is_read ? '<span>✅ Lida</span>' : '<span>🔴 Não lida</span>'}
-                                    </div>
-                                </div>
-                                <div class="notification-message">${notificacao.message}</div>
-                                <div class="notification-meta">
-                                    <small>Para: ${notificacao.user?.nickname || 'Usuário'}</small>
-                                    ${notificacao.created_by_admin ? `<small>Criada por: ${notificacao.created_by_admin.nickname}</small>` : ''}
-                                </div>
-                            </div>
-                        `;
-                    });
-                    
-                    html += '</div>';
-                }
-
-                container.innerHTML = html;
-
-            } catch (error) {
-                mostrarErro('overviewContent', 'Erro ao carregar visão geral');
-            }
+        } catch (error) {
+            console.error('Erro na inicialização:', error);
+            mostrarErro('overviewContent', 'Erro ao carregar painel administrativo');
         }
+    }
 
-        // ==================== ABA: GERENCIAR NOTIFICAÇÕES ====================
+    async function carregarEstatisticas() {
+        try {
+            // Total de notificações
+            const { count: totalNotificacoes } = await supabase
+                .from('user_notifications')
+                .select('*', { count: 'exact', head: true });
 
-        async function carregarNotificacoes() {
-            const container = document.getElementById('notificationsContent');
+            // Notificações não lidas
+            const { count: naoLidas } = await supabase
+                .from('user_notifications')
+                .select('*', { count: 'exact', head: true })
+                .eq('is_read', false);
+
+            // Total de usuários
+            const { count: totalUsuarios } = await supabase
+                .from('profiles')
+                .select('*', { count: 'exact', head: true });
+
+            // Templates ativos
+            const { count: templatesAtivos } = await supabase
+                .from('notification_templates')
+                .select('*', { count: 'exact', head: true })
+                .eq('is_active', true);
+
+            // Atualizar interface
+            document.getElementById('totalNotifications').textContent = totalNotificacoes || 0;
+            document.getElementById('unreadNotifications').textContent = naoLidas || 0;
+            document.getElementById('totalUsers').textContent = totalUsuarios || 0;
+            document.getElementById('activeTemplates').textContent = templatesAtivos || 0;
+
+            document.getElementById('lastUpdate').textContent = 
+                `Última atualização: ${new Date().toLocaleString('pt-BR')}`;
+
+        } catch (error) {
+            console.error('Erro ao carregar estatísticas:', error);
+        }
+    }
+
+    async function carregarVisaoGeral() {
+        const container = document.getElementById('overviewContent');
+        
+        try {
+            // Buscar últimas notificações
+            const { data: notificacoes, error } = await supabase
+                .from('user_notifications')
+                .select(`
+                    *,
+                    user:user_id(nickname, avatar_url),
+                    created_by_admin:created_by(nickname)
+                `)
+                .order('created_at', { ascending: false })
+                .limit(10);
+
+            if (error) throw error;
+
+            let html = '<h3 style="margin-bottom: 1rem; color: var(--primary);">Últimas Notificações</h3>';
             
-            try {
-                container.innerHTML = `
-                    <div class="loading">
-                        <div class="spinner"></div>
-                        <p>Carregando notificações...</p>
+            if (!notificacoes || notificacoes.length === 0) {
+                html += `
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <p>Nenhuma notificação no sistema</p>
                     </div>
                 `;
-
-                // Buscar TODAS as notificações do sistema
-                const { data: notificacoes, error } = await supabase
-                    .from('user_notifications')
-                    .select(`
-                        *,
-                        user:user_id(nickname, avatar_url),
-                        created_by_admin:created_by(nickname),
-                        related_user:related_user_id(nickname)
-                    `)
-                    .order('created_at', { ascending: false })
-                    .limit(100);
-
-                if (error) throw error;
-
-                if (!notificacoes || notificacoes.length === 0) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <div class="icon">📭</div>
-                            <h3>Nenhuma notificação</h3>
-                            <p>Não há notificações no sistema.</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                let html = `
-                    <div style="margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                        <button class="btn btn-primary" onclick="filtrarNotificacoes('all')">
-                            📨 Todas (${notificacoes.length})
-                        </button>
-                        <button class="btn" onclick="filtrarNotificacoes('unread')" style="background: var(--danger); color: white;">
-                            🔴 Não Lidas (${notificacoes.filter(n => !n.is_read).length})
-                        </button>
-                        <button class="btn" onclick="filtrarNotificacoes('read')" style="background: var(--success); color: white;">
-                            ✅ Lidas (${notificacoes.filter(n => n.is_read).length})
-                        </button>
-                    </div>
-                    <div class="notifications-grid" id="notificationsList">
-                `;
-
+            } else {
+                html += '<div class="notifications-grid">';
+                
                 notificacoes.forEach(notificacao => {
-                    const badgeColor = {
-                        'interactions': '#e9d8fd',
-                        'bonus': '#c6f6d5', 
-                        'warnings': '#fed7d7',
-                        'security': '#fed7d7',
-                        'system': '#bee3f8'
-                    }[notificacao.category] || '#e2e8f0';
-
                     html += `
-                        <div class="notification-item" data-id="${notificacao.id}" data-read="${notificacao.is_read}">
+                        <div class="notification-item">
                             <div class="notification-header">
                                 <div class="notification-title">${notificacao.title}</div>
                                 <div class="notification-meta">
-                                    <span class="notification-badge" style="background: ${badgeColor}; color: #333;">${notificacao.category}</span>
+                                    <span class="notification-badge">${notificacao.category}</span>
                                     <span>${formatarData(notificacao.created_at)}</span>
-                                    ${notificacao.is_read ? '<span>✅ Lida</span>' : '<span style="color: var(--danger);">🔴 Não lida</span>'}
+                                    ${notificacao.is_read ? '<span>✅ Lida</span>' : '<span>🔴 Não lida</span>'}
                                 </div>
                             </div>
                             <div class="notification-message">${notificacao.message}</div>
                             <div class="notification-meta">
-                                <small><strong>Para:</strong> ${notificacao.user?.nickname || 'Usuário'} (ID: ${notificacao.user_id})</small>
-                                ${notificacao.related_user ? `<small><strong>Relacionado:</strong> ${notificacao.related_user.nickname}</small>` : ''}
-                                ${notificacao.created_by_admin ? `<small><strong>Criada por:</strong> ${notificacao.created_by_admin.nickname}</small>` : ''}
-                                <small><strong>Expira:</strong> ${formatarData(notificacao.expires_at)}</small>
-                            </div>
-                            <div class="notification-actions">
-                                ${!notificacao.is_read ? `
-                                    <button class="btn btn-success" onclick="marcarComoLida('${notificacao.id}')">
-                                        ✅ Marcar como Lida
-                                    </button>
-                                ` : ''}
-                                <button class="btn btn-danger" onclick="excluirNotificacao('${notificacao.id}')">
-                                    🗑️ Excluir
-                                </button>
+                                <small>Para: ${notificacao.user?.nickname || 'Usuário'}</small>
+                                ${notificacao.created_by_admin ? `<small>Criada por: ${notificacao.created_by_admin.nickname}</small>` : ''}
                             </div>
                         </div>
                     `;
                 });
-
+                
                 html += '</div>';
-                container.innerHTML = html;
+            }
 
-            } catch (error) {
-                console.error('Erro ao carregar notificações:', error);
+            container.innerHTML = html;
+
+        } catch (error) {
+            mostrarErro('overviewContent', 'Erro ao carregar visão geral');
+        }
+    }
+
+    // ==================== ABA: GERENCIAR NOTIFICAÇÕES ====================
+
+    async function carregarNotificacoes() {
+        const container = document.getElementById('notificationsContent');
+        
+        try {
+            container.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Carregando notificações...</p>
+                </div>
+            `;
+
+            // Buscar TODAS as notificações do sistema
+            const { data: notificacoes, error } = await supabase
+                .from('user_notifications')
+                .select(`
+                    *,
+                    user:user_id(nickname, avatar_url),
+                    created_by_admin:created_by(nickname),
+                    related_user:related_user_id(nickname)
+                `)
+                .order('created_at', { ascending: false })
+                .limit(100);
+
+            if (error) throw error;
+
+            if (!notificacoes || notificacoes.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
-                        <div class="icon">❌</div>
-                        <h3>Erro ao carregar</h3>
-                        <p>${error.message}</p>
-                        <button class="btn btn-primary" onclick="carregarNotificacoes()" style="margin-top: 1rem;">
-                            🔄 Tentar Novamente
-                        </button>
+                        <div class="icon">📭</div>
+                        <h3>Nenhuma notificação</h3>
+                        <p>Não há notificações no sistema.</p>
                     </div>
                 `;
-            }
-        }
-
-        function filtrarNotificacoes(filtro) {
-            const notificacoes = document.querySelectorAll('.notification-item');
-            
-            notificacoes.forEach(notificacao => {
-                switch(filtro) {
-                    case 'unread':
-                        notificacao.style.display = notificacao.dataset.read === 'false' ? 'block' : 'none';
-                        break;
-                    case 'read':
-                        notificacao.style.display = notificacao.dataset.read === 'true' ? 'block' : 'none';
-                        break;
-                    default:
-                        notificacao.style.display = 'block';
-                }
-            });
-        }
-
-        async function marcarComoLida(notificacaoId) {
-            try {
-                const { error } = await supabase
-                    .from('user_notifications')
-                    .update({ 
-                        is_read: true,
-                        read_at: new Date().toISOString()
-                    })
-                    .eq('id', notificacaoId);
-
-                if (error) throw error;
-
-                // Atualizar UI
-                const notificacaoElement = document.querySelector(`[data-id="${notificacaoId}"]`);
-                if (notificacaoElement) {
-                    notificacaoElement.dataset.read = 'true';
-                    notificacaoElement.querySelector('.btn-success')?.remove();
-                }
-
-                alert('✅ Notificação marcada como lida!');
-                carregarEstatisticas();
-
-            } catch (error) {
-                console.error('Erro ao marcar como lida:', error);
-                alert('❌ Erro ao marcar como lida: ' + error.message);
-            }
-        }
-
-        async function excluirNotificacao(notificacaoId) {
-            if (!confirm('Tem certeza que deseja excluir esta notificação?\n\nEsta ação não pode ser desfeita.')) {
                 return;
             }
 
-            try {
-                const { error } = await supabase
-                    .from('user_notifications')
-                    .delete()
-                    .eq('id', notificacaoId);
+            let html = `
+                <div style="margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="filtrarNotificacoes('all')">
+                        📨 Todas (${notificacoes.length})
+                    </button>
+                    <button class="btn" onclick="filtrarNotificacoes('unread')" style="background: var(--danger); color: white;">
+                        🔴 Não Lidas (${notificacoes.filter(n => !n.is_read).length})
+                    </button>
+                    <button class="btn" onclick="filtrarNotificacoes('read')" style="background: var(--success); color: white;">
+                        ✅ Lidas (${notificacoes.filter(n => n.is_read).length})
+                    </button>
+                </div>
+                <div class="notifications-grid" id="notificationsList">
+            `;
 
-                if (error) throw error;
+            notificacoes.forEach(notificacao => {
+                const badgeColor = {
+                    'interactions': '#e9d8fd',
+                    'bonus': '#c6f6d5', 
+                    'warnings': '#fed7d7',
+                    'security': '#fed7d7',
+                    'system': '#bee3f8'
+                }[notificacao.category] || '#e2e8f0';
 
-                document.querySelector(`[data-id="${notificacaoId}"]`)?.remove();
-                alert('✅ Notificação excluída com sucesso!');
-                carregarEstatisticas();
-
-            } catch (error) {
-                console.error('Erro ao excluir notificação:', error);
-                alert('❌ Erro ao excluir notificação: ' + error.message);
-            }
-        }
-
-        function showTab(tabName) {
-            // Esconder todas as abas
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
+                html += `
+                    <div class="notification-item" data-id="${notificacao.id}" data-read="${notificacao.is_read}">
+                        <div class="notification-header">
+                            <div class="notification-title">${notificacao.title}</div>
+                            <div class="notification-meta">
+                                <span class="notification-badge" style="background: ${badgeColor}; color: #333;">${notificacao.category}</span>
+                                <span>${formatarData(notificacao.created_at)}</span>
+                                ${notificacao.is_read ? '<span>✅ Lida</span>' : '<span style="color: var(--danger);">🔴 Não lida</span>'}
+                            </div>
+                        </div>
+                        <div class="notification-message">${notificacao.message}</div>
+                        <div class="notification-meta">
+                            <small><strong>Para:</strong> ${notificacao.user?.nickname || 'Usuário'} (ID: ${notificacao.user_id})</small>
+                            ${notificacao.related_user ? `<small><strong>Relacionado:</strong> ${notificacao.related_user.nickname}</small>` : ''}
+                            ${notificacao.created_by_admin ? `<small><strong>Criada por:</strong> ${notificacao.created_by_admin.nickname}</small>` : ''}
+                            <small><strong>Expira:</strong> ${formatarData(notificacao.expires_at)}</small>
+                        </div>
+                        <div class="notification-actions">
+                            ${!notificacao.is_read ? `
+                                <button class="btn btn-success" onclick="marcarComoLida('${notificacao.id}')">
+                                    ✅ Marcar como Lida
+                                </button>
+                            ` : ''}
+                            <button class="btn btn-danger" onclick="excluirNotificacao('${notificacao.id}')">
+                                🗑️ Excluir
+                            </button>
+                        </div>
+                    </div>
+                `;
             });
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
 
-            // Mostrar aba selecionada
-            document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
+            html += '</div>';
+            container.innerHTML = html;
 
-            // Carregar conteúdo específico da aba
-            switch(tabName) {
-                case 'notifications':
-                    carregarNotificacoes();
-                    break;
-                case 'templates':
-                    carregarTemplates();
-                    break;
-                case 'send':
-                    carregarFormularioEnvio();
-                    break;
-            }
-        }
-
-        function carregarTudo() {
-            carregarEstatisticas();
-            carregarVisaoGeral();
-        }
-
-        function formatarData(data) {
-            return new Date(data).toLocaleString('pt-BR');
-        }
-
-        function mostrarErro(containerId, mensagem) {
-            document.getElementById(containerId).innerHTML = `
+        } catch (error) {
+            console.error('Erro ao carregar notificações:', error);
+            container.innerHTML = `
                 <div class="empty-state">
                     <div class="icon">❌</div>
-                    <h3>Erro</h3>
-                    <p>${mensagem}</p>
-                    <button class="btn btn-primary" onclick="carregarTudo()" style="margin-top: 1rem;">
+                    <h3>Erro ao carregar</h3>
+                    <p>${error.message}</p>
+                    <button class="btn btn-primary" onclick="carregarNotificacoes()" style="margin-top: 1rem;">
                         🔄 Tentar Novamente
                     </button>
                 </div>
             `;
         }
+    }
 
-        // ==================== INICIALIZAÇÃO ====================
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('👑 Painel Admin iniciado');
-            inicializarAdmin();
+    function filtrarNotificacoes(filtro) {
+        const notificacoes = document.querySelectorAll('.notification-item');
+        
+        notificacoes.forEach(notificacao => {
+            switch(filtro) {
+                case 'unread':
+                    notificacao.style.display = notificacao.dataset.read === 'false' ? 'block' : 'none';
+                    break;
+                case 'read':
+                    notificacao.style.display = notificacao.dataset.read === 'true' ? 'block' : 'none';
+                    break;
+                default:
+                    notificacao.style.display = 'block';
+            }
+        });
+    }
+
+    async function marcarComoLida(notificacaoId) {
+        try {
+            const { error } = await supabase
+                .from('user_notifications')
+                .update({ 
+                    is_read: true,
+                    read_at: new Date().toISOString()
+                })
+                .eq('id', notificacaoId);
+
+            if (error) throw error;
+
+            // Atualizar UI
+            const notificacaoElement = document.querySelector(`[data-id="${notificacaoId}"]`);
+            if (notificacaoElement) {
+                notificacaoElement.dataset.read = 'true';
+                notificacaoElement.querySelector('.btn-success')?.remove();
+            }
+
+            alert('✅ Notificação marcada como lida!');
+            carregarEstatisticas();
+
+        } catch (error) {
+            console.error('Erro ao marcar como lida:', error);
+            alert('❌ Erro ao marcar como lida: ' + error.message);
+        }
+    }
+
+    async function excluirNotificacao(notificacaoId) {
+        if (!confirm('Tem certeza que deseja excluir esta notificação?\n\nEsta ação não pode ser desfeita.')) {
+            return;
+        }
+
+        try {
+            const { error } = await supabase
+                .from('user_notifications')
+                .delete()
+                .eq('id', notificacaoId);
+
+            if (error) throw error;
+
+            document.querySelector(`[data-id="${notificacaoId}"]`)?.remove();
+            alert('✅ Notificação excluída com sucesso!');
+            carregarEstatisticas();
+
+        } catch (error) {
+            console.error('Erro ao excluir notificação:', error);
+            alert('❌ Erro ao excluir notificação: ' + error.message);
+        }
+    }
+
+    function showTab(tabName) {
+        // Esconder todas as abas
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
         });
 
-        // Funções placeholder para as outras abas
-        async function carregarTemplates() {
-            document.getElementById('templatesContent').innerHTML = `
-                <div class="empty-state">
-                    <div class="icon">🛠️</div>
-                    <h3>Em Desenvolvimento</h3>
-                    <p>Esta funcionalidade está sendo implementada...</p>
-                </div>
-            `;
-        }
+        // Mostrar aba selecionada
+        document.getElementById(tabName).classList.add('active');
+        event.target.classList.add('active');
 
-        async function carregarFormularioEnvio() {
-            document.getElementById('sendContent').innerHTML = `
-                <div class="empty-state">
-                    <div class="icon">🛠️</div>
-                    <h3>Em Desenvolvimento</h3>
-                    <p>Esta funcionalidade está sendo implementada...</p>
-                </div>
-            `;
+        // Carregar conteúdo específico da aba
+        switch(tabName) {
+            case 'notifications':
+                carregarNotificacoes();
+                break;
+            case 'templates':
+                carregarTemplates();
+                break;
+            case 'send':
+                carregarFormularioEnvio();
+                break;
         }
+    }
 
-        function mostrarModalTemplate() {
-            alert('Modal de template será implementado na próxima etapa...');
-        }
+    function carregarTudo() {
+        carregarEstatisticas();
+        carregarVisaoGeral();
+    }
 
-    </script>
+    function formatarData(data) {
+        return new Date(data).toLocaleString('pt-BR');
+    }
+
+    function mostrarErro(containerId, mensagem) {
+        document.getElementById(containerId).innerHTML = `
+            <div class="empty-state">
+                <div class="icon">❌</div>
+                <h3>Erro</h3>
+                <p>${mensagem}</p>
+                <button class="btn btn-primary" onclick="carregarTudo()" style="margin-top: 1rem;">
+                    🔄 Tentar Novamente
+                </button>
+            </div>
+        `;
+    }
+
+    // ==================== INICIALIZAÇÃO ====================
+    document.addEventListener('DOMContentLoaded', async function() {
+        console.log('👑 Painel Admin iniciado');
+        
+        // Primeiro verifica se está autenticado
+        const autenticado = await verificarAutenticacao();
+        if (!autenticado) return;
+        
+        // Se estiver autenticado, inicializa o painel
+        await inicializarAdmin();
+    });
+
+    // Funções placeholder para as outras abas
+    async function carregarTemplates() {
+        document.getElementById('templatesContent').innerHTML = `
+            <div class="empty-state">
+                <div class="icon">🛠️</div>
+                <h3>Em Desenvolvimento</h3>
+                <p>Esta funcionalidade está sendo implementada...</p>
+            </div>
+        `;
+    }
+
+    async function carregarFormularioEnvio() {
+        document.getElementById('sendContent').innerHTML = `
+            <div class="empty-state">
+                <div class="icon">🛠️</div>
+                <h3>Em Desenvolvimento</h3>
+                <p>Esta funcionalidade está sendo implementada...</p>
+            </div>
+        `;
+    }
+
+    function mostrarModalTemplate() {
+        alert('Modal de template será implementado na próxima etapa...');
+    }
+</script>
 </body>
 </html>
