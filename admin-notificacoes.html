@@ -208,7 +208,6 @@
             opacity: 0.5;
         }
 
-        /* Grid de notificações */
         .notifications-grid {
             display: grid;
             gap: 1rem;
@@ -336,9 +335,6 @@
             <button class="tab-btn" onclick="showTab('send')">
                 ✉️ Enviar Notificação
             </button>
-            <button class="tab-btn" onclick="showTab('users')">
-                👥 Gerenciar Usuários
-            </button>
         </div>
 
         <!-- Conteúdo das Abas -->
@@ -402,22 +398,6 @@
                 <div class="loading">
                     <div class="spinner"></div>
                     <p>Carregando formulário...</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- ABA 5: Gerenciar Usuários -->
-        <div id="users" class="tab-content">
-            <div class="section-title">
-                <h2>👥 Gerenciar Usuários</h2>
-                <button class="btn btn-primary" onclick="carregarUsuarios()">
-                    🔄 Atualizar
-                </button>
-            </div>
-            <div id="usersContent">
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p>Carregando usuários...</p>
                 </div>
             </div>
         </div>
@@ -554,6 +534,185 @@
             }
         }
 
+        // ==================== ABA: GERENCIAR NOTIFICAÇÕES ====================
+
+        async function carregarNotificacoes() {
+            const container = document.getElementById('notificationsContent');
+            
+            try {
+                container.innerHTML = `
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Carregando notificações...</p>
+                    </div>
+                `;
+
+                // Buscar TODAS as notificações do sistema
+                const { data: notificacoes, error } = await supabase
+                    .from('user_notifications')
+                    .select(`
+                        *,
+                        user:user_id(nickname, avatar_url),
+                        created_by_admin:created_by(nickname),
+                        related_user:related_user_id(nickname)
+                    `)
+                    .order('created_at', { ascending: false })
+                    .limit(100);
+
+                if (error) throw error;
+
+                if (!notificacoes || notificacoes.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">📭</div>
+                            <h3>Nenhuma notificação</h3>
+                            <p>Não há notificações no sistema.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = `
+                    <div style="margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <button class="btn btn-primary" onclick="filtrarNotificacoes('all')">
+                            📨 Todas (${notificacoes.length})
+                        </button>
+                        <button class="btn" onclick="filtrarNotificacoes('unread')" style="background: var(--danger); color: white;">
+                            🔴 Não Lidas (${notificacoes.filter(n => !n.is_read).length})
+                        </button>
+                        <button class="btn" onclick="filtrarNotificacoes('read')" style="background: var(--success); color: white;">
+                            ✅ Lidas (${notificacoes.filter(n => n.is_read).length})
+                        </button>
+                    </div>
+                    <div class="notifications-grid" id="notificationsList">
+                `;
+
+                notificacoes.forEach(notificacao => {
+                    const badgeColor = {
+                        'interactions': '#e9d8fd',
+                        'bonus': '#c6f6d5', 
+                        'warnings': '#fed7d7',
+                        'security': '#fed7d7',
+                        'system': '#bee3f8'
+                    }[notificacao.category] || '#e2e8f0';
+
+                    html += `
+                        <div class="notification-item" data-id="${notificacao.id}" data-read="${notificacao.is_read}">
+                            <div class="notification-header">
+                                <div class="notification-title">${notificacao.title}</div>
+                                <div class="notification-meta">
+                                    <span class="notification-badge" style="background: ${badgeColor}; color: #333;">${notificacao.category}</span>
+                                    <span>${formatarData(notificacao.created_at)}</span>
+                                    ${notificacao.is_read ? '<span>✅ Lida</span>' : '<span style="color: var(--danger);">🔴 Não lida</span>'}
+                                </div>
+                            </div>
+                            <div class="notification-message">${notificacao.message}</div>
+                            <div class="notification-meta">
+                                <small><strong>Para:</strong> ${notificacao.user?.nickname || 'Usuário'} (ID: ${notificacao.user_id})</small>
+                                ${notificacao.related_user ? `<small><strong>Relacionado:</strong> ${notificacao.related_user.nickname}</small>` : ''}
+                                ${notificacao.created_by_admin ? `<small><strong>Criada por:</strong> ${notificacao.created_by_admin.nickname}</small>` : ''}
+                                <small><strong>Expira:</strong> ${formatarData(notificacao.expires_at)}</small>
+                            </div>
+                            <div class="notification-actions">
+                                ${!notificacao.is_read ? `
+                                    <button class="btn btn-success" onclick="marcarComoLida('${notificacao.id}')">
+                                        ✅ Marcar como Lida
+                                    </button>
+                                ` : ''}
+                                <button class="btn btn-danger" onclick="excluirNotificacao('${notificacao.id}')">
+                                    🗑️ Excluir
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+                container.innerHTML = html;
+
+            } catch (error) {
+                console.error('Erro ao carregar notificações:', error);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">❌</div>
+                        <h3>Erro ao carregar</h3>
+                        <p>${error.message}</p>
+                        <button class="btn btn-primary" onclick="carregarNotificacoes()" style="margin-top: 1rem;">
+                            🔄 Tentar Novamente
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function filtrarNotificacoes(filtro) {
+            const notificacoes = document.querySelectorAll('.notification-item');
+            
+            notificacoes.forEach(notificacao => {
+                switch(filtro) {
+                    case 'unread':
+                        notificacao.style.display = notificacao.dataset.read === 'false' ? 'block' : 'none';
+                        break;
+                    case 'read':
+                        notificacao.style.display = notificacao.dataset.read === 'true' ? 'block' : 'none';
+                        break;
+                    default:
+                        notificacao.style.display = 'block';
+                }
+            });
+        }
+
+        async function marcarComoLida(notificacaoId) {
+            try {
+                const { error } = await supabase
+                    .from('user_notifications')
+                    .update({ 
+                        is_read: true,
+                        read_at: new Date().toISOString()
+                    })
+                    .eq('id', notificacaoId);
+
+                if (error) throw error;
+
+                // Atualizar UI
+                const notificacaoElement = document.querySelector(`[data-id="${notificacaoId}"]`);
+                if (notificacaoElement) {
+                    notificacaoElement.dataset.read = 'true';
+                    notificacaoElement.querySelector('.btn-success')?.remove();
+                }
+
+                alert('✅ Notificação marcada como lida!');
+                carregarEstatisticas();
+
+            } catch (error) {
+                console.error('Erro ao marcar como lida:', error);
+                alert('❌ Erro ao marcar como lida: ' + error.message);
+            }
+        }
+
+        async function excluirNotificacao(notificacaoId) {
+            if (!confirm('Tem certeza que deseja excluir esta notificação?\n\nEsta ação não pode ser desfeita.')) {
+                return;
+            }
+
+            try {
+                const { error } = await supabase
+                    .from('user_notifications')
+                    .delete()
+                    .eq('id', notificacaoId);
+
+                if (error) throw error;
+
+                document.querySelector(`[data-id="${notificacaoId}"]`)?.remove();
+                alert('✅ Notificação excluída com sucesso!');
+                carregarEstatisticas();
+
+            } catch (error) {
+                console.error('Erro ao excluir notificação:', error);
+                alert('❌ Erro ao excluir notificação: ' + error.message);
+            }
+        }
+
         function showTab(tabName) {
             // Esconder todas as abas
             document.querySelectorAll('.tab-content').forEach(tab => {
@@ -577,9 +736,6 @@
                     break;
                 case 'send':
                     carregarFormularioEnvio();
-                    break;
-                case 'users':
-                    carregarUsuarios();
                     break;
             }
         }
@@ -612,17 +768,7 @@
             inicializarAdmin();
         });
 
-        // Funções placeholder para as outras abas (vamos implementar depois)
-        async function carregarNotificacoes() {
-            document.getElementById('notificationsContent').innerHTML = `
-                <div class="empty-state">
-                    <div class="icon">🛠️</div>
-                    <h3>Em Desenvolvimento</h3>
-                    <p>Esta funcionalidade está sendo implementada...</p>
-                </div>
-            `;
-        }
-
+        // Funções placeholder para as outras abas
         async function carregarTemplates() {
             document.getElementById('templatesContent').innerHTML = `
                 <div class="empty-state">
@@ -635,16 +781,6 @@
 
         async function carregarFormularioEnvio() {
             document.getElementById('sendContent').innerHTML = `
-                <div class="empty-state">
-                    <div class="icon">🛠️</div>
-                    <h3>Em Desenvolvimento</h3>
-                    <p>Esta funcionalidade está sendo implementada...</p>
-                </div>
-            `;
-        }
-
-        async function carregarUsuarios() {
-            document.getElementById('usersContent').innerHTML = `
                 <div class="empty-state">
                     <div class="icon">🛠️</div>
                     <h3>Em Desenvolvimento</h3>
