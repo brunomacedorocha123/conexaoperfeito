@@ -314,19 +314,6 @@
     </div>
 
 <script>
-    // ==================== VERIFICAÇÃO DE AUTENTICAÇÃO ====================
-    if (localStorage.getItem('adminAutenticado') !== 'true') {
-        window.location.href = 'login-admin.html';
-    }
-
-    // Verifica se o login foi feito há menos de 24 horas
-    const loginTime = localStorage.getItem('adminLoginTime');
-    if (loginTime && (new Date().getTime() - loginTime) > 24 * 60 * 60 * 1000) {
-        localStorage.removeItem('adminAutenticado');
-        localStorage.removeItem('adminLoginTime');
-        window.location.href = 'login-admin.html';
-    }
-
     // ==================== CONFIGURAÇÃO SUPABASE ====================
     const supabaseUrl = 'https://gcukalndarlgydmgmmmt.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
