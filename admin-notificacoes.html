@@ -404,28 +404,21 @@
 
     </div>
 
-    <script>
+   <script>
     // ==================== CONFIGURAÇÃO SUPABASE ====================
     const supabaseUrl = 'https://gcukalndarlgydmgmmmt.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
     const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-    let currentAdmin = null;
-
     // ==================== FUNÇÕES PRINCIPAIS ====================
 
     async function inicializarAdmin() {
         try {
-            // Carregar dados iniciais
             await carregarEstatisticas();
             await carregarVisaoGeral();
-            
-            // Atualizar a cada 30 segundos
             setInterval(carregarEstatisticas, 30000);
-
         } catch (error) {
             console.error('Erro na inicialização:', error);
-            mostrarErro('overviewContent', 'Erro ao carregar painel administrativo');
         }
     }
 
@@ -471,13 +464,11 @@
         const container = document.getElementById('overviewContent');
         
         try {
-            // Buscar últimas notificações
             const { data: notificacoes, error } = await supabase
                 .from('user_notifications')
                 .select(`
                     *,
-                    user:user_id(nickname, avatar_url),
-                    created_by_admin:created_by(nickname)
+                    user:user_id(nickname, avatar_url)
                 `)
                 .order('created_at', { ascending: false })
                 .limit(10);
@@ -510,7 +501,6 @@
                             <div class="notification-message">${notificacao.message}</div>
                             <div class="notification-meta">
                                 <small>Para: ${notificacao.user?.nickname || 'Usuário'}</small>
-                                ${notificacao.created_by_admin ? `<small>Criada por: ${notificacao.created_by_admin.nickname}</small>` : ''}
                             </div>
                         </div>
                     `;
@@ -522,7 +512,13 @@
             container.innerHTML = html;
 
         } catch (error) {
-            mostrarErro('overviewContent', 'Erro ao carregar visão geral');
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">❌</div>
+                    <h3>Erro ao carregar</h3>
+                    <p>${error.message}</p>
+                </div>
+            `;
         }
     }
 
@@ -539,14 +535,11 @@
                 </div>
             `;
 
-            // Buscar TODAS as notificações do sistema
             const { data: notificacoes, error } = await supabase
                 .from('user_notifications')
                 .select(`
                     *,
-                    user:user_id(nickname, avatar_url),
-                    created_by_admin:created_by(nickname),
-                    related_user:related_user_id(nickname)
+                    user:user_id(nickname)
                 `)
                 .order('created_at', { ascending: false })
                 .limit(100);
@@ -600,9 +593,7 @@
                         </div>
                         <div class="notification-message">${notificacao.message}</div>
                         <div class="notification-meta">
-                            <small><strong>Para:</strong> ${notificacao.user?.nickname || 'Usuário'} (ID: ${notificacao.user_id})</small>
-                            ${notificacao.related_user ? `<small><strong>Relacionado:</strong> ${notificacao.related_user.nickname}</small>` : ''}
-                            ${notificacao.created_by_admin ? `<small><strong>Criada por:</strong> ${notificacao.created_by_admin.nickname}</small>` : ''}
+                            <small><strong>Para:</strong> ${notificacao.user?.nickname || 'Usuário'}</small>
                             <small><strong>Expira:</strong> ${formatarData(notificacao.expires_at)}</small>
                         </div>
                         <div class="notification-actions">
@@ -629,9 +620,6 @@
                     <div class="icon">❌</div>
                     <h3>Erro ao carregar</h3>
                     <p>${error.message}</p>
-                    <button class="btn btn-primary" onclick="carregarNotificacoes()" style="margin-top: 1rem;">
-                        🔄 Tentar Novamente
-                    </button>
                 </div>
             `;
         }
@@ -666,7 +654,6 @@
 
             if (error) throw error;
 
-            // Atualizar UI
             const notificacaoElement = document.querySelector(`[data-id="${notificacaoId}"]`);
             if (notificacaoElement) {
                 notificacaoElement.dataset.read = 'true';
@@ -678,12 +665,12 @@
 
         } catch (error) {
             console.error('Erro ao marcar como lida:', error);
-            alert('❌ Erro ao marcar como lida: ' + error.message);
+            alert('❌ Erro: ' + error.message);
         }
     }
 
     async function excluirNotificacao(notificacaoId) {
-        if (!confirm('Tem certeza que deseja excluir esta notificação?\n\nEsta ação não pode ser desfeita.')) {
+        if (!confirm('Tem certeza que deseja excluir esta notificação?')) {
             return;
         }
 
@@ -696,22 +683,21 @@
             if (error) throw error;
 
             document.querySelector(`[data-id="${notificacaoId}"]`)?.remove();
-            alert('✅ Notificação excluída com sucesso!');
+            alert('✅ Notificação excluída!');
             carregarEstatisticas();
 
         } catch (error) {
             console.error('Erro ao excluir notificação:', error);
-            alert('❌ Erro ao excluir notificação: ' + error.message);
+            alert('❌ Erro: ' + error.message);
         }
     }
 
-    // ==================== ABA: TEMPLATES - VERSÃO SIMPLIFICADA ====================
+    // ==================== ABA: TEMPLATES ====================
 
     async function carregarTemplates() {
         const container = document.getElementById('templatesContent');
         
         try {
-            // Buscar todos os templates
             const { data: templates, error } = await supabase
                 .from('notification_templates')
                 .select('*')
@@ -723,10 +709,10 @@
                 container.innerHTML = `
                     <div class="empty-state">
                         <div class="icon">📝</div>
-                        <h3>Nenhum template criado</h3>
-                        <p>Crie seu primeiro template para agilizar o envio de notificações.</p>
+                        <h3>Nenhum template</h3>
+                        <p>Não há templates criados.</p>
                         <button class="btn btn-success" onclick="criarTemplateSimples()" style="margin-top: 1rem;">
-                            ➕ Criar Primeiro Template
+                            ➕ Criar Template
                         </button>
                     </div>
                 `;
@@ -749,24 +735,15 @@
                             <div class="notification-title">${template.name}</div>
                             <div class="notification-meta">
                                 <span class="notification-badge">${template.category}</span>
-                                <span class="notification-badge">${template.priority}</span>
-                                ${template.is_active ? '<span style="color: var(--success);">✅ Ativo</span>' : '<span style="color: var(--gray);">⏸️ Inativo</span>'}
+                                ${template.is_active ? '<span>✅ Ativo</span>' : '<span>⏸️ Inativo</span>'}
                             </div>
                         </div>
-                        
                         <div style="margin-bottom: 1rem;">
                             <strong>Título:</strong> ${template.title_template}
                         </div>
-                        
                         <div class="notification-message">
                             <strong>Mensagem:</strong> ${template.message_template}
                         </div>
-                        
-                        <div class="notification-meta">
-                            <small><strong>Retenção:</strong> ${template.retention_days} dias</small>
-                            <small><strong>Usos:</strong> ${template.usage_count || 0}</small>
-                        </div>
-                        
                         <div class="notification-actions">
                             <button class="btn btn-primary" onclick="usarTemplate('${template.id}')">
                                 ✉️ Usar
@@ -787,7 +764,7 @@
             container.innerHTML = `
                 <div class="empty-state">
                     <div class="icon">❌</div>
-                    <h3>Erro ao carregar templates</h3>
+                    <h3>Erro ao carregar</h3>
                     <p>${error.message}</p>
                 </div>
             `;
@@ -819,18 +796,16 @@
 
             if (error) throw error;
 
-            alert('✅ Template criado com sucesso!');
+            alert('✅ Template criado!');
             carregarTemplates();
 
         } catch (error) {
-            alert('❌ Erro ao criar template: ' + error.message);
+            alert('❌ Erro: ' + error.message);
         }
     }
 
     async function excluirTemplate(templateId) {
-        if (!confirm('Tem certeza que deseja excluir este template?')) {
-            return;
-        }
+        if (!confirm('Excluir este template?')) return;
 
         try {
             const { error } = await supabase
@@ -840,109 +815,138 @@
 
             if (error) throw error;
 
-            alert('✅ Template excluído com sucesso!');
+            alert('✅ Template excluído!');
             carregarTemplates();
 
         } catch (error) {
-            alert('❌ Erro ao excluir template: ' + error.message);
+            alert('❌ Erro: ' + error.message);
         }
     }
 
     function usarTemplate(templateId) {
-        // Vai para a aba de envio
         showTab('send');
-        alert('Agora vá para a aba "Enviar Notificação" e use o template selecionado');
+        alert('Agora use o formulário de envio');
     }
 
-    // ==================== ABA: ENVIAR NOTIFICAÇÃO - VERSÃO SIMPLIFICADA ====================
+    // ==================== ABA: ENVIAR NOTIFICAÇÃO ====================
 
     async function carregarFormularioEnvio() {
         const container = document.getElementById('sendContent');
         
         try {
-            // Buscar lista de usuários para seleção
+            // Buscar usuários de forma SIMPLES
             const { data: usuarios, error } = await supabase
                 .from('profiles')
-                .select('id, nickname, email')
-                .order('nickname')
-                .limit(50);
+                .select('id, nickname')
+                .limit(20);
 
-            if (error) throw error;
+            let optionsHTML = '';
+            if (usuarios && usuarios.length > 0) {
+                optionsHTML = usuarios.map(user => 
+                    `<option value="${user.id}">${user.nickname || 'Usuário'}</option>`
+                ).join('');
+            } else {
+                optionsHTML = '<option value="">Nenhum usuário encontrado</option>';
+            }
 
-            let html = `
+            container.innerHTML = `
                 <div style="max-width: 600px; margin: 0 auto;">
+                    <h3 style="color: var(--primary); margin-bottom: 2rem;">✉️ Enviar Notificação</h3>
+                    
                     <form onsubmit="enviarNotificacaoSimples(event)">
-                        
                         <div style="background: var(--light-gray); padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem;">
-                            <h3 style="color: var(--primary); margin-bottom: 1rem;">🎯 Destinatário</h3>
+                            <h4 style="margin-bottom: 1rem;">🎯 Destinatário</h4>
                             
                             <div style="margin-bottom: 1rem;">
-                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Selecionar Usuário *</label>
-                                <select id="usuarioDestino" style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px;" required>
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Usuário *</label>
+                                <select id="usuarioId" style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px;" required>
                                     <option value="">Selecione um usuário...</option>
-                                    ${usuarios?.map(user => `
-                                        <option value="${user.id}">${user.nickname} (${user.email})</option>
-                                    `).join('')}
+                                    ${optionsHTML}
                                 </select>
                             </div>
                         </div>
 
                         <div style="background: var(--light-gray); padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem;">
-                            <h3 style="color: var(--primary); margin-bottom: 1rem;">✉️ Conteúdo da Notificação</h3>
+                            <h4 style="margin-bottom: 1rem;">📝 Conteúdo</h4>
                             
                             <div style="margin-bottom: 1rem;">
                                 <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Título *</label>
-                                <input type="text" id="tituloNotificacao" style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px;" 
-                                    placeholder="Ex: 🎉 Nova mensagem!" required>
+                                <input type="text" id="titulo" placeholder="Ex: 🎉 Nova mensagem!" 
+                                    style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px;" required>
                             </div>
                             
                             <div style="margin-bottom: 1rem;">
                                 <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Mensagem *</label>
-                                <textarea id="mensagemNotificacao" style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px; height: 120px;" 
-                                    placeholder="Digite a mensagem..." required></textarea>
+                                <textarea id="mensagem" placeholder="Digite a mensagem..." 
+                                    style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px; height: 120px;" required></textarea>
                             </div>
                             
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                                 <div>
                                     <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Categoria</label>
-                                    <select id="categoriaNotificacao" style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px;">
+                                    <select id="categoria" style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px;">
                                         <option value="system">Sistema</option>
                                         <option value="interactions">Interações</option>
                                         <option value="bonus">Bônus</option>
-                                        <option value="warnings">Advertências</option>
                                     </select>
                                 </div>
                                 
                                 <div>
                                     <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Prioridade</label>
-                                    <select id="prioridadeNotificacao" style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px;">
+                                    <select id="prioridade" style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px;">
                                         <option value="normal">Normal</option>
                                         <option value="high">Alta</option>
-                                        <option value="urgent">Urgente</option>
                                     </select>
                                 </div>
                             </div>
                         </div>
 
                         <div style="text-align: center;">
-                            <button type="submit" class="btn btn-success" style="padding: 1rem 2rem; font-size: 1.1rem;">
+                            <button type="submit" class="btn btn-success" style="padding: 1rem 2rem;">
                                 ✉️ Enviar Notificação
                             </button>
                         </div>
-
                     </form>
                 </div>
             `;
 
-            container.innerHTML = html;
-
         } catch (error) {
             console.error('Erro ao carregar formulário:', error);
+            // Fallback - formulário SEM usuários
             container.innerHTML = `
-                <div class="empty-state">
-                    <div class="icon">❌</div>
-                    <h3>Erro ao carregar formulário</h3>
-                    <p>${error.message}</p>
+                <div style="max-width: 600px; margin: 0 auto;">
+                    <h3 style="color: var(--primary); margin-bottom: 2rem;">✉️ Enviar Notificação</h3>
+                    
+                    <form onsubmit="enviarNotificacaoFallback(event)">
+                        <div style="background: var(--light-gray); padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem;">
+                            <h4 style="margin-bottom: 1rem;">🎯 Destinatário</h4>
+                            <div style="margin-bottom: 1rem;">
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ID do Usuário *</label>
+                                <input type="text" id="userIdFallback" placeholder="Cole o ID de um usuário" 
+                                    style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px;" required>
+                            </div>
+                        </div>
+
+                        <div style="background: var(--light-gray); padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem;">
+                            <h4 style="margin-bottom: 1rem;">📝 Conteúdo</h4>
+                            <div style="margin-bottom: 1rem;">
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Título *</label>
+                                <input type="text" id="tituloFallback" placeholder="Ex: 🎉 Teste!" 
+                                    style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px;" required>
+                            </div>
+                            <div style="margin-bottom: 1rem;">
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Mensagem *</label>
+                                <textarea id="mensagemFallback" placeholder="Mensagem de teste..." 
+                                    style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px; height: 120px;" required></textarea>
+                            </div>
+                        </div>
+
+                        <div style="text-align: center;">
+                            <button type="submit" class="btn btn-success" style="padding: 1rem 2rem;">
+                                ✉️ Enviar Notificação
+                            </button>
+                        </div>
+                    </form>
                 </div>
             `;
         }
@@ -951,14 +955,14 @@
     async function enviarNotificacaoSimples(event) {
         event.preventDefault();
         
-        const usuarioId = document.getElementById('usuarioDestino').value;
-        const titulo = document.getElementById('tituloNotificacao').value;
-        const mensagem = document.getElementById('mensagemNotificacao').value;
-        const categoria = document.getElementById('categoriaNotificacao').value;
-        const prioridade = document.getElementById('prioridadeNotificacao').value;
+        const usuarioId = document.getElementById('usuarioId').value;
+        const titulo = document.getElementById('titulo').value;
+        const mensagem = document.getElementById('mensagem').value;
+        const categoria = document.getElementById('categoria').value;
+        const prioridade = document.getElementById('prioridade').value;
         
         if (!usuarioId) {
-            alert('⚠️ Selecione um usuário.');
+            alert('Selecione um usuário');
             return;
         }
 
@@ -970,10 +974,9 @@
                     title: titulo,
                     message: mensagem,
                     category: categoria,
-                    type: 'manual_admin',
+                    type: 'manual',
                     priority: prioridade,
-                    retention_days: 30,
-                    created_by: 'admin'
+                    retention_days: 30
                 }]);
 
             if (error) throw error;
@@ -981,16 +984,54 @@
             alert('✅ Notificação enviada com sucesso!');
             
             // Limpar formulário
-            document.getElementById('usuarioDestino').value = '';
-            document.getElementById('tituloNotificacao').value = '';
-            document.getElementById('mensagemNotificacao').value = '';
+            document.getElementById('usuarioId').value = '';
+            document.getElementById('titulo').value = '';
+            document.getElementById('mensagem').value = '';
             
-            // Atualizar estatísticas
             carregarEstatisticas();
 
         } catch (error) {
-            console.error('Erro ao enviar notificação:', error);
-            alert('❌ Erro ao enviar notificação: ' + error.message);
+            console.error('Erro:', error);
+            alert('❌ Erro: ' + error.message);
+        }
+    }
+
+    async function enviarNotificacaoFallback(event) {
+        event.preventDefault();
+        
+        const usuarioId = document.getElementById('userIdFallback').value;
+        const titulo = document.getElementById('tituloFallback').value;
+        const mensagem = document.getElementById('mensagemFallback').value;
+        
+        if (!usuarioId) {
+            alert('Digite um ID de usuário');
+            return;
+        }
+
+        try {
+            const { error } = await supabase
+                .from('user_notifications')
+                .insert([{
+                    user_id: usuarioId,
+                    title: titulo,
+                    message: mensagem,
+                    category: 'system',
+                    type: 'manual',
+                    priority: 'normal',
+                    retention_days: 30
+                }]);
+
+            if (error) throw error;
+
+            alert('✅ Notificação enviada!');
+            document.getElementById('userIdFallback').value = '';
+            document.getElementById('tituloFallback').value = '';
+            document.getElementById('mensagemFallback').value = '';
+            
+            carregarEstatisticas();
+
+        } catch (error) {
+            alert('❌ Erro: ' + error.message);
         }
     }
 
@@ -1029,17 +1070,8 @@
     }
 
     function formatarData(data) {
+        if (!data) return '--';
         return new Date(data).toLocaleString('pt-BR');
-    }
-
-    function mostrarErro(containerId, mensagem) {
-        document.getElementById(containerId).innerHTML = `
-            <div class="empty-state">
-                <div class="icon">❌</div>
-                <h3>Erro</h3>
-                <p>${mensagem}</p>
-            </div>
-        `;
     }
 
     // ==================== INICIALIZAÇÃO ====================
