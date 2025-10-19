@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notificações - Amor Conect</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --bege: #f6ecc5;
+            --vermelho-rosado: #d1656d;
+            --lilas: #dfc9ed;
+            --branco: #ffffff;
+            --text: #444;
+            --text-light: #666;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+            --success: #38a169;
+            --warning: #d69e2e;
+            --danger: #e53e3e;
+            --info: #3182ce;
+        }
+
+        body {
+            background-color: var(--bege);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            color: var(--branco);
+            padding: 0.8rem 0;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo img {
+            height: 180px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .btn {
+            padding: 0.6rem 1rem;
+            border-radius: 30px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--branco);
+            color: var(--branco);
+        }
+
+        .btn-primary {
+            background: var(--branco);
+            color: var(--vermelho-rosado);
+        }
+
+        .notification-badge {
+            background: var(--danger);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-left: 0.3rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem 0;
+            min-height: calc(100vh - 200px);
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem;
+            background: var(--branco);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--lilas);
+        }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            color: var(--vermelho-rosado);
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            color: var(--text-light);
+        }
+
+        /* Filtros */
+        .notification-filters {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .filter-btn {
+            padding: 0.7rem 1.5rem;
+            border: 2px solid var(--lilas);
+            background: var(--branco);
+            border-radius: 25px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-btn.active {
+            background: var(--lilas);
+            color: var(--branco);
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Lista de Notificações */
+        .notifications-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .notification-card {
+            background: var(--branco);
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--lilas);
+            transition: var(--transition);
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            position: relative;
+        }
+
+        .notification-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .notification-card.unread {
+            border-left: 4px solid var(--vermelho-rosado);
+            background: linear-gradient(135deg, var(--branco), #fdf6e3);
+        }
+
+        .notification-icon {
+            font-size: 1.5rem;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .notification-message {
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+        }
+
+        .notification-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .notification-time {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .notification-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.8rem;
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .mark-read-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: var(--transition);
+        }
+
+        .mark-read-btn:hover {
+            background: var(--bege);
+            color: var(--vermelho-rosado);
+        }
+
+        /* Estados Vazios */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            background: var(--branco);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--lilas);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--bege);
+            border-top: 4px solid var(--vermelho-rosado);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--bege);
+            color: var(--text);
+            padding: 2rem 0 1rem;
+            border-top: 1px solid var(--lilas);
+            margin-top: 3rem;
+        }
+
+        .footer-content {
+            text-align: center;
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 1rem;
+            border-top: 1px solid var(--lilas);
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        /* Responsivo */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                height: auto;
+                gap: 1rem;
+                padding: 1rem 0;
+            }
+
+            .logo img {
+                height: 140px;
+            }
+
+            .notification-filters {
+                justify-content: flex-start;
+                overflow-x: auto;
+                padding-bottom: 0.5rem;
+            }
+
+            .filter-btn {
+                white-space: nowrap;
+            }
+
+            .notification-card {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .notification-icon {
+                align-self: center;
+            }
+
+            .page-header {
+                padding: 1.5rem;
+            }
+
+            .page-header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="logoamorconect.png" alt="Amor Conect">
+                </div>
+                <div class="user-menu">
+                    <a href="home.html" class="btn btn-outline">🏠 Voltar para Home</a>
+                    <a href="mensagens.html" class="btn btn-outline">💌 Mensagens</a>
+                    <button class="btn btn-primary" onclick="markAllAsRead()">
+                        ✅ Marcar todas como lida
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1>🔔 Notificações</h1>
+                <p>Fique por dentro de tudo que acontece no Amor Conect</p>
+                <div style="margin-top: 1rem;">
+                    <small id="notificationsCount">Carregando...</small>
+                </div>
+            </div>
+
+            <!-- Filtros -->
+            <div class="notification-filters">
+                <button class="filter-btn active" onclick="filterNotifications('all')">
+                    📨 Todas
+                </button>
+                <button class="filter-btn" onclick="filterNotifications('interactions')">
+                    ❤️ Interações
+                </button>
+                <button class="filter-btn" onclick="filterNotifications('system')">
+                    🎁 Sistema & Bônus
+                </button>
+                <button class="filter-btn" onclick="filterNotifications('moderation')">
+                    ⚠️ Moderação
+                </button>
+                <button class="filter-btn" onclick="filterNotifications('security')">
+                    🔒 Segurança
+                </button>
+                <button class="filter-btn" onclick="filterNotifications('unread')">
+                    🔴 Não lidas
+                </button>
+            </div>
+
+            <!-- Lista de Notificações -->
+            <div class="notifications-list" id="notificationsList">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Carregando notificações...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <p>&copy; 2024 Amor Conect. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // ==================== CONFIGURAÇÃO SUPABASE ====================
+        const supabaseUrl = 'https://gcukalndarlgydmgmmmt.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        let currentUser = null;
+        let allNotifications = [];
+
+        // ==================== INICIALIZAÇÃO ====================
+        document.addEventListener('DOMContentLoaded', async function() {
+            await initializeNotifications();
+        });
+
+        async function initializeNotifications() {
+            try {
+                // Verificar autenticação
+                const { data: { user }, error } = await supabase.auth.getUser();
+                if (error || !user) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                currentUser = user;
+
+                // Carregar notificações
+                await loadNotifications();
+                
+                // Iniciar atualização em tempo real
+                startRealtimeUpdates();
+
+            } catch (error) {
+                console.error('Erro na inicialização:', error);
+                showError('Erro ao carregar notificações');
+            }
+        }
+
+        // ==================== FUNÇÕES PRINCIPAIS ====================
+
+        async function loadNotifications() {
+            try {
+                // Buscar notificações do usuário
+                const { data: notifications, error } = await supabase
+                    .from('user_notifications')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                allNotifications = notifications || [];
+                displayNotifications(allNotifications);
+                updateBadgeCount();
+
+            } catch (error) {
+                console.error('Erro ao carregar notificações:', error);
+                
+                // Notificações de exemplo (fallback)
+                allNotifications = generateSampleNotifications();
+                displayNotifications(allNotifications);
+            }
+        }
+
+        function displayNotifications(notifications) {
+            const container = document.getElementById('notificationsList');
+            const countElement = document.getElementById('notificationsCount');
+            
+            if (!notifications || notifications.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <h3>Nenhuma notificação</h3>
+                        <p>Quando você tiver novas notificações, elas aparecerão aqui.</p>
+                    </div>
+                `;
+                countElement.textContent = '0 notificações';
+                return;
+            }
+
+            const unreadCount = notifications.filter(n => !n.is_read).length;
+            countElement.textContent = `${notifications.length} notificações (${unreadCount} não lidas)`;
+
+            container.innerHTML = notifications.map(notification => `
+                <div class="notification-card ${notification.is_read ? '' : 'unread'}" 
+                     data-id="${notification.id}" 
+                     data-type="${notification.type}">
+                    
+                    <div class="notification-icon" style="background: ${getNotificationColor(notification.type)}">
+                        ${getNotificationIcon(notification.type)}
+                    </div>
+                    
+                    <div class="notification-content">
+                        <div class="notification-title">${notification.title}</div>
+                        <div class="notification-message">${notification.message}</div>
+                        
+                        <div class="notification-meta">
+                            <div class="notification-time">
+                                ⏰ ${formatTime(notification.created_at)}
+                            </div>
+                            ${notification.priority === 'high' ? '<span style="color: var(--danger);">🔥 Importante</span>' : ''}
+                        </div>
+                        
+                        ${notification.actions ? `
+                            <div class="notification-actions">
+                                ${notification.actions.map(action => `
+                                    <button class="btn btn-sm ${action.type === 'primary' ? 'btn-primary' : 'btn-outline'}" 
+                                            onclick="handleNotificationAction('${notification.id}', '${action.label}')">
+                                        ${action.label}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                    
+                    ${!notification.is_read ? `
+                        <button class="mark-read-btn" onclick="markAsRead('${notification.id}')" title="Marcar como lida">
+                            ●
+                        </button>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        async function markAsRead(notificationId) {
+            try {
+                const { error } = await supabase
+                    .from('user_notifications')
+                    .update({ is_read: true, read_at: new Date().toISOString() })
+                    .eq('id', notificationId)
+                    .eq('user_id', currentUser.id);
+
+                if (error) throw error;
+
+                // Atualizar UI
+                const card = document.querySelector(`[data-id="${notificationId}"]`);
+                if (card) {
+                    card.classList.remove('unread');
+                    card.querySelector('.mark-read-btn')?.remove();
+                }
+
+                updateBadgeCount();
+
+            } catch (error) {
+                console.error('Erro ao marcar como lida:', error);
+            }
+        }
+
+        async function markAllAsRead() {
+            try {
+                const unreadNotifications = allNotifications.filter(n => !n.is_read);
+                
+                if (unreadNotifications.length === 0) {
+                    alert('Todas as notificações já estão marcadas como lidas!');
+                    return;
+                }
+
+                const { error } = await supabase
+                    .from('user_notifications')
+                    .update({ is_read: true, read_at: new Date().toISOString() })
+                    .eq('user_id', currentUser.id)
+                    .eq('is_read', false);
+
+                if (error) throw error;
+
+                // Atualizar UI
+                document.querySelectorAll('.notification-card.unread').forEach(card => {
+                    card.classList.remove('unread');
+                    card.querySelector('.mark-read-btn')?.remove();
+                });
+
+                updateBadgeCount();
+                alert('✅ Todas as notificações marcadas como lidas!');
+
+            } catch (error) {
+                console.error('Erro ao marcar todas como lidas:', error);
+            }
+        }
+
+        function filterNotifications(filter) {
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            let filteredNotifications = allNotifications;
+
+            switch (filter) {
+                case 'interactions':
+                    filteredNotifications = allNotifications.filter(n => 
+                        ['like', 'visit', 'match', 'message'].includes(n.type));
+                    break;
+                case 'system':
+                    filteredNotifications = allNotifications.filter(n => 
+                        ['bonus', 'maintenance', 'feature', 'promotion'].includes(n.type));
+                    break;
+                case 'moderation':
+                    filteredNotifications = allNotifications.filter(n => 
+                        ['warning', 'report', 'ban'].includes(n.type));
+                    break;
+                case 'security':
+                    filteredNotifications = allNotifications.filter(n => 
+                        ['security', 'login'].includes(n.type));
+                    break;
+                case 'unread':
+                    filteredNotifications = allNotifications.filter(n => !n.is_read);
+                    break;
+                // 'all' mostra tudo
+            }
+
+            displayNotifications(filteredNotifications);
+        }
+
+        function updateBadgeCount() {
+            const unreadCount = allNotifications.filter(n => !n.is_read).length;
+            
+            // Atualizar badges na página atual
+            const badges = document.querySelectorAll('.notification-badge');
+            badges.forEach(badge => {
+                if (unreadCount > 0) {
+                    badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            });
+
+            // Salvar no localStorage para a home acessar
+            localStorage.setItem('unreadNotifications', unreadCount);
+        }
+
+        function handleNotificationAction(notificationId, action) {
+            const notification = allNotifications.find(n => n.id === notificationId);
+            
+            switch (action) {
+                case 'Ver Perfil':
+                    if (notification.related_user_id) {
+                        localStorage.setItem('viewingProfileId', notification.related_user_id);
+                        window.location.href = 'perfil.html';
+                    }
+                    break;
+                case 'Responder':
+                    if (notification.related_user_id) {
+                        localStorage.setItem('openChatWithUserId', notification.related_user_id);
+                        window.location.href = 'mensagens.html';
+                    }
+                    break;
+                case 'Ver Detalhes':
+                    // Lógica para mostrar detalhes
+                    alert(`Detalhes: ${notification.message}`);
+                    break;
+                case 'Aceitar Bônus':
+                    alert('🎁 Bônus aceito com sucesso!');
+                    markAsRead(notificationId);
+                    break;
+                default:
+                    console.log('Ação:', action, 'para notificação:', notificationId);
+            }
+        }
+
+        // ==================== FUNÇÕES AUXILIARES ====================
+
+        function getNotificationIcon(type) {
+            const icons = {
+                'like': '❤️',
+                'visit': '👀',
+                'match': '💝',
+                'message': '💌',
+                'warning': '⚠️',
+                'bonus': '🎁',
+                'maintenance': '🔧',
+                'feature': '✨',
+                'promotion': '🏆',
+                'security': '🔒',
+                'login': '📱',
+                'report': '🚨',
+                'ban': '🚫'
+            };
+            return icons[type] || '📢';
+        }
+
+        function getNotificationColor(type) {
+            const colors = {
+                'like': '#fed7d7',
+                'visit': '#e9d8fd',
+                'match': '#fbb6ce',
+                'message': '#bee3f8',
+                'warning': '#fefcbf',
+                'bonus': '#c6f6d5',
+                'maintenance': '#fed7d7',
+                'feature': '#e9d8fd',
+                'promotion': '#fefcbf',
+                'security': '#fed7d7',
+                'login': '#bee3f8',
+                'report': '#fed7d7',
+                'ban': '#fed7d7'
+            };
+            return colors[type] || '#e2e8f0';
+        }
+
+        function formatTime(timestamp) {
+            const now = new Date();
+            const date = new Date(timestamp);
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return 'Agora mesmo';
+            if (diffMins < 60) return `Há ${diffMins} min`;
+            if (diffHours < 24) return `Há ${diffHours} h`;
+            if (diffDays < 7) return `Há ${diffDays} dia${diffDays > 1 ? 's' : ''}`;
+            return date.toLocaleDateString('pt-BR');
+        }
+
+        function startRealtimeUpdates() {
+            // Escutar por novas notificações em tempo real
+            const subscription = supabase
+                .channel('notifications')
+                .on('postgres_changes', 
+                    { 
+                        event: 'INSERT', 
+                        schema: 'public', 
+                        table: 'user_notifications',
+                        filter: `user_id=eq.${currentUser.id}`
+                    }, 
+                    (payload) => {
+                        console.log('Nova notificação em tempo real:', payload);
+                        allNotifications.unshift(payload.new);
+                        displayNotifications(allNotifications);
+                        updateBadgeCount();
+                        
+                        // Mostrar notificação push se a página não está em foco
+                        if (document.hidden) {
+                            showBrowserNotification(payload.new);
+                        }
+                    }
+                )
+                .subscribe();
+
+            // Verificar notificações a cada 30 segundos
+            setInterval(() => {
+                loadNotifications();
+            }, 30000);
+        }
+
+        function showBrowserNotification(notification) {
+            if (!("Notification" in window)) return;
+
+            if (Notification.permission === "granted") {
+                new Notification(notification.title, {
+                    body: notification.message,
+                    icon: '/logoamorconect.png'
+                });
+            } else if (Notification.permission !== "denied") {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                        new Notification(notification.title, {
+                            body: notification.message,
+                            icon: '/logoamorconect.png'
+                        });
+                    }
+                });
+            }
+        }
+
+        function showError(message) {
+            const container = document.getElementById('notificationsList');
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">❌</div>
+                    <h3>Erro ao carregar</h3>
+                    <p>${message}</p>
+                    <button class="btn btn-primary" onclick="loadNotifications()" style="margin-top: 1rem;">
+                        🔄 Tentar Novamente
+                    </button>
+                </div>
+            `;
+        }
+
+        // ==================== NOTIFICAÇÕES DE EXEMPLO (FALLBACK) ====================
+
+        function generateSampleNotifications() {
+            return [
+                {
+                    id: '1',
+                    type: 'visit',
+                    title: 'Nova visita no seu perfil',
+                    message: 'Maria Silva visitou seu perfil há 2 horas',
+                    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+                    is_read: false,
+                    priority: 'normal',
+                    actions: [
+                        { label: 'Ver Perfil', type: 'primary' },
+                        { label: 'Enviar Mensagem', type: 'secondary' }
+                    ]
+                },
+                {
+                    id: '2',
+                    title: 'Bônus de Boas-vindas!',
+                    type: 'bonus',
+                    message: 'Você ganhou 7 dias de Premium grátis por se cadastrar!',
+                    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+                    is_read: true,
+                    priority: 'high',
+                    actions: [
+                        { label: 'Aceitar Bônus', type: 'primary' }
+                    ]
+                },
+                {
+                    id: '3',
+                    type: 'like',
+                    title: 'Novo like recebido',
+                    message: 'João Santos curtiu seu perfil',
+                    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+                    is_read: true,
+                    priority: 'normal'
+                }
+            ];
+        }
+
+        // ==================== SQL PARA CRIAR A TABELA ====================
+        /*
+        CREATE TABLE user_notifications (
+            id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+            user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+            type VARCHAR(50) NOT NULL,
+            title VARCHAR(200) NOT NULL,
+            message TEXT NOT NULL,
+            is_read BOOLEAN DEFAULT FALSE,
+            read_at TIMESTAMP WITH TIME ZONE,
+            priority VARCHAR(20) DEFAULT 'normal',
+            related_user_id UUID REFERENCES profiles(id),
+            actions JSONB,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        );
+
+        CREATE INDEX idx_user_notifications_user_id ON user_notifications(user_id);
+        CREATE INDEX idx_user_notifications_created_at ON user_notifications(created_at DESC);
+        CREATE INDEX idx_user_notifications_is_read ON user_notifications(is_read);
+        */
+    </script>
+</body>
+</html>
