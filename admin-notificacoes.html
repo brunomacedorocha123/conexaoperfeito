@@ -412,28 +412,10 @@
 
     let currentAdmin = null;
 
-    // ==================== VERIFICAÇÃO DE AUTENTICAÇÃO ====================
-    async function verificarAutenticacao() {
-        try {
-            const { data: { user }, error } = await supabase.auth.getUser();
-            if (error || !user) {
-                window.location.href = 'login-admin.html';
-                return false;
-            }
-            return true;
-        } catch (error) {
-            console.error('Erro na autenticação:', error);
-            window.location.href = 'login-admin.html';
-            return false;
-        }
-    }
-
     // ==================== FUNÇÕES PRINCIPAIS ====================
 
     async function inicializarAdmin() {
         try {
-            currentAdmin = (await supabase.auth.getUser()).data.user;
-
             // Carregar dados iniciais
             await carregarEstatisticas();
             await carregarVisaoGeral();
@@ -773,15 +755,9 @@
     }
 
     // ==================== INICIALIZAÇÃO ====================
-    document.addEventListener('DOMContentLoaded', async function() {
+    document.addEventListener('DOMContentLoaded', function() {
         console.log('👑 Painel Admin iniciado');
-        
-        // Primeiro verifica se está autenticado
-        const autenticado = await verificarAutenticacao();
-        if (!autenticado) return;
-        
-        // Se estiver autenticado, inicializa o painel
-        await inicializarAdmin();
+        inicializarAdmin();
     });
 
     // Funções placeholder para as outras abas
