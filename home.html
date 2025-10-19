@@ -1722,6 +1722,94 @@ footer {
 .visitor-avatar {
     display: flex !important;
 }
+
+/* ==================== SISTEMA DE NOTIFICAÇÕES - SINO ==================== */
+.notification-bell-container {
+    position: absolute;
+    right: 200px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 101;
+}
+
+.notification-bell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    font-size: 1.5rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.notification-bell:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: linear-gradient(135deg, #e53e3e, #c53030);
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: bold;
+    border: 2px solid var(--branco);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.notification-badge:empty {
+    display: none;
+}
+
+.notification-mobile-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.notification-mobile-btn .notification-badge {
+    position: static;
+    margin-left: auto;
+}
+
+@media (max-width: 768px) {
+    .notification-bell-container {
+        position: static;
+        transform: none;
+        margin-left: auto;
+        margin-right: 1rem;
+    }
+    
+    .notification-bell {
+        width: 45px;
+        height: 45px;
+        font-size: 1.3rem;
+    }
+    
+    .notification-badge {
+        width: 18px;
+        height: 18px;
+        font-size: 0.65rem;
+    }
+}
 </style>
 </head>
 <body>
@@ -1733,6 +1821,15 @@ footer {
         <div class="logo">
           <img src="logoamorconect.png" alt="Amor Conect">
         </div>
+        
+        <!-- 🔔 SINO DE NOTIFICAÇÕES ISOLADO -->
+        <div class="notification-bell-container">
+          <a href="notificacoes.html" class="notification-bell" id="notificationBell" title="Notificações">
+            🔔
+            <span class="notification-badge" id="notificationBadge">0</span>
+          </a>
+        </div>
+
         <div class="user-menu">
           <div class="user-info">
             <div class="user-avatar" id="userAvatar">
@@ -1768,6 +1865,12 @@ footer {
     </div>
 
     <div class="mobile-nav">
+      <!-- 🔔 SINO DE NOTIFICAÇÕES MOBILE -->
+      <a href="notificacoes.html" class="btn btn-outline notification-mobile-btn">
+        🔔 Notificações
+        <span class="notification-badge" id="mobileNotificationBadge">0</span>
+      </a>
+      
       <!-- NOVO: Badge Free e Botão Premium Mobile -->
       <div id="mobileFreeBadge" class="free-badge" style="display: none;">Free</div>
       <a href="princing.html" id="mobilePremiumBtn" class="btn btn-premium" style="display: none;">Premium</a>
@@ -2016,6 +2119,36 @@ footer {
         <div class="footer-column">
           <h3>Links Rápidos</h3>
           <ul>
+            <li><a href="home.html">Página Inicial</a></li>
+            <li><a href="princing.html">Planos Premium</a></li>
+            <li><a href="#como-funciona">Como Funciona</a></li>
+            <li><a href="#depoimentos">Depoimentos</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h3>Suporte</h3>
+          <ul>
+            <li><a href="#">Central de Ajuda</a></li>
+            <li><a href="#">Política de Privacidade</a></li>
+            <li><a href="#">Termos de Uso</a></li>
+            <li><a href="#" onclick="openSupportModal()">🚨 Reportar Problema</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="copyright">
+        <p>&copy; 2024 Amor Conect. Todos os direitos reservados.</p>
+      </div>
+    </div>
+  </footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-column">
+          <h3>Amor Conect</h3>
+          <p>Uma plataforma segura e discreta para conectar corações e construir relacionamentos genuínos.</p>
+        </div>
+        <div class="footer-column">
+          <h3>Links Rápidos</h3>
+          <ul>
             <li><a href="index.html">Página Inicial</a></li>
             <li><a href="princing.html">Planos Premium</a></li>
             <li><a href="#como-funciona">Como Funciona</a></li>
@@ -2049,7 +2182,7 @@ let userProfile = null;
 let currentReportUserId = null;
 let currentReportUserName = null;
 
-// ==================== INICIALIZAÇÃO CORRIGIDA ====================
+/// ==================== INICIALIZAÇÃO CORRIGIDA ====================
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Iniciando aplicação...');
     initializeApp();
@@ -2116,6 +2249,12 @@ async function initializeApp() {
             }
         }
         
+        // 🔔 NOVO: Inicializar sistema de notificações
+        await initializeNotificationSystem();
+        
+        // 🔔 NOVO: Criar notificação de boas-vindas (opcional)
+        setTimeout(createSampleNotification, 2000);
+        
         // 4. Configurar sistemas secundários
         setupEventListeners();
         setupMobileMenu();
@@ -2129,6 +2268,121 @@ async function initializeApp() {
     } catch (error) {
         console.error('❌ Erro crítico na inicialização:', error);
         showQuickToast('Erro ao carregar a página. Recarregue.');
+    }
+}
+
+// ==================== SISTEMA DE NOTIFICAÇÕES ====================
+
+// Função para atualizar o badge de notificações
+async function updateNotificationBadge() {
+    try {
+        if (!currentUser) return;
+        
+        const { data: notifications, error } = await supabase
+            .from('user_notifications')
+            .select('id')
+            .eq('user_id', currentUser.id)
+            .eq('is_read', false);
+
+        if (error) {
+            console.log('ℹ️ Tabela de notificações não encontrada, usando sistema padrão');
+            return;
+        }
+
+        const unreadCount = notifications?.length || 0;
+        
+        // Atualizar badges
+        const badges = document.querySelectorAll('.notification-badge');
+        badges.forEach(badge => {
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                badge.style.display = 'flex';
+                
+                // Adicionar classe se tiver muitas notificações
+                if (unreadCount > 9) {
+                    badge.classList.add('high-count');
+                } else {
+                    badge.classList.remove('high-count');
+                }
+            } else {
+                badge.textContent = '0';
+                badge.style.display = 'none';
+            }
+        });
+
+        // Atualizar sino
+        const bell = document.getElementById('notificationBell');
+        if (bell) {
+            if (unreadCount > 0) {
+                bell.classList.add('has-notifications');
+            } else {
+                bell.classList.remove('has-notifications');
+            }
+        }
+
+        // Salvar no localStorage para acesso rápido
+        localStorage.setItem('unreadNotifications', unreadCount);
+
+    } catch (error) {
+        console.error('Erro ao atualizar badge:', error);
+    }
+}
+
+// Inicializar sistema de notificações
+async function initializeNotificationSystem() {
+    if (!currentUser) return;
+    
+    await updateNotificationBadge();
+    
+    // Atualizar a cada 30 segundos
+    setInterval(updateNotificationBadge, 30000);
+    
+    // Escutar por novas notificações em tempo real
+    try {
+        const subscription = supabase
+            .channel('notifications-badge')
+            .on('postgres_changes', 
+                { 
+                    event: '*', 
+                    schema: 'public', 
+                    table: 'user_notifications',
+                    filter: `user_id=eq.${currentUser.id}`
+                }, 
+                () => {
+                    updateNotificationBadge();
+                }
+            )
+            .subscribe();
+    } catch (error) {
+        console.log('ℹ️ Sistema em tempo real não disponível');
+    }
+}
+
+// Criar notificação de exemplo (para teste)
+async function createSampleNotification() {
+    try {
+        const notificationData = {
+            user_id: currentUser.id,
+            type: 'welcome',
+            title: 'Bem-vindo ao Amor Conect! 🎉',
+            message: 'Sua jornada para encontrar conexões genuínas começou. Complete seu perfil para ter mais matches!',
+            priority: 'high',
+            actions: [
+                { label: 'Completar Perfil', type: 'primary' },
+                { label: 'Ver Dicas', type: 'secondary' }
+            ],
+            created_at: new Date().toISOString()
+        };
+
+        const { error } = await supabase
+            .from('user_notifications')
+            .insert(notificationData);
+
+        if (error && error.code !== '23505') { // Ignora erro de duplicação
+            console.log('ℹ️ Não foi possível criar notificação de exemplo');
+        }
+    } catch (error) {
+        // Tabela não existe ainda, tudo bem
     }
 }
 
@@ -3234,139 +3488,6 @@ setTimeout(() => {
     // Executar debug do sistema de reportes
     debugReportSystem().catch(console.error);
 }, 5000);
-
-// ✅ CORREÇÃO CRÍTICA: Inicialização garantida para visitantes
-async function initializeApp() {
-    try {
-        // 1. Verificar autenticação
-        const { data: { user }, error } = await supabase.auth.getUser();
-        
-        if (error || !user) {
-            window.location.href = 'login.html';
-            return;
-        }
-        
-        currentUser = user;
-        
-        // 2. Carregar dados do usuário
-        await loadUserData();
-        
-        // 3. Carregar usuários
-        await loadRealUsers();
-        
-        // ✅✅✅ CORREÇÃO DEFINITIVA: Sistema de visitantes com timeout
-        console.log('🎯 Inicializando sistema de visitantes...');
-        
-        // Aguardar o arquivo home-visitante.js carregar
-        let tentativas = 0;
-        const maxTentativas = 10;
-        
-        const carregarVisitantes = setInterval(async () => {
-            tentativas++;
-            
-            if (window.inicializarSistemaVisitantes) {
-                clearInterval(carregarVisitantes);
-                console.log('✅ Sistema de visitantes encontrado! Inicializando...');
-                await window.inicializarSistemaVisitantes(supabase, currentUser);
-                console.log('✅ Sistema de visitantes inicializado com sucesso!');
-            } else if (tentativas >= maxTentativas) {
-                clearInterval(carregarVisitantes);
-                console.error('❌ Sistema de visitantes não carregou');
-                await criarSistemaVisitantesFallback();
-            } else {
-                console.log('⏳ Aguardando sistema de visitantes...', tentativas);
-            }
-        }, 500);
-        
-        // 4. Configurar sistemas secundários
-        setupEventListeners();
-        setupMobileMenu();
-        
-        // 5. Atualizar stats
-        setTimeout(updateStats, 2000);
-        startOnlineStatusUpdater();
-        
-        console.log('🎯 Aplicação carregada com sucesso!');
-        
-    } catch (error) {
-        console.error('❌ Erro crítico na inicialização:', error);
-    }
-}
-
-// ✅ FALLBACK para sistema de visitantes
-async function criarSistemaVisitantesFallback() {
-    console.log('🔄 Criando fallback para sistema de visitantes...');
-    
-    try {
-        const { data: visits, error } = await supabase
-            .from('profile_visits')
-            .select('id', { count: 'exact' })
-            .eq('visited_id', currentUser.id);
-
-        const visitCount = visits?.length || 0;
-        
-        // Atualizar UI manualmente
-        const visitorsCount = document.getElementById('visitorsCount');
-        const freeVisitorsCount = document.getElementById('freeVisitorsCount');
-        const premiumSection = document.getElementById('premiumVisitors');
-        const freeSection = document.getElementById('freeVisitors');
-        
-        if (visitorsCount) {
-            visitorsCount.textContent = `${visitCount} visita${visitCount !== 1 ? 's' : ''}`;
-        }
-        
-        if (freeVisitorsCount) {
-            const countText = visitCount === 1 ? '1 pessoa' : `${visitCount} pessoas`;
-            freeVisitorsCount.textContent = countText;
-        }
-        
-        // Sempre mostrar seção FREE no fallback
-        if (premiumSection && freeSection) {
-            premiumSection.style.display = 'none';
-            freeSection.style.display = 'block';
-        }
-        
-        console.log('✅ Fallback de visitantes configurado:', visitCount);
-        
-    } catch (error) {
-        console.error('❌ Erro no fallback:', error);
-    }
-}
-
-// ✅ CORREÇÃO: Atualizar função viewProfile para registrar visitas
-async function viewProfile(userId, event) {
-    if (event) event.stopPropagation();
-
-    // Verificação de bloqueio
-    if (window.blockSystem && window.blockSystem.isUserBlocked(userId)) {
-        showQuickToast('🚫 Você bloqueou este usuário.');
-        return;
-    }
-    
-    // Verificar se o usuário te bloqueou
-    const isBlockedByUser = await checkIfBlockedByUser(userId);
-    if (isBlockedByUser) {
-        showQuickToast('🚫 Este usuário te bloqueou.');
-        if (window.blockSystem) {
-            window.blockSystem.removeUserCardImmediately(userId);
-        }
-        return;
-    }
-    
-    if (!isProfileComplete()) {
-        showQuickToast('Complete seu perfil primeiro!');
-        window.location.href = 'painel.html';
-        return;
-    }
-    
-    // ✅ REGISTRAR VISITA usando o sistema
-    if (window.registrarVisitaPerfil) {
-        await window.registrarVisitaPerfil(userId);
-    }
-    
-    localStorage.setItem('viewingProfileId', userId);
-    window.location.href = 'perfil.html';
-}
 
 console.log('✅ SISTEMA HOME.HTML CARREGADO COM SUCESSO! 🎉');
 console.log('👤 Usuário:', currentUser?.email);
