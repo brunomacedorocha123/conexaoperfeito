@@ -1722,11 +1722,10 @@ footer {
 .visitor-avatar {
     display: flex !important;
 }
-
 /* ==================== SISTEMA DE NOTIFICAÇÕES - SINO ==================== */
 .notification-bell-container {
     position: absolute;
-    right: 200px;
+    right: 80px; /* Posicionado após o botão Sair */
     top: 50%;
     transform: translateY(-50%);
     z-index: 101;
@@ -1790,6 +1789,49 @@ footer {
     margin-left: auto;
 }
 
+/* Badge com muitos números */
+.notification-badge.high-count {
+    width: 25px;
+    height: 25px;
+    font-size: 0.6rem;
+}
+
+/* Animação de pulso para badge */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.7);
+    }
+    70% {
+        transform: scale(1.1);
+        box-shadow: 0 0 0 6px rgba(229, 62, 62, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(229, 62, 62, 0);
+    }
+}
+
+/* Sino quando tem notificações não lidas */
+.notification-bell.has-notifications {
+    background: rgba(229, 62, 62, 0.1);
+    border-color: rgba(229, 62, 62, 0.5);
+    animation: bell-shake 2s ease-in-out infinite;
+}
+
+@keyframes bell-shake {
+    0%, 100% { transform: translateY(-50%) rotate(0); }
+    25% { transform: translateY(-50%) rotate(-10deg); }
+    75% { transform: translateY(-50%) rotate(10deg); }
+}
+
+/* Versão mobile da animação */
+@keyframes bell-shake-mobile {
+    0%, 100% { transform: rotate(0); }
+    25% { transform: rotate(-10deg); }
+    75% { transform: rotate(10deg); }
+}
+
 @media (max-width: 768px) {
     .notification-bell-container {
         position: static;
@@ -1808,6 +1850,30 @@ footer {
         width: 18px;
         height: 18px;
         font-size: 0.65rem;
+    }
+    
+    .notification-bell.has-notifications {
+        animation: bell-shake-mobile 2s ease-in-out infinite;
+    }
+}
+
+@media (max-width: 480px) {
+    .notification-bell-container {
+        margin-right: 0.5rem;
+    }
+    
+    .notification-bell {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+    
+    .notification-badge {
+        width: 16px;
+        height: 16px;
+        font-size: 0.6rem;
+        top: -3px;
+        right: -3px;
     }
 }
 </style>
