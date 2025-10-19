@@ -314,26 +314,23 @@
     </div>
 
 <script>
+    // ==================== VERIFICAÇÃO DE AUTENTICAÇÃO ====================
+    if (localStorage.getItem('adminAutenticado') !== 'true') {
+        window.location.href = 'login-admin.html';
+    }
+
+    // Verifica se o login foi feito há menos de 24 horas
+    const loginTime = localStorage.getItem('adminLoginTime');
+    if (loginTime && (new Date().getTime() - loginTime) > 24 * 60 * 60 * 1000) {
+        localStorage.removeItem('adminAutenticado');
+        localStorage.removeItem('adminLoginTime');
+        window.location.href = 'login-admin.html';
+    }
+
     // ==================== CONFIGURAÇÃO SUPABASE ====================
     const supabaseUrl = 'https://gcukalndarlgydmgmmmt.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
     const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-
-    // ==================== VERIFICAÇÃO DE AUTENTICAÇÃO ====================
-    async function verificarAutenticacao() {
-        try {
-            const { data: { user }, error } = await supabase.auth.getUser();
-            if (error || !user) {
-                window.location.href = 'login-admin.html';
-                return false;
-            }
-            return true;
-        } catch (error) {
-            console.error('Erro na autenticação:', error);
-            window.location.href = 'login-admin.html';
-            return false;
-        }
-    }
 
     // ==================== FUNÇÕES PRINCIPAIS ====================
     async function carregarEstatisticas() {
@@ -451,7 +448,6 @@
         }
     }
 
-    // ✅ FUNÇÃO PRINCIPAL CORRIGIDA - BANIMENTO PERMANENTE
     async function tomarAcao(idReporte, idUsuario, acao, emailUsuario = '') {
         const textoAcao = {
             'banir': 'BANIR PERMANENTEMENTE este usuário',
@@ -468,11 +464,9 @@
         }
 
         try {
-            // ✅ AÇÃO: BANIMENTO PERMANENTE
             if (acao === 'banir' && idUsuario) {
                 let emailParaBanir = emailUsuario;
                 
-                // Se não veio o email, buscar do perfil
                 if (!emailParaBanir) {
                     const { data: usuario, error: userError } = await supabase
                         .from('profiles')
@@ -484,7 +478,6 @@
                     emailParaBanir = usuario.email;
                 }
                 
-                // Buscar motivo do reporte
                 const { data: reporte } = await supabase
                     .from('user_reports')
                     .select('reason, evidence')
@@ -493,7 +486,6 @@
                     
                 const motivo = reporte?.evidence || reporte?.reason || 'Violação grave das regras';
                 
-                // ✅ 1. BANIR EMAIL PERMANENTEMENTE
                 const { error: banError } = await supabase
                     .from('banned_emails')
                     .insert({
@@ -512,15 +504,12 @@
                     }
                 }
                 
-                // ✅ 2. LIMPAR DADOS DO USUÁRIO
                 await limparDadosUsuario(idUsuario);
                 
                 console.log(`✅ Usuário ${idUsuario} banido permanentemente. Email: ${emailParaBanir}`);
             }
             
-            // ✅ AÇÃO: ADVERTÊNCIA  
             else if (acao === 'advertir' && idUsuario) {
-                // Buscar motivo do reporte
                 const { data: reporte } = await supabase
                     .from('user_reports')
                     .select('reason, evidence')
@@ -529,7 +518,6 @@
                     
                 const motivo = reporte?.evidence || reporte?.reason || 'Violação de regras';
                 
-                // Salvar advertência
                 try {
                     const { error: warnError } = await supabase
                         .from('user_warnings')
@@ -544,7 +532,6 @@
 
                     if (warnError) {
                         console.warn('Tabela de advertências não disponível:', warnError);
-                        // Criar advertência no perfil se a tabela não existir
                         await supabase
                             .from('profiles')
                             .update({
@@ -556,7 +543,6 @@
                     }
                 } catch (e) {
                     console.warn('Sistema de advertências indisponível, usando fallback');
-                    // Fallback: marcar no perfil
                     await supabase
                         .from('profiles')
                         .update({
@@ -567,7 +553,6 @@
                 }
             }
             
-            // ✅ SEMPRE marca o reporte como resolvido
             const { error: reportError } = await supabase
                 .from('user_reports')
                 .update({ 
@@ -580,7 +565,6 @@
 
             if (reportError) throw reportError;
 
-            // Mensagem de confirmação
             let mensagem = '';
             if (acao === 'banir') {
                 mensagem = '🚫 USUÁRIO BANIDO PERMANENTEMENTE!\n\n• Email BLOQUEADO para sempre\n• Não pode criar nova conta\n• Dados removidos do sistema';
@@ -591,8 +575,6 @@
             }
             
             alert(mensagem);
-            
-            // Recarrega os dados
             carregarTudo();
 
         } catch (erro) {
@@ -601,12 +583,10 @@
         }
     }
 
-    // ✅ FUNÇÃO PARA LIMPAR DADOS DO USUÁRIO BANIDO
     async function limparDadosUsuario(userId) {
         try {
             console.log(`🧹 Limpando dados do usuário banido: ${userId}`);
             
-            // 1. Anonimizar perfil COMPLETAMENTE
             const { error: profileError } = await supabase
                 .from('profiles')
                 .update({
@@ -625,7 +605,6 @@
 
             if (profileError) throw profileError;
 
-            // 2. Limpar interações e dados relacionados
             const tabelasParaLimpar = [
                 'user_likes', 
                 'user_matches', 
@@ -638,10 +617,8 @@
             
             for (const tabela of tabelasParaLimpar) {
                 try {
-                    // Remover onde o usuário é o autor/remetente
                     await supabase.from(tabela).delete().eq('user_id', userId);
                     
-                    // Remover onde o usuário é o alvo/destinatário
                     const colunasAlvo = ['target_user_id', 'receiver_id', 'visited_id', 'blocked_user_id', 'reported_user_id'];
                     for (const coluna of colunasAlvo) {
                         await supabase.from(tabela).delete().eq(coluna, userId);
@@ -651,7 +628,6 @@
                 }
             }
             
-            // 3. Limpar user_details se existir
             try {
                 await supabase.from('user_details').delete().eq('user_id', userId);
             } catch (e) {
@@ -684,23 +660,15 @@
     }
 
     // ==================== INICIALIZAÇÃO ====================
-    document.addEventListener('DOMContentLoaded', async function() {
+    document.addEventListener('DOMContentLoaded', function() {
         console.log('👑 Painel Admin iniciado');
-        
-        // Primeiro verifica se está autenticado
-        const autenticado = await verificarAutenticacao();
-        if (!autenticado) return;
-        
-        // Se estiver autenticado, carrega o painel
         carregarTudo();
         
-        // Atualiza a cada 30 segundos
         setInterval(() => {
             carregarEstatisticas();
         }, 30000);
     });
 
-    // ✅ FUNÇÃO PARA VERIFICAR TABELA DE EMAILS BANIDOS (DEBUG)
     async function verificarTabelaBanidos() {
         try {
             const { data, error } = await supabase
@@ -709,7 +677,7 @@
                 .limit(5);
                 
             if (error) {
-                console.warn('❌ Tabela banned_emails não existe. Execute o SQL primeiro.');
+                console.warn('❌ Tabela banned_emails não existe.');
                 return false;
             }
             
@@ -721,7 +689,6 @@
         }
     }
 
-    // Verificar se a tabela existe ao carregar
     setTimeout(verificarTabelaBanidos, 2000);
 </script>
 </body>
