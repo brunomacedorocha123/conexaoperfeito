@@ -404,11 +404,13 @@
 
     </div>
 
-   <script>
+  <script>
     // ==================== CONFIGURAÇÃO SUPABASE ====================
     const supabaseUrl = 'https://gcukalndarlgydmgmmmt.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
     const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+    let currentAdmin = null;
 
     // ==================== FUNÇÕES PRINCIPAIS ====================
 
@@ -574,11 +576,10 @@
 
             notificacoes.forEach(notificacao => {
                 const badgeColor = {
-                    'interactions': '#e9d8fd',
+                    'system': '#bee3f8',
                     'bonus': '#c6f6d5', 
-                    'warnings': '#fed7d7',
-                    'security': '#fed7d7',
-                    'system': '#bee3f8'
+                    'interactions': '#e9d8fd',
+                    'warnings': '#fed7d7'
                 }[notificacao.category] || '#e2e8f0';
 
                 html += `
@@ -828,210 +829,503 @@
         alert('Agora use o formulário de envio');
     }
 
-    // ==================== ABA: ENVIAR NOTIFICAÇÃO ====================
+    // ==================== ABA: ENVIAR NOTIFICAÇÃO - VERSÃO COMPLETA ====================
 
     async function carregarFormularioEnvio() {
         const container = document.getElementById('sendContent');
         
         try {
-            // Buscar usuários de forma SIMPLES
-            const { data: usuarios, error } = await supabase
-                .from('profiles')
-                .select('id, nickname')
-                .limit(20);
-
-            let optionsHTML = '';
-            if (usuarios && usuarios.length > 0) {
-                optionsHTML = usuarios.map(user => 
-                    `<option value="${user.id}">${user.nickname || 'Usuário'}</option>`
-                ).join('');
-            } else {
-                optionsHTML = '<option value="">Nenhum usuário encontrado</option>';
-            }
-
             container.innerHTML = `
-                <div style="max-width: 600px; margin: 0 auto;">
+                <div style="max-width: 800px; margin: 0 auto;">
                     <h3 style="color: var(--primary); margin-bottom: 2rem;">✉️ Enviar Notificação</h3>
                     
-                    <form onsubmit="enviarNotificacaoSimples(event)">
+                    <form onsubmit="enviarNotificacaoAvancada(event)">
+                        
+                        <!-- SELEÇÃO DE DESTINATÁRIOS -->
                         <div style="background: var(--light-gray); padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem;">
-                            <h4 style="margin-bottom: 1rem;">🎯 Destinatário</h4>
+                            <h4 style="color: var(--primary); margin-bottom: 1rem;">🎯 Escolher Destinatários</h4>
                             
-                            <div style="margin-bottom: 1rem;">
-                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Usuário *</label>
-                                <select id="usuarioId" style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px;" required>
-                                    <option value="">Selecione um usuário...</option>
-                                    ${optionsHTML}
-                                </select>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                                <div>
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Tipo de Envio *</label>
+                                    <select id="tipoEnvio" onchange="toggleDestinatarios()" style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px;" required>
+                                        <option value="">Selecione o tipo...</option>
+                                        <option value="todos">📧 Todos os Usuários</option>
+                                        <option value="grupo">🎯 Grupo Específico</option>
+                                        <option value="usuario">👤 Usuário Específico</option>
+                                        <option value="multiplos">👥 Múltiplos Usuários</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- GRUPOS -->
+                                <div id="grupoContainer" style="display: none;">
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Selecionar Grupo</label>
+                                    <select id="grupoSelecionado" style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px;">
+                                        <option value="free">👥 Todos Free</option>
+                                        <option value="premium">⭐ Todos Premium</option>
+                                        <option value="online">🔔 Todos Online</option>
+                                        <option value="novos">🆕 Novos Usuários (7 dias)</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- USUÁRIO ESPECÍFICO -->
+                                <div id="usuarioContainer" style="display: none;">
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Buscar Usuário</label>
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <input type="text" id="buscarUsuario" placeholder="Digite nickname ou email..." 
+                                            style="flex: 1; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px;">
+                                        <button type="button" class="btn btn-primary" onclick="buscarUsuarios()" style="white-space: nowrap;">
+                                            🔍 Buscar
+                                        </button>
+                                    </div>
+                                    <div id="resultadosBusca" style="margin-top: 0.5rem;"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- MÚLTIPLOS USUÁRIOS -->
+                            <div id="multiplosContainer" style="display: none;">
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Selecionar Múltiplos Usuários</label>
+                                <div style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 6px; padding: 1rem; background: white;">
+                                    <div id="listaUsuariosMultiplos">
+                                        <div class="loading">
+                                            <div class="spinner"></div>
+                                            <p>Carregando usuários...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <small style="color: #666;">Selecionados: <span id="contadorSelecionados">0</span> usuários</small>
+                            </div>
+                            
+                            <!-- RESUMO DOS DESTINATÁRIOS -->
+                            <div id="resumoDestinatarios" style="margin-top: 1rem; padding: 1rem; background: #e8f5e8; border-radius: 6px; display: none;">
+                                <strong>📋 Resumo:</strong> <span id="textoResumo">--</span>
                             </div>
                         </div>
 
+                        <!-- CONTEÚDO DA NOTIFICAÇÃO -->
                         <div style="background: var(--light-gray); padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem;">
-                            <h4 style="margin-bottom: 1rem;">📝 Conteúdo</h4>
+                            <h4 style="color: var(--primary); margin-bottom: 1rem;">📝 Conteúdo da Notificação</h4>
                             
-                            <div style="margin-bottom: 1rem;">
-                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Título *</label>
-                                <input type="text" id="titulo" placeholder="Ex: 🎉 Nova mensagem!" 
-                                    style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px;" required>
-                            </div>
-                            
-                            <div style="margin-bottom: 1rem;">
-                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Mensagem *</label>
-                                <textarea id="mensagem" placeholder="Digite a mensagem..." 
-                                    style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px; height: 120px;" required></textarea>
-                            </div>
-                            
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                                 <div>
-                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Categoria</label>
-                                    <select id="categoria" style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px;">
-                                        <option value="system">Sistema</option>
-                                        <option value="interactions">Interações</option>
-                                        <option value="bonus">Bônus</option>
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Categoria *</label>
+                                    <select id="categoriaNotificacao" style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px;" required>
+                                        <option value="system">🔄 Sistema</option>
+                                        <option value="bonus">🎁 Bônus</option>
+                                        <option value="interactions">💝 Interações</option>
+                                        <option value="warnings">⚠️ Advertências</option>
                                     </select>
                                 </div>
                                 
                                 <div>
-                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Prioridade</label>
-                                    <select id="prioridade" style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px;">
-                                        <option value="normal">Normal</option>
-                                        <option value="high">Alta</option>
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Prioridade *</label>
+                                    <select id="prioridadeNotificacao" style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px;" required>
+                                        <option value="low">🔵 Baixa</option>
+                                        <option value="normal" selected>🟢 Normal</option>
+                                        <option value="high">🟡 Alta</option>
+                                        <option value="urgent">🔴 Urgente</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-bottom: 1rem;">
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Título *</label>
+                                <input type="text" id="tituloNotificacao" 
+                                    placeholder="Ex: 🎉 Bônus Exclusivo para Premium!" 
+                                    style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px;" required>
+                            </div>
+                            
+                            <div style="margin-bottom: 1rem;">
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Mensagem *</label>
+                                <textarea id="mensagemNotificacao" 
+                                    placeholder="Digite a mensagem da notificação..." 
+                                    style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px; height: 150px;" required></textarea>
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div>
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Tipo</label>
+                                    <input type="text" id="tipoNotificacao" 
+                                        placeholder="Ex: bonus_premium, advertencia" 
+                                        style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px;">
+                                </div>
+                                
+                                <div>
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Dias de Retenção</label>
+                                    <select id="retencaoNotificacao" style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px;">
+                                        <option value="7">7 dias</option>
+                                        <option value="30" selected>30 dias</option>
+                                        <option value="90">90 dias</option>
+                                        <option value="365">1 ano</option>
                                     </select>
                                 </div>
                             </div>
                         </div>
 
-                        <div style="text-align: center;">
-                            <button type="submit" class="btn btn-success" style="padding: 1rem 2rem;">
+                        <!-- AÇÕES -->
+                        <div style="display: flex; gap: 1rem; justify-content: flex-end; flex-wrap: wrap;">
+                            <button type="button" class="btn" onclick="previsualizarNotificacao()" style="background: var(--info); color: white;">
+                                👁️ Pré-visualizar
+                            </button>
+                            <button type="submit" class="btn btn-success">
                                 ✉️ Enviar Notificação
                             </button>
                         </div>
+
                     </form>
                 </div>
             `;
+
+            // Carregar lista de usuários para seleção múltipla
+            await carregarUsuariosParaSelecao();
 
         } catch (error) {
             console.error('Erro ao carregar formulário:', error);
-            // Fallback - formulário SEM usuários
             container.innerHTML = `
-                <div style="max-width: 600px; margin: 0 auto;">
-                    <h3 style="color: var(--primary); margin-bottom: 2rem;">✉️ Enviar Notificação</h3>
-                    
-                    <form onsubmit="enviarNotificacaoFallback(event)">
-                        <div style="background: var(--light-gray); padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem;">
-                            <h4 style="margin-bottom: 1rem;">🎯 Destinatário</h4>
-                            <div style="margin-bottom: 1rem;">
-                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ID do Usuário *</label>
-                                <input type="text" id="userIdFallback" placeholder="Cole o ID de um usuário" 
-                                    style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px;" required>
-                            </div>
-                        </div>
-
-                        <div style="background: var(--light-gray); padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem;">
-                            <h4 style="margin-bottom: 1rem;">📝 Conteúdo</h4>
-                            <div style="margin-bottom: 1rem;">
-                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Título *</label>
-                                <input type="text" id="tituloFallback" placeholder="Ex: 🎉 Teste!" 
-                                    style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px;" required>
-                            </div>
-                            <div style="margin-bottom: 1rem;">
-                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Mensagem *</label>
-                                <textarea id="mensagemFallback" placeholder="Mensagem de teste..." 
-                                    style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px; height: 120px;" required></textarea>
-                            </div>
-                        </div>
-
-                        <div style="text-align: center;">
-                            <button type="submit" class="btn btn-success" style="padding: 1rem 2rem;">
-                                ✉️ Enviar Notificação
-                            </button>
-                        </div>
-                    </form>
+                <div class="empty-state">
+                    <div class="icon">❌</div>
+                    <h3>Erro ao carregar formulário</h3>
+                    <p>${error.message}</p>
                 </div>
             `;
         }
     }
 
-    async function enviarNotificacaoSimples(event) {
-        event.preventDefault();
+    // Função para alternar entre os tipos de destinatários
+    function toggleDestinatarios() {
+        const tipoEnvio = document.getElementById('tipoEnvio').value;
         
-        const usuarioId = document.getElementById('usuarioId').value;
-        const titulo = document.getElementById('titulo').value;
-        const mensagem = document.getElementById('mensagem').value;
-        const categoria = document.getElementById('categoria').value;
-        const prioridade = document.getElementById('prioridade').value;
+        // Esconder todos os containers primeiro
+        document.getElementById('grupoContainer').style.display = 'none';
+        document.getElementById('usuarioContainer').style.display = 'none';
+        document.getElementById('multiplosContainer').style.display = 'none';
+        document.getElementById('resumoDestinatarios').style.display = 'none';
         
-        if (!usuarioId) {
-            alert('Selecione um usuário');
+        // Mostrar o container correto
+        switch(tipoEnvio) {
+            case 'grupo':
+                document.getElementById('grupoContainer').style.display = 'block';
+                atualizarResumoDestinatarios('grupo');
+                break;
+            case 'usuario':
+                document.getElementById('usuarioContainer').style.display = 'block';
+                atualizarResumoDestinatarios('usuario');
+                break;
+            case 'multiplos':
+                document.getElementById('multiplosContainer').style.display = 'block';
+                atualizarResumoDestinatarios('multiplos');
+                break;
+            case 'todos':
+                atualizarResumoDestinatarios('todos');
+                break;
+        }
+    }
+
+    function atualizarResumoDestinatarios(tipo) {
+        const resumo = document.getElementById('resumoDestinatarios');
+        const texto = document.getElementById('textoResumo');
+        
+        let textoResumo = '';
+        
+        switch(tipo) {
+            case 'todos':
+                textoResumo = '📧 Todos os usuários do sistema';
+                break;
+            case 'grupo':
+                const grupo = document.getElementById('grupoSelecionado');
+                const grupoTexto = grupo.options[grupo.selectedIndex].text;
+                textoResumo = `🎯 ${grupoTexto}`;
+                break;
+            case 'usuario':
+                textoResumo = '👤 Usuário específico (buscar abaixo)';
+                break;
+            case 'multiplos':
+                const contador = document.getElementById('contadorSelecionados').textContent;
+                textoResumo = `👥 ${contador} usuários selecionados`;
+                break;
+        }
+        
+        texto.textContent = textoResumo;
+        resumo.style.display = 'block';
+    }
+
+    async function carregarUsuariosParaSelecao() {
+        try {
+            const { data: usuarios, error } = await supabase
+                .from('profiles')
+                .select('id, nickname, email, subscription_type, created_at')
+                .order('nickname')
+                .limit(200);
+
+            if (error) throw error;
+
+            const container = document.getElementById('listaUsuariosMultiplos');
+            
+            if (!usuarios || usuarios.length === 0) {
+                container.innerHTML = '<p>Nenhum usuário encontrado</p>';
+                return;
+            }
+
+            let html = '';
+            usuarios.forEach(usuario => {
+                const tipoAssinatura = usuario.subscription_type === 'premium' ? '⭐' : '👥';
+                const isNovo = new Date() - new Date(usuario.created_at) < 7 * 24 * 60 * 60 * 1000;
+                const novoBadge = isNovo ? ' 🆕' : '';
+                
+                html += `
+                    <label style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; cursor: pointer; padding: 0.5rem; border-radius: 4px; transition: background 0.2s;">
+                        <input type="checkbox" name="usuariosMultiplos" value="${usuario.id}" 
+                            onchange="atualizarContadorSelecionados()" style="margin: 0;">
+                        <span>${tipoAssinatura} ${usuario.nickname || 'Sem nickname'} (${usuario.email})${novoBadge}</span>
+                    </label>
+                `;
+            });
+
+            container.innerHTML = html;
+            atualizarContadorSelecionados();
+
+        } catch (error) {
+            console.error('Erro ao carregar usuários:', error);
+            document.getElementById('listaUsuariosMultiplos').innerHTML = '<p>Erro ao carregar usuários</p>';
+        }
+    }
+
+    function atualizarContadorSelecionados() {
+        const selecionados = document.querySelectorAll('input[name="usuariosMultiplos"]:checked').length;
+        document.getElementById('contadorSelecionados').textContent = selecionados;
+        atualizarResumoDestinatarios('multiplos');
+    }
+
+    async function buscarUsuarios() {
+        const termo = document.getElementById('buscarUsuario').value.trim();
+        const container = document.getElementById('resultadosBusca');
+        
+        if (!termo) {
+            container.innerHTML = '<p style="color: #666;">Digite um nickname ou email para buscar</p>';
             return;
         }
 
         try {
-            const { error } = await supabase
-                .from('user_notifications')
-                .insert([{
-                    user_id: usuarioId,
-                    title: titulo,
-                    message: mensagem,
-                    category: categoria,
-                    type: 'manual',
-                    priority: prioridade,
-                    retention_days: 30
-                }]);
+            const { data: usuarios, error } = await supabase
+                .from('profiles')
+                .select('id, nickname, email, subscription_type')
+                .or(`nickname.ilike.%${termo}%,email.ilike.%${termo}%`)
+                .limit(10);
 
             if (error) throw error;
 
-            alert('✅ Notificação enviada com sucesso!');
-            
-            // Limpar formulário
-            document.getElementById('usuarioId').value = '';
-            document.getElementById('titulo').value = '';
-            document.getElementById('mensagem').value = '';
-            
-            carregarEstatisticas();
+            if (!usuarios || usuarios.length === 0) {
+                container.innerHTML = '<p style="color: #666;">Nenhum usuário encontrado</p>';
+                return;
+            }
+
+            let html = '<div style="display: flex; flex-direction: column; gap: 0.5rem;">';
+            usuarios.forEach(usuario => {
+                const tipoAssinatura = usuario.subscription_type === 'premium' ? '⭐' : '👥';
+                html += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.8rem; background: white; border-radius: 6px; border: 1px solid #ddd;">
+                        <div>
+                            <strong>${tipoAssinatura} ${usuario.nickname || 'Sem nickname'}</strong>
+                            <br><small>${usuario.email}</small>
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="selecionarUsuarioUnico('${usuario.id}', '${usuario.nickname || usuario.email}')">
+                            Selecionar
+                        </button>
+                    </div>
+                `;
+            });
+            html += '</div>';
+
+            container.innerHTML = html;
 
         } catch (error) {
-            console.error('Erro:', error);
+            console.error('Erro na busca:', error);
+            container.innerHTML = '<p style="color: red;">Erro na busca</p>';
+        }
+    }
+
+    function selecionarUsuarioUnico(usuarioId, usuarioNome) {
+        // Aqui você pode armazenar o usuário selecionado para usar no envio
+        localStorage.setItem('usuarioSelecionado', JSON.stringify({ id: usuarioId, nome: usuarioNome }));
+        
+        document.getElementById('resultadosBusca').innerHTML = `
+            <div style="padding: 1rem; background: #e8f5e8; border-radius: 6px;">
+                ✅ <strong>Usuário selecionado:</strong> ${usuarioNome}
+            </div>
+        `;
+        
+        atualizarResumoDestinatarios('usuario');
+    }
+
+    function previsualizarNotificacao() {
+        const titulo = document.getElementById('tituloNotificacao').value;
+        const mensagem = document.getElementById('mensagemNotificacao').value;
+        const categoria = document.getElementById('categoriaNotificacao').value;
+        
+        if (!titulo || !mensagem) {
+            alert('Preencha o título e a mensagem para ver a prévia');
+            return;
+        }
+
+        const previewHTML = `
+            <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000;">
+                <div style="background: white; padding: 2rem; border-radius: 12px; width: 90%; max-width: 500px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h3 style="color: var(--primary); margin: 0;">👁️ Pré-visualização</h3>
+                        <button onclick="fecharPreview()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">❌</button>
+                    </div>
+                    
+                    <div class="notification-item">
+                        <div class="notification-header">
+                            <div class="notification-title">${titulo}</div>
+                            <div class="notification-meta">
+                                <span class="notification-badge">${categoria}</span>
+                                <span style="color: var(--danger);">🔴 Não lida</span>
+                            </div>
+                        </div>
+                        <div class="notification-message">${mensagem}</div>
+                        <div class="notification-meta">
+                            <small><strong>Para:</strong> Usuário de Exemplo</small>
+                            <small><strong>Enviada:</strong> Agora</small>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 1.5rem; text-align: center;">
+                        <button onclick="fecharPreview()" class="btn btn-primary">Fechar</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', previewHTML);
+    }
+
+    function fecharPreview() {
+        const preview = document.querySelector('body > div:last-child');
+        if (preview) preview.remove();
+    }
+
+    async function enviarNotificacaoAvancada(event) {
+        event.preventDefault();
+        
+        const tipoEnvio = document.getElementById('tipoEnvio').value;
+        let userIDs = [];
+        
+        // Coletar IDs baseado no tipo de envio
+        switch(tipoEnvio) {
+            case 'todos':
+                userIDs = await buscarTodosUsuarios();
+                break;
+            case 'grupo':
+                const grupo = document.getElementById('grupoSelecionado').value;
+                userIDs = await buscarUsuariosPorGrupo(grupo);
+                break;
+            case 'usuario':
+                const usuarioSelecionado = localStorage.getItem('usuarioSelecionado');
+                if (usuarioSelecionado) {
+                    const usuario = JSON.parse(usuarioSelecionado);
+                    userIDs = [usuario.id];
+                }
+                break;
+            case 'multiplos':
+                const checkboxes = document.querySelectorAll('input[name="usuariosMultiplos"]:checked');
+                userIDs = Array.from(checkboxes).map(cb => cb.value);
+                break;
+        }
+        
+        if (userIDs.length === 0) {
+            alert('Nenhum usuário selecionado para receber a notificação');
+            return;
+        }
+        
+        const notificacaoData = {
+            category: document.getElementById('categoriaNotificacao').value,
+            type: document.getElementById('tipoNotificacao').value || 'manual_admin',
+            title: document.getElementById('tituloNotificacao').value,
+            message: document.getElementById('mensagemNotificacao').value,
+            priority: document.getElementById('prioridadeNotificacao').value,
+            retention_days: parseInt(document.getElementById('retencaoNotificacao').value),
+            created_by: 'admin'
+        };
+        
+        // Confirmação para envio em massa
+        if (userIDs.length > 1) {
+            const confirmacao = confirm(`Enviar esta notificação para ${userIDs.length} usuários?\n\nTítulo: ${notificacaoData.title}\nCategoria: ${notificacaoData.category}`);
+            if (!confirmacao) return;
+        }
+        
+        try {
+            // Preparar notificações para todos os usuários
+            const notificacoes = userIDs.map(userId => ({
+                ...notificacaoData,
+                user_id: userId,
+                created_at: new Date().toISOString()
+            }));
+            
+            // Inserir em lote
+            const { error } = await supabase
+                .from('user_notifications')
+                .insert(notificacoes);
+            
+            if (error) throw error;
+            
+            alert(`✅ Notificação enviada para ${userIDs.length} usuário(s)!`);
+            
+            // Limpar formulário
+            document.getElementById('sendNotificationForm').reset();
+            localStorage.removeItem('usuarioSelecionado');
+            
+            // Atualizar estatísticas
+            carregarEstatisticas();
+            
+        } catch (error) {
+            console.error('Erro ao enviar notificação:', error);
             alert('❌ Erro: ' + error.message);
         }
     }
 
-    async function enviarNotificacaoFallback(event) {
-        event.preventDefault();
-        
-        const usuarioId = document.getElementById('userIdFallback').value;
-        const titulo = document.getElementById('tituloFallback').value;
-        const mensagem = document.getElementById('mensagemFallback').value;
-        
-        if (!usuarioId) {
-            alert('Digite um ID de usuário');
-            return;
-        }
-
+    async function buscarTodosUsuarios() {
         try {
-            const { error } = await supabase
-                .from('user_notifications')
-                .insert([{
-                    user_id: usuarioId,
-                    title: titulo,
-                    message: mensagem,
-                    category: 'system',
-                    type: 'manual',
-                    priority: 'normal',
-                    retention_days: 30
-                }]);
-
-            if (error) throw error;
-
-            alert('✅ Notificação enviada!');
-            document.getElementById('userIdFallback').value = '';
-            document.getElementById('tituloFallback').value = '';
-            document.getElementById('mensagemFallback').value = '';
+            const { data: usuarios, error } = await supabase
+                .from('profiles')
+                .select('id')
+                .limit(10000);
             
-            carregarEstatisticas();
-
+            if (error) throw error;
+            return usuarios.map(u => u.id);
         } catch (error) {
-            alert('❌ Erro: ' + error.message);
+            console.error('Erro ao buscar usuários:', error);
+            return [];
+        }
+    }
+
+    async function buscarUsuariosPorGrupo(grupo) {
+        try {
+            let query = supabase.from('profiles').select('id');
+            
+            switch(grupo) {
+                case 'free':
+                    query = query.eq('subscription_type', 'free');
+                    break;
+                case 'premium':
+                    query = query.eq('subscription_type', 'premium');
+                    break;
+                case 'online':
+                    // Aqui você precisaria de uma lógica para usuários online
+                    query = query.gt('last_online_at', new Date(Date.now() - 15 * 60 * 1000).toISOString());
+                    break;
+                case 'novos':
+                    query = query.gt('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+                    break;
+            }
+            
+            const { data: usuarios, error } = await query;
+            if (error) throw error;
+            return usuarios.map(u => u.id);
+            
+        } catch (error) {
+            console.error('Erro ao buscar grupo:', error);
+            return [];
         }
     }
 
