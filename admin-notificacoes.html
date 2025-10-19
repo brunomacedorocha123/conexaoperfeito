@@ -829,7 +829,7 @@
         alert('Agora use o formulário de envio');
     }
 
-    // ==================== ABA: ENVIAR NOTIFICAÇÃO - VERSÃO COMPLETA ====================
+   // ==================== ABA: ENVIAR NOTIFICAÇÃO - VERSÃO COMPLETA ====================
 
     async function carregarFormularioEnvio() {
         const container = document.getElementById('sendContent');
@@ -1244,8 +1244,8 @@
             title: document.getElementById('tituloNotificacao').value,
             message: document.getElementById('mensagemNotificacao').value,
             priority: document.getElementById('prioridadeNotificacao').value,
-            retention_days: parseInt(document.getElementById('retencaoNotificacao').value),
-            created_by: 'admin'
+            retention_days: parseInt(document.getElementById('retencaoNotificacao').value)
+            // CORREÇÃO: REMOVIDO created_by: 'admin' - CAUSAVA O ERRO
         };
         
         // Confirmação para envio em massa
