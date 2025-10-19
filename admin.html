@@ -313,11 +313,27 @@
         </div>
     </div>
 
-   <script>
-    // ==================== CONEXÃO COM BANCO ====================
+<script>
+    // ==================== CONFIGURAÇÃO SUPABASE ====================
     const supabaseUrl = 'https://gcukalndarlgydmgmmmt.supabase.co';
-    const supabaseChave = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseChave);
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+    // ==================== VERIFICAÇÃO DE AUTENTICAÇÃO ====================
+    async function verificarAutenticacao() {
+        try {
+            const { data: { user }, error } = await supabase.auth.getUser();
+            if (error || !user) {
+                window.location.href = 'login-admin.html';
+                return false;
+            }
+            return true;
+        } catch (error) {
+            console.error('Erro na autenticação:', error);
+            window.location.href = 'login-admin.html';
+            return false;
+        }
+    }
 
     // ==================== FUNÇÕES PRINCIPAIS ====================
     async function carregarEstatisticas() {
@@ -668,8 +684,14 @@
     }
 
     // ==================== INICIALIZAÇÃO ====================
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
         console.log('👑 Painel Admin iniciado');
+        
+        // Primeiro verifica se está autenticado
+        const autenticado = await verificarAutenticacao();
+        if (!autenticado) return;
+        
+        // Se estiver autenticado, carrega o painel
         carregarTudo();
         
         // Atualiza a cada 30 segundos
