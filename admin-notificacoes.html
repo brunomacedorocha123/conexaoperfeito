@@ -705,6 +705,297 @@
         }
     }
 
+    // ==================== ABA: TEMPLATES - VERSÃO SIMPLIFICADA ====================
+
+    async function carregarTemplates() {
+        const container = document.getElementById('templatesContent');
+        
+        try {
+            // Buscar todos os templates
+            const { data: templates, error } = await supabase
+                .from('notification_templates')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            if (!templates || templates.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📝</div>
+                        <h3>Nenhum template criado</h3>
+                        <p>Crie seu primeiro template para agilizar o envio de notificações.</p>
+                        <button class="btn btn-success" onclick="criarTemplateSimples()" style="margin-top: 1rem;">
+                            ➕ Criar Primeiro Template
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <div style="margin-bottom: 1rem;">
+                    <button class="btn btn-success" onclick="criarTemplateSimples()">
+                        ➕ Novo Template
+                    </button>
+                </div>
+                <div class="notifications-grid">
+            `;
+
+            templates.forEach(template => {
+                html += `
+                    <div class="notification-item">
+                        <div class="notification-header">
+                            <div class="notification-title">${template.name}</div>
+                            <div class="notification-meta">
+                                <span class="notification-badge">${template.category}</span>
+                                <span class="notification-badge">${template.priority}</span>
+                                ${template.is_active ? '<span style="color: var(--success);">✅ Ativo</span>' : '<span style="color: var(--gray);">⏸️ Inativo</span>'}
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <strong>Título:</strong> ${template.title_template}
+                        </div>
+                        
+                        <div class="notification-message">
+                            <strong>Mensagem:</strong> ${template.message_template}
+                        </div>
+                        
+                        <div class="notification-meta">
+                            <small><strong>Retenção:</strong> ${template.retention_days} dias</small>
+                            <small><strong>Usos:</strong> ${template.usage_count || 0}</small>
+                        </div>
+                        
+                        <div class="notification-actions">
+                            <button class="btn btn-primary" onclick="usarTemplate('${template.id}')">
+                                ✉️ Usar
+                            </button>
+                            <button class="btn btn-danger" onclick="excluirTemplate('${template.id}')">
+                                🗑️ Excluir
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            container.innerHTML = html;
+
+        } catch (error) {
+            console.error('Erro ao carregar templates:', error);
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">❌</div>
+                    <h3>Erro ao carregar templates</h3>
+                    <p>${error.message}</p>
+                </div>
+            `;
+        }
+    }
+
+    async function criarTemplateSimples() {
+        const nome = prompt('Nome do template:');
+        if (!nome) return;
+        
+        const titulo = prompt('Título da notificação:');
+        if (!titulo) return;
+        
+        const mensagem = prompt('Mensagem da notificação:');
+        if (!mensagem) return;
+
+        try {
+            const { error } = await supabase
+                .from('notification_templates')
+                .insert([{
+                    name: nome,
+                    title_template: titulo,
+                    message_template: mensagem,
+                    category: 'system',
+                    priority: 'normal',
+                    retention_days: 30,
+                    is_active: true
+                }]);
+
+            if (error) throw error;
+
+            alert('✅ Template criado com sucesso!');
+            carregarTemplates();
+
+        } catch (error) {
+            alert('❌ Erro ao criar template: ' + error.message);
+        }
+    }
+
+    async function excluirTemplate(templateId) {
+        if (!confirm('Tem certeza que deseja excluir este template?')) {
+            return;
+        }
+
+        try {
+            const { error } = await supabase
+                .from('notification_templates')
+                .delete()
+                .eq('id', templateId);
+
+            if (error) throw error;
+
+            alert('✅ Template excluído com sucesso!');
+            carregarTemplates();
+
+        } catch (error) {
+            alert('❌ Erro ao excluir template: ' + error.message);
+        }
+    }
+
+    function usarTemplate(templateId) {
+        // Vai para a aba de envio
+        showTab('send');
+        alert('Agora vá para a aba "Enviar Notificação" e use o template selecionado');
+    }
+
+    // ==================== ABA: ENVIAR NOTIFICAÇÃO - VERSÃO SIMPLIFICADA ====================
+
+    async function carregarFormularioEnvio() {
+        const container = document.getElementById('sendContent');
+        
+        try {
+            // Buscar lista de usuários para seleção
+            const { data: usuarios, error } = await supabase
+                .from('profiles')
+                .select('id, nickname, email')
+                .order('nickname')
+                .limit(50);
+
+            if (error) throw error;
+
+            let html = `
+                <div style="max-width: 600px; margin: 0 auto;">
+                    <form onsubmit="enviarNotificacaoSimples(event)">
+                        
+                        <div style="background: var(--light-gray); padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem;">
+                            <h3 style="color: var(--primary); margin-bottom: 1rem;">🎯 Destinatário</h3>
+                            
+                            <div style="margin-bottom: 1rem;">
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Selecionar Usuário *</label>
+                                <select id="usuarioDestino" style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px;" required>
+                                    <option value="">Selecione um usuário...</option>
+                                    ${usuarios?.map(user => `
+                                        <option value="${user.id}">${user.nickname} (${user.email})</option>
+                                    `).join('')}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="background: var(--light-gray); padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem;">
+                            <h3 style="color: var(--primary); margin-bottom: 1rem;">✉️ Conteúdo da Notificação</h3>
+                            
+                            <div style="margin-bottom: 1rem;">
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Título *</label>
+                                <input type="text" id="tituloNotificacao" style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px;" 
+                                    placeholder="Ex: 🎉 Nova mensagem!" required>
+                            </div>
+                            
+                            <div style="margin-bottom: 1rem;">
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Mensagem *</label>
+                                <textarea id="mensagemNotificacao" style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px; height: 120px;" 
+                                    placeholder="Digite a mensagem..." required></textarea>
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div>
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Categoria</label>
+                                    <select id="categoriaNotificacao" style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px;">
+                                        <option value="system">Sistema</option>
+                                        <option value="interactions">Interações</option>
+                                        <option value="bonus">Bônus</option>
+                                        <option value="warnings">Advertências</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Prioridade</label>
+                                    <select id="prioridadeNotificacao" style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px;">
+                                        <option value="normal">Normal</option>
+                                        <option value="high">Alta</option>
+                                        <option value="urgent">Urgente</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="text-align: center;">
+                            <button type="submit" class="btn btn-success" style="padding: 1rem 2rem; font-size: 1.1rem;">
+                                ✉️ Enviar Notificação
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
+            `;
+
+            container.innerHTML = html;
+
+        } catch (error) {
+            console.error('Erro ao carregar formulário:', error);
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">❌</div>
+                    <h3>Erro ao carregar formulário</h3>
+                    <p>${error.message}</p>
+                </div>
+            `;
+        }
+    }
+
+    async function enviarNotificacaoSimples(event) {
+        event.preventDefault();
+        
+        const usuarioId = document.getElementById('usuarioDestino').value;
+        const titulo = document.getElementById('tituloNotificacao').value;
+        const mensagem = document.getElementById('mensagemNotificacao').value;
+        const categoria = document.getElementById('categoriaNotificacao').value;
+        const prioridade = document.getElementById('prioridadeNotificacao').value;
+        
+        if (!usuarioId) {
+            alert('⚠️ Selecione um usuário.');
+            return;
+        }
+
+        try {
+            const { error } = await supabase
+                .from('user_notifications')
+                .insert([{
+                    user_id: usuarioId,
+                    title: titulo,
+                    message: mensagem,
+                    category: categoria,
+                    type: 'manual_admin',
+                    priority: prioridade,
+                    retention_days: 30,
+                    created_by: 'admin'
+                }]);
+
+            if (error) throw error;
+
+            alert('✅ Notificação enviada com sucesso!');
+            
+            // Limpar formulário
+            document.getElementById('usuarioDestino').value = '';
+            document.getElementById('tituloNotificacao').value = '';
+            document.getElementById('mensagemNotificacao').value = '';
+            
+            // Atualizar estatísticas
+            carregarEstatisticas();
+
+        } catch (error) {
+            console.error('Erro ao enviar notificação:', error);
+            alert('❌ Erro ao enviar notificação: ' + error.message);
+        }
+    }
+
+    // ==================== FUNÇÕES GERAIS ====================
+
     function showTab(tabName) {
         // Esconder todas as abas
         document.querySelectorAll('.tab-content').forEach(tab => {
@@ -747,9 +1038,6 @@
                 <div class="icon">❌</div>
                 <h3>Erro</h3>
                 <p>${mensagem}</p>
-                <button class="btn btn-primary" onclick="carregarTudo()" style="margin-top: 1rem;">
-                    🔄 Tentar Novamente
-                </button>
             </div>
         `;
     }
@@ -759,31 +1047,6 @@
         console.log('👑 Painel Admin iniciado');
         inicializarAdmin();
     });
-
-    // Funções placeholder para as outras abas
-    async function carregarTemplates() {
-        document.getElementById('templatesContent').innerHTML = `
-            <div class="empty-state">
-                <div class="icon">🛠️</div>
-                <h3>Em Desenvolvimento</h3>
-                <p>Esta funcionalidade está sendo implementada...</p>
-            </div>
-        `;
-    }
-
-    async function carregarFormularioEnvio() {
-        document.getElementById('sendContent').innerHTML = `
-            <div class="empty-state">
-                <div class="icon">🛠️</div>
-                <h3>Em Desenvolvimento</h3>
-                <p>Esta funcionalidade está sendo implementada...</p>
-            </div>
-        `;
-    }
-
-    function mostrarModalTemplate() {
-        alert('Modal de template será implementado na próxima etapa...');
-    }
 </script>
 </body>
 </html>
