@@ -1,5 +1,5 @@
-// home-favoritos.js - SISTEMA COMPLETO E FUNCIONAL
-console.log('🚀 Iniciando sistema de favoritos...');
+// home-favoritos.js - SISTEMA COMPLETO DE FAVORITOS
+console.log('⭐ Iniciando sistema profissional de favoritos...');
 
 class FavoriteSystem {
     constructor(supabase, currentUser) {
@@ -7,34 +7,67 @@ class FavoriteSystem {
         this.currentUser = currentUser;
         this.isPremium = false;
         this.isInitialized = false;
-        console.log('🎯 FavoriteSystem criado para usuário:', currentUser?.id);
+        this.retryCount = 0;
+        this.maxRetries = 3;
+        
+        console.log('🎯 Sistema de favoritos instanciado para:', currentUser?.email);
     }
 
     async initialize() {
         try {
             console.log('🔄 Inicializando sistema de favoritos...');
             
+            // Verificar dependências críticas
             if (!this.supabase) {
-                throw new Error('Supabase não disponível');
+                throw new Error('Supabase client não disponível');
             }
             
-            if (!this.currentUser) {
+            if (!this.currentUser?.id) {
                 throw new Error('Usuário não autenticado');
             }
             
-            await this.checkPremiumStatus();
+            // Verificar conexão com Supabase
+            const { data: testData, error: testError } = await this.supabase
+                .from('profiles')
+                .select('id')
+                .eq('id', this.currentUser.id)
+                .limit(1)
+                .single();
+
+            if (testError && testError.code !== 'PGRST116') {
+                throw new Error(`Erro de conexão: ${testError.message}`);
+            }
+            
+            // Carregar status premium
+            await this.loadPremiumStatus();
+            
+            // Marcar como inicializado
             this.isInitialized = true;
+            this.retryCount = 0;
+            
             console.log('✅ Sistema de favoritos inicializado com sucesso!');
+            console.log('👑 Status Premium:', this.isPremium);
+            console.log('👤 Usuário:', this.currentUser.email);
+            
             return true;
             
         } catch (error) {
             console.error('❌ Erro na inicialização:', error);
+            
+            // Tentar novamente se não excedeu o limite
+            if (this.retryCount < this.maxRetries) {
+                this.retryCount++;
+                console.log(`🔄 Tentativa ${this.retryCount}/${this.maxRetries} em 2 segundos...`);
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                return this.initialize();
+            }
+            
             this.isInitialized = false;
             return false;
         }
     }
 
-    async checkPremiumStatus() {
+    async loadPremiumStatus() {
         try {
             const { data: profile, error } = await this.supabase
                 .from('profiles')
@@ -43,70 +76,76 @@ class FavoriteSystem {
                 .single();
 
             if (error) {
-                console.warn('⚠️ Erro ao verificar premium:', error);
+                console.warn('⚠️ Não foi possível verificar status premium:', error);
                 this.isPremium = false;
                 return;
             }
 
             this.isPremium = profile?.is_premium || false;
-            console.log('👑 Status Premium:', this.isPremium);
             
         } catch (error) {
-            console.error('Erro ao verificar premium:', error);
+            console.error('Erro ao carregar status premium:', error);
             this.isPremium = false;
         }
     }
 
-    // ❤️ FUNÇÃO PRINCIPAL - CORAÇÃO DOS FAVORITOS
+    // 🎯 FUNÇÃO PRINCIPAL - ADICIONAR/REMOVER FAVORITO
     async toggleFavorite(userId, userCardElement = null) {
-        console.log('❤️ toggleFavorite chamado para:', userId);
+        console.log('❤️ Processando ação de favorito para:', userId);
         
         try {
-            // Verificações de segurança
+            // Validações de segurança
             if (!this.isInitialized) {
-                throw new Error('Sistema de favoritos não inicializado');
+                throw new Error('Sistema não inicializado. Aguarde o carregamento.');
             }
 
-            if (!userId) {
-                throw new Error('ID do usuário não fornecido');
+            if (!userId || typeof userId !== 'string') {
+                throw new Error('ID de usuário inválido');
             }
 
-            console.log('🔍 Verificando se já é favorito...');
+            if (userId === this.currentUser.id) {
+                throw new Error('Não é possível favoritar a si mesmo');
+            }
+
+            console.log('🔍 Verificando status atual do favorito...');
             
-            // Verificar se já é favorito
+            // 1. VERIFICAR SE JÁ É FAVORITO
             const { data: existingFavorite, error: checkError } = await this.supabase
                 .from('user_favorites')
-                .select('id')
+                .select('id, created_at')
                 .eq('user_id', this.currentUser.id)
                 .eq('favorite_user_id', userId)
                 .single();
 
-            // PGRST116 = "No rows found" - isso é normal
             if (checkError && checkError.code !== 'PGRST116') {
                 console.error('❌ Erro ao verificar favorito:', checkError);
-                throw checkError;
+                throw new Error(`Erro ao verificar: ${checkError.message}`);
             }
 
             const isCurrentlyFavorite = !!existingFavorite;
-            console.log('📊 Status atual:', isCurrentlyFavorite ? 'FAVORITO' : 'NÃO FAVORITO');
+            console.log('📊 Status atual:', isCurrentlyFavorite ? 'JÁ É FAVORITO' : 'NÃO É FAVORITO');
 
+            let result;
+            
             if (isCurrentlyFavorite) {
-                await this.removeFavorite(userId, userCardElement);
+                // 2. REMOVER FAVORITO
+                result = await this.removeFavorite(userId, userCardElement);
             } else {
-                await this.addFavorite(userId, userCardElement);
+                // 3. ADICIONAR FAVORITO
+                result = await this.addFavorite(userId, userCardElement);
             }
 
-            return !isCurrentlyFavorite;
+            return result;
 
         } catch (error) {
-            console.error('💥 ERRO em toggleFavorite:', error);
-            this.showToast('❌ Erro ao processar curtida: ' + (error.message || 'Erro desconhecido'));
+            console.error('💥 ERRO CRÍTICO em toggleFavorite:', error);
+            this.showNotification('❌ ' + (error.message || 'Erro ao processar ação'));
             throw error;
         }
     }
 
     async addFavorite(userId, userCardElement) {
-        console.log('➕ ADICIONANDO favorito:', userId);
+        console.log('➕ ADICIONANDO usuário aos favoritos:', userId);
         
         try {
             const favoriteData = {
@@ -115,8 +154,9 @@ class FavoriteSystem {
                 created_at: new Date().toISOString()
             };
 
-            console.log('📤 Enviando para Supabase:', favoriteData);
+            console.log('📤 Enviando dados para Supabase:', favoriteData);
 
+            // Tentar inserção com retorno de dados
             const { data, error } = await this.supabase
                 .from('user_favorites')
                 .insert(favoriteData)
@@ -124,15 +164,22 @@ class FavoriteSystem {
                 .single();
 
             if (error) {
-                console.error('❌ Erro do Supabase ao adicionar:', error);
+                console.error('❌ Erro na inserção:', error);
                 
-                // Tentar inserção simples sem select
+                // Tentar inserção simples (sem select) como fallback
                 console.log('🔄 Tentando inserção alternativa...');
                 const { error: simpleError } = await this.supabase
                     .from('user_favorites')
                     .insert(favoriteData);
 
                 if (simpleError) {
+                    // Verificar se é erro de duplicidade (já é favorito)
+                    if (simpleError.code === '23505') {
+                        console.log('ℹ️ Usuário já está nos favoritos');
+                        this.updateCardUI(userCardElement, true);
+                        this.showNotification('❤️ Usuário já está nos favoritos!');
+                        return true;
+                    }
                     throw simpleError;
                 }
                 
@@ -141,32 +188,33 @@ class FavoriteSystem {
                 console.log('✅ Favorito adicionado com sucesso:', data);
             }
 
-            // Atualizar UI
+            // ATUALIZAR INTERFACE
             this.updateCardUI(userCardElement, true);
             
-            // Atualizar outros cards se existirem
-            if (window.updateFavoriteInCard) {
-                window.updateFavoriteInCard(userId, true);
-            }
+            // SINCRONIZAR COM OUTROS COMPONENTES
+            this.syncWithOtherComponents(userId, true);
             
-            // Feedback para usuário
-            if (this.isPremium) {
-                this.showToast('❤️ Adicionado à Lista VIP!');
-            } else {
-                this.showToast('❤️ Curtida enviada!');
-            }
+            // FEEDBACK PARA USUÁRIO
+            this.showNotification(
+                this.isPremium ? 
+                '❤️ Adicionado à Lista VIP!' : 
+                '❤️ Curtida enviada!'
+            );
 
-            // Verificar match
-            await this.checkMutualLike(userId);
+            // VERIFICAR MATCH MÚTUO
+            await this.checkForMutualLike(userId);
+
+            return true;
 
         } catch (error) {
             console.error('❌ Erro ao adicionar favorito:', error);
+            this.showNotification('❌ Erro ao adicionar favorito');
             throw error;
         }
     }
 
     async removeFavorite(userId, userCardElement) {
-        console.log('➖ REMOVENDO favorito:', userId);
+        console.log('➖ REMOVENDO usuário dos favoritos:', userId);
         
         try {
             const { error } = await this.supabase
@@ -182,29 +230,31 @@ class FavoriteSystem {
 
             console.log('✅ Favorito removido com sucesso');
             
-            // Atualizar UI
+            // ATUALIZAR INTERFACE
             this.updateCardUI(userCardElement, false);
             
-            // Atualizar outros cards se existirem
-            if (window.updateFavoriteInCard) {
-                window.updateFavoriteInCard(userId, false);
-            }
+            // SINCRONIZAR COM OUTROS COMPONENTES
+            this.syncWithOtherComponents(userId, false);
             
-            this.showToast('💔 Curtida removida');
+            // FEEDBACK PARA USUÁRIO
+            this.showNotification('💔 Curtida removida');
+
+            return false;
 
         } catch (error) {
             console.error('❌ Erro ao remover favorito:', error);
+            this.showNotification('❌ Erro ao remover favorito');
             throw error;
         }
     }
 
-    async checkMutualLike(userId) {
+    async checkForMutualLike(userId) {
         try {
-            console.log('🔍 Verificando match com:', userId);
+            console.log('🔍 Verificando match mútuo com:', userId);
 
             const { data: mutualLike, error } = await this.supabase
                 .from('user_favorites')
-                .select('id')
+                .select('id, created_at')
                 .eq('user_id', userId)
                 .eq('favorite_user_id', this.currentUser.id)
                 .single();
@@ -214,9 +264,9 @@ class FavoriteSystem {
             }
 
             if (mutualLike) {
-                console.log('💝 MATCH DETECTADO!');
-                this.showToast('💝 Match! Vocês se curtiram!');
-                await this.incrementPulseCount();
+                console.log('💝 MATCH MÚTUO DETECTADO!');
+                this.showNotification('💝 Match! Vocês se curtiram!');
+                await this.recordMutualLike();
             }
 
         } catch (error) {
@@ -224,11 +274,11 @@ class FavoriteSystem {
         }
     }
 
-    async incrementPulseCount() {
+    async recordMutualLike() {
         try {
             const { data: existingPulse } = await this.supabase
                 .from('user_pulses')
-                .select('*')
+                .select('pulse_count')
                 .eq('user_id', this.currentUser.id)
                 .single();
 
@@ -250,35 +300,55 @@ class FavoriteSystem {
                     });
             }
 
-            console.log('📈 Pulse count atualizado');
+            console.log('📈 Contador de matches atualizado');
 
         } catch (error) {
-            console.error('Erro ao incrementar pulse:', error);
+            console.error('Erro ao registrar match:', error);
         }
     }
 
     updateCardUI(cardElement, isFavorite) {
         if (!cardElement) {
-            console.log('ℹ️ Nenhum card element fornecido para atualizar UI');
+            console.log('ℹ️ Elemento do card não fornecido');
             return;
         }
 
         const favoriteBtn = cardElement.querySelector('.favorite-btn');
-        if (favoriteBtn) {
-            if (isFavorite) {
-                favoriteBtn.innerHTML = '❤️';
-                favoriteBtn.title = 'Remover dos favoritos';
-                favoriteBtn.classList.add('favorited');
-                console.log('🎨 UI atualizada: FAVORITADO');
-            } else {
-                favoriteBtn.innerHTML = '🤍';
-                favoriteBtn.title = 'Adicionar aos favoritos';
-                favoriteBtn.classList.remove('favorited');
-                console.log('🎨 UI atualizada: NÃO FAVORITADO');
-            }
-        } else {
+        if (!favoriteBtn) {
             console.warn('❌ Botão de favorito não encontrado no card');
+            return;
         }
+
+        if (isFavorite) {
+            favoriteBtn.innerHTML = '❤️';
+            favoriteBtn.title = 'Remover dos favoritos';
+            favoriteBtn.classList.add('favorited');
+            favoriteBtn.style.transform = 'scale(1.1)';
+            
+            // Animação de pulso
+            setTimeout(() => {
+                favoriteBtn.style.transform = 'scale(1)';
+            }, 300);
+            
+            console.log('🎨 UI atualizada: FAVORITADO');
+        } else {
+            favoriteBtn.innerHTML = '🤍';
+            favoriteBtn.title = 'Adicionar aos favoritos';
+            favoriteBtn.classList.remove('favorited');
+            console.log('🎨 UI atualizada: NÃO FAVORITADO');
+        }
+    }
+
+    syncWithOtherComponents(userId, isFavorite) {
+        // Sincronizar com sistema de usuários se existir
+        if (window.updateFavoriteInCard) {
+            window.updateFavoriteInCard(userId, isFavorite);
+        }
+        
+        // Disparar evento global para outros componentes
+        window.dispatchEvent(new CustomEvent('favoriteUpdated', {
+            detail: { userId, isFavorite }
+        }));
     }
 
     async isUserFavorite(userId) {
@@ -302,44 +372,125 @@ class FavoriteSystem {
         }
     }
 
-    showToast(message) {
+    async getUserFavorites() {
+        try {
+            const { data: favorites, error } = await this.supabase
+                .from('user_favorites')
+                .select(`
+                    favorite_user_id,
+                    created_at,
+                    profiles:favorite_user_id (
+                        id,
+                        nickname,
+                        avatar_url,
+                        last_online_at
+                    )
+                `)
+                .eq('user_id', this.currentUser.id)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            return favorites || [];
+
+        } catch (error) {
+            console.error('Erro ao carregar favoritos:', error);
+            return [];
+        }
+    }
+
+    showNotification(message, type = 'info') {
+        const types = {
+            info: '#38a169',
+            error: '#e53e3e',
+            warning: '#d69e2e'
+        };
+        
+        const color = types[type] || types.info;
+        
         if (window.showQuickToast) {
             window.showQuickToast(message);
         } else {
-            // Fallback de toast
-            const toast = document.createElement('div');
-            toast.style.cssText = `
-                position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-                background: #333; color: white; padding: 12px 24px; border-radius: 25px;
-                font-size: 14px; font-weight: 600; z-index: 10000; opacity: 0;
-                transition: opacity 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            // Notification fallback
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: ${color};
+                color: white;
+                padding: 12px 24px;
+                border-radius: 25px;
+                font-size: 14px;
+                font-weight: 600;
+                z-index: 10000;
+                opacity: 0;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                text-align: center;
+                min-width: 200px;
+                max-width: 90%;
             `;
-            toast.textContent = message;
-            document.body.appendChild(toast);
+            notification.textContent = message;
+            document.body.appendChild(notification);
             
-            setTimeout(() => toast.style.opacity = '1', 100);
+            // Animação de entrada
             setTimeout(() => {
-                toast.style.opacity = '0';
-                setTimeout(() => toast.remove(), 300);
+                notification.style.opacity = '1';
+                notification.style.transform = 'translateX(-50%) translateY(-10px)';
+            }, 100);
+            
+            // Remover após 3 segundos
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(-50%) translateY(10px)';
+                setTimeout(() => notification.remove(), 300);
             }, 3000);
+        }
+    }
+
+    // Método para verificar saúde do sistema
+    async healthCheck() {
+        try {
+            const { data, error } = await this.supabase
+                .from('user_favorites')
+                .select('id')
+                .limit(1);
+
+            return {
+                healthy: !error,
+                supabaseConnected: !error,
+                userAuthenticated: !!this.currentUser,
+                systemInitialized: this.isInitialized,
+                error: error?.message
+            };
+        } catch (error) {
+            return {
+                healthy: false,
+                error: error.message
+            };
         }
     }
 }
 
-// ==================== INICIALIZAÇÃO AUTOMÁTICA ====================
+// ==================== SISTEMA DE INICIALIZAÇÃO ROBUSTO ====================
 
 async function initializeFavoriteSystem() {
-    console.log('🔧 Inicializando sistema de favoritos...');
+    console.log('🔧 Iniciando sistema de favoritos...');
     
-    let tentativas = 0;
-    const maxTentativas = 20;
+    let attempts = 0;
+    const maxAttempts = 15;
     
-    while (tentativas < maxTentativas) {
+    while (attempts < maxAttempts) {
         if (window.supabase && window.currentUser) {
-            console.log('🚀 Dependências encontradas - criando FavoriteSystem...');
+            console.log('🚀 Dependências disponíveis - criando sistema...');
             
             try {
+                // Criar instância do sistema
                 window.favoriteSystem = new FavoriteSystem(window.supabase, window.currentUser);
+                
+                // Inicializar
                 const success = await window.favoriteSystem.initialize();
                 
                 if (success) {
@@ -348,134 +499,121 @@ async function initializeFavoriteSystem() {
                     // Disparar evento de inicialização
                     window.dispatchEvent(new CustomEvent('favoriteSystemReady'));
                     
+                    // Verificar saúde do sistema
+                    const health = await window.favoriteSystem.healthCheck();
+                    console.log('🏥 Saúde do sistema:', health);
+                    
                     return true;
-                } else {
-                    console.error('❌ Falha na inicialização do FavoriteSystem');
-                    return false;
                 }
             } catch (error) {
                 console.error('❌ Erro na inicialização:', error);
-                return false;
             }
         }
         
-        console.log('⏳ Aguardando supabase e currentUser...', tentativas + 1);
+        attempts++;
+        console.log(`⏳ Aguardando dependências... ${attempts}/${maxAttempts}`);
         await new Promise(resolve => setTimeout(resolve, 500));
-        tentativas++;
     }
     
-    console.error('💥 TIMEOUT: Não foi possível inicializar sistema de favoritos');
+    console.error('💥 TIMEOUT: Sistema de favoritos não pôde ser inicializado');
     return false;
 }
 
 // ==================== FUNÇÃO GLOBAL PRINCIPAL ====================
 
 window.toggleFavorite = async function(userId, event) {
-    console.log('🎯 toggleFavorite GLOBAL chamado para:', userId);
+    console.log('🎯 toggleFavorite chamado para:', userId);
     
     if (event) {
         event.stopPropagation();
         event.preventDefault();
     }
     
-    console.log('📊 Estado do sistema:', {
-        favoriteSystem: !!window.favoriteSystem,
-        isInitialized: window.favoriteSystem?.isInitialized,
-        supabase: !!window.supabase,
-        currentUser: !!window.currentUser
-    });
-    
+    // Verificar se o sistema está pronto
     if (window.favoriteSystem && window.favoriteSystem.isInitialized) {
         try {
             const cardElement = event ? event.target.closest('.user-card') : null;
             const result = await window.favoriteSystem.toggleFavorite(userId, cardElement);
             return result;
         } catch (error) {
-            console.error('❌ Erro no toggleFavorite:', error);
-            showQuickToast('❌ Erro ao processar curtida');
+            console.error('❌ Erro na execução:', error);
             return false;
         }
     } else {
-        console.error('❌ favoriteSystem não disponível ou não inicializado');
-        showQuickToast('⚠️ Sistema carregando... tente novamente em alguns segundos.');
+        console.error('❌ Sistema de favoritos não disponível');
         
-        // Tentar inicializar novamente
-        setTimeout(() => {
-            initializeFavoriteSystem();
-        }, 1000);
+        // Tentar inicializar
+        const success = await initializeFavoriteSystem();
+        if (success) {
+            // Retry após inicialização
+            const cardElement = event ? event.target.closest('.user-card') : null;
+            return window.favoriteSystem.toggleFavorite(userId, cardElement);
+        }
+        
         return false;
     }
 };
 
-// Função para Lista VIP
+// ==================== FUNÇÕES AUXILIARES GLOBAIS ====================
+
 window.goToVipList = function() {
     if (window.favoriteSystem && window.favoriteSystem.isPremium) {
         window.location.href = 'lista-vip.html';
     } else {
-        showQuickToast('⭐ Torne-se Premium para acessar a Lista VIP!');
+        if (window.showQuickToast) {
+            window.showQuickToast('⭐ Torne-se Premium para acessar a Lista VIP!');
+        }
         window.location.href = 'princing.html';
     }
 };
 
-// ==================== INICIALIZAÇÃO ====================
+window.getFavoriteSystem = function() {
+    return window.favoriteSystem;
+};
 
-// Inicializar quando DOM estiver pronto
+window.debugFavoriteSystem = function() {
+    console.log('🔍 DEBUG - Sistema de Favoritos:');
+    console.log('- Sistema:', window.favoriteSystem);
+    console.log('- Inicializado:', window.favoriteSystem?.isInitialized);
+    console.log('- Premium:', window.favoriteSystem?.isPremium);
+    console.log('- Supabase:', window.supabase ? '✅ Disponível' : '❌ Indisponível');
+    console.log('- CurrentUser:', window.currentUser ? `✅ ${window.currentUser.email}` : '❌ Indisponível');
+    
+    if (window.favoriteSystem) {
+        window.favoriteSystem.healthCheck().then(health => {
+            console.log('- Saúde do sistema:', health);
+        });
+    }
+};
+
+// ==================== INICIALIZAÇÃO AUTOMÁTICA ====================
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('📄 DOM carregado - iniciando sistema de favoritos...');
     initializeFavoriteSystem();
 });
 
-// Fallback adicional
 window.addEventListener('load', function() {
-    console.log('🔄 Window loaded - verificando sistema...');
+    console.log('🔄 Página totalmente carregada - verificando sistema...');
     if (!window.favoriteSystem || !window.favoriteSystem.isInitialized) {
-        console.log('🔄 Tentando inicializar novamente...');
-        setTimeout(initializeFavoriteSystem, 2000);
+        setTimeout(initializeFavoriteSystem, 1000);
     }
 });
 
-// Debug helper
-window.debugFavoriteSystem = function() {
-    console.log('🔍 DEBUG - Sistema de Favoritos:');
-    console.log('- favoriteSystem:', window.favoriteSystem);
-    console.log('- isInitialized:', window.favoriteSystem?.isInitialized);
-    console.log('- isPremium:', window.favoriteSystem?.isPremium);
-    console.log('- supabase:', window.supabase);
-    console.log('- currentUser:', window.currentUser);
-    console.log('- currentUser ID:', window.currentUser?.id);
-    console.log('- toggleFavorite:', window.toggleFavorite);
-};
-
-// Função global de toast (fallback)
+// Fallback para toast global
 if (typeof showQuickToast === 'undefined') {
     window.showQuickToast = function(message) {
         console.log('🔔 TOAST:', message);
-        const toast = document.createElement('div');
-        toast.style.cssText = `
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: #38a169; color: white; padding: 12px 20px; border-radius: 25px;
-            font-size: 14px; font-weight: 600; z-index: 10000; opacity: 0;
-            transition: opacity 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            text-align: center; min-width: 200px; max-width: 90%;
-        `;
-        toast.textContent = message;
-        document.body.appendChild(toast);
-        
-        setTimeout(() => toast.style.opacity = '1', 100);
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
+        // Usar o sistema de notificação do FavoriteSystem se disponível
+        if (window.favoriteSystem) {
+            window.favoriteSystem.showNotification(message);
+        }
     };
 }
 
-console.log('✅ home-favoritos.js CARREGADO - pronto para inicializar!');
+console.log('✅ home-favoritos.js CARREGADO - Sistema profissional pronto!');
 
-// Teste automático após 3 segundos
-setTimeout(() => {
-    if (window.favoriteSystem && window.favoriteSystem.isInitialized) {
-        console.log('🎉 Sistema de favoritos funcionando perfeitamente!');
-    } else {
-        console.warn('⚠️ Sistema de favoritos ainda não inicializado');
-    }
-}, 3000);
+// Export para uso em outros módulos
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { FavoriteSystem, initializeFavoriteSystem };
+}
