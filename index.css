@@ -63,8 +63,8 @@ header {
 /* LOGO EXPANSÍVEL - CRESCE LIVREMENTE */
 .logo img {
     width: auto;
-    height: 80px;
-    max-height: 100px;
+    height: 120px;         /* 👈 AUMENTEI! */
+    max-height: 150px;     /* 👈 AUMENTEI! */
     object-fit: contain;
     transition: var(--transition);
 }
