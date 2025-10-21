@@ -17,6 +17,9 @@
   --transition: all 0.3s ease;
   --error: #e53e3e;
   --success: #38a169;
+  --favorite: #e53e3e;
+  --favorite-hover: #c53030;
+  --pulse: #ff6b6b;
 }
 
 body {
@@ -150,6 +153,14 @@ header {
   box-shadow: 0 4px 15px rgba(255, 107, 0, 0.3);
 }
 
+.btn-vip {
+  background: linear-gradient(135deg, #ffd700, #ffed4e);
+  color: #000;
+  border: 2px solid #ffd700;
+  font-weight: 700;
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+}
+
 .btn-sm {
   padding: 0.5rem 1rem;
   font-size: 0.9rem;
@@ -163,6 +174,12 @@ header {
 .btn-premium:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(255, 107, 0, 0.4);
+}
+
+.btn-vip:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+  background: linear-gradient(135deg, #ffed4e, #ffd700);
 }
 
 /* ==================== BADGES ==================== */
@@ -316,11 +333,55 @@ header {
   font-weight: bold;
 }
 
+/* 🔥 NOVO: HEADER DO CARD COM NOME E BOTÃO DE FAVORITO */
+.user-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.8rem;
+  gap: 0.5rem;
+}
+
 .user-card-name {
   font-size: 1.2rem;
   font-weight: 600;
   color: var(--vermelho-rosado);
-  margin-bottom: 0.5rem;
+  margin: 0;
+  flex: 1;
+  text-align: left;
+}
+
+/* 🔥 NOVO: BOTÃO DE FAVORITO */
+.favorite-btn {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 0.3rem;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  position: relative;
+  z-index: 10;
+}
+
+.favorite-btn:hover {
+  background: rgba(255, 107, 107, 0.1);
+  transform: scale(1.1);
+}
+
+.favorite-btn.favorited {
+  animation: pulse 0.6s ease;
+  color: var(--favorite);
+}
+
+.favorite-btn:not(.favorited):hover {
+  color: var(--favorite-hover);
 }
 
 .user-card-info {
@@ -349,6 +410,7 @@ header {
   overflow: hidden;
   min-height: 4.5rem;
   line-height: 1.4;
+  text-align: left;
 }
 
 /* ==================== SISTEMA DE REPORTE E BLOQUEIO ==================== */
@@ -612,6 +674,29 @@ header {
 .action-icon {
   font-size: 2rem;
   margin-bottom: 1rem;
+}
+
+/* 🔥 NOVO: CARD DA LISTA VIP */
+.vip-action-card {
+  background: linear-gradient(135deg, #fff9c4, #ffecb3);
+  border: 2px solid #ffd700;
+  position: relative;
+  overflow: hidden;
+}
+
+.vip-action-card::before {
+  content: "⭐";
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  font-size: 1.5rem;
+  opacity: 0.3;
+}
+
+.vip-action-card:hover {
+  background: linear-gradient(135deg, #ffecb3, #ffdb58);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.3);
 }
 
 /* ==================== FOOTER ==================== */
@@ -1106,6 +1191,26 @@ footer {
   background: rgba(229, 62, 62, 0.1);
   border-color: rgba(229, 62, 62, 0.5);
   animation: bell-shake 2s ease-in-out infinite;
+}
+
+/* 🔥 NOVO: BADGE DE PULSES */
+.pulse-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: linear-gradient(135deg, var(--pulse), #ee5a52);
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  border: 2px solid white;
+  z-index: 10;
+  animation: pulse 2s infinite;
 }
 
 /* ==================== ANIMAÇÕES ==================== */

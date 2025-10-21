@@ -6,13 +6,13 @@
   <title>Home - Amor Conect</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="home.css">
-<link rel="stylesheet" href="home-mobile.css">
+  <link rel="stylesheet" href="home-mobile.css">
   <script src="home.block.js"></script>
-<script src="home-visitante.js"></script>
-<script src="home-users.js"></script>
-<script src="home-notificacoes.js"></script>
-<script src="home-stats.js"></script>
- 
+  <script src="home-visitante.js"></script>
+  <script src="home-users.js"></script>
+  <script src="home-notificacoes.js"></script>
+  <script src="home-stats.js"></script>
+  <script src="home-favoritos.js"></script>
 </head>
 <body>
   <!-- Header -->
@@ -43,6 +43,8 @@
           <!-- NOVO: Badge Free e Botão Premium -->
           <div id="freeBadge" class="free-badge" style="display: none;">Free</div>
           <a href="princing.html" id="premiumBtn" class="btn btn-premium" style="display: none;">Premium</a>
+          <!-- 🔥 NOVO: Link para Lista VIP -->
+          <a href="lista-vip.html" class="btn btn-vip">⭐ Lista VIP</a>
           <a href="mensagens.html" class="btn btn-outline">Mensagens</a>
           <a href="busca.html" class="btn btn-outline">Buscar</a>
           <a href="painel.html" class="btn btn-outline">Perfil</a>
@@ -76,6 +78,8 @@
       <!-- NOVO: Badge Free e Botão Premium Mobile -->
       <div id="mobileFreeBadge" class="free-badge" style="display: none;">Free</div>
       <a href="princing.html" id="mobilePremiumBtn" class="btn btn-premium" style="display: none;">Premium</a>
+      <!-- 🔥 NOVO: Link para Lista VIP Mobile -->
+      <a href="lista-vip.html" class="btn btn-vip">⭐ Lista VIP</a>
       <a href="busca.html" class="btn btn-outline">Buscar</a>
       <a href="painel.html" class="btn btn-outline">Perfil</a>
       <a href="mensagens.html" class="btn btn-outline">Mensagens</a>
@@ -190,6 +194,12 @@
             <div class="action-icon">💌</div>
             <h3>Minhas Mensagens</h3>
             <p>Ver e responder mensagens</p>
+          </a>
+          <!-- 🔥 NOVO: Card para Lista VIP -->
+          <a href="lista-vip.html" class="action-card vip-action-card" onclick="goToVipList()">
+            <div class="action-icon">⭐</div>
+            <h3>Minha Lista VIP</h3>
+            <p>Veja seus favoritos e matches</p>
           </a>
           <!-- NOVO: Card para usuários bloqueados -->
           <a href="blocks.html" class="action-card" style="background: linear-gradient(135deg, #fed7d7, #feb2b2); border: 2px solid #e53e3e;">
@@ -312,38 +322,38 @@
 
   <!-- Footer -->
   <footer>
-  <div class="container">
-    <div class="footer-content">
-      <div class="footer-column">
-        <h3>Amor Conect</h3>
-        <p>Uma plataforma segura e discreta para conectar corações e construir relacionamentos genuínos.</p>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-column">
+          <h3>Amor Conect</h3>
+          <p>Uma plataforma segura e discreta para conectar corações e construir relacionamentos genuínos.</p>
+        </div>
+        <div class="footer-column">
+          <h3>Links Rápidos</h3>
+          <ul>
+            <li><a href="home.html">Página Inicial</a></li>
+            <li><a href="princing.html">Planos Premium</a></li>
+            <li><a href="#como-funciona">Como Funciona</a></li>
+            <li><a href="#depoimentos">Depoimentos</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h3>Suporte</h3>
+          <ul>
+            <li><a href="#">Central de Ajuda</a></li>
+            <li><a href="#">Política de Privacidade</a></li>
+            <li><a href="#">Termos de Uso</a></li>
+            <li><a href="#" onclick="openSupportModal()">🚨 Reportar Problema</a></li>
+          </ul>
+        </div>
       </div>
-      <div class="footer-column">
-        <h3>Links Rápidos</h3>
-        <ul>
-          <li><a href="home.html">Página Inicial</a></li>
-          <li><a href="princing.html">Planos Premium</a></li>
-          <li><a href="#como-funciona">Como Funciona</a></li>
-          <li><a href="#depoimentos">Depoimentos</a></li>
-        </ul>
-      </div>
-      <div class="footer-column">
-        <h3>Suporte</h3>
-        <ul>
-          <li><a href="#">Central de Ajuda</a></li>
-          <li><a href="#">Política de Privacidade</a></li>
-          <li><a href="#">Termos de Uso</a></li>
-          <li><a href="#" onclick="openSupportModal()">🚨 Reportar Problema</a></li>
-        </ul>
+      <div class="copyright">
+        <p>&copy; 2024 Amor Conect. Todos os direitos reservados.</p>
       </div>
     </div>
-    <div class="copyright">
-      <p>&copy; 2024 Amor Conect. Todos os direitos reservados.</p>
-    </div>
-  </div>
-</footer>
+  </footer>
 
-<script>
+  <script>
 // ==================== CONFIGURAÇÃO SUPABASE ====================
 const supabaseUrl = 'https://gcukalndarlgydmgmmmt.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
@@ -442,6 +452,15 @@ async function initializeSeparatedSystems() {
         if (window.initializeStatsSystem) {
             await initializeStatsSystem(supabase, currentUser);
             console.log('✅ Sistema de estatísticas inicializado!');
+        }
+        
+        // 🔥 5. NOVO: Sistema de Favoritos
+        if (window.FavoriteSystem) {
+            window.favoriteSystem = new FavoriteSystem(supabase, currentUser);
+            await window.favoriteSystem.initialize();
+            console.log('✅ Sistema de favoritos inicializado!');
+        } else {
+            console.error('❌ FavoriteSystem não carregado - verifique se home-favoritos.js foi incluído');
         }
         
     } catch (error) {
@@ -1097,10 +1116,32 @@ window.confirmBlock = confirmBlock;
 window.closeConfirmModal = closeConfirmModal;
 window.openSupportModal = openSupportModal;
 
+// 🔥 NOVO: Funções do Sistema de Favoritos
+window.toggleFavorite = function(userId, event) {
+    if (event) event.stopPropagation();
+    
+    if (window.favoriteSystem) {
+        const cardElement = event ? event.target.closest('.user-card') : null;
+        window.favoriteSystem.toggleFavorite(userId, cardElement);
+    } else {
+        showQuickToast('⚠️ Sistema de favoritos não carregado');
+    }
+};
+
+window.goToVipList = function() {
+    if (window.favoriteSystem && window.favoriteSystem.isPremium) {
+        window.location.href = 'lista-vip.html';
+    } else {
+        showQuickToast('⭐ Torne-se Premium para acessar a Lista VIP!');
+        window.location.href = 'princing.html';
+    }
+};
+
 console.log('✅ SISTEMA HOME.HTML CARREGADO COM SUCESSO! 🎉');
 console.log('👤 Usuário:', currentUser?.email);
 console.log('🆔 User ID:', currentUser?.id);
 console.log('📊 Perfil carregado:', !!userProfile);
-</script>
+console.log('❤️ Sistema de Favoritos:', !!window.favoriteSystem);
+  </script>
 </body>
 </html>

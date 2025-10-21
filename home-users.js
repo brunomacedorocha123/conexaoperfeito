@@ -1,13 +1,21 @@
-// home-users.js
+// home-users.js - ATUALIZADO COM SISTEMA DE FAVORITOS
 class HomeUsersSystem {
     constructor(supabase, currentUser) {
         this.supabase = supabase;
         this.currentUser = currentUser;
         this.userProfile = null;
+        this.favoriteSystem = null;
     }
 
     async initialize(userProfile) {
         this.userProfile = userProfile;
+        
+        // 🔥 NOVO: Inicializar sistema de favoritos se disponível
+        if (window.favoriteSystem) {
+            this.favoriteSystem = window.favoriteSystem;
+            console.log('✅ Sistema de favoritos integrado ao users system');
+        }
+        
         await this.loadRealUsers();
     }
 
@@ -104,7 +112,7 @@ class HomeUsersSystem {
         }
     }
 
-    // ✅ CORREÇÃO: Criar card com FOTOS REAIS como IMG (igual perfil.html)
+    // ✅ ATUALIZADO: Criar card com BOTÃO DE FAVORITO
     async createUserCardWithPhoto(user) {
         try {
             // ✅ CORREÇÃO: A função SQL retorna campos diferentes, precisamos adaptar
@@ -118,6 +126,12 @@ class HomeUsersSystem {
                 details = user.user_details; // Veio da função SQL
             } else if (user.user_details) {
                 details = user.user_details; // Veio do fallback
+            }
+            
+            // 🔥 NOVO: Verificar se usuário já é favorito
+            let isFavorite = false;
+            if (this.favoriteSystem) {
+                isFavorite = await this.favoriteSystem.isUserFavorite(userId);
             }
             
             // Status online
@@ -156,10 +170,23 @@ class HomeUsersSystem {
             const lookingFor = details.looking_for || user.looking_for;
             const bio = details.description || user.description || 'Este usuário ainda não adicionou uma descrição.';
 
+            // 🔥 NOVO: Botão de favorito com estado inicial correto
+            const favoriteIcon = isFavorite ? '❤️' : '🤍';
+            const favoriteTitle = isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos';
+            const favoriteClass = isFavorite ? 'favorite-btn favorited' : 'favorite-btn';
+
             return `
                 <div class="user-card" data-user-id="${userId}" onclick="viewProfile('${userId}')">
                     ${avatarHtml}
-                    <div class="user-card-name">${nickname}${age ? `, ${age}` : ''}</div>
+                    
+                    <div class="user-card-header">
+                        <div class="user-card-name">${nickname}${age ? `, ${age}` : ''}</div>
+                        <!-- 🔥 NOVO: BOTÃO DE FAVORITO -->
+                        <button class="${favoriteClass}" onclick="event.stopPropagation(); toggleFavorite('${userId}', event)" 
+                                title="${favoriteTitle}">
+                            ${favoriteIcon}
+                        </button>
+                    </div>
                     
                     <div class="user-card-info">
                         ${zodiac ? `<div class="user-card-detail">${this.getZodiacIcon(zodiac)} ${this.formatZodiac(zodiac)}</div>` : ''}
@@ -195,6 +222,25 @@ class HomeUsersSystem {
         } catch (error) {
             console.error('Erro ao criar card:', error);
             return '';
+        }
+    }
+
+    // 🔥 NOVO: Atualizar estado do botão de favorito em um card específico
+    async updateFavoriteButton(userId, isFavorite) {
+        const card = document.querySelector(`.user-card[data-user-id="${userId}"]`);
+        if (!card) return;
+        
+        const favoriteBtn = card.querySelector('.favorite-btn');
+        if (!favoriteBtn) return;
+        
+        if (isFavorite) {
+            favoriteBtn.innerHTML = '❤️';
+            favoriteBtn.title = 'Remover dos favoritos';
+            favoriteBtn.classList.add('favorited');
+        } else {
+            favoriteBtn.innerHTML = '🤍';
+            favoriteBtn.title = 'Adicionar aos favoritos';
+            favoriteBtn.classList.remove('favorited');
         }
     }
 
@@ -262,8 +308,20 @@ class HomeUsersSystem {
     showEmptyState(message) {
         const usersGrid = document.getElementById('usersGrid');
         if (usersGrid) {
-            usersGrid.innerHTML = `<div class="empty-state"><h3>${message}</h3></div>`;
+            usersGrid.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">👥</div>
+                    <h3>${message}</h3>
+                    <p>Volte mais tarde para conhecer novas pessoas!</p>
+                </div>
+            `;
         }
+    }
+
+    // 🔥 NOVO: Recarregar usuários (útil após ações como bloqueio)
+    async refreshUsers() {
+        console.log('🔄 Recarregando usuários...');
+        await this.loadRealUsers();
     }
 }
 
@@ -274,3 +332,19 @@ function initializeUsersSystem(supabase, currentUser, userProfile) {
     usersSystem = new HomeUsersSystem(supabase, currentUser);
     return usersSystem.initialize(userProfile);
 }
+
+// 🔥 NOVO: Função global para atualizar favorito em cards específicos
+window.updateFavoriteInCard = function(userId, isFavorite) {
+    if (usersSystem) {
+        usersSystem.updateFavoriteButton(userId, isFavorite);
+    }
+};
+
+// 🔥 NOVO: Função global para recarregar usuários
+window.refreshUsersGrid = function() {
+    if (usersSystem) {
+        usersSystem.refreshUsers();
+    }
+};
+
+console.log('✅ home-users.js ATUALIZADO com sistema de favoritos!');

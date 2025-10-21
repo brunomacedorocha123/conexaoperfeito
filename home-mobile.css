@@ -90,6 +90,13 @@
   box-shadow: 0 4px 15px rgba(255, 107, 0, 0.3);
 }
 
+.mobile-nav .btn-vip {
+  background: linear-gradient(135deg, #ffd700, #ffed4e);
+  color: #000;
+  border: 2px solid #ffd700;
+  font-weight: 700;
+}
+
 .mobile-nav .btn:last-child {
   margin-top: 2rem;
   margin-bottom: 2rem;
@@ -125,6 +132,17 @@
 .mobile-user-info #mobileUserNickname {
   font-size: 1.1rem;
   font-weight: bold;
+}
+
+/* 🔥 NOVO: BOTÃO DE FAVORITO MOBILE */
+.favorite-btn {
+  width: 36px !important;
+  height: 36px !important;
+  font-size: 1.2rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 1001 !important;
 }
 
 /* ==================== RESPONSIVIDADE ==================== */
@@ -184,6 +202,21 @@
 
   .user-card-name {
     font-size: 1.1rem;
+  }
+
+  /* 🔥 NOVO: HEADER DO CARD MOBILE */
+  .user-card-header {
+    margin-bottom: 0.6rem;
+  }
+
+  .user-card-name {
+    font-size: 1rem;
+  }
+
+  .favorite-btn {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 1.1rem !important;
   }
 
   .user-card-actions {
@@ -357,6 +390,15 @@
     animation: bell-shake-mobile 2s ease-in-out infinite;
   }
 
+  /* 🔥 NOVO: PULSE BADGE MOBILE */
+  .pulse-badge {
+    width: 18px;
+    height: 18px;
+    font-size: 10px;
+    top: -6px;
+    right: -6px;
+  }
+
   @keyframes bell-shake-mobile {
     0%, 100% { transform: rotate(0); }
     25% { transform: rotate(-10deg); }
@@ -424,6 +466,13 @@
     font-size: 1.2rem !important;
   }
 
+  /* 🔥 NOVO: FAVORITO MOBILE PEQUENO */
+  .favorite-btn {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 1rem !important;
+  }
+
   .visitor-card {
     width: 100px;
   }
@@ -487,5 +536,13 @@
     font-size: 0.6rem;
     top: -3px;
     right: -3px;
+  }
+
+  .pulse-badge {
+    width: 16px;
+    height: 16px;
+    font-size: 9px;
+    top: -4px;
+    right: -4px;
   }
 }
