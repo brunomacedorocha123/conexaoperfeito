@@ -49,22 +49,25 @@ header {
 .header-content {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    min-height: 80px;
-    height: auto;
+    align-items: flex-start;
+    height: 80px;
+    overflow: visible;
+    position: relative;
 }
 
 .logo {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     flex-shrink: 0;
+    margin-top: -40px;        /* 👈 AUMENTEI PRA -40px (EMPURRA MUITO PRA CIMA) */
+    height: 160px;            /* 👈 ADICIONEI - ESPAÇO EXTRA */
 }
 
 /* LOGO EXPANSÍVEL - CRESCE LIVREMENTE */
 .logo img {
     width: auto;
-    height: 120px;         /* 👈 AUMENTEI! */
-    max-height: 150px;     /* 👈 AUMENTEI! */
+    height: 160px;            /* 👈 AUMENTEI PRA 160px (ENORME!) */
+    max-height: 180px;        /* 👈 AUMENTEI MÁXIMO */
     object-fit: contain;
     transition: var(--transition);
 }
