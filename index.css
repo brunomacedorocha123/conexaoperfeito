@@ -59,15 +59,15 @@ header {
     display: flex;
     align-items: flex-start;
     flex-shrink: 0;
-    margin-top: -40px;        /* 👈 AUMENTEI PRA -40px (EMPURRA MUITO PRA CIMA) */
-    height: 160px;            /* 👈 ADICIONEI - ESPAÇO EXTRA */
+    margin-top: -40px;
+    height: 160px;
 }
 
 /* LOGO EXPANSÍVEL - CRESCE LIVREMENTE */
 .logo img {
     width: auto;
-    height: 250px;            /* 👈 AUMENTEI PRA 160px (ENORME!) */
-    max-height: 180px;        /* 👈 AUMENTEI MÁXIMO */
+    height: 250px;
+    max-height: 180px;
     object-fit: contain;
     transition: var(--transition);
 }
@@ -76,11 +76,22 @@ header {
     transform: scale(1.05);
 }
 
-/* Menu Desktop */
+/* CENTRALIZAR BOTÕES VERTICALMENTE */
+.auth-buttons {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    height: 80px;             /* 👈 ADICIONEI - mesma altura do header */
+    margin-top: 0;            /* 👈 GARANTIR */
+}
+
+/* CENTRALIZAR MENU VERTICALMENTE */
 nav ul {
     display: flex;
     list-style: none;
     gap: 2rem;
+    align-items: center;      /* 👈 JÁ TEM - garante centralização */
+    height: 80px;             /* 👈 ADICIONEI - mesma altura do header */
 }
 
 nav a {
@@ -91,6 +102,9 @@ nav a {
     padding: 0.5rem 1rem;
     border-radius: 30px;
     font-size: 1rem;
+    display: flex;
+    align-items: center;      /* 👈 ADICIONEI - centraliza texto */
+    height: 40px;             /* 👈 ADICIONEI - altura consistente */
 }
 
 nav a:hover {
