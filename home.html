@@ -5,15 +5,1961 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Home - Amor Conect</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link rel="stylesheet" href="home.css">
-  <link rel="stylesheet" href="home-mobile.css">
-  <!-- NO SEU home.html, GARANTA ESTA ORDEM -->
-<script src="home.block.js"></script>
-<script src="home-visitante.js"></script>
-<script src="home-users.js"></script>
-<script src="home-notificacoes.js"></script>
-<script src="home-stats.js"></script>
-<script src="home-favoritos.js"></script> <!-- ✅ DEVE FICAR AQUI -->
+  <script src="home.block.js"></script>
+  <script src="home-visitante.js"></script>
+ <style>
+      * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+:root {
+  --bege: #f6ecc5;
+  --vermelho-rosado: #d1656d;
+  --lilas: #dfc9ed;
+  --branco: #ffffff;
+  --text: #444;
+  --text-light: #666;
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --transition: all 0.3s ease;
+  --error: #e53e3e;
+  --success: #38a169;
+}
+
+body {
+  background-color: var(--bege);
+  color: var(--text);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Header */
+header {
+  background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+  color: var(--branco);
+  padding: 0.8rem 0;
+  box-shadow: var(--shadow);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 70px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  justify-content: center;
+  flex: 1;
+}
+
+.logo img {
+  height: 220px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* TÍTULO REMOVIDO DO DESKTOP */
+.logo h1 {
+  display: none;
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--branco);
+  color: var(--vermelho-rosado);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.user-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: none;
+}
+
+.user-avatar-fallback {
+  font-size: 1.2rem;
+}
+
+.btn {
+  padding: 0.6rem 1rem;
+  border-radius: 30px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 2px solid var(--branco);
+  color: var(--branco);
+}
+
+.btn-primary {
+  background: var(--branco);
+  color: var(--vermelho-rosado);
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 2px solid var(--vermelho-rosado);
+  color: var(--vermelho-rosado);
+}
+
+.btn-premium {
+  background: linear-gradient(135deg, #ffd700, #ff6b00);
+  color: var(--branco);
+  border: none;
+  font-weight: 700;
+  box-shadow: 0 4px 15px rgba(255, 107, 0, 0.3);
+}
+/* ==================== BADGE FREE ==================== */
+.free-badge {
+  background: linear-gradient(135deg, #c0c0c0, #a0a0a0);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 30px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  white-space: nowrap;
+  border: 2px solid #d0d0d0;
+  cursor: default;
+  transition: var(--transition);
+}
+
+.free-badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(160, 160, 160, 0.3);
+}
+
+/* Ajuste para mobile */
+@media (max-width: 768px) {
+  .free-badge {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+    width: 100%;
+    text-align: center;
+  }
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.btn-premium:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 0, 0.4);
+}
+
+/* Main Content */
+.main-content {
+  padding: 2rem 0;
+}
+
+.welcome-section {
+  text-align: center;
+  margin-bottom: 3rem;
+  padding: 2rem;
+  background: var(--branco);
+  border-radius: 15px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--lilas);
+}
+
+.welcome-section h2 {
+  font-size: 2.5rem;
+  color: var(--vermelho-rosado);
+  margin-bottom: 1rem;
+}
+
+.welcome-section p {
+  color: var(--text-light);
+  font-size: 1.1rem;
+}
+
+.user-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.stat-card {
+  background: var(--branco);
+  padding: 1.5rem;
+  border-radius: 15px;
+  box-shadow: var(--shadow);
+  text-align: center;
+  transition: var(--transition);
+  border: 1px solid var(--lilas);
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+}
+
+.stat-number {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: var(--vermelho-rosado);
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  color: var(--text-light);
+  font-size: 0.9rem;
+}
+
+/* Users Grid */
+.users-section {
+  margin-bottom: 3rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.section-header h2 {
+  font-size: 2rem;
+  color: var(--vermelho-rosado);
+}
+
+.users-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.user-card {
+  background: var(--branco);
+  border-radius: 15px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+  text-align: center;
+  cursor: pointer;
+  border: 1px solid var(--lilas);
+  position: relative;
+}
+
+.user-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* ✅ AVATAR COM FOTO - ESTILOS ATUALIZADOS */
+.user-card-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+  color: var(--branco);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: bold;
+  margin: 0 auto 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.user-card-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: none;
+}
+
+.user-card-avatar-fallback {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.user-card-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--vermelho-rosado);
+  margin-bottom: 0.5rem;
+}
+
+.user-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 1rem;
+}
+
+.user-card-detail {
+  font-size: 0.9rem;
+  color: var(--text-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+.user-card-bio {
+  font-size: 0.9rem;
+  color: var(--text);
+  margin-bottom: 1.5rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 4.5rem;
+  line-height: 1.4;
+}
+
+/* ==================== SISTEMA DE REPORTE E BLOQUEIO - CARDS GRANDES ==================== */
+.user-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.user-card-menu {
+  position: relative;
+  display: inline-block;
+}
+
+.btn-more {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: var(--transition);
+  color: var(--text-light);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-more:hover {
+  background: var(--lilas);
+  color: var(--branco);
+  transform: translateY(-2px);
+}
+
+.menu-options {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--branco);
+  border: 1px solid var(--lilas);
+  border-radius: 10px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  padding: 0.5rem;
+  z-index: 100;
+  display: none;
+  min-width: 160px;
+  animation: fadeIn 0.2s ease;
+}
+
+.menu-options.show {
+  display: block;
+}
+
+.menu-options button {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: var(--transition);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text);
+}
+
+.menu-options button:hover {
+  background: var(--bege);
+}
+
+.menu-options .report-btn {
+  color: #e53e3e;
+}
+
+.menu-options .report-btn:hover {
+  background: #fed7d7;
+}
+
+.menu-options .block-btn {
+  color: #d1656d;
+}
+
+.menu-options .block-btn:hover {
+  background: #fbd5d5;
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+/* ==================== MODAIS DE REPORTE E BLOQUEIO ==================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.modal-overlay.show {
+  display: flex;
+}
+
+.modal-content {
+  background: var(--branco);
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: var(--shadow);
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--bege);
+}
+
+.modal-header h3 {
+  color: var(--vermelho-rosado);
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.close-modal {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--text-light);
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: var(--transition);
+}
+
+.close-modal:hover {
+  background: var(--bege);
+  color: var(--vermelho-rosado);
+}
+
+.report-categories {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.report-category {
+  padding: 1rem;
+  border: 2px solid var(--bege);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.report-category:hover {
+  border-color: var(--lilas);
+  background: var(--bege);
+}
+
+.report-category.selected {
+  border-color: var(--vermelho-rosado);
+  background: var(--bege);
+}
+
+.report-category input[type="radio"] {
+  margin: 0;
+}
+
+.report-details {
+  margin-bottom: 1.5rem;
+}
+
+.report-details textarea {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid var(--lilas);
+  border-radius: 10px;
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+.report-details textarea:focus {
+  outline: none;
+  border-color: var(--vermelho-rosado);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.modal-body {
+  margin-bottom: 1.5rem;
+}
+
+.modal-body p {
+  color: var(--text);
+  line-height: 1.5;
+}
+
+/* Quick Actions */
+.quick-actions {
+  background: var(--branco);
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: var(--shadow);
+  margin-bottom: 3rem;
+  border: 1px solid var(--lilas);
+}
+
+.quick-actions h2 {
+  margin-bottom: 1.5rem;
+  color: var(--vermelho-rosado);
+}
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.action-card {
+  background: var(--bege);
+  padding: 1.5rem;
+  border-radius: 10px;
+  text-align: center;
+  transition: var(--transition);
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid var(--lilas);
+}
+
+.action-card:hover {
+  background: var(--lilas);
+  transform: translateY(-3px);
+}
+
+.action-icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+/* Footer */
+footer {
+  background-color: var(--bege);
+  color: var(--text);
+  padding: 2rem 0 1rem;
+  border-top: 1px solid var(--lilas);
+}
+
+.footer-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.footer-column h3 {
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  color: var(--vermelho-rosado);
+}
+
+.footer-column ul {
+  list-style: none;
+}
+
+.footer-column ul li {
+  margin-bottom: 0.5rem;
+}
+
+.footer-column a {
+  color: var(--text);
+  text-decoration: none;
+  transition: var(--transition);
+  font-size: 0.9rem;
+}
+
+.footer-column a:hover {
+  color: var(--vermelho-rosado);
+}
+
+.copyright {
+  text-align: center;
+  padding-top: 1rem;
+  border-top: 1px solid var(--lilas);
+  font-size: 0.8rem;
+  color: var(--text-light);
+}
+
+/* Loading State */
+.loading {
+  text-align: center;
+  padding: 3rem;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--bege);
+  border-top: 4px solid var(--vermelho-rosado);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Estados Vazios */
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  background: var(--branco);
+  border-radius: 15px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--lilas);
+}
+
+.empty-state-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+/* Alertas */
+.alert {
+  padding: 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  text-align: center;
+  border: 1px solid;
+}
+
+.alert-info {
+  background-color: #bee3f8;
+  border-color: #90cdf4;
+  color: #2c5aa0;
+}
+
+/* Menu Hamburguer Mobile - CORRIGIDO */
+#hamburgerBtn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--branco);
+  font-size: 1.8rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  z-index: 1001;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#mobileMenu {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+  z-index: 1000;
+  padding: 1.5rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1rem;
+  overflow-y: auto;
+}
+
+#closeMobileMenu {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: var(--branco);
+  font-size: 2rem;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1002;
+}
+
+.mobile-user-info {
+  text-align: center;
+  color: var(--branco);
+  margin-bottom: 1rem;
+  margin-top: 2rem;
+}
+
+.mobile-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  width: 100%;
+  max-width: 280px;
+  flex: 1;
+  justify-content: flex-start;
+  padding-top: 1rem;
+}
+
+.mobile-nav .btn {
+  width: 100%;
+  text-align: center;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem;
+  font-size: 0.95rem;
+  border-radius: 10px;
+  min-height: 48px;
+}
+
+.mobile-nav .btn-premium {
+  background: linear-gradient(135deg, #ffd700, #ff6b00);
+  color: var(--branco);
+  border: none;
+  font-weight: 700;
+  box-shadow: 0 4px 15px rgba(255, 107, 0, 0.3);
+}
+
+/* BOTÃO SAIR DIFERENCIADO NO MOBILE */
+.mobile-nav .btn:last-child {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: var(--branco);
+  font-weight: 600;
+  position: relative;
+}
+
+.mobile-nav .btn:last-child::before {
+  content: "";
+  position: absolute;
+  top: -1rem;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.mobile-nav .btn:last-child:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.mobile-user-info .user-avatar {
+  width: 70px;
+  height: 70px;
+  font-size: 1.3rem;
+  margin: 0 auto 0.5rem;
+}
+
+.mobile-user-info #mobileUserNickname {
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+/* ==================== SISTEMA DE VISITANTES ATUALIZADO ==================== */
+.visitors-section {
+    margin-bottom: 3rem;
+}
+
+.visitors-card {
+    background: var(--branco);
+    padding: 1.5rem;
+    border-radius: 15px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--lilas);
+    transition: var(--transition);
+}
+
+.visitors-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.visitors-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.visitors-header h2 {
+    font-size: 1.5rem;
+    color: var(--vermelho-rosado);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+}
+
+.visitors-count {
+    background: var(--lilas);
+    color: var(--branco);
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+/* NOVO: Grid de Cards Pequenos - IGUAL AO VISITANTE.HTML */
+.visitors-grid {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    padding: 0.5rem 0.2rem;
+    margin-bottom: 1.5rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--lilas) var(--bege);
+    min-height: 180px;
+}
+
+.visitors-grid::-webkit-scrollbar {
+    height: 6px;
+}
+
+.visitors-grid::-webkit-scrollbar-track {
+    background: var(--bege);
+    border-radius: 3px;
+}
+
+.visitors-grid::-webkit-scrollbar-thumb {
+    background: var(--lilas);
+    border-radius: 3px;
+}
+
+/* Cards Pequenos - IGUAL AO VISITANTE.HTML */
+.visitor-card {
+    flex: 0 0 auto;
+    width: 120px;
+    background: var(--bege);
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    border: 2px solid transparent;
+    position: relative;
+    display: block !important;
+}
+
+.visitor-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--lilas);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* ✅ AVATAR CORRIGIDO - SÓ MOSTRA FOTO OU SÓ MOSTRA FALLBACK (NUNCA OS DOIS) */
+.visitor-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    margin: 0 auto 0.8rem;
+    position: relative;
+    overflow: hidden; /* ✅ IMPEDE que apareça coisa do lado */
+    border: 3px solid var(--branco);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* ✅ IMAGEM - quando tem foto */
+.visitor-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+/* ✅ FALLBACK - quando NÃO tem foto */
+.visitor-avatar-fallback {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+/* ✅ REGRA CRÍTICA: Quando a imagem existe, ESCONDER o fallback */
+.visitor-avatar:has(.visitor-avatar-img[src]) .visitor-avatar-fallback {
+    display: none !important;
+}
+
+/* ✅ REGRA CRÍTICA: Quando NÃO tem imagem, MOSTRAR o fallback */
+.visitor-avatar:not(:has(.visitor-avatar-img[src])) .visitor-avatar-fallback {
+    display: flex !important;
+}
+
+.visitor-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 0.3rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.visitor-location {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.visitor-time {
+    font-size: 0.7rem;
+    color: var(--vermelho-rosado);
+    margin-top: 0.3rem;
+    font-weight: 500;
+}
+
+.visitors-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.free-content {
+    text-align: center;
+    padding: 2rem;
+    display: none;
+}
+
+.free-content.visible {
+    display: block;
+}
+
+.free-content .icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.7;
+}
+
+.free-content h3 {
+    color: var(--vermelho-rosado);
+    margin-bottom: 0.5rem;
+    font-size: 1.2rem;
+}
+
+.free-content p {
+    color: var(--text-light);
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+}
+
+.visitors-empty {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-light);
+    width: 100%;
+}
+
+.visitors-empty .icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.visitors-empty p {
+    margin-bottom: 1rem;
+}
+
+.visitors-loading {
+    text-align: center;
+    padding: 2rem;
+    width: 100%;
+}
+
+.visitors-spinner {
+    width: 30px;
+    height: 30px;
+    border: 3px solid var(--bege);
+    border-top: 3px solid var(--vermelho-rosado);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+/* ==================== SISTEMA DE STATUS ONLINE/OFFLINE ==================== */
+
+/* Bolinha Online (Verde) */
+.online-badge {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 12px;
+    height: 12px;
+    background: #48bb78; /* Verde */
+    border: 2px solid var(--branco);
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    animation: pulse-online 2s infinite;
+}
+
+/* Bolinha Offline (Cinza) */
+.offline-badge {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 12px;
+    height: 12px;
+    background: #a0aec0; /* Cinza */
+    border: 2px solid var(--branco);
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Animação para bolinha online */
+@keyframes pulse-online {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.7);
+    }
+    70% {
+        transform: scale(1.1);
+        box-shadow: 0 0 0 6px rgba(72, 187, 120, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(72, 187, 120, 0);
+    }
+}
+
+/* Ajustes para os avatares dos cards de usuário */
+.user-card-avatar {
+    position: relative;
+    overflow: visible !important;
+}
+
+.user-card-avatar .online-badge,
+.user-card-avatar .offline-badge {
+    bottom: 8px;
+    right: 8px;
+    width: 14px;
+    height: 14px;
+    border: 3px solid var(--branco);
+}
+
+/* Ajustes para os avatares dos visitantes */
+.visitor-avatar {
+    position: relative;
+    overflow: visible !important;
+}
+
+.visitor-avatar .online-badge,
+.visitor-avatar .offline-badge {
+    bottom: 5px;
+    right: 5px;
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--branco);
+}
+
+/* Ajustes para os avatares no header */
+.user-avatar {
+    position: relative;
+    overflow: visible !important;
+}
+
+.user-avatar .online-badge,
+.user-avatar .offline-badge {
+    bottom: 2px;
+    right: 2px;
+    width: 10px;
+    height: 10px;
+    border: 2px solid var(--branco);
+}
+
+/* Status no tooltip para melhor UX */
+.user-card:hover .online-badge::after,
+.visitor-card:hover .online-badge::after {
+    content: "Online";
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2d3748;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    white-space: nowrap;
+    z-index: 1000;
+}
+
+.user-card:hover .offline-badge::after,
+.visitor-card:hover .offline-badge::after {
+    content: "Offline";
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2d3748;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    white-space: nowrap;
+    z-index: 1000;
+}
+
+/* ==================== INDICADOR MODO INVISÍVEL ==================== */
+.invisible-status {
+    display: none; /* Inicialmente escondido */
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--lilas);
+    color: var(--branco);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    margin-left: auto;
+}
+
+.invisible-status .status-icon {
+    font-size: 1.1rem;
+}
+
+.invisible-status .status-text strong {
+    color: #ffeb3b;
+}
+
+/* ==================== CORREÇÕES MOBILE - BLOQUEIO E MENU ==================== */
+
+/* ✅ CORREÇÃO: Menu de opções desktop */
+.user-card-menu {
+  position: relative;
+  z-index: 100;
+}
+
+.menu-options {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--branco);
+  border: 1px solid var(--lilas);
+  border-radius: 10px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  padding: 0.5rem;
+  z-index: 1000;
+  display: none;
+  min-width: 160px;
+  animation: fadeIn 0.2s ease;
+}
+
+.menu-options.show {
+  display: block;
+}
+
+/* ✅ CORREÇÃO: Garantir que cards não cortem o menu */
+.user-card {
+  position: relative;
+  z-index: 1;
+  overflow: visible !important;
+}
+
+.user-card:hover {
+  z-index: 2;
+}
+
+/* ✅ CORREÇÃO: Remoção visual imediata dos cards */
+.user-card.removing {
+  opacity: 0.5 !important;
+  transform: scale(0.95) !important;
+  pointer-events: none !important;
+  transition: all 0.3s ease !important;
+}
+
+/* ==================== CORREÇÃO CRÍTICA PARA MOBILE ==================== */
+@media (max-width: 768px) {
+  #hamburgerBtn {
+    display: flex;
+  }
+
+  .user-menu {
+    display: none;
+  }
+
+  .header-content {
+    flex-direction: row;
+    justify-content: space-between;
+    height: 80px;
+    padding: 0;
+  }
+
+  .logo {
+    justify-content: center;
+    flex: 1;
+    margin: 0 auto;
+  }
+
+  .logo img {
+    height: 180px !important;
+  }
+
+  .user-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .stat-card {
+    padding: 1rem;
+  }
+
+  .stat-number {
+    font-size: 1.8rem;
+  }
+
+  .users-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .user-card {
+    padding: 1.2rem;
+  }
+
+  .user-card-avatar {
+    width: 70px;
+    height: 70px;
+  }
+
+  .user-card-name {
+    font-size: 1.1rem;
+  }
+
+  .user-card-actions {
+    flex-direction: row;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .user-card-actions .btn {
+    flex: 1;
+    padding: 0.8rem 0.5rem;
+    font-size: 0.8rem;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* ✅ CORREÇÃO CRÍTICA: BOTÃO DOS 3 PONTOS NO MOBILE */
+  .btn-more {
+    width: 44px !important;
+    height: 44px !important;
+    background: var(--lilas) !important;
+    color: white !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.3rem !important;
+    font-weight: bold !important;
+    border: 2px solid var(--branco) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+    flex: 0 0 auto !important;
+  }
+
+  .btn-more:active {
+    transform: scale(0.95);
+    background: var(--vermelho-rosado) !important;
+  }
+
+  .user-card-menu {
+    z-index: 10;
+    position: relative;
+  }
+
+  /* ✅ CORREÇÃO CRÍTICA: MENU MOBILE FUNCIONAL */
+  .menu-options {
+    display: none;
+    position: absolute;
+    bottom: 100% !important;
+    top: auto !important;
+    right: 0;
+    left: auto;
+    min-width: 180px;
+    z-index: 1001 !important;
+    background: var(--branco);
+    border: 1px solid var(--lilas);
+    border-radius: 10px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    transform: none !important;
+  }
+
+  .menu-options.show {
+    display: block !important;
+    animation: fadeIn 0.2s ease !important;
+  }
+
+  /* ✅ GARANTIR que os cards não cortam o menu */
+  .user-card {
+    overflow: visible !important;
+    position: relative;
+  }
+
+  .user-card:hover {
+    z-index: 999;
+  }
+
+  .actions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .action-card {
+    padding: 1.2rem;
+  }
+
+  .welcome-section {
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .welcome-section h2 {
+    font-size: 1.8rem;
+  }
+
+  .quick-actions {
+    padding: 1.5rem;
+  }
+
+  .section-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  /* Ajustes para modais mobile */
+  .modal-content {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .modal-actions .btn {
+    width: 100%;
+  }
+
+  /* Responsividade Visitantes */
+  .visitors-grid {
+    gap: 0.8rem;
+  }
+  
+  .visitor-card {
+    width: 110px;
+    padding: 0.8rem;
+  }
+  
+  .visitor-avatar {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .visitors-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .visitors-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .visitors-count {
+    align-self: flex-start;
+  }
+
+  .invisible-status {
+    margin-left: 0;
+    align-self: flex-start;
+  }
+
+  /* Ajustes específicos para mobile menu em telas pequenas */
+  @media (max-height: 700px) {
+    #mobileMenu {
+      padding: 1rem;
+      gap: 0.5rem;
+    }
+    
+    .mobile-user-info {
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .mobile-nav .btn {
+      padding: 0.7rem;
+      min-height: 44px;
+      font-size: 0.9rem;
+    }
+    
+    .mobile-nav .btn:last-child {
+      margin-top: 1.5rem;
+      margin-bottom: 1rem;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .logo img {
+    height: 160px !important;
+  }
+
+  .user-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .welcome-section h2 {
+    font-size: 1.5rem;
+  }
+
+  .stat-number {
+    font-size: 1.5rem;
+  }
+
+  .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .header-content {
+    height: 70px;
+  }
+
+  /* ✅ CORREÇÃO EXTRA PARA MOBILE PEQUENO */
+  .user-card-actions .btn {
+    font-size: 0.75rem;
+    padding: 0.7rem 0.3rem;
+  }
+
+  .btn-more {
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 1.2rem !important;
+  }
+
+  .visitor-card {
+    width: 100px;
+  }
+  
+  .visitor-avatar {
+    width: 45px;
+    height: 45px;
+  }
+  
+  .visitor-name {
+    font-size: 0.75rem;
+  }
+  
+  .visitor-location {
+    font-size: 0.65rem;
+  }
+  
+  .visitor-time {
+    font-size: 0.65rem;
+  }
+  
+  .free-content {
+    padding: 1.5rem;
+  }
+  
+  .free-content .icon {
+    font-size: 2.5rem;
+  }
+
+  /* Ajustes extras para mobile menu em telas muito pequenas */
+  #mobileMenu {
+    padding: 1rem;
+  }
+  
+  .mobile-nav {
+    max-width: 260px;
+  }
+  
+  .mobile-user-info .user-avatar {
+    width: 60px;
+    height: 60px;
+    font-size: 1.1rem;
+  }
+  
+  .mobile-user-info #mobileUserNickname {
+    font-size: 1rem;
+  }
+}
+
+/* ✅ CORREÇÃO DOS BOTÕES NÃO CLICÁVEIS */
+.user-card-actions {
+    position: relative;
+    z-index: 1000;
+}
+
+.user-card-actions button {
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 1001 !important;
+    cursor: pointer !important;
+}
+
+.user-card-actions .btn-more {
+    pointer-events: auto !important;
+    z-index: 1002 !important;
+}
+
+.menu-options {
+    z-index: 1003 !important;
+}
+
+/* Garante que os cards não bloqueiem cliques */
+.user-card {
+    position: relative;
+}
+
+.user-card > *:not(.user-card-actions) {
+    pointer-events: none;
+}
+
+.user-card-actions,
+.user-card-actions * {
+    pointer-events: auto !important;
+}
+
+/* ✅ ANIMAÇÃO PARA O MENU MOBILE */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==================== CORREÇÃO CRÍTICA - SISTEMA DE VISITANTES ==================== */
+
+/* ✅ CORREÇÃO: Seções de visitantes controladas por JavaScript */
+#premiumVisitors {
+    display: none;
+}
+
+#premiumVisitors.visible {
+    display: block !important;
+}
+
+#freeVisitors {
+    display: none;
+}
+
+#freeVisitors.visible {
+    display: block !important;
+}
+
+/* ✅ CORREÇÃO: Garantir que elementos estão visíveis quando ativos */
+.visitors-card {
+    display: block !important;
+}
+
+.visitors-grid {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* ✅ CORREÇÃO: Estado de loading sempre visível quando ativo */
+.visitors-loading {
+    display: block !important;
+}
+
+/* ✅ CORREÇÃO: Estado vazio sempre visível quando ativo */
+.visitors-empty {
+    display: block !important;
+}
+
+/* ✅ CORREÇÃO: Conteúdo free sempre visível quando ativo */
+.free-content {
+    display: none;
+}
+
+.free-content.visible {
+    display: block !important;
+}
+
+/* ✅ CORREÇÃO: Garantir que os cards de visitantes são sempre visíveis */
+.visitor-card {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* ✅ CORREÇÃO: Avatar dos visitantes sempre visível */
+.visitor-avatar {
+    display: flex !important;
+}
+/* ==================== SISTEMA DE NOTIFICAÇÕES - SINO ==================== */
+.notification-bell-container {
+    position: absolute;
+    right: 80px; /* Posicionado após o botão Sair */
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 101;
+}
+
+.notification-bell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    font-size: 1.5rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.notification-bell:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: linear-gradient(135deg, #e53e3e, #c53030);
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: bold;
+    border: 2px solid var(--branco);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.notification-badge:empty {
+    display: none;
+}
+
+.notification-mobile-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.notification-mobile-btn .notification-badge {
+    position: static;
+    margin-left: auto;
+}
+
+/* Badge com muitos números */
+.notification-badge.high-count {
+    width: 25px;
+    height: 25px;
+    font-size: 0.6rem;
+}
+
+/* Animação de pulso para badge */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.7);
+    }
+    70% {
+        transform: scale(1.1);
+        box-shadow: 0 0 0 6px rgba(229, 62, 62, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(229, 62, 62, 0);
+    }
+}
+
+/* ==================== SISTEMA DE NOTIFICAÇÕES - SINO ==================== */
+.notification-bell-container {
+    position: absolute;
+    right: 20px; /* Mais à direita, próximo à borda */
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 101;
+}
+
+.notification-bell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    font-size: 1.5rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.notification-bell:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: linear-gradient(135deg, #e53e3e, #c53030);
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: bold;
+    border: 2px solid var(--branco);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.notification-badge:empty {
+    display: none;
+}
+
+.notification-mobile-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.notification-mobile-btn .notification-badge {
+    position: static;
+    margin-left: auto;
+}
+
+/* Badge com muitos números */
+.notification-badge.high-count {
+    width: 25px;
+    height: 25px;
+    font-size: 0.6rem;
+}
+
+/* Animação de pulso para badge */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.7);
+    }
+    70% {
+        transform: scale(1.1);
+        box-shadow: 0 0 0 6px rgba(229, 62, 62, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(229, 62, 62, 0);
+    }
+}
+
+/* Sino quando tem notificações não lidas */
+.notification-bell.has-notifications {
+    background: rgba(229, 62, 62, 0.1);
+    border-color: rgba(229, 62, 62, 0.5);
+    animation: bell-shake 2s ease-in-out infinite;
+}
+
+@keyframes bell-shake {
+    0%, 100% { transform: translateY(-50%) rotate(0); }
+    25% { transform: translateY(-50%) rotate(-10deg); }
+    75% { transform: translateY(-50%) rotate(10deg); }
+}
+
+@media (max-width: 768px) {
+    .notification-bell-container {
+        position: static;
+        transform: none;
+        margin-left: auto;
+        margin-right: 1rem;
+    }
+    
+    .notification-bell {
+        width: 45px;
+        height: 45px;
+        font-size: 1.3rem;
+    }
+    
+    .notification-badge {
+        width: 18px;
+        height: 18px;
+        font-size: 0.65rem;
+    }
+    
+    .notification-bell.has-notifications {
+        animation: bell-shake-mobile 2s ease-in-out infinite;
+    }
+}
+
+@media (max-width: 480px) {
+    .notification-bell-container {
+        margin-right: 0.5rem;
+    }
+    
+    .notification-bell {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+    
+    .notification-badge {
+        width: 16px;
+        height: 16px;
+        font-size: 0.6rem;
+        top: -3px;
+        right: -3px;
+    }
+}
+</style>
 </head>
 <body>
   <!-- Header -->
@@ -25,10 +1971,10 @@
           <img src="logoamorconect.png" alt="Amor Conect">
         </div>
         
-        <!-- 🔔 SINO DE NOTIFICAÇÕES ISOLADO -->
+        <!--    SINO DE NOTIFICAÇÕES ISOLADO -->
         <div class="notification-bell-container">
           <a href="notificacoes.html" class="notification-bell" id="notificationBell" title="Notificações">
-            🔔
+              
             <span class="notification-badge" id="notificationBadge">0</span>
           </a>
         </div>
@@ -44,13 +1990,11 @@
           <!-- NOVO: Badge Free e Botão Premium -->
           <div id="freeBadge" class="free-badge" style="display: none;">Free</div>
           <a href="princing.html" id="premiumBtn" class="btn btn-premium" style="display: none;">Premium</a>
-          <!-- 🔥 NOVO: Link para Lista VIP -->
-          <a href="lista-vip.html" class="btn btn-vip">⭐ Lista VIP</a>
           <a href="mensagens.html" class="btn btn-outline">Mensagens</a>
           <a href="busca.html" class="btn btn-outline">Buscar</a>
           <a href="painel.html" class="btn btn-outline">Perfil</a>
           <!-- NOVO: Link para usuários bloqueados -->
-          <a href="blocks.html" class="btn btn-outline">🚫 Bloqueados</a>
+          <a href="blocks.html" class="btn btn-outline">   Bloqueados</a>
           <button class="btn btn-outline" id="logoutBtn">Sair</button>
         </div>
       </div>
@@ -70,22 +2014,20 @@
     </div>
 
     <div class="mobile-nav">
-      <!-- 🔔 SINO DE NOTIFICAÇÕES MOBILE -->
+      <!--    SINO DE NOTIFICAÇÕES MOBILE -->
       <a href="notificacoes.html" class="btn btn-outline notification-mobile-btn">
-        🔔 Notificações
+           Notificações
         <span class="notification-badge" id="mobileNotificationBadge">0</span>
       </a>
       
       <!-- NOVO: Badge Free e Botão Premium Mobile -->
       <div id="mobileFreeBadge" class="free-badge" style="display: none;">Free</div>
       <a href="princing.html" id="mobilePremiumBtn" class="btn btn-premium" style="display: none;">Premium</a>
-      <!-- 🔥 NOVO: Link para Lista VIP Mobile -->
-      <a href="lista-vip.html" class="btn btn-vip">⭐ Lista VIP</a>
       <a href="busca.html" class="btn btn-outline">Buscar</a>
       <a href="painel.html" class="btn btn-outline">Perfil</a>
       <a href="mensagens.html" class="btn btn-outline">Mensagens</a>
       <!-- NOVO: Link para usuários bloqueados no mobile -->
-      <a href="blocks.html" class="btn btn-outline">🚫 Bloqueados</a>
+      <a href="blocks.html" class="btn btn-outline">   Bloqueados</a>
       <button class="btn btn-outline" id="mobileLogoutBtn">Sair</button>
     </div>
   </div>
@@ -128,7 +2070,7 @@
       <section class="visitors-section">
         <div class="visitors-card">
           <div class="visitors-header">
-            <h2>👀 Quem te visitou</h2>
+            <h2>   Quem te visitou</h2>
             <div class="visitors-count" id="visitorsCount">0 visitas</div>
           </div>
 
@@ -151,7 +2093,7 @@
 
           <!-- Conteúdo Free -->
           <div class="free-content" id="freeVisitors">
-            <div class="icon">🔒</div>
+            <div class="icon">  </div>
             <h3>Descubra quem se interessou por você!</h3>
             <p>
               <span id="freeVisitorsCount">0 pessoas</span> visitaram seu perfil esta semana
@@ -182,29 +2124,23 @@
         <h2>Ações Rápidas</h2>
         <div class="actions-grid">
           <a href="painel.html" class="action-card">
-            <div class="action-icon">👤</div>
+            <div class="action-icon">  </div>
             <h3>Completar Perfil</h3>
             <p>Adicione mais informações ao seu perfil</p>
           </a>
           <a href="busca.html" class="action-card">
-            <div class="action-icon">🔍</div>
+            <div class="action-icon">  </div>
             <h3>Buscar Pessoas</h3>
             <p>Encontre pessoas com interesses similares</p>
           </a>
           <a href="mensagens.html" class="action-card">
-            <div class="action-icon">💌</div>
+            <div class="action-icon">  </div>
             <h3>Minhas Mensagens</h3>
             <p>Ver e responder mensagens</p>
           </a>
-          <!-- 🔥 NOVO: Card para Lista VIP -->
-          <a href="lista-vip.html" class="action-card vip-action-card" onclick="goToVipList()">
-            <div class="action-icon">⭐</div>
-            <h3>Minha Lista VIP</h3>
-            <p>Veja seus favoritos e matches</p>
-          </a>
           <!-- NOVO: Card para usuários bloqueados -->
           <a href="blocks.html" class="action-card" style="background: linear-gradient(135deg, #fed7d7, #feb2b2); border: 2px solid #e53e3e;">
-            <div class="action-icon">🚫</div>
+            <div class="action-icon">  </div>
             <h3>Usuários Bloqueados</h3>
             <p>Gerencie usuários que você bloqueou</p>
           </a>
@@ -223,7 +2159,7 @@
   <div class="modal-overlay" id="reportModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>🚨 Reportar Usuário</h3>
+        <h3>   Reportar Usuário</h3>
         <button class="close-modal" onclick="closeReportModal()">×</button>
       </div>
       
@@ -235,19 +2171,19 @@
         <div class="report-categories">
           <label class="report-category">
             <input type="radio" name="reportReason" value="spam" onchange="selectReportCategory(this)">
-            <span>📧 Spam ou conteúdo comercial</span>
+            <span>   Spam ou conteúdo comercial</span>
           </label>
           <label class="report-category">
             <input type="radio" name="reportReason" value="harassment" onchange="selectReportCategory(this)">
-            <span>🚫 Assédio ou bullying</span>
+            <span>   Assédio ou bullying</span>
           </label>
           <label class="report-category">
             <input type="radio" name="reportReason" value="inappropriate" onchange="selectReportCategory(this)">
-            <span>🔞 Conteúdo inadequado</span>
+            <span>   Conteúdo inadequado</span>
           </label>
           <label class="report-category">
             <input type="radio" name="reportReason" value="fake" onchange="selectReportCategory(this)">
-            <span>🤥 Perfil falso</span>
+            <span>   Perfil falso</span>
           </label>
           <label class="report-category">
             <input type="radio" name="reportReason" value="other" onchange="selectReportCategory(this)">
@@ -277,7 +2213,7 @@
   <div class="modal-overlay" id="blockModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>🚫 Bloquear Usuário</h3>
+        <h3>   Bloquear Usuário</h3>
         <button class="close-modal" onclick="closeBlockModal()">×</button>
       </div>
       
@@ -291,7 +2227,7 @@
           <li>Não aparecerá mais nos seus resultados de busca</li>
           <li>Não poderá ver seu perfil</li>
           <li>Esta ação pode ser revertida a qualquer momento</li>
-          <li>Para gerenciar bloqueios, acesse <strong>"🚫 Bloqueados"</strong> no menu</li>
+          <li>Para gerenciar bloqueios, acesse <strong>"   Bloqueados"</strong> no menu</li>
         </ul>
       </div>
       
@@ -344,7 +2280,7 @@
             <li><a href="#">Central de Ajuda</a></li>
             <li><a href="#">Política de Privacidade</a></li>
             <li><a href="#">Termos de Uso</a></li>
-            <li><a href="#" onclick="openSupportModal()">🚨 Reportar Problema</a></li>
+            <li><a href="#" onclick="openSupportModal()">   Reportar Problema</a></li>
           </ul>
         </div>
       </div>
@@ -353,8 +2289,37 @@
       </div>
     </div>
   </footer>
-
-  <script>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-column">
+          <h3>Amor Conect</h3>
+          <p>Uma plataforma segura e discreta para conectar corações e construir relacionamentos genuínos.</p>
+        </div>
+        <div class="footer-column">
+          <h3>Links Rápidos</h3>
+          <ul>
+            <li><a href="index.html">Página Inicial</a></li>
+            <li><a href="princing.html">Planos Premium</a></li>
+            <li><a href="#como-funciona">Como Funciona</a></li>
+            <li><a href="#depoimentos">Depoimentos</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h3>Suporte</h3>
+          <ul>
+            <li><a href="#">Central de Ajuda</a></li>
+            <li><a href="#">Política de Privacidade</a></li>
+            <li><a href="#">Termos de Uso</a></li>
+            <li><a href="#" onclick="openSupportModal()">   Reportar Problema</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="copyright">
+        <p>&copy; 2023 Amor Conect. Todos os direitos reservados.</p>
+      </div>
+    </div>
+  </footer>
+<script>
 // ==================== CONFIGURAÇÃO SUPABASE ====================
 const supabaseUrl = 'https://gcukalndarlgydmgmmmt.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
@@ -366,19 +2331,26 @@ let userProfile = null;
 let currentReportUserId = null;
 let currentReportUserName = null;
 
-// ==================== INICIALIZAÇÃO PRINCIPAL ====================
+/// ==================== INICIALIZAÇÃO CORRIGIDA ====================
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Iniciando aplicação...');
+    console.log('   Iniciando aplicação...');
     initializeApp();
 });
 
+// ✅ CORREÇÃO CRÍTICA: Inicialização garantida para visitantes
 async function initializeApp() {
     try {
-        // 1. Verificar autenticação
+        // 1. Verificar autenticação UMA VEZ
         const { data: { user }, error } = await supabase.auth.getUser();
         
-        if (error || !user) {
-            console.error('❌ Usuário não autenticado:', error);
+        if (error) {
+            console.error('Erro de autenticação:', error);
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        if (!user) {
+            console.log('❌ Usuário não autenticado, redirecionando...');
             window.location.href = 'login.html';
             return;
         }
@@ -386,45 +2358,27 @@ async function initializeApp() {
         console.log('✅ Usuário autenticado:', user.id);
         currentUser = user;
         
-        // 2. Inicializar sistema de bloqueio
+        // ✅✅✅ CORREÇÃO: Inicializar sistema de bloqueio COM VERIFICAÇÃO
         if (window.HomeBlockSystem) {
             window.blockSystem = new HomeBlockSystem(supabase, currentUser);
             await window.blockSystem.initialize();
             console.log('✅ Sistema de bloqueio inicializado!');
         } else {
-            console.error('❌ HomeBlockSystem não carregado');
+            console.error('❌ HomeBlockSystem não carregado - verifique home.block.js');
+            // Fallback emergencial
             initializeBlockSystemFallback();
         }
         
-        // 3. Carregar dados do usuário
+        // 2. Carregar dados do usuário
         await loadUserData();
         
-        // 4. Inicializar sistemas separados
-        await initializeSeparatedSystems();
+        // 3. Carregar usuários OTIMIZADO
+        await loadRealUsers();
         
-        // 5. Configurar UI
-        setupEventListeners();
-        setupMobileMenu();
+        // ✅✅✅ CORREÇÃO DEFINITIVA: Sistema de visitantes com garantia
+        console.log('   Inicializando sistema de visitantes...');
         
-        console.log('🎯 Aplicação carregada com sucesso!');
-        
-    } catch (error) {
-        console.error('❌ Erro crítico na inicialização:', error);
-        showQuickToast('Erro ao carregar a página. Recarregue.');
-    }
-}
-
-// ==================== INICIALIZAÇÃO DOS SISTEMAS SEPARADOS ====================
-async function initializeSeparatedSystems() {
-    try {
-        // 1. Sistema de usuários
-        if (window.initializeUsersSystem) {
-            await initializeUsersSystem(supabase, currentUser, userProfile);
-            console.log('✅ Sistema de usuários inicializado!');
-        }
-        
-        // 2. Sistema de visitantes
-        console.log('🎯 Inicializando sistema de visitantes...');
+        // Aguardar o arquivo home-visitante.js carregar
         let tentativas = 0;
         while (tentativas < 8) {
             if (window.inicializarSistemaVisitantes) {
@@ -433,43 +2387,331 @@ async function initializeSeparatedSystems() {
                 console.log('✅ Sistema de visitantes inicializado com sucesso!');
                 break;
             }
+            
             console.log('⏳ Aguardando sistema de visitantes...', tentativas + 1);
             await new Promise(resolve => setTimeout(resolve, 300));
             tentativas++;
             
             if (tentativas === 8) {
-                console.error('❌ Sistema de visitantes não carregou');
+                console.error('❌ Sistema de visitantes não carregou após 8 tentativas');
                 await criarSistemaVisitantesFallback();
             }
         }
         
-        // 3. Sistema de notificações
-        if (window.initializeNotificationsSystem) {
-            await initializeNotificationsSystem(supabase, currentUser);
-            console.log('✅ Sistema de notificações inicializado!');
-        }
+        //    NOVO: Inicializar sistema de notificações
+        await initializeNotificationSystem();
         
-        // 4. Sistema de estatísticas
-        if (window.initializeStatsSystem) {
-            await initializeStatsSystem(supabase, currentUser);
-            console.log('✅ Sistema de estatísticas inicializado!');
-        }
+        //    NOVO: Criar notificação de boas-vindas (opcional)
+        setTimeout(createSampleNotification, 2000);
         
-        // 🔥 5. NOVO: Sistema de Favoritos
-        if (window.FavoriteSystem) {
-            window.favoriteSystem = new FavoriteSystem(supabase, currentUser);
-            await window.favoriteSystem.initialize();
-            console.log('✅ Sistema de favoritos inicializado!');
-        } else {
-            console.error('❌ FavoriteSystem não carregado - verifique se home-favoritos.js foi incluído');
-        }
+        // 4. Configurar sistemas secundários
+        setupEventListeners();
+        setupMobileMenu();
+        
+        // ✅ CORREÇÃO: Atualizar stats depois de carregar visitantes
+        setTimeout(updateStats, 1000);
+        startOnlineStatusUpdater();
+        
+        console.log('   Aplicação carregada com sucesso!');
         
     } catch (error) {
-        console.error('❌ Erro ao inicializar sistemas:', error);
+        console.error('❌ Erro crítico na inicialização:', error);
+        showQuickToast('Erro ao carregar a página. Recarregue.');
     }
 }
 
-// ==================== SISTEMA DE USUÁRIO ====================
+// ==================== SISTEMA DE NOTIFICAÇÕES ====================
+
+// Função para atualizar o badge de notificações
+async function updateNotificationBadge() {
+    try {
+        if (!currentUser) return;
+        
+        const { data: notifications, error } = await supabase
+            .from('user_notifications')
+            .select('id')
+            .eq('user_id', currentUser.id)
+            .eq('is_read', false);
+
+        if (error) {
+            console.log('ℹ️ Tabela de notificações não encontrada, usando sistema padrão');
+            return;
+        }
+
+        const unreadCount = notifications?.length || 0;
+        
+        // Atualizar badges
+        const badges = document.querySelectorAll('.notification-badge');
+        badges.forEach(badge => {
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                badge.style.display = 'flex';
+                
+                // Adicionar classe se tiver muitas notificações
+                if (unreadCount > 9) {
+                    badge.classList.add('high-count');
+                } else {
+                    badge.classList.remove('high-count');
+                }
+            } else {
+                badge.textContent = '0';
+                badge.style.display = 'none';
+            }
+        });
+
+        // Atualizar sino
+        const bell = document.getElementById('notificationBell');
+        if (bell) {
+            if (unreadCount > 0) {
+                bell.classList.add('has-notifications');
+            } else {
+                bell.classList.remove('has-notifications');
+            }
+        }
+
+        // Salvar no localStorage para acesso rápido
+        localStorage.setItem('unreadNotifications', unreadCount);
+
+    } catch (error) {
+        console.error('Erro ao atualizar badge:', error);
+    }
+}
+
+// Inicializar sistema de notificações
+async function initializeNotificationSystem() {
+    if (!currentUser) return;
+    
+    await updateNotificationBadge();
+    
+    // Atualizar a cada 30 segundos
+    setInterval(updateNotificationBadge, 30000);
+    
+    // Escutar por novas notificações em tempo real
+    try {
+        const subscription = supabase
+            .channel('notifications-badge')
+            .on('postgres_changes', 
+                { 
+                    event: '*', 
+                    schema: 'public', 
+                    table: 'user_notifications',
+                    filter: `user_id=eq.${currentUser.id}`
+                }, 
+                () => {
+                    updateNotificationBadge();
+                }
+            )
+            .subscribe();
+    } catch (error) {
+        console.log('ℹ️ Sistema em tempo real não disponível');
+    }
+}
+
+// Criar notificação de exemplo (para teste)
+async function createSampleNotification() {
+    try {
+        const notificationData = {
+            user_id: currentUser.id,
+            type: 'welcome',
+            title: 'Bem-vindo ao Amor Conect!   ',
+            message: 'Sua jornada para encontrar conexões genuínas começou. Complete seu perfil para ter mais matches!',
+            priority: 'high',
+            actions: [
+                { label: 'Completar Perfil', type: 'primary' },
+                { label: 'Ver Dicas', type: 'secondary' }
+            ],
+            created_at: new Date().toISOString()
+        };
+
+        const { error } = await supabase
+            .from('user_notifications')
+            .insert(notificationData);
+
+        if (error && error.code !== '23505') { // Ignora erro de duplicação
+            console.log('ℹ️ Não foi possível criar notificação de exemplo');
+        }
+    } catch (error) {
+        // Tabela não existe ainda, tudo bem
+    }
+}
+
+// ✅ FALLBACK PARA SISTEMA DE BLOQUEIO (EMERGÊNCIA)
+function initializeBlockSystemFallback() {
+    console.log('   Inicializando fallback de bloqueio...');
+    
+    window.blockSystem = {
+        async openBlockModal(userId, userName) {
+            console.log('   Fallback: Abrindo modal para', userName);
+            document.getElementById('blockUserName').textContent = userName;
+            document.getElementById('blockModal').classList.add('show');
+            
+            // Configurar confirmação direta
+            const confirmBtn = document.getElementById('confirmBlockBtn');
+            if (confirmBtn) {
+                confirmBtn.onclick = async function() {
+                    await blockUserDirect(userId, userName);
+                };
+            }
+        },
+        
+        closeBlockModal() {
+            document.getElementById('blockModal').classList.remove('show');
+        },
+        
+        async confirmBlock() {
+            console.log('⚠️ Use blockUserDirect diretamente');
+        },
+        
+        isUserBlocked(userId) {
+            return false;
+        },
+        
+        removeUserCardImmediately(userId) {
+            const cards = document.querySelectorAll(`[data-user-id="${userId}"]`);
+            cards.forEach(card => {
+                card.style.transition = 'all 0.3s ease';
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.8)';
+                setTimeout(() => card.remove(), 300);
+            });
+        }
+    };
+}
+
+// ✅ FUNÇÃO DE BLOQUEIO DIRETO (GARANTIDA)
+async function blockUserDirect(userId, userName) {
+    console.log('   BLOQUEIO DIRETO:', userName);
+    
+    try {
+        // 1. Fechar modal
+        document.getElementById('blockModal').classList.remove('show');
+        
+        // 2. Remover card IMEDIATAMENTE
+        const cards = document.querySelectorAll(`[data-user-id="${userId}"]`);
+        cards.forEach(card => {
+            card.style.transition = 'all 0.4s ease';
+            card.style.opacity = '0.3';
+            card.style.transform = 'scale(0.9)';
+            card.style.pointerEvents = 'none';
+            
+            setTimeout(() => {
+                card.style.height = '0';
+                card.style.margin = '0';
+                card.style.padding = '0';
+                card.style.overflow = 'hidden';
+                
+                setTimeout(() => card.remove(), 300);
+            }, 400);
+        });
+        
+        // 3. Salvar no banco
+        const { error } = await supabase
+            .from('user_blocks')
+            .insert({
+                blocker_id: currentUser.id,
+                blocked_user_id: userId,
+                created_at: new Date().toISOString()
+            });
+        
+        if (error) {
+            if (error.code === '23505') {
+                console.log('ℹ️ Usuário já estava bloqueado');
+            } else {
+                throw error;
+            }
+        }
+        
+        showQuickToast(`✅ ${userName} bloqueado com sucesso!`);
+        console.log('✅ Bloqueio realizado:', userName);
+        
+    } catch (error) {
+        console.error('❌ Erro no bloqueio direto:', error);
+        showQuickToast('⚠️ Bloqueado localmente (erro de rede)');
+    }
+}
+
+// ✅ FALLBACK para sistema de visitantes
+async function criarSistemaVisitantesFallback() {
+    console.log('   Criando fallback para sistema de visitantes...');
+    
+    // Sistema básico que atualiza apenas o contador
+    try {
+        const { data: visits, error } = await supabase
+            .from('profile_visits')
+            .select('id', { count: 'exact' })
+            .eq('visited_id', currentUser.id);
+
+        const visitCount = visits?.length || 0;
+        
+        // Atualizar UI manualmente
+        const visitorsCount = document.getElementById('visitorsCount');
+        const freeVisitorsCount = document.getElementById('freeVisitorsCount');
+        const premiumSection = document.getElementById('premiumVisitors');
+        const freeSection = document.getElementById('freeVisitors');
+        
+        if (visitorsCount) {
+            visitorsCount.textContent = `${visitCount} visita${visitCount !== 1 ? 's' : ''}`;
+        }
+        
+        if (freeVisitorsCount) {
+            const countText = visitCount === 1 ? '1 pessoa' : `${visitCount} pessoas`;
+            freeVisitorsCount.textContent = countText;
+        }
+        
+        // Sempre mostrar seção FREE no fallback
+        if (premiumSection && freeSection) {
+            premiumSection.style.display = 'none';
+            freeSection.style.display = 'block';
+        }
+        
+        console.log('✅ Fallback de visitantes configurado:', visitCount);
+        
+    } catch (error) {
+        console.error('❌ Erro no fallback:', error);
+    }
+}
+
+// Configurar event listeners
+function setupEventListeners() {
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', logout);
+    }
+}
+
+// Logout
+async function logout() {
+    try {
+        await supabase.auth.signOut();
+        window.location.href = 'index.html';
+    } catch (error) {
+        console.error('Erro ao fazer logout:', error);
+    }
+}
+
+function showQuickToast(message) {
+    document.querySelectorAll('.quick-toast').forEach(toast => toast.remove());
+    
+    const toast = document.createElement('div');
+    toast.className = 'quick-toast';
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+        background: #38a169; color: white; padding: 12px 20px; border-radius: 25px;
+        font-size: 14px; font-weight: 600; z-index: 10000; opacity: 0;
+        transition: opacity 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        text-align: center; min-width: 200px; max-width: 90%;
+    `;
+    
+    document.body.appendChild(toast);
+    setTimeout(() => toast.style.opacity = '1', 100);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// ✅ CORREÇÃO: Carregar dados do usuário
 async function loadUserData() {
     try {
         const { data: profile, error } = await supabase
@@ -515,6 +2757,29 @@ async function loadUserData() {
     }
 }
 
+// Atualizar badges premium/free
+function updatePremiumBadges(isPremium) {
+    const elements = {
+        freeBadge: document.getElementById('freeBadge'),
+        premiumBtn: document.getElementById('premiumBtn'),
+        mobileFreeBadge: document.getElementById('mobileFreeBadge'),
+        mobilePremiumBtn: document.getElementById('mobilePremiumBtn')
+    };
+    
+    if (isPremium) {
+        if (elements.premiumBtn) elements.premiumBtn.style.display = 'inline-block';
+        if (elements.freeBadge) elements.freeBadge.style.display = 'none';
+        if (elements.mobilePremiumBtn) elements.mobilePremiumBtn.style.display = 'flex';
+        if (elements.mobileFreeBadge) elements.mobileFreeBadge.style.display = 'none';
+    } else {
+        if (elements.freeBadge) elements.freeBadge.style.display = 'inline-block';
+        if (elements.premiumBtn) elements.premiumBtn.style.display = 'none';
+        if (elements.mobileFreeBadge) elements.mobileFreeBadge.style.display = 'flex';
+        if (elements.mobilePremiumBtn) elements.mobilePremiumBtn.style.display = 'none';
+    }
+}
+
+// Atualizar avatar
 async function updateUserAvatar(displayName, profile) {
     const avatarElements = [
         document.getElementById('userAvatar'),
@@ -545,6 +2810,7 @@ async function updateUserAvatar(displayName, profile) {
     }
 }
 
+// Carregar foto
 async function loadUserPhoto(avatarUrl) {
     try {
         if (!avatarUrl) return null;
@@ -555,28 +2821,196 @@ async function loadUserPhoto(avatarUrl) {
     }
 }
 
-function updatePremiumBadges(isPremium) {
-    const elements = {
-        freeBadge: document.getElementById('freeBadge'),
-        premiumBtn: document.getElementById('premiumBtn'),
-        mobileFreeBadge: document.getElementById('mobileFreeBadge'),
-        mobilePremiumBtn: document.getElementById('mobilePremiumBtn')
-    };
-    
-    if (isPremium) {
-        if (elements.premiumBtn) elements.premiumBtn.style.display = 'inline-block';
-        if (elements.freeBadge) elements.freeBadge.style.display = 'none';
-        if (elements.mobilePremiumBtn) elements.mobilePremiumBtn.style.display = 'flex';
-        if (elements.mobileFreeBadge) elements.mobileFreeBadge.style.display = 'none';
-    } else {
-        if (elements.freeBadge) elements.freeBadge.style.display = 'inline-block';
-        if (elements.premiumBtn) elements.premiumBtn.style.display = 'none';
-        if (elements.mobileFreeBadge) elements.mobileFreeBadge.style.display = 'flex';
-        if (elements.mobilePremiumBtn) elements.mobilePremiumBtn.style.display = 'none';
+// ✅✅✅ CORREÇÃO CRÍTICA: Carregar usuários OTIMIZADO com função SQL
+async function loadRealUsers() {
+    try {
+        console.log('   Carregando usuários OTIMIZADO...');
+        
+        const limit = window.innerWidth <= 768 ? 4 : 8;
+        
+        // ✅ USAR A FUNÇÃO SQL OTIMIZADA QUE JÁ FILTRA BLOQUEIOS
+        const { data: users, error } = await supabase.rpc(
+            'get_home_users_optimized', {
+                current_user_uuid: currentUser.id,
+                limit_count: limit
+            }
+        );
+
+        if (error) {
+            console.error('Erro ao carregar usuários otimizado:', error);
+            // Fallback para query normal
+            await loadRealUsersFallback(limit);
+            return;
+        }
+
+        console.log(`✅ ${users?.length || 0} usuários encontrados (OTIMIZADO)`);
+
+        if (!users || users.length === 0) {
+            showEmptyState('Ainda não há outros usuários cadastrados.');
+            return;
+        }
+        
+        await displayUsersWithPhotos(users);
+
+    } catch (error) {
+        console.error('Erro ao carregar usuários:', error);
+        showEmptyState('Erro ao carregar usuários.');
     }
 }
 
-// ==================== SISTEMA DE REPORTE ====================
+// ✅ FALLBACK se a função SQL falhar
+async function loadRealUsersFallback(limit) {
+    console.log('   Usando fallback...');
+    
+    const { data: users, error } = await supabase
+        .from('profiles')
+        .select(`
+            id,
+            nickname,
+            full_name,
+            birth_date,
+            avatar_url,
+            last_online_at,
+            is_invisible,
+            user_details (
+                gender,
+                zodiac,
+                profession,
+                interests,
+                looking_for,
+                description
+            )
+        `)
+        .neq('id', currentUser.id)
+        .limit(limit)
+        .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    
+    await displayUsersWithPhotos(users);
+}
+
+// Exibir usuários com fotos
+async function displayUsersWithPhotos(users) {
+    const usersGrid = document.getElementById('usersGrid');
+    if (!usersGrid) {
+        console.error('❌ usersGrid não encontrado');
+        return;
+    }
+    
+    const userCards = [];
+    
+    for (const user of users) {
+        // ✅ AGORA O FILTRO DE BLOQUEIO É FEITO NO SQL, SEM VERIFICAÇÃO AQUI
+        const card = await createUserCardWithPhoto(user);
+        if (card) userCards.push(card);
+    }
+    
+    console.log(`   Exibindo ${userCards.length} cards`);
+    usersGrid.innerHTML = userCards.join('');
+    
+    if (userCards.length === 0) {
+        showEmptyState('Nenhum usuário disponível no momento.');
+    }
+}
+
+// Criar card de usuário
+// ✅ CORREÇÃO: Criar card com FOTOS REAIS como IMG (igual perfil.html)
+async function createUserCardWithPhoto(user) {
+    try {
+        // ✅ CORREÇÃO: A função SQL retorna campos diferentes, precisamos adaptar
+        const userId = user.user_id || user.id;
+        const nickname = user.nickname || user.full_name?.split(' ')[0] || 'Usuário';
+        const age = user.birth_date ? calculateAge(user.birth_date) : null;
+        
+        // ✅ CORREÇÃO: Dados podem vir de user_details JSONB ou do objeto principal
+        let details = {};
+        if (user.user_details) {
+            details = user.user_details; // Veio da função SQL
+        } else if (user.user_details) {
+            details = user.user_details; // Veio do fallback
+        }
+        
+        // Status online
+        const isOnline = isUserOnline(user, currentUser.id);
+        const onlineBadge = isOnline ? 
+            '<div class="online-badge" title="Online"></div>' : 
+            '<div class="offline-badge" title="Offline"></div>';
+        
+        // ✅ CORREÇÃO CRÍTICA: Usar IMG tag igual no perfil.html
+        let avatarHtml = '';
+        if (user.avatar_url) {
+            const photoUrl = await loadUserPhoto(user.avatar_url);
+            if (photoUrl) {
+                avatarHtml = `
+                    <div class="user-card-avatar">
+                        <img class="user-card-avatar-img" src="${photoUrl}" alt="${nickname}" style="display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                        <div class="user-card-avatar-fallback" style="display: none;">${nickname.charAt(0).toUpperCase()}</div>
+                        ${onlineBadge}
+                    </div>
+                `;
+            }
+        }
+        
+        // ✅ Fallback apenas se não tiver foto
+        if (!avatarHtml) {
+            avatarHtml = `
+                <div class="user-card-avatar">
+                    <div class="user-card-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
+                    ${onlineBadge}
+                </div>
+            `;
+        }
+
+        const zodiac = details.zodiac || user.zodiac;
+        const profession = details.profession || user.profession;
+        const lookingFor = details.looking_for || user.looking_for;
+        const bio = details.description || user.description || 'Este usuário ainda não adicionou uma descrição.';
+
+        return `
+            <div class="user-card" data-user-id="${userId}" onclick="viewProfile('${userId}')">
+                ${avatarHtml}
+                <div class="user-card-name">${nickname}${age ? `, ${age}` : ''}</div>
+                
+                <div class="user-card-info">
+                    ${zodiac ? `<div class="user-card-detail">${getZodiacIcon(zodiac)} ${formatZodiac(zodiac)}</div>` : ''}
+                    ${profession ? `<div class="user-card-detail">   ${profession}</div>` : ''}
+                    ${lookingFor ? `<div class="user-card-detail">   ${formatLookingFor(lookingFor)}</div>` : ''}
+                </div>
+                
+                <div class="user-card-bio">${bio}</div>
+                
+                <div class="user-card-actions">
+                    <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); sendMessage('${userId}')">
+                           Mensagem
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewProfile('${userId}')">
+                           Ver Perfil
+                    </button>
+                    <div class="user-card-menu">
+                        <button class="btn-more" onclick="event.stopPropagation(); toggleMenu(this)" title="Mais opções">
+                            ⋯
+                        </button>
+                        <div class="menu-options">
+                            <button class="report-btn" onclick="event.stopPropagation(); openReportModal('${userId}', '${nickname}')">
+                                   Reportar
+                            </button>
+                            <button class="block-btn" onclick="event.stopPropagation(); openBlockModal('${userId}', '${nickname}')">
+                                   Bloquear
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        console.error('Erro ao criar card:', error);
+        return '';
+    }
+}
+
+// ==================== SISTEMA DE REPORTE COMPLETO ====================
+
 function toggleMenu(button) {
     const menu = button.nextElementSibling;
     const isShowing = menu.classList.contains('show');
@@ -627,14 +3061,15 @@ function selectReportCategory(radio) {
     document.getElementById('submitReportBtn').disabled = false;
 }
 
+// ✅✅✅ FUNÇÃO SUBMITREPORT - VERSÃO DEFINITIVA E TESTADA
 async function submitReport() {
     const submitBtn = document.getElementById('submitReportBtn');
     const originalText = submitBtn.innerHTML;
     
     try {
-        console.log('🚀 Iniciando processo de reporte...');
+        console.log('   Iniciando processo de reporte...');
         
-        // Validações
+        // Validações rigorosas
         const reason = document.querySelector('input[name="reportReason"]:checked')?.value;
         const description = document.getElementById('reportDescription').value.trim();
         
@@ -652,13 +3087,14 @@ async function submitReport() {
         submitBtn.innerHTML = '⏳ Enviando...';
         submitBtn.disabled = true;
 
-        console.log('📤 Dados do reporte:', {
+        console.log('   Dados do reporte:', {
             reporter: currentUser.id,
             reported: currentReportUserId,
             reason: reason,
             description: description
         });
 
+        // ✅ ESTRUTURA DE DADOS COMPLETA PARA A NOVA TABELA
         const reportData = {
             reporter_id: currentUser.id,
             reported_user_id: currentReportUserId,
@@ -670,8 +3106,9 @@ async function submitReport() {
             updated_at: new Date().toISOString()
         };
 
-        console.log('📦 Estrutura do reporte:', reportData);
+        console.log('   Estrutura do reporte:', reportData);
 
+        // ✅ INSERÇÃO NO BANCO COM TRATAMENTO DE ERRO
         const { data, error } = await supabase
             .from('user_reports')
             .insert(reportData)
@@ -681,8 +3118,8 @@ async function submitReport() {
         if (error) {
             console.error('❌ Erro do Supabase:', error);
             
-            // Tentativa alternativa
-            console.log('🔄 Tentando inserção alternativa...');
+            // ✅ TENTATIVA ALTERNATIVA COM ESTRUTURA MÍNIMA
+            console.log('   Tentando inserção alternativa...');
             
             const minimalData = {
                 reporter_id: currentUser.id,
@@ -710,14 +3147,16 @@ async function submitReport() {
 
         console.log('✅ Reporte enviado com sucesso:', data);
         
+        // ✅ REGISTRAR EVENTO DE REPORTE (OPCIONAL)
         await registerReportEvent(currentReportUserId, reason);
         
         showQuickToast('✅ Reporte enviado! A equipe irá analisar.');
         closeReportModal();
 
     } catch (error) {
-        console.error('💥 Erro crítico no reporte:', error);
+        console.error('   Erro crítico no reporte:', error);
         
+        // ✅ MENSAGENS DE ERRO ESPECÍFICAS
         const errorMessages = {
             '23505': '❌ Reporte duplicado.',
             '42501': '❌ Sem permissão para enviar reportes.',
@@ -730,13 +3169,16 @@ async function submitReport() {
         showQuickToast(userMessage);
         
     } finally {
+        // Restaurar botão
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
     }
 }
 
+// ✅ FUNÇÃO AUXILIAR: Registrar evento de reporte
 async function registerReportEvent(reportedUserId, reason) {
     try {
+        // Tentar registrar na tabela de atividades se existir
         const { error } = await supabase
             .from('user_activities')
             .insert({
@@ -755,106 +3197,20 @@ async function registerReportEvent(reportedUserId, reason) {
     }
 }
 
-// ==================== SISTEMA DE BLOQUEIO (FALLBACK) ====================
-function initializeBlockSystemFallback() {
-    console.log('🔄 Inicializando fallback de bloqueio...');
-    
-    window.blockSystem = {
-        async openBlockModal(userId, userName) {
-            console.log('🚫 Fallback: Abrindo modal para', userName);
-            document.getElementById('blockUserName').textContent = userName;
-            document.getElementById('blockModal').classList.add('show');
-            
-            const confirmBtn = document.getElementById('confirmBlockBtn');
-            if (confirmBtn) {
-                confirmBtn.onclick = async function() {
-                    await blockUserDirect(userId, userName);
-                };
-            }
-        },
-        
-        closeBlockModal() {
-            document.getElementById('blockModal').classList.remove('show');
-        },
-        
-        async confirmBlock() {
-            console.log('⚠️ Use blockUserDirect diretamente');
-        },
-        
-        isUserBlocked(userId) {
-            return false;
-        },
-        
-        removeUserCardImmediately(userId) {
-            const cards = document.querySelectorAll(`[data-user-id="${userId}"]`);
-            cards.forEach(card => {
-                card.style.transition = 'all 0.3s ease';
-                card.style.opacity = '0';
-                card.style.transform = 'scale(0.8)';
-                setTimeout(() => card.remove(), 300);
-            });
-        }
-    };
-}
-
-async function blockUserDirect(userId, userName) {
-    console.log('🚫 BLOQUEIO DIRETO:', userName);
-    
-    try {
-        document.getElementById('blockModal').classList.remove('show');
-        
-        const cards = document.querySelectorAll(`[data-user-id="${userId}"]`);
-        cards.forEach(card => {
-            card.style.transition = 'all 0.4s ease';
-            card.style.opacity = '0.3';
-            card.style.transform = 'scale(0.9)';
-            card.style.pointerEvents = 'none';
-            
-            setTimeout(() => {
-                card.style.height = '0';
-                card.style.margin = '0';
-                card.style.padding = '0';
-                card.style.overflow = 'hidden';
-                
-                setTimeout(() => card.remove(), 300);
-            }, 400);
-        });
-        
-        const { error } = await supabase
-            .from('user_blocks')
-            .insert({
-                blocker_id: currentUser.id,
-                blocked_user_id: userId,
-                created_at: new Date().toISOString()
-            });
-        
-        if (error) {
-            if (error.code === '23505') {
-                console.log('ℹ️ Usuário já estava bloqueado');
-            } else {
-                throw error;
-            }
-        }
-        
-        showQuickToast(`✅ ${userName} bloqueado com sucesso!`);
-        console.log('✅ Bloqueio realizado:', userName);
-        
-    } catch (error) {
-        console.error('❌ Erro no bloqueio direto:', error);
-        showQuickToast('⚠️ Bloqueado localmente (erro de rede)');
-    }
-}
-
+// ✅✅✅ CORREÇÃO DAS FUNÇÕES DE BLOQUEIO
 function openBlockModal(userId, userName) {
-    console.log('🚫 Abrindo modal de bloqueio para:', userName);
+    console.log('   Abrindo modal de bloqueio para:', userName);
     
+    // Usar sistema principal se disponível
     if (window.blockSystem && window.blockSystem.openBlockModal) {
         window.blockSystem.openBlockModal(userId, userName);
     } else {
-        console.log('🔄 Usando fallback de bloqueio');
+        // Fallback direto
+        console.log('   Usando fallback de bloqueio');
         document.getElementById('blockUserName').textContent = userName;
         document.getElementById('blockModal').classList.add('show');
         
+        // Configurar confirmação
         const confirmBtn = document.getElementById('confirmBlockBtn');
         if (confirmBtn) {
             confirmBtn.onclick = async function() {
@@ -876,7 +3232,7 @@ function confirmBlock() {
     if (window.blockSystem && window.blockSystem.confirmBlock) {
         window.blockSystem.confirmBlock();
     } else {
-        showQuickToast('🚫 Use o botão "Confirmar Bloqueio" no modal');
+        showQuickToast('   Use o botão "Confirmar Bloqueio" no modal');
     }
 }
 
@@ -884,58 +3240,27 @@ function closeConfirmModal() {
     document.getElementById('confirmModal').classList.remove('show');
 }
 
-// ==================== SISTEMA DE VISITANTES (FALLBACK) ====================
-async function criarSistemaVisitantesFallback() {
-    console.log('🔄 Criando fallback para sistema de visitantes...');
-    
-    try {
-        const { data: visits, error } = await supabase
-            .from('profile_visits')
-            .select('id', { count: 'exact' })
-            .eq('visited_id', currentUser.id);
-
-        const visitCount = visits?.length || 0;
-        
-        const visitorsCount = document.getElementById('visitorsCount');
-        const freeVisitorsCount = document.getElementById('freeVisitorsCount');
-        const premiumSection = document.getElementById('premiumVisitors');
-        const freeSection = document.getElementById('freeVisitors');
-        
-        if (visitorsCount) {
-            visitorsCount.textContent = `${visitCount} visita${visitCount !== 1 ? 's' : ''}`;
-        }
-        
-        if (freeVisitorsCount) {
-            const countText = visitCount === 1 ? '1 pessoa' : `${visitCount} pessoas`;
-            freeVisitorsCount.textContent = countText;
-        }
-        
-        if (premiumSection && freeSection) {
-            premiumSection.style.display = 'none';
-            freeSection.style.display = 'block';
-        }
-        
-        console.log('✅ Fallback de visitantes configurado:', visitCount);
-        
-    } catch (error) {
-        console.error('❌ Erro no fallback:', error);
-    }
+function openSupportModal() {
+    alert('   Entre em contato com nosso suporte: suporte@amorconect.com');
 }
 
-// ==================== INTERAÇÕES ====================
+// ==================== FUNÇÕES DE INTERAÇÃO ====================
+
 async function sendMessage(userId, event) {
     if (event) event.stopPropagation();
     
-    console.log('💌 Enviando mensagem para:', userId);
+    console.log('   Enviando mensagem para:', userId);
     
+    // Verificação de bloqueio será feita pelo home.block.js
     if (window.blockSystem && window.blockSystem.isUserBlocked(userId)) {
-        showQuickToast('🚫 Você bloqueou este usuário.');
+        showQuickToast('   Você bloqueou este usuário.');
         return;
     }
     
+    // Verificar se o usuário te bloqueou
     const isBlockedByUser = await checkIfBlockedByUser(userId);
     if (isBlockedByUser) {
-        showQuickToast('🚫 Este usuário te bloqueou.');
+        showQuickToast('   Este usuário te bloqueou.');
         if (window.blockSystem) {
             window.blockSystem.removeUserCardImmediately(userId);
         }
@@ -955,14 +3280,16 @@ async function sendMessage(userId, event) {
 async function viewProfile(userId, event) {
     if (event) event.stopPropagation();
 
+    // Verificação de bloqueio será feita pelo home.block.js
     if (window.blockSystem && window.blockSystem.isUserBlocked(userId)) {
-        showQuickToast('🚫 Você bloqueou este usuário.');
+        showQuickToast('   Você bloqueou este usuário.');
         return;
     }
     
+    // Verificar se o usuário te bloqueou
     const isBlockedByUser = await checkIfBlockedByUser(userId);
     if (isBlockedByUser) {
-        showQuickToast('🚫 Este usuário te bloqueou.');
+        showQuickToast('   Este usuário te bloqueou.');
         if (window.blockSystem) {
             window.blockSystem.removeUserCardImmediately(userId);
         }
@@ -975,6 +3302,7 @@ async function viewProfile(userId, event) {
         return;
     }
     
+    // ✅ REGISTRAR VISITA usando o novo sistema
     if (window.registrarVisitaPerfil) {
         await window.registrarVisitaPerfil(userId);
     }
@@ -1004,48 +3332,162 @@ async function checkIfBlockedByUser(userId) {
     }
 }
 
+// ==================== FUNÇÕES AUXILIARES ====================
+
+function calculateAge(birthDate) {
+    if (!birthDate) return null;
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--;
+    }
+    return age;
+}
+
+function formatZodiac(zodiac) {
+    const zodiacMap = {
+        'aries': 'Áries', 'taurus': 'Touro', 'gemini': 'Gêmeos', 'cancer': 'Câncer',
+        'leo': 'Leão', 'virgo': 'Virgem', 'libra': 'Libra', 'scorpio': 'Escorpião',
+        'sagittarius': 'Sagitário', 'capricorn': 'Capricórnio', 'aquarius': 'Aquário', 'pisces': 'Peixes'
+    };
+    return zodiacMap[zodiac?.toLowerCase()] || zodiac;
+}
+
+function getZodiacIcon(zodiac) {
+    const zodiacIcons = {
+        'aries': '♈', 'taurus': '♉', 'gemini': '♊', 'cancer': '♋',
+        'leo': '♌', 'virgo': '♍', 'libra': '♎', 'scorpio': '♏',
+        'sagittarius': '♐', 'capricorn': '♑', 'aquarius': '♒', 'pisces': '♓'
+    };
+    return zodiacIcons[zodiac?.toLowerCase()] || '✨';
+}
+
+function formatLookingFor(lookingFor) {
+    if (Array.isArray(lookingFor)) {
+        return lookingFor.join(', ');
+    }
+    return lookingFor || 'Não informado';
+}
+
 function isProfileComplete() {
     return userProfile && userProfile.full_name && userProfile.full_name.trim() !== '' && userProfile.birth_date;
 }
 
-// ==================== UI E UTILITÁRIOS ====================
-function setupEventListeners() {
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', logout);
+function isUserOnline(userProfile, currentUserId) {
+    if (!userProfile.last_online_at) return false;
+    const lastOnline = new Date(userProfile.last_online_at);
+    const now = new Date();
+    const minutesDiff = (now - lastOnline) / (1000 * 60);
+    const isActuallyOnline = minutesDiff <= 5;
+    if (userProfile.id === currentUserId) return true;
+    if (userProfile.is_invisible && userProfile.id !== currentUserId) return false;
+    return isActuallyOnline;
+}
+
+function showEmptyState(message) {
+    const usersGrid = document.getElementById('usersGrid');
+    if (usersGrid) {
+        usersGrid.innerHTML = `<div class="empty-state"><h3>${message}</h3></div>`;
     }
 }
 
-async function logout() {
+// ==================== SISTEMA DE STATUS ONLINE ====================
+
+async function updateOnlineStatus() {
     try {
-        await supabase.auth.signOut();
-        window.location.href = 'index.html';
+        const { error } = await supabase
+            .from('profiles')
+            .update({ 
+                last_online_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', currentUser.id);
+            
+        if (error) {
+            console.warn('⚠️ Erro ao atualizar status online:', error);
+        }
     } catch (error) {
-        console.error('Erro ao fazer logout:', error);
+        console.error('❌ Erro crítico ao atualizar status:', error);
     }
 }
 
-function showQuickToast(message) {
-    document.querySelectorAll('.quick-toast').forEach(toast => toast.remove());
+function startOnlineStatusUpdater() {
+    // Atualizar imediatamente
+    updateOnlineStatus();
     
-    const toast = document.createElement('div');
-    toast.className = 'quick-toast';
-    toast.textContent = message;
-    toast.style.cssText = `
-        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-        background: #38a169; color: white; padding: 12px 20px; border-radius: 25px;
-        font-size: 14px; font-weight: 600; z-index: 10000; opacity: 0;
-        transition: opacity 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        text-align: center; min-width: 200px; max-width: 90%;
-    `;
+    // Atualizar a cada minuto
+    setInterval(updateOnlineStatus, 60000);
     
-    document.body.appendChild(toast);
-    setTimeout(() => toast.style.opacity = '1', 100);
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
+    // Atualizar quando a página ficar visível
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) updateOnlineStatus();
+    });
+    
+    // Atualizar em interações do usuário
+    ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => {
+        document.addEventListener(event, updateOnlineStatus, { passive: true });
+    });
 }
+
+// ==================== ESTATÍSTICAS ====================
+
+async function updateStats() {
+    // Inicializar com valores padrão
+    document.getElementById('totalUsers').textContent = '...';
+    document.getElementById('newMatches').textContent = '0';
+    document.getElementById('usersOnline').textContent = '...';
+    document.getElementById('profileViews').textContent = '...';
+
+    try {
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+        
+        // Executar todas as consultas em paralelo
+        const [totalResult, messagesResult, onlineResult] = await Promise.all([
+            supabase.from('profiles').select('*', { count: 'exact', head: true }),
+            supabase.from('messages').select('*', { count: 'exact', head: true })
+                .eq('receiver_id', currentUser.id)
+                .eq('is_read', false),
+            supabase.from('profiles').select('*', { count: 'exact', head: true })
+                .gte('last_online_at', fiveMinutesAgo)
+                .eq('is_invisible', false)
+                .neq('id', currentUser.id)
+        ]);
+
+        // Atualizar a interface
+        document.getElementById('totalUsers').textContent = totalResult.count || 1;
+        document.getElementById('newMatches').textContent = messagesResult.count || 0;
+        document.getElementById('usersOnline').textContent = onlineResult.count || 0;
+        
+        // ✅ CORREÇÃO: VISUALIZAÇÕES DO SISTEMA DE VISITANTES
+        if (window.visitanteSystem && typeof window.visitanteSystem.getVisitCount === 'function') {
+            const visitCount = window.visitanteSystem.getVisitCount();
+            document.getElementById('profileViews').textContent = visitCount;
+            console.log('   Visualizações do perfil:', visitCount);
+        } else {
+            // Fallback: contar diretamente
+            const { data: visits, error } = await supabase
+                .from('profile_visits')
+                .select('id', { count: 'exact' })
+                .eq('visited_id', currentUser.id);
+
+            const visitCount = visits?.length || 0;
+            document.getElementById('profileViews').textContent = visitCount;
+            console.log('   Visualizações (fallback):', visitCount);
+        }
+
+    } catch (error) {
+        console.error('❌ Erro ao carregar estatísticas:', error);
+        // Valores fallback
+        document.getElementById('totalUsers').textContent = '1';
+        document.getElementById('newMatches').textContent = '0';
+        document.getElementById('usersOnline').textContent = '0';
+        document.getElementById('profileViews').textContent = '0';
+    }
+}
+
+// ==================== MENU MOBILE ====================
 
 function setupMobileMenu() {
     const hamburgerBtn = document.getElementById('hamburgerBtn');
@@ -1058,20 +3500,24 @@ function setupMobileMenu() {
         return;
     }
 
+    // Abrir menu mobile
     hamburgerBtn.addEventListener('click', () => {
         mobileMenu.style.display = 'flex';
         document.body.style.overflow = 'hidden';
     });
 
+    // Fechar menu mobile
     closeMobileMenu.addEventListener('click', () => {
         mobileMenu.style.display = 'none';
         document.body.style.overflow = 'auto';
     });
 
+    // Logout mobile
     if (mobileLogoutBtn) {
         mobileLogoutBtn.addEventListener('click', logout);
     }
 
+    // Fechar menu ao clicar em links
     mobileMenu.querySelectorAll('a').forEach(link => {
         link.addEventListener('click', () => {
             mobileMenu.style.display = 'none';
@@ -1079,6 +3525,7 @@ function setupMobileMenu() {
         });
     });
 
+    // Gerenciar visibilidade do menu baseado no tamanho da tela
     function checkScreenSize() {
         const userMenu = document.querySelector('.user-menu');
         if (!userMenu) return;
@@ -1094,16 +3541,63 @@ function setupMobileMenu() {
         }
     }
 
+    // Event listeners para responsividade
     window.addEventListener('resize', checkScreenSize);
     window.addEventListener('load', checkScreenSize);
+    
+    // Verificar inicialmente
     checkScreenSize();
 }
 
-function openSupportModal() {
-    alert('📞 Entre em contato com nosso suporte: suporte@amorconect.com');
+// ==================== FUNÇÃO DE DEBUG PARA REPORTES ====================
+
+async function debugReportSystem() {
+    try {
+        console.group('   DEBUG SISTEMA DE REPORTES');
+        
+        // 1. Verificar se usuário está autenticado
+        console.log('✅ Usuário autenticado:', currentUser?.id);
+        
+        // 2. Verificar se a tabela user_reports está acessível
+        const { data: sampleReports, error: tableError } = await supabase
+            .from('user_reports')
+            .select('id')
+            .limit(1);
+            
+        if (tableError) {
+            console.error('❌ Tabela user_reports inacessível:', tableError);
+        } else {
+            console.log('✅ Tabela user_reports acessível');
+            console.log('   Total de reportes:', sampleReports?.length || 0);
+        }
+        
+        // 3. Verificar estrutura da tabela
+        const { data: structure, error: structureError } = await supabase
+            .from('user_reports')
+            .select('*')
+            .limit(1)
+            .single();
+            
+        if (structureError && structureError.code !== 'PGRST116') {
+            console.error('❌ Erro na estrutura:', structureError);
+        } else if (structure) {
+            console.log('  ️ Estrutura da tabela:', Object.keys(structure));
+        } else {
+            console.log('   Tabela vazia - estrutura pronta para uso');
+        }
+        
+        console.groupEnd();
+        return true;
+        
+    } catch (error) {
+        console.error('   Erro no debug:', error);
+        console.groupEnd();
+        return false;
+    }
 }
 
-// ==================== FUNÇÕES GLOBAIS ====================
+// ==================== EXPORTAR FUNÇÕES GLOBAIS ====================
+
 window.sendMessage = sendMessage;
 window.viewProfile = viewProfile;
 window.toggleMenu = toggleMenu;
@@ -1117,32 +3611,37 @@ window.confirmBlock = confirmBlock;
 window.closeConfirmModal = closeConfirmModal;
 window.openSupportModal = openSupportModal;
 
-// 🔥 NOVO: Funções do Sistema de Favoritos
-window.toggleFavorite = function(userId, event) {
-    if (event) event.stopPropagation();
+// ==================== INICIALIZAÇÃO AVANÇADA ====================
+
+// Verificar performance e saúde do sistema
+function monitorSystemHealth() {
+    // Verificar uso de memória
+    if (performance.memory) {
+        const usedMB = Math.round(performance.memory.usedJSHeapSize / 1048576);
+        const totalMB = Math.round(performance.memory.totalJSHeapSize / 1048576);
+        console.log(`   Memória: ${usedMB}MB / ${totalMB}MB`);
+    }
     
-    if (window.favoriteSystem) {
-        const cardElement = event ? event.target.closest('.user-card') : null;
-        window.favoriteSystem.toggleFavorite(userId, cardElement);
+    // Verificar conexão
+    if (navigator.onLine) {
+        console.log('   Conexão: Online');
     } else {
-        showQuickToast('⚠️ Sistema de favoritos não carregado');
+        console.warn('   Conexão: Offline');
+        showQuickToast('⚠️ Você está offline');
     }
-};
+}
 
-window.goToVipList = function() {
-    if (window.favoriteSystem && window.favoriteSystem.isPremium) {
-        window.location.href = 'lista-vip.html';
-    } else {
-        showQuickToast('⭐ Torne-se Premium para acessar a Lista VIP!');
-        window.location.href = 'princing.html';
-    }
-};
+// Inicializar monitoramento
+setTimeout(() => {
+    monitorSystemHealth();
+    // Executar debug do sistema de reportes
+    debugReportSystem().catch(console.error);
+}, 5000);
 
-console.log('✅ SISTEMA HOME.HTML CARREGADO COM SUCESSO! 🎉');
-console.log('👤 Usuário:', currentUser?.email);
-console.log('🆔 User ID:', currentUser?.id);
-console.log('📊 Perfil carregado:', !!userProfile);
-console.log('❤️ Sistema de Favoritos:', !!window.favoriteSystem);
-  </script>
+console.log('✅ SISTEMA HOME.HTML CARREGADO COM SUCESSO!   ');
+console.log('   Usuário:', currentUser?.email);
+console.log('   User ID:', currentUser?.id);
+console.log('   Perfil carregado:', !!userProfile);
+</script>
 </body>
 </html>

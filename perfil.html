@@ -1,2378 +1,1630 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perfil - Amor Conect</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Sistema de Visitantes -->
-     <script src="home-favoritos.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Perfil - Amor Conect</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Sistema de Visitantes -->
 <style>
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
 
-    :root {
-        --bege: #f6ecc5;
-        --vermelho-rosado: #d1656d;
-        --lilas: #dfc9ed;
-        --branco: #ffffff;
-        --text: #444;
-        --text-light: #666;
-        --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        --transition: all 0.3s ease;
-    }
 
-    body {
-        background-color: var(--bege);
-        color: var(--text);
-        line-height: 1.6;
-    }
+  :root {
+    --bege: #f6ecc5;
+    --vermelho-rosado: #d1656d;
+    --lilas: #dfc9ed;
+    --branco: #ffffff;
+    --text: #444;
+    --text-light: #666;
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    --transition: all 0.3s ease;
+  }
 
-    .container {
-        width: 100%;
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 0 20px;
-    }
 
-    /* Header */
-    header {
-        background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
-        color: var(--branco);
-        padding: 0.8rem 0;
-        box-shadow: var(--shadow);
-        position: sticky;
-        top: 0;
-        z-index: 100;
-    }
+  body {
+    background-color: var(--bege);
+    color: var(--text);
+    line-height: 1.6;
+  }
 
+
+  .container {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+
+  /* Header */
+  header {
+    background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+    color: var(--branco);
+    padding: 0.8rem 0;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+
+  .logo img {
+    height: 120px;
+    width: auto;
+    object-fit: contain;
+  }
+
+
+  .logo h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--branco);
+    white-space: nowrap;
+  }
+
+
+  .btn {
+    padding: 0.5rem 1.5rem;
+    border-radius: 30px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+  }
+
+
+  .btn-outline {
+    background: transparent;
+    border: 2px solid var(--branco);
+    color: var(--branco);
+  }
+
+
+  .btn-primary {
+    background: var(--branco);
+    color: var(--vermelho-rosado);
+    border: none;
+  }
+
+
+  .btn-secondary {
+    background: transparent;
+    border: 2px solid var(--vermelho-rosado);
+    color: var(--vermelho-rosado);
+  }
+
+
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+
+
+  /* Main Content */
+  .main-content {
+    padding: 2rem 0;
+  }
+
+
+  .profile-card {
+    background: var(--branco);
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: var(--shadow);
+    text-align: center;
+    margin-bottom: 2rem;
+    border: 1px solid var(--lilas);
+  }
+
+
+  .profile-avatar {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+    color: var(--branco);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3.5rem;
+    font-weight: bold;
+    margin: 0 auto 1.5rem;
+    position: relative;
+    overflow: hidden;
+    border: 3px solid var(--branco);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  }
+
+
+  .profile-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: none;
+  }
+
+
+  .profile-avatar-fallback {
+    font-size: 3.5rem;
+    font-weight: bold;
+  }
+
+
+  .profile-name {
+    font-size: 2rem;
+    color: var(--vermelho-rosado);
+    margin-bottom: 0.5rem;
+  }
+
+
+  .profile-age {
+    color: var(--text-light);
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+  }
+
+
+  .profile-bio {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    padding: 0 1rem;
+    color: var(--text);
+    font-style: italic;
+  }
+
+
+  /* Info Grid */
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+
+  .info-card {
+    background: var(--branco);
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--lilas);
+  }
+
+
+  .info-card h3 {
+    color: var(--vermelho-rosado);
+    margin-bottom: 1rem;
+    border-bottom: 2px solid var(--bege);
+    padding-bottom: 0.5rem;
+    font-size: 1.2rem;
+  }
+
+
+  .info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid var(--bege);
+  }
+
+
+  .info-item:last-child {
+    border-bottom: none;
+  }
+
+
+  .info-label {
+    font-weight: 500;
+    color: var(--text);
+  }
+
+
+  .info-value {
+    color: var(--text);
+    text-align: right;
+    max-width: 60%;
+  }
+
+
+  .info-value.empty {
+    color: var(--text-light);
+    font-style: italic;
+  }
+
+
+  /* Galeria Section - CORRIGIDO */
+  .gallery-section {
+    margin: 2rem 0;
+    display: block !important;
+  }
+
+
+  .gallery-section h3 {
+    color: var(--vermelho-rosado);
+    margin-bottom: 1rem;
+    border-bottom: 2px solid var(--bege);
+    padding-bottom: 0.5rem;
+    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+
+  .gallery-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+    cursor: pointer;
+    /* ✅ BACKGROUND REMOVIDO - a imagem vai preencher */
+  }
+
+
+  .gallery-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+
+
+  .gallery-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    background: var(--bege); /* ✅ Fundo suave enquanto carrega */
+  }
+
+
+  .premium-gallery-view {
+    display: block !important;
+  }
+
+
+  .free-gallery-preview {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+
+  .preview-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-align: center;
+    padding: 2rem;
+    z-index: 2;
+  }
+
+
+  .preview-overlay i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: var(--lilas);
+  }
+
+
+  .preview-overlay h4 {
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+  }
+
+
+  .preview-overlay p {
+    margin-bottom: 1.5rem;
+    opacity: 0.9;
+  }
+
+
+  .blurred-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+    filter: blur(8px);
+    opacity: 0.7;
+  }
+
+
+  .blurred-image {
+    aspect-ratio: 1;
+    background: linear-gradient(135deg, var(--lilas), var(--vermelho-rosado));
+    border-radius: 10px;
+    opacity: 0.5;
+  }
+
+
+  .empty-gallery {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-light);
+    grid-column: 1 / -1;
+  }
+
+
+  /* Modal da Galeria */
+  .gallery-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+  }
+
+
+  .modal-content {
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+  }
+
+
+  .modal-image {
+    max-width: 100%;
+    max-height: 90vh;
+    border-radius: 10px;
+  }
+
+
+  .modal-close {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 2rem;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+
+  .modal-nav {
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    transform: translateY(-50%);
+    padding: 0 20px;
+  }
+
+
+  .modal-nav-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: var(--transition);
+    backdrop-filter: blur(10px);
+  }
+
+
+  .modal-nav-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+  }
+
+
+  /* Actions */
+  .profile-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+  }
+
+
+  /* Loading */
+  .loading {
+    text-align: center;
+    padding: 3rem;
+    background: var(--branco);
+    border-radius: 15px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--lilas);
+  }
+
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--bege);
+    border-top: 4px solid var(--vermelho-rosado);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+  }
+
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+
+  /* Error State */
+  .error-state {
+    text-align: center;
+    padding: 3rem;
+    background: var(--branco);
+    border-radius: 15px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--lilas);
+  }
+
+
+  .error-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    color: var(--vermelho-rosado);
+  }
+
+
+  /* Responsividade */
+  @media (max-width: 768px) {
     .header-content {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+      flex-direction: column;
+      gap: 1rem;
     }
 
-    .logo {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        flex-shrink: 0;
-    }
 
     .logo img {
-        height: 120px;
-        width: auto;
-        object-fit: contain;
+      height: 100px;
     }
+
 
     .logo h1 {
-        font-size: 1.4rem;
-        font-weight: 700;
-        color: var(--branco);
-        white-space: nowrap;
+      font-size: 1.2rem;
     }
 
-    .btn {
-        padding: 0.5rem 1.5rem;
-        border-radius: 30px;
-        border: none;
-        font-weight: 600;
-        cursor: pointer;
-        transition: var(--transition);
-        text-decoration: none;
-        display: inline-block;
-        text-align: center;
-    }
-
-    .btn-outline {
-        background: transparent;
-        border: 2px solid var(--branco);
-        color: var(--branco);
-    }
-
-    .btn-primary {
-        background: var(--branco);
-        color: var(--vermelho-rosado);
-        border: none;
-    }
-
-    .btn-secondary {
-        background: transparent;
-        border: 2px solid var(--vermelho-rosado);
-        color: var(--vermelho-rosado);
-    }
-
-    .btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    /* Main Content */
-    .main-content {
-        padding: 2rem 0;
-    }
-
-    .profile-card {
-        background: var(--branco);
-        border-radius: 15px;
-        padding: 2rem;
-        box-shadow: var(--shadow);
-        text-align: center;
-        margin-bottom: 2rem;
-        border: 1px solid var(--lilas);
-    }
 
     .profile-avatar {
-        width: 140px;
-        height: 140px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
-        color: var(--branco);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 3.5rem;
-        font-weight: bold;
-        margin: 0 auto 1.5rem;
-        position: relative;
-        overflow: hidden;
-        border: 3px solid var(--branco);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      width: 120px;
+      height: 120px;
+      font-size: 3rem;
     }
 
-    .profile-avatar-img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 50%;
-        display: none;
-    }
 
     .profile-avatar-fallback {
-        font-size: 3.5rem;
-        font-weight: bold;
+      font-size: 3rem;
     }
+
 
     .profile-name {
-        font-size: 2rem;
-        color: var(--vermelho-rosado);
-        margin-bottom: 0.5rem;
+      font-size: 1.8rem;
     }
 
-    .profile-age {
-        color: var(--text-light);
-        font-size: 1.2rem;
-        margin-bottom: 1.5rem;
-    }
 
-    .profile-bio {
-        font-size: 1.1rem;
-        line-height: 1.6;
-        margin-bottom: 2rem;
-        padding: 0 1rem;
-        color: var(--text);
-        font-style: italic;
-    }
-
-    /* Info Grid */
     .info-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1rem;
-        margin-bottom: 2rem;
+      grid-template-columns: 1fr;
     }
 
-    .info-card {
-        background: var(--branco);
-        padding: 1.5rem;
-        border-radius: 10px;
-        box-shadow: var(--shadow);
-        border: 1px solid var(--lilas);
+
+    .gallery-grid, .blurred-gallery {
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 0.8rem;
     }
 
-    .info-card h3 {
-        color: var(--vermelho-rosado);
-        margin-bottom: 1rem;
-        border-bottom: 2px solid var(--bege);
-        padding-bottom: 0.5rem;
-        font-size: 1.2rem;
+
+    .profile-actions {
+      flex-direction: column;
+      align-items: center;
     }
 
-    .info-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.8rem 0;
-        border-bottom: 1px solid var(--bege);
+
+    .profile-actions .btn {
+      width: 200px;
     }
 
-    .info-item:last-child {
-        border-bottom: none;
-    }
-
-    .info-label {
-        font-weight: 500;
-        color: var(--text);
-    }
-
-    .info-value {
-        color: var(--text);
-        text-align: right;
-        max-width: 60%;
-    }
-
-    .info-value.empty {
-        color: var(--text-light);
-        font-style: italic;
-    }
-
-    /* Galeria Section - CORRIGIDO */
-    .gallery-section {
-        margin: 2rem 0;
-        display: block !important;
-    }
-
-    .gallery-section h3 {
-        color: var(--vermelho-rosado);
-        margin-bottom: 1rem;
-        border-bottom: 2px solid var(--bege);
-        padding-bottom: 0.5rem;
-        font-size: 1.3rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .gallery-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-
-    .gallery-item {
-        position: relative;
-        aspect-ratio: 1;
-        border-radius: 10px;
-        overflow: hidden;
-        box-shadow: var(--shadow);
-        transition: var(--transition);
-        cursor: pointer;
-        /* ✅ BACKGROUND REMOVIDO - a imagem vai preencher */
-    }
-
-    .gallery-item:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    }
-
-    .gallery-image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-        background: var(--bege); /* ✅ Fundo suave enquanto carrega */
-    }
-
-    .premium-gallery-view {
-        display: block !important;
-    }
-
-    .free-gallery-preview {
-        position: relative;
-        border-radius: 10px;
-        overflow: hidden;
-    }
-
-    .preview-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.7);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        text-align: center;
-        padding: 2rem;
-        z-index: 2;
-    }
-
-    .preview-overlay i {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-        color: var(--lilas);
-    }
-
-    .preview-overlay h4 {
-        font-size: 1.3rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .preview-overlay p {
-        margin-bottom: 1.5rem;
-        opacity: 0.9;
-    }
-
-    .blurred-gallery {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 1rem;
-        filter: blur(8px);
-        opacity: 0.7;
-    }
-
-    .blurred-image {
-        aspect-ratio: 1;
-        background: linear-gradient(135deg, var(--lilas), var(--vermelho-rosado));
-        border-radius: 10px;
-        opacity: 0.5;
-    }
-
-    .empty-gallery {
-        text-align: center;
-        padding: 3rem;
-        color: var(--text-light);
-        grid-column: 1 / -1;
-    }
-
-    /* Modal da Galeria */
-    .gallery-modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.9);
-        z-index: 10000;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .modal-content {
-        position: relative;
-        max-width: 90%;
-        max-height: 90%;
-    }
-
-    .modal-image {
-        max-width: 100%;
-        max-height: 90vh;
-        border-radius: 10px;
-    }
-
-    .modal-close {
-        position: absolute;
-        top: -40px;
-        right: 0;
-        background: none;
-        border: none;
-        color: white;
-        font-size: 2rem;
-        cursor: pointer;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .modal-nav {
-        position: absolute;
-        top: 50%;
-        width: 100%;
-        display: flex;
-        justify-content: space-between;
-        transform: translateY(-50%);
-        padding: 0 20px;
-    }
 
     .modal-nav-btn {
-        background: rgba(255, 255, 255, 0.2);
-        border: none;
-        color: white;
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        transition: var(--transition);
-        backdrop-filter: blur(10px);
+      width: 40px;
+      height: 40px;
+      font-size: 1.2rem;
+    }
+  }
+
+
+  @media (max-width: 480px) {
+    .logo img {
+      height: 90px;
     }
 
-    .modal-nav-btn:hover {
-        background: rgba(255, 255, 255, 0.3);
-        transform: scale(1.1);
+
+    .logo h1 {
+      font-size: 1.1rem;
     }
 
-    /* Actions */
-    .profile-actions {
-        display: flex;
-        gap: 1rem;
-        justify-content: center;
-        margin-top: 2rem;
-        flex-wrap: wrap;
+
+    .profile-card {
+      padding: 1.5rem;
     }
 
-    /* Loading */
-    .loading {
-        text-align: center;
-        padding: 3rem;
-        background: var(--branco);
-        border-radius: 15px;
-        box-shadow: var(--shadow);
-        border: 1px solid var(--lilas);
+
+    .profile-avatar {
+      width: 100px;
+      height: 100px;
+      font-size: 2.5rem;
     }
 
-    .spinner {
-        width: 40px;
-        height: 40px;
-        border: 4px solid var(--bege);
-        border-top: 4px solid var(--vermelho-rosado);
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin: 0 auto 1rem;
+
+    .profile-avatar-fallback {
+      font-size: 2.5rem;
     }
 
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+
+    .profile-name {
+      font-size: 1.6rem;
     }
 
-    /* Error State */
-    .error-state {
-        text-align: center;
-        padding: 3rem;
-        background: var(--branco);
-        border-radius: 15px;
-        box-shadow: var(--shadow);
-        border: 1px solid var(--lilas);
+
+    .info-card {
+      padding: 1rem;
     }
 
-    .error-icon {
-        font-size: 4rem;
-        margin-bottom: 1rem;
-        color: var(--vermelho-rosado);
+
+    .gallery-grid, .blurred-gallery {
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 0.5rem;
     }
 
-    /* Responsividade */
-    @media (max-width: 768px) {
-        .header-content {
-            flex-direction: column;
-            gap: 1rem;
-        }
 
-        .logo img {
-            height: 100px;
-        }
-
-        .logo h1 {
-            font-size: 1.2rem;
-        }
-
-        .profile-avatar {
-            width: 120px;
-            height: 120px;
-            font-size: 3rem;
-        }
-
-        .profile-avatar-fallback {
-            font-size: 3rem;
-        }
-
-        .profile-name {
-            font-size: 1.8rem;
-        }
-
-        .info-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .gallery-grid, .blurred-gallery {
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 0.8rem;
-        }
-
-        .profile-actions {
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .profile-actions .btn {
-            width: 200px;
-        }
-
-        .modal-nav-btn {
-            width: 40px;
-            height: 40px;
-            font-size: 1.2rem;
-        }
+    .preview-overlay {
+      padding: 1rem;
     }
 
-    @media (max-width: 480px) {
-        .logo img {
-            height: 90px;
-        }
 
-        .logo h1 {
-            font-size: 1.1rem;
-        }
-
-        .profile-card {
-            padding: 1.5rem;
-        }
-
-        .profile-avatar {
-            width: 100px;
-            height: 100px;
-            font-size: 2.5rem;
-        }
-
-        .profile-avatar-fallback {
-            font-size: 2.5rem;
-        }
-
-        .profile-name {
-            font-size: 1.6rem;
-        }
-
-        .info-card {
-            padding: 1rem;
-        }
-
-        .gallery-grid, .blurred-gallery {
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 0.5rem;
-        }
-
-        .preview-overlay {
-            padding: 1rem;
-        }
-
-        .preview-overlay i {
-            font-size: 2rem;
-        }
-
-        .preview-overlay h4 {
-            font-size: 1.1rem;
-        }
+    .preview-overlay i {
+      font-size: 2rem;
     }
+
+
+    .preview-overlay h4 {
+      font-size: 1.1rem;
+    }
+  }
 </style>
 </head>
 <body>
-    <!-- Header -->
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <img src="logoamorconect.png" alt="Amor Conect">
-                    <h1>Amor Conect</h1>
-                </div>
-                <a href="home.html" class="btn btn-outline">← Voltar para Home</a>
-            </div>
+  <!-- Header -->
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">
+          <img src="logoamorconect.png" alt="Amor Conect">
+          <h1>Amor Conect</h1>
         </div>
-    </header>
-
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="container">
-            <div id="profileContent">
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p>Carregando perfil...</p>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- Modal da Galeria -->
-    <div class="gallery-modal" id="galleryModal">
-        <div class="modal-content">
-            <button class="modal-close" id="modalClose">×</button>
-            <img class="modal-image" id="modalImage" src="" alt="Imagem da galeria">
-            <div class="modal-nav">
-                <button class="modal-nav-btn" id="modalPrev">❮</button>
-                <button class="modal-nav-btn" id="modalNext">❯</button>
-            </div>
-        </div>
+        <a href="home.html" class="btn btn-outline">← Voltar para Home</a>
+      </div>
     </div>
-   <script>
+  </header>
+
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="container">
+      <div id="profileContent">
+        <div class="loading">
+          <div class="spinner"></div>
+          <p>Carregando perfil...</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+
+  <!-- Modal da Galeria -->
+  <div class="gallery-modal" id="galleryModal">
+    <div class="modal-content">
+      <button class="modal-close" id="modalClose">×</button>
+      <img class="modal-image" id="modalImage" src="" alt="Imagem da galeria">
+      <div class="modal-nav">
+        <button class="modal-nav-btn" id="modalPrev">❮</button>
+        <button class="modal-nav-btn" id="modalNext">❯</button>
+      </div>
+    </div>
+  </div>
+  <script>
 // ==================== CONFIGURAÇÃO SUPABASE ====================
 const supabaseUrl = 'https://gcukalndarlgydmgmmmt.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
 
 // ==================== VARIÁVEIS GLOBAIS ====================
 let currentProfileGallery = [];
 let currentModalIndex = 0;
 let currentProfileId = null;
 
-// ==================== SISTEMA DE FAVORITOS - INICIALIZAÇÃO RÁPIDA ====================
-
-// ✅ VERIFICAR SE O SISTEMA DE FAVORITOS JÁ EXISTE
-function checkFavoriteSystem() {
-    if (window.favoriteSystem && window.favoriteSystem.isInitialized) {
-        console.log('✅ Sistema de favoritos já carregado globalmente');
-        return true;
-    }
-    return false;
-}
-
-// ✅ INICIALIZAÇÃO RÁPIDA DO SISTEMA DE FAVORITOS
-async function quickInitializeFavorites() {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            console.log('⏳ Aguardando usuário para inicializar favoritos');
-            return false;
-        }
-
-        // Se a classe FavoriteSystem existe, criar instância
-        if (window.FavoriteSystem) {
-            console.log('🚀 Criando sistema de favoritos no perfil...');
-            window.favoriteSystem = new FavoriteSystem(supabase, user);
-            const success = await window.favoriteSystem.initialize();
-            console.log('✅ Sistema de favoritos inicializado:', success);
-            return success;
-        } else {
-            console.warn('⚠️ FavoriteSystem não disponível ainda');
-            return false;
-        }
-    } catch (error) {
-        console.error('❌ Erro na inicialização rápida:', error);
-        return false;
-    }
-}
 
 // ==================== SISTEMA DE GALERIA CORRIGIDO ====================
 
+
 class GallerySystem {
-    constructor() {
-        this.bucketName = 'gallery';
+  constructor() {
+    this.bucketName = 'gallery';
+  }
+
+
+  // ✅ CORREÇÃO: Usar URL ASSINADA para bucket PRIVADO
+  async getGalleryImageUrl(imagePath) {
+    try {
+      if (!imagePath) {
+        console.log('❌ imagePath está vazio');
+        return null;
+      }
+
+
+      console.log(' Gerando URL ASSINADA para:', imagePath);
+      
+      // ✅ CORREÇÃO: Usar createSignedUrl para bucket PRIVADO
+      const { data, error } = await supabase.storage
+        .from(this.bucketName)
+        .createSignedUrl(imagePath, 3600); // 1 hora de validade
+
+
+      if (error) {
+        console.error('❌ Erro ao gerar URL assinada:', error);
+        return null;
+      }
+
+
+      const signedUrl = data?.signedUrl;
+      console.log('✅ URL assinada gerada:', signedUrl ? 'SUCESSO' : 'FALHA');
+      
+      return signedUrl || null;
+
+
+    } catch (error) {
+      console.error('❌ Erro ao gerar URL da galeria:', error);
+      return null;
+    }
+  }
+
+
+  // ✅ CORREÇÃO: Carregar galeria do usuário
+  async loadUserGallery(userId) {
+    try {
+      console.log('️ Carregando galeria para usuário:', userId);
+      
+      const { data: gallery, error } = await supabase
+        .from('user_gallery')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+
+      if (error) {
+        console.error('❌ Erro ao carregar galeria:', error);
+        return [];
+      }
+
+
+      if (!gallery || gallery.length === 0) {
+        console.log(' Galeria vazia para usuário:', userId);
+        return [];
+      }
+
+
+      console.log(` ${gallery.length} imagens encontradas na galeria`);
+
+
+      // ✅ CORREÇÃO: Gerar URLs ASSINADAS para todas as imagens
+      const galleryWithUrls = await Promise.all(
+        gallery.map(async (item) => {
+          const signedUrl = await this.getGalleryImageUrl(item.image_url);
+          
+          console.log(`️ Imagem ${item.image_name}:`, signedUrl ? 'URL ASSINADA OK' : 'URL FALHA');
+          
+          return {
+            ...item,
+            public_url: signedUrl,
+            display_url: signedUrl
+          };
+        })
+      );
+
+
+      console.log(`✅ Galeria carregada: ${galleryWithUrls.length} imagens`);
+      return galleryWithUrls;
+
+
+    } catch (error) {
+      console.error('❌ Erro crítico ao carregar galeria:', error);
+      return [];
+    }
+  }
+
+
+  // ✅ CORREÇÃO: Criar grid da galeria com tratamento de erro
+  async createGalleryGrid(images) {
+    if (!images || images.length === 0) {
+      return `
+        <div class="empty-gallery">
+          <div style="font-size: 3rem; margin-bottom: 1rem;"></div>
+          <p>Nenhuma foto na galeria</p>
+        </div>
+      `;
     }
 
-    // ✅ CORREÇÃO: Usar URL ASSINADA para bucket PRIVADO
-    async getGalleryImageUrl(imagePath) {
-        try {
-            if (!imagePath) {
-                console.log('❌ imagePath está vazio');
-                return null;
-            }
 
-            console.log('🔄 Gerando URL ASSINADA para:', imagePath);
-            
-            // ✅ CORREÇÃO: Usar createSignedUrl para bucket PRIVADO
-            const { data, error } = await supabase.storage
-                .from(this.bucketName)
-                .createSignedUrl(imagePath, 3600); // 1 hora de validade
-
-            if (error) {
-                console.error('❌ Erro ao gerar URL assinada:', error);
-                return null;
-            }
-
-            const signedUrl = data?.signedUrl;
-            console.log('✅ URL assinada gerada:', signedUrl ? 'SUCESSO' : 'FALHA');
-            
-            return signedUrl || null;
-
-        } catch (error) {
-            console.error('❌ Erro ao gerar URL da galeria:', error);
-            return null;
-        }
+    let gridHTML = '';
+    let loadedImages = 0;
+    
+    for (let i = 0; i < images.length; i++) {
+      const image = images[i];
+      
+      // ✅ CORREÇÃO: Usar a URL ASSINADA
+      const imageUrl = image.display_url;
+      
+      if (imageUrl) {
+        gridHTML += `
+          <div class="gallery-item" onclick="openGalleryModal(${i})">
+            <img src="${imageUrl}" alt="Foto ${i + 1}" class="gallery-image"
+               loading="lazy"
+               onerror="handleImageError(this)"
+               onload="handleImageLoad(this)">
+          </div>
+        `;
+        loadedImages++;
+      } else {
+        console.log('❌ Imagem sem URL válida:', image);
+        // Mostrar placeholder para imagem com erro
+        gridHTML += `
+          <div class="gallery-item" style="background: var(--lilas); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">
+            ️
+          </div>
+        `;
+      }
     }
 
-    // ✅ CORREÇÃO: Carregar galeria do usuário
-    async loadUserGallery(userId) {
-        try {
-            console.log('🖼️ Carregando galeria para usuário:', userId);
-            
-            const { data: gallery, error } = await supabase
-                .from('user_gallery')
-                .select('*')
-                .eq('user_id', userId)
-                .order('created_at', { ascending: false });
 
-            if (error) {
-                console.error('❌ Erro ao carregar galeria:', error);
-                return [];
-            }
-
-            if (!gallery || gallery.length === 0) {
-                console.log('📭 Galeria vazia para usuário:', userId);
-                return [];
-            }
-
-            console.log(`📸 ${gallery.length} imagens encontradas na galeria`);
-
-            // ✅ CORREÇÃO: Gerar URLs ASSINADAS para todas as imagens
-            const galleryWithUrls = await Promise.all(
-                gallery.map(async (item) => {
-                    const signedUrl = await this.getGalleryImageUrl(item.image_url);
-                    
-                    console.log(`🖼️ Imagem ${item.image_name}:`, signedUrl ? 'URL ASSINADA OK' : 'URL FALHA');
-                    
-                    return {
-                        ...item,
-                        public_url: signedUrl,
-                        display_url: signedUrl
-                    };
-                })
-            );
-
-            console.log(`✅ Galeria carregada: ${galleryWithUrls.length} imagens`);
-            return galleryWithUrls;
-
-        } catch (error) {
-            console.error('❌ Erro crítico ao carregar galeria:', error);
-            return [];
-        }
-    }
-
-    // ✅ CORREÇÃO: Criar grid da galeria com tratamento de erro
-    async createGalleryGrid(images) {
-        if (!images || images.length === 0) {
-            return `
-                <div class="empty-gallery">
-                    <div style="font-size: 3rem; margin-bottom: 1rem;">📸</div>
-                    <p>Nenhuma foto na galeria</p>
-                </div>
-            `;
-        }
-
-        let gridHTML = '';
-        let loadedImages = 0;
-        
-        for (let i = 0; i < images.length; i++) {
-            const image = images[i];
-            
-            // ✅ CORREÇÃO: Usar a URL ASSINADA
-            const imageUrl = image.display_url;
-            
-            if (imageUrl) {
-                gridHTML += `
-                    <div class="gallery-item" onclick="openGalleryModal(${i})">
-                        <img src="${imageUrl}" alt="Foto ${i + 1}" class="gallery-image" 
-                             loading="lazy" 
-                             onerror="handleImageError(this)"
-                             onload="handleImageLoad(this)">
-                    </div>
-                `;
-                loadedImages++;
-            } else {
-                console.log('❌ Imagem sem URL válida:', image);
-                // Mostrar placeholder para imagem com erro
-                gridHTML += `
-                    <div class="gallery-item" style="background: var(--lilas); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">
-                        🖼️
-                    </div>
-                `;
-            }
-        }
-
-        console.log(`🎨 Grid criado: ${loadedImages} imagens visíveis`);
-        return gridHTML;
-    }
+    console.log(` Grid criado: ${loadedImages} imagens visíveis`);
+    return gridHTML;
+  }
 }
+
 
 // ✅ FUNÇÕES AUXILIARES PARA TRATAMENTO DE IMAGENS (ADICIONE ESTAS NO FINAL DO SCRIPT)
 function handleImageError(imgElement) {
-    console.error('❌ Erro ao carregar imagem:', imgElement.src);
-    imgElement.style.display = 'none';
-    
-    // Criar fallback
-    const fallback = document.createElement('div');
-    fallback.style.cssText = `
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(135deg, var(--lilas), var(--vermelho-rosado));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 1.5rem;
-    `;
-    fallback.innerHTML = '🖼️';
-    
-    imgElement.parentNode.appendChild(fallback);
+  console.error('❌ Erro ao carregar imagem:', imgElement.src);
+  imgElement.style.display = 'none';
+  
+  // Criar fallback
+  const fallback = document.createElement('div');
+  fallback.style.cssText = `
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--lilas), var(--vermelho-rosado));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+  `;
+  fallback.innerHTML = '️';
+  
+  imgElement.parentNode.appendChild(fallback);
 }
 
+
 function handleImageLoad(imgElement) {
-    console.log('✅ Imagem carregada com sucesso');
-    imgElement.style.opacity = '1';
+  console.log('✅ Imagem carregada com sucesso');
+  imgElement.style.opacity = '1';
 }
 // ==================== SISTEMA DE VISITAS ====================
 
+
 class VisitTracker {
-    static async trackVisit(visitedUserId) {
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            
-            if (!user || user.id === visitedUserId) return;
+  static async trackVisit(visitedUserId) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user || user.id === visitedUserId) return;
 
-            console.log(`👀 Registrando visita: ${user.id} → ${visitedUserId}`);
 
-            const { error } = await supabase
-                .from('profile_visits')
-                .insert({
-                    visitor_id: user.id,
-                    visited_id: visitedUserId,
-                    visited_at: new Date().toISOString()
-                });
+      console.log(` Registrando visita: ${user.id} → ${visitedUserId}`);
 
-            if (error && error.code !== '23505') {
-                console.error('❌ Erro ao registrar visita:', error);
-            } else {
-                console.log('✅ Visita registrada com sucesso');
-            }
 
-        } catch (error) {
-            console.error('❌ Erro no tracker:', error);
-        }
+      const { error } = await supabase
+        .from('profile_visits')
+        .insert({
+          visitor_id: user.id,
+          visited_id: visitedUserId,
+          visited_at: new Date().toISOString()
+        });
+
+
+      if (error && error.code !== '23505') {
+        console.error('❌ Erro ao registrar visita:', error);
+      } else {
+        console.log('✅ Visita registrada com sucesso');
+      }
+
+
+    } catch (error) {
+      console.error('❌ Erro no tracker:', error);
     }
+  }
 }
+
 
 // ✅ VERIFICADOR DE STATUS PREMIUM
 const PremiumManager = {
-    async verifyPremiumStatus(userId) {
-        try {
-            console.log('⭐ Verificando status premium para:', userId);
-            
-            const { data: profile, error } = await supabase
-                .from('profiles')
-                .select('is_premium, premium_expires_at')
-                .eq('id', userId)
-                .single();
-            
-            if (error) {
-                console.error('❌ Erro ao verificar premium:', error);
-                return false;
-            }
-            
-            const isPremium = profile?.is_premium === true;
-            const isExpired = profile?.premium_expires_at && new Date(profile.premium_expires_at) < new Date();
-            
-            console.log('✅ Status premium:', isPremium && !isExpired);
-            return isPremium && !isExpired;
-        } catch (error) {
-            console.error('❌ Erro na verificação premium:', error);
-            return false;
-        }
+  async verifyPremiumStatus(userId) {
+    try {
+      console.log('⭐ Verificando status premium para:', userId);
+      
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('is_premium, premium_expires_at')
+        .eq('id', userId)
+        .single();
+      
+      if (error) {
+        console.error('❌ Erro ao verificar premium:', error);
+        return false;
+      }
+      
+      const isPremium = profile?.is_premium === true;
+      const isExpired = profile?.premium_expires_at && new Date(profile.premium_expires_at) < new Date();
+      
+      console.log('✅ Status premium:', isPremium && !isExpired);
+      return isPremium && !isExpired;
+    } catch (error) {
+      console.error('❌ Erro na verificação premium:', error);
+      return false;
     }
+  }
 }
 
+
 // ==================== INICIALIZAÇÃO ====================
+
 
 // Instanciar sistemas
 const gallerySystem = new GallerySystem();
 
+
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 perfil.html carregando...');
-    
-    // ✅ INICIALIZAR SISTEMA DE FAVORITOS PRIMEIRO
-    initializeFavoriteSystemInProfile();
-    
-    loadProfile();
-    setupGalleryModal();
+  console.log(' perfil.html carregando...');
+  loadProfile();
+  setupGalleryModal();
 });
 
-// ✅ INICIALIZAR SISTEMA DE FAVORITOS NO PERFIL
-async function initializeFavoriteSystemInProfile() {
-    try {
-        console.log('🎯 Inicializando sistema de favoritos no perfil...');
-        
-        // Se já existe, usar
-        if (window.favoriteSystem && window.favoriteSystem.isInitialized) {
-            console.log('✅ Sistema de favoritos já carregado');
-            return true;
-        }
-        
-        // Se a função de inicialização existe, usar
-        if (window.initializeFavoriteSystem) {
-            console.log('🚀 Inicializando via função global...');
-            const success = await window.initializeFavoriteSystem();
-            console.log('✅ Sistema inicializado:', success);
-            return success;
-        }
-        
-        // Se não, criar uma instância local
-        console.log('🔄 Criando instância local do sistema de favoritos...');
-        
-        // Verificar se temos as dependências
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            console.log('⏳ Aguardando autenticação...');
-            return false;
-        }
-        
-        // Criar sistema local
-        if (window.FavoriteSystem) {
-            window.favoriteSystem = new FavoriteSystem(supabase, user);
-            const success = await window.favoriteSystem.initialize();
-            console.log('✅ Sistema local criado:', success);
-            return success;
-        }
-        
-        console.error('❌ FavoriteSystem não disponível');
-        return false;
-        
-    } catch (error) {
-        console.error('❌ Erro ao inicializar sistema de favoritos:', error);
-        return false;
-    }
-}
 
 // ✅ CARREGAR PERFIL DO USUÁRIO SELECIONADO
 async function loadProfile() {
-    try {
-        const profileId = localStorage.getItem('viewingProfileId');
-        
-        if (!profileId) {
-            showError('Nenhum perfil selecionado');
-            return;
-        }
-
-        currentProfileId = profileId;
-        console.log('🔄 Carregando perfil:', profileId);
-
-        // ✅ VERIFICAR SE USUÁRIO É PREMIUM ANTES DE REGISTRAR VISITA
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (user && user.id !== profileId) {
-            const isPremium = await PremiumManager.verifyPremiumStatus(user.id);
-            
-            if (isPremium) {
-                console.log('⭐ Usuário premium - registrando visita');
-                await VisitTracker.trackVisit(profileId);
-            } else {
-                console.log('🔒 Usuário não premium - visita não registrada');
-            }
-        }
-
-        // Buscar dados do perfil
-        const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select(`
-                id,
-                nickname,
-                full_name,
-                birth_date,
-                avatar_url,
-                user_details (
-                    gender,
-                    zodiac,
-                    has_pets,
-                    pets_details,
-                    sexual_orientation,
-                    drinking,
-                    smoking,
-                    exercise,
-                    exercise_details,
-                    religion,
-                    education,
-                    profession,
-                    interests,
-                    looking_for,
-                    description
-                )
-            `)
-            .eq('id', profileId)
-            .single();
-
-        if (profileError) {
-            console.error('Erro ao carregar perfil:', profileError);
-            showError('Perfil não encontrado');
-            return;
-        }
-
-        if (!profile) {
-            showError('Perfil não encontrado');
-            return;
-        }
-
-        console.log('✅ Perfil carregado:', profile.nickname);
-        await displayProfile(profile);
-
-    } catch (error) {
-        console.error('❌ Erro ao carregar perfil:', error);
-        showError('Erro ao carregar perfil');
+  try {
+    const profileId = localStorage.getItem('viewingProfileId');
+    
+    if (!profileId) {
+      showError('Nenhum perfil selecionado');
+      return;
     }
+
+
+    currentProfileId = profileId;
+    console.log(' Carregando perfil:', profileId);
+
+
+    // ✅ VERIFICAR SE USUÁRIO É PREMIUM ANTES DE REGISTRAR VISITA
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (user && user.id !== profileId) {
+      const isPremium = await PremiumManager.verifyPremiumStatus(user.id);
+      
+      if (isPremium) {
+        console.log('⭐ Usuário premium - registrando visita');
+        await VisitTracker.trackVisit(profileId);
+      } else {
+        console.log(' Usuário não premium - visita não registrada');
+      }
+    }
+
+
+    // Buscar dados do perfil
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select(`
+        id,
+        nickname,
+        full_name,
+        birth_date,
+        avatar_url,
+        user_details (
+          gender,
+          zodiac,
+          has_pets,
+          pets_details,
+          sexual_orientation,
+          drinking,
+          smoking,
+          exercise,
+          exercise_details,
+          religion,
+          education,
+          profession,
+          interests,
+          looking_for,
+          description
+        )
+      `)
+      .eq('id', profileId)
+      .single();
+
+
+    if (profileError) {
+      console.error('Erro ao carregar perfil:', profileError);
+      showError('Perfil não encontrado');
+      return;
+    }
+
+
+    if (!profile) {
+      showError('Perfil não encontrado');
+      return;
+    }
+
+
+    console.log('✅ Perfil carregado:', profile.nickname);
+    await displayProfile(profile);
+
+
+  } catch (error) {
+    console.error('❌ Erro ao carregar perfil:', error);
+    showError('Erro ao carregar perfil');
+  }
 }
+
 
 // ✅ CARREGAR FOTO DO PERFIL
 async function loadProfilePhoto(avatarUrl) {
-    try {
-        if (!avatarUrl) {
-            console.log('ℹ️ Nenhum avatar_url fornecido');
-            return null;
-        }
-
-        console.log('🔄 Buscando foto do perfil:', avatarUrl);
-        
-        const { data } = supabase.storage
-            .from('avatars')
-            .getPublicUrl(avatarUrl);
-
-        const photoUrl = data?.publicUrl;
-        
-        if (photoUrl) {
-            console.log('✅ Foto do perfil carregada com sucesso');
-            return photoUrl;
-        } else {
-            console.log('❌ Foto do perfil não encontrada');
-            return null;
-        }
-
-    } catch (error) {
-        console.error('❌ Erro ao carregar foto do perfil:', error);
-        return null;
+  try {
+    if (!avatarUrl) {
+      console.log('ℹ️ Nenhum avatar_url fornecido');
+      return null;
     }
+
+
+    console.log(' Buscando foto do perfil:', avatarUrl);
+    
+    const { data } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(avatarUrl);
+
+
+    const photoUrl = data?.publicUrl;
+    
+    if (photoUrl) {
+      console.log('✅ Foto do perfil carregada com sucesso');
+      return photoUrl;
+    } else {
+      console.log('❌ Foto do perfil não encontrada');
+      return null;
+    }
+
+
+  } catch (error) {
+    console.error('❌ Erro ao carregar foto do perfil:', error);
+    return null;
+  }
 }
+
 
 // ✅ MOSTRAR PERFIL NA TELA COM GALERIA VISÍVEL
 async function displayProfile(profile) {
-    const profileContent = document.getElementById('profileContent');
-    const details = profile.user_details || {};
-    
-    const displayName = profile.nickname || profile.full_name?.split(' ')[0] || 'Usuário';
-    const age = profile.birth_date ? calculateAge(profile.birth_date) : null;
+  const profileContent = document.getElementById('profileContent');
+  const details = profile.user_details || {};
+  
+  const displayName = profile.nickname || profile.full_name?.split(' ')[0] || 'Usuário';
+  const age = profile.birth_date ? calculateAge(profile.birth_date) : null;
 
-    // ✅ CARREGAR FOTO DO PERFIL
-    let avatarHtml = '';
-    const avatarUrl = await loadProfilePhoto(profile.avatar_url);
-    
-    if (avatarUrl) {
-        avatarHtml = `
-            <div class="profile-avatar" style="background: none;">
-                <img src="${avatarUrl}" alt="${displayName}" class="profile-avatar-img" 
-                     style="display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"
-                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-                     onload="console.log('✅ Avatar carregado')">
-                <div class="profile-avatar-fallback" style="display: none;">${displayName.charAt(0).toUpperCase()}</div>
-            </div>
-        `;
-    } else {
-        avatarHtml = `
-            <div class="profile-avatar">
-                <div class="profile-avatar-fallback">${displayName.charAt(0).toUpperCase()}</div>
-            </div>
-        `;
-    }
 
-    // ✅ VERIFICAR SE É FAVORITO
-    const isFavorite = await checkIfFavorite(profile.id);
-
-    // ✅ CARREGAR E MOSTRAR GALERIA CORRIGIDA - AGORA VISÍVEL PARA TODOS
-    const gallerySection = await createGallerySection(profile.id);
-
-    profileContent.innerHTML = `
-        <div class="profile-card">
-            ${avatarHtml}
-            <h1 class="profile-name">${displayName}${age ? `, ${age}` : ''}</h1>
-            ${details.description ? `<p class="profile-bio">"${details.description}"</p>` : ''}
-            
-            <!-- ✅ BOTÃO DE FAVORITO NO PERFIL -->
-            <div style="margin: 1.5rem 0; display: flex; justify-content: center;">
-                <button class="favorite-btn ${isFavorite ? 'favorited' : ''}" 
-                        onclick="toggleFavoriteInProfile('${profile.id}', this)"
-                        style="background: none; border: none; font-size: 2.5rem; cursor: pointer; transition: transform 0.3s ease;">
-                    ${isFavorite ? '❤️' : '🤍'}
-                </button>
-            </div>
-            
-            <div class="info-grid">
-                <!-- Informações Pessoais -->
-                <div class="info-card">
-                    <h3>📋 Sobre</h3>
-                    ${details.gender ? `
-                        <div class="info-item">
-                            <span class="info-label">Gênero</span>
-                            <span class="info-value">${formatGender(details.gender)}</span>
-                        </div>
-                    ` : ''}
-                    ${details.zodiac ? `
-                        <div class="info-item">
-                            <span class="info-label">Signo</span>
-                            <span class="info-value">${formatZodiac(details.zodiac)}</span>
-                        </div>
-                    ` : ''}
-                    ${details.sexual_orientation ? `
-                        <div class="info-item">
-                            <span class="info-label">Orientação</span>
-                            <span class="info-value">${formatSexualOrientation(details.sexual_orientation)}</span>
-                        </div>
-                    ` : ''}
-                </div>
-
-                <!-- Estilo de Vida -->
-                <div class="info-card">
-                    <h3>🌟 Estilo de Vida</h3>
-                    ${details.profession ? `
-                        <div class="info-item">
-                            <span class="info-label">Profissão</span>
-                            <span class="info-value">${details.profession}</span>
-                        </div>
-                    ` : ''}
-                    ${details.education ? `
-                        <div class="info-item">
-                            <span class="info-label">Escolaridade</span>
-                            <span class="info-value">${formatEducation(details.education)}</span>
-                        </div>
-                    ` : ''}
-                    ${details.religion ? `
-                        <div class="info-item">
-                            <span class="info-label">Religião</span>
-                            <span class="info-value">${formatReligion(details.religion)}</span>
-                        </div>
-                    ` : ''}
-                </div>
-
-                <!-- Hábitos -->
-                <div class="info-card">
-                    <h3>💫 Hábitos</h3>
-                    ${details.drinking ? `
-                        <div class="info-item">
-                            <span class="info-label">Bebida</span>
-                            <span class="info-value">${formatDrinking(details.drinking)}</span>
-                        </div>
-                    ` : ''}
-                    ${details.smoking ? `
-                        <div class="info-item">
-                            <span class="info-label">Fumo</span>
-                            <span class="info-value">${formatSmoking(details.smoking)}</span>
-                        </div>
-                    ` : ''}
-                    ${details.exercise ? `
-                        <div class="info-item">
-                            <span class="info-label">Exercício</span>
-                            <span class="info-value">${formatExercise(details.exercise, details.exercise_details)}</span>
-                        </div>
-                    ` : ''}
-                </div>
-
-                <!-- Interesses -->
-                <div class="info-card">
-                    <h3>🎯 Interesses</h3>
-                    ${details.looking_for ? `
-                        <div class="info-item">
-                            <span class="info-label">Procura</span>
-                            <span class="info-value">${formatLookingFor(details.looking_for)}</span>
-                        </div>
-                    ` : ''}
-                    ${details.interests && details.interests.length > 0 ? `
-                        <div class="info-item">
-                            <span class="info-label">Gosta de</span>
-                            <span class="info-value">${details.interests.join(', ')}</span>
-                        </div>
-                    ` : ''}
-                    ${details.has_pets ? `
-                        <div class="info-item">
-                            <span class="info-label">Animais</span>
-                            <span class="info-value">${formatPets(details.has_pets, details.pets_details)}</span>
-                        </div>
-                    ` : ''}
-                </div>
-            </div>
-
-            <!-- ✅ SEÇÃO DA GALERIA - AGORA VISÍVEL PARA TODOS -->
-            ${gallerySection}
-
-            <div class="profile-actions">
-                <button class="btn btn-primary" onclick="sendMessage('${profile.id}')">
-                    💌 Enviar Mensagem
-                </button>
-                <button class="btn btn-secondary" onclick="window.location.href='home.html'">
-                    ← Voltar
-                </button>
-            </div>
-        </div>
+  // ✅ CARREGAR FOTO DO PERFIL
+  let avatarHtml = '';
+  const avatarUrl = await loadProfilePhoto(profile.avatar_url);
+  
+  if (avatarUrl) {
+    avatarHtml = `
+      <div class="profile-avatar" style="background: none;">
+        <img src="${avatarUrl}" alt="${displayName}" class="profile-avatar-img"
+           style="display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"
+           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+           onload="console.log('✅ Avatar carregado')">
+        <div class="profile-avatar-fallback" style="display: none;">${displayName.charAt(0).toUpperCase()}</div>
+      </div>
     `;
+  } else {
+    avatarHtml = `
+      <div class="profile-avatar">
+        <div class="profile-avatar-fallback">${displayName.charAt(0).toUpperCase()}</div>
+      </div>
+    `;
+  }
+
+
+  // ✅ CARREGAR E MOSTRAR GALERIA CORRIGIDA - AGORA VISÍVEL PARA TODOS
+  const gallerySection = await createGallerySection(profile.id);
+
+
+  profileContent.innerHTML = `
+    <div class="profile-card">
+      ${avatarHtml}
+      <h1 class="profile-name">${displayName}${age ? `, ${age}` : ''}</h1>
+      ${details.description ? `<p class="profile-bio">"${details.description}"</p>` : ''}
+      
+      <div class="info-grid">
+        <!-- Informações Pessoais -->
+        <div class="info-card">
+          <h3> Sobre</h3>
+          ${details.gender ? `
+            <div class="info-item">
+              <span class="info-label">Gênero</span>
+              <span class="info-value">${formatGender(details.gender)}</span>
+            </div>
+          ` : ''}
+          ${details.zodiac ? `
+            <div class="info-item">
+              <span class="info-label">Signo</span>
+              <span class="info-value">${formatZodiac(details.zodiac)}</span>
+            </div>
+          ` : ''}
+          ${details.sexual_orientation ? `
+            <div class="info-item">
+              <span class="info-label">Orientação</span>
+              <span class="info-value">${formatSexualOrientation(details.sexual_orientation)}</span>
+            </div>
+          ` : ''}
+        </div>
+
+
+        <!-- Estilo de Vida -->
+        <div class="info-card">
+          <h3> Estilo de Vida</h3>
+          ${details.profession ? `
+            <div class="info-item">
+              <span class="info-label">Profissão</span>
+              <span class="info-value">${details.profession}</span>
+            </div>
+          ` : ''}
+          ${details.education ? `
+            <div class="info-item">
+              <span class="info-label">Escolaridade</span>
+              <span class="info-value">${formatEducation(details.education)}</span>
+            </div>
+          ` : ''}
+          ${details.religion ? `
+            <div class="info-item">
+              <span class="info-label">Religião</span>
+              <span class="info-value">${formatReligion(details.religion)}</span>
+            </div>
+          ` : ''}
+        </div>
+
+
+        <!-- Hábitos -->
+        <div class="info-card">
+          <h3> Hábitos</h3>
+          ${details.drinking ? `
+            <div class="info-item">
+              <span class="info-label">Bebida</span>
+              <span class="info-value">${formatDrinking(details.drinking)}</span>
+            </div>
+          ` : ''}
+          ${details.smoking ? `
+            <div class="info-item">
+              <span class="info-label">Fumo</span>
+              <span class="info-value">${formatSmoking(details.smoking)}</span>
+            </div>
+          ` : ''}
+          ${details.exercise ? `
+            <div class="info-item">
+              <span class="info-label">Exercício</span>
+              <span class="info-value">${formatExercise(details.exercise, details.exercise_details)}</span>
+            </div>
+          ` : ''}
+        </div>
+
+
+        <!-- Interesses -->
+        <div class="info-card">
+          <h3> Interesses</h3>
+          ${details.looking_for ? `
+            <div class="info-item">
+              <span class="info-label">Procura</span>
+              <span class="info-value">${formatLookingFor(details.looking_for)}</span>
+            </div>
+          ` : ''}
+          ${details.interests && details.interests.length > 0 ? `
+            <div class="info-item">
+              <span class="info-label">Gosta de</span>
+              <span class="info-value">${details.interests.join(', ')}</span>
+            </div>
+          ` : ''}
+          ${details.has_pets ? `
+            <div class="info-item">
+              <span class="info-label">Animais</span>
+              <span class="info-value">${formatPets(details.has_pets, details.pets_details)}</span>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+
+
+      <!-- ✅ SEÇÃO DA GALERIA - AGORA VISÍVEL PARA TODOS -->
+      ${gallerySection}
+
+
+      <div class="profile-actions">
+        <button class="btn btn-primary" onclick="sendMessage('${profile.id}')">
+           Enviar Mensagem
+        </button>
+        <button class="btn btn-secondary" onclick="window.location.href='home.html'">
+          ← Voltar
+        </button>
+      </div>
+    </div>
+  `;
 }
 
-// ✅ VERIFICAR SE USUÁRIO É FAVORITO
-async function checkIfFavorite(userId) {
-    try {
-        if (!window.favoriteSystem || !window.favoriteSystem.isInitialized) {
-            console.log('🔄 Sistema não inicializado - verificando diretamente...');
-            return await checkFavoriteDirectly(userId);
-        }
-        
-        return await window.favoriteSystem.isUserFavorite(userId);
-    } catch (error) {
-        console.error('❌ Erro ao verificar favorito:', error);
-        return await checkFavoriteDirectly(userId);
-    }
-}
-
-// ✅ VERIFICAÇÃO DIRETA DE FAVORITO
-async function checkFavoriteDirectly(userId) {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return false;
-
-        const { data: favorite, error } = await supabase
-            .from('user_favorites')
-            .select('id')
-            .eq('user_id', user.id)
-            .eq('favorite_user_id', userId)
-            .single();
-
-        if (error && error.code !== 'PGRST116') {
-            throw error;
-        }
-
-        return !!favorite;
-    } catch (error) {
-        console.error('❌ Erro na verificação direta:', error);
-        return false;
-    }
-}
-
-// ✅ TOGGLE FAVORITO ESPECÍFICO PARA PERFIL
-async function toggleFavoriteInProfile(userId, buttonElement) {
-    console.log('❤️ toggleFavoriteInProfile chamado para:', userId);
-    
-    try {
-        // Garantir que o sistema está carregado
-        if (!window.favoriteSystem || !window.favoriteSystem.isInitialized) {
-            console.log('🔄 Sistema não inicializado - tentando inicializar...');
-            const success = await initializeFavoriteSystemInProfile();
-            
-            if (!success) {
-                showQuickToast('⚠️ Sistema carregando... tente novamente.');
-                return;
-            }
-        }
-
-        // Usar o sistema global se disponível
-        if (window.favoriteSystem && window.favoriteSystem.isInitialized) {
-            const result = await window.favoriteSystem.toggleFavorite(userId, null);
-            
-            // Atualizar UI do botão
-            if (buttonElement) {
-                if (result) {
-                    buttonElement.innerHTML = '❤️';
-                    buttonElement.classList.add('favorited');
-                } else {
-                    buttonElement.innerHTML = '🤍';
-                    buttonElement.classList.remove('favorited');
-                }
-                
-                // Animação
-                buttonElement.style.transform = 'scale(1.2)';
-                setTimeout(() => {
-                    buttonElement.style.transform = 'scale(1)';
-                }, 300);
-            }
-            
-            return result;
-        } else {
-            // Fallback: toggle manual
-            return await toggleFavoriteDirectly(userId, buttonElement);
-        }
-
-    } catch (error) {
-        console.error('❌ Erro no toggleFavoriteInProfile:', error);
-        showQuickToast('❌ Erro ao processar curtida');
-        return false;
-    }
-}
-
-// ✅ TOGGLE FAVORITO MANUAL (FALLBACK)
-async function toggleFavoriteDirectly(userId, buttonElement) {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            showQuickToast('⚠️ Faça login para curtir');
-            return false;
-        }
-
-        // Verificar se já é favorito
-        const { data: existingFavorite, error: checkError } = await supabase
-            .from('user_favorites')
-            .select('id')
-            .eq('user_id', user.id)
-            .eq('favorite_user_id', userId)
-            .single();
-
-        if (checkError && checkError.code !== 'PGRST116') {
-            throw checkError;
-        }
-
-        const isCurrentlyFavorite = !!existingFavorite;
-
-        if (isCurrentlyFavorite) {
-            // Remover favorito
-            const { error: removeError } = await supabase
-                .from('user_favorites')
-                .delete()
-                .eq('user_id', user.id)
-                .eq('favorite_user_id', userId);
-
-            if (removeError) throw removeError;
-
-            // Atualizar UI
-            if (buttonElement) {
-                buttonElement.innerHTML = '🤍';
-                buttonElement.classList.remove('favorited');
-            }
-            
-            showQuickToast('💔 Curtida removida');
-            return false;
-        } else {
-            // Adicionar favorito
-            const favoriteData = {
-                user_id: user.id,
-                favorite_user_id: userId,
-                created_at: new Date().toISOString()
-            };
-
-            const { error: addError } = await supabase
-                .from('user_favorites')
-                .insert(favoriteData);
-
-            if (addError) throw addError;
-
-            // Atualizar UI
-            if (buttonElement) {
-                buttonElement.innerHTML = '❤️';
-                buttonElement.classList.add('favorited');
-            }
-            
-            showQuickToast('❤️ Curtida enviada!');
-            return true;
-        }
-
-    } catch (error) {
-        console.error('❌ Erro no toggle manual:', error);
-        throw error;
-    }
-}
 
 // ✅ CRIAR SEÇÃO DA GALERIA CORRIGIDA - VISÍVEL PARA TODOS
 async function createGallerySection(profileId) {
-    try {
-        console.log('=== 🎯 INICIANDO GALERIA VISÍVEL ===');
-        console.log('🔍 Perfil visitado:', profileId);
-        
-        // Buscar imagens do perfil específico
-        const galleryImages = await gallerySystem.loadUserGallery(profileId);
-        console.log('🔍 Imagens processadas:', galleryImages.length);
+  try {
+    console.log('===  INICIANDO GALERIA VISÍVEL ===');
+    console.log(' Perfil visitado:', profileId);
+    
+    // Buscar imagens do perfil específico
+    const galleryImages = await gallerySystem.loadUserGallery(profileId);
+    console.log(' Imagens processadas:', galleryImages.length);
 
-        // ✅ ATRIBUIR À VARIÁVEL GLOBAL DO MODAL
-        currentProfileGallery = galleryImages;
 
-        // SE GALERIA ESTÁ VAZIA
-        if (galleryImages.length === 0) {
-            console.log('🔍 GALERIA VAZIA PARA ESTE USUÁRIO');
-            return `
-                <div class="gallery-section">
-                    <h3>🖼️ Galeria de Fotos</h3>
-                    <div class="empty-gallery" style="text-align: center; padding: 2rem;">
-                        <div style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;">📸</div>
-                        <h4 style="margin-bottom: 0.5rem;">Galeria vazia</h4>
-                        <p>Este usuário ainda não adicionou fotos à galeria</p>
-                    </div>
-                </div>
-            `;
-        }
+    // ✅ ATRIBUIR À VARIÁVEL GLOBAL DO MODAL
+    currentProfileGallery = galleryImages;
 
-        console.log('⭐ MOSTRANDO GALERIA COMPLETA -', galleryImages.length, 'imagens');
-        const galleryGrid = await gallerySystem.createGalleryGrid(galleryImages);
-        
-        return `
-            <div class="gallery-section">
-                <h3>🖼️ Galeria de Fotos (${galleryImages.length})</h3>
-                <div class="premium-gallery-view">
-                    <div class="gallery-grid">
-                        ${galleryGrid}
-                    </div>
-                </div>
-            </div>
-        `;
 
-    } catch (error) {
-        console.error('❌ Erro crítico na galeria:', error);
-        return `
-            <div class="gallery-section">
-                <h3>🖼️ Galeria de Fotos</h3>
-                <div class="empty-gallery">
-                    <div style="font-size: 3rem; color: #ff6b6b; margin-bottom: 1rem;">⚠️</div>
-                    <p>Erro ao carregar galeria</p>
-                </div>
-            </div>
-        `;
+    // SE GALERIA ESTÁ VAZIA
+    if (galleryImages.length === 0) {
+      console.log(' GALERIA VAZIA PARA ESTE USUÁRIO');
+      return `
+        <div class="gallery-section">
+          <h3>️ Galeria de Fotos</h3>
+          <div class="empty-gallery" style="text-align: center; padding: 2rem;">
+            <div style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;"></div>
+            <h4 style="margin-bottom: 0.5rem;">Galeria vazia</h4>
+            <p>Este usuário ainda não adicionou fotos à galeria</p>
+          </div>
+        </div>
+      `;
     }
+
+
+    console.log('⭐ MOSTRANDO GALERIA COMPLETA -', galleryImages.length, 'imagens');
+    const galleryGrid = await gallerySystem.createGalleryGrid(galleryImages);
+    
+    return `
+      <div class="gallery-section">
+        <h3>️ Galeria de Fotos (${galleryImages.length})</h3>
+        <div class="premium-gallery-view">
+          <div class="gallery-grid">
+            ${galleryGrid}
+          </div>
+        </div>
+      </div>
+    `;
+
+
+  } catch (error) {
+    console.error('❌ Erro crítico na galeria:', error);
+    return `
+      <div class="gallery-section">
+        <h3>️ Galeria de Fotos</h3>
+        <div class="empty-gallery">
+          <div style="font-size: 3rem; color: #ff6b6b; margin-bottom: 1rem;">⚠️</div>
+          <p>Erro ao carregar galeria</p>
+        </div>
+      </div>
+    `;
+  }
 }
+
 
 // ✅ CONFIGURAR MODAL DA GALERIA
 function setupGalleryModal() {
-    const modal = document.getElementById('galleryModal');
-    const modalClose = document.getElementById('modalClose');
-    const modalPrev = document.getElementById('modalPrev');
-    const modalNext = document.getElementById('modalNext');
+  const modal = document.getElementById('galleryModal');
+  const modalClose = document.getElementById('modalClose');
+  const modalPrev = document.getElementById('modalPrev');
+  const modalNext = document.getElementById('modalNext');
 
-    if (modalClose) modalClose.addEventListener('click', closeGalleryModal);
-    if (modalPrev) modalPrev.addEventListener('click', showPrevImage);
-    if (modalNext) modalNext.addEventListener('click', showNextImage);
 
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && modal.style.display === 'flex') {
-            closeGalleryModal();
-        }
-    });
+  if (modalClose) modalClose.addEventListener('click', closeGalleryModal);
+  if (modalPrev) modalPrev.addEventListener('click', showPrevImage);
+  if (modalNext) modalNext.addEventListener('click', showNextImage);
 
-    modal.addEventListener('click', function(e) {
-        if (e.target === modal) {
-            closeGalleryModal();
-        }
-    });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && modal.style.display === 'flex') {
+      closeGalleryModal();
+    }
+  });
+
+
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) {
+      closeGalleryModal();
+    }
+  });
 }
+
 
 // ✅ ABRIR MODAL DA GALERIA
 function openGalleryModal(index) {
-    const modal = document.getElementById('galleryModal');
-    const modalImage = document.getElementById('modalImage');
-    
-    if (currentProfileGallery.length === 0) {
-        console.log('❌ Nenhuma imagem na galeria para abrir modal');
-        return;
-    }
-    
-    currentModalIndex = index;
-    const image = currentProfileGallery[currentModalIndex];
-    
-    if (!image || !image.display_url) {
-        console.log('❌ Imagem não encontrada no índice:', index);
-        return;
-    }
-    
-    console.log('🖼️ Abrindo modal com imagem:', image.display_url);
-    modalImage.src = image.display_url;
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
+  const modal = document.getElementById('galleryModal');
+  const modalImage = document.getElementById('modalImage');
+  
+  if (currentProfileGallery.length === 0) {
+    console.log('❌ Nenhuma imagem na galeria para abrir modal');
+    return;
+  }
+  
+  currentModalIndex = index;
+  const image = currentProfileGallery[currentModalIndex];
+  
+  if (!image || !image.display_url) {
+    console.log('❌ Imagem não encontrada no índice:', index);
+    return;
+  }
+  
+  console.log('️ Abrindo modal com imagem:', image.display_url);
+  modalImage.src = image.display_url;
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
 }
+
 
 // ✅ FECHAR MODAL DA GALERIA
 function closeGalleryModal() {
-    const modal = document.getElementById('galleryModal');
-    modal.style.display = 'none';
-    document.body.style.overflow = 'auto';
+  const modal = document.getElementById('galleryModal');
+  modal.style.display = 'none';
+  document.body.style.overflow = 'auto';
 }
+
 
 // ✅ MOSTRAR IMAGEM ANTERIOR
 function showPrevImage() {
-    if (currentProfileGallery.length === 0) return;
-    
-    currentModalIndex = (currentModalIndex - 1 + currentProfileGallery.length) % currentProfileGallery.length;
-    const image = currentProfileGallery[currentModalIndex];
-    
-    if (image && image.display_url) {
-        document.getElementById('modalImage').src = image.display_url;
-    }
+  if (currentProfileGallery.length === 0) return;
+  
+  currentModalIndex = (currentModalIndex - 1 + currentProfileGallery.length) % currentProfileGallery.length;
+  const image = currentProfileGallery[currentModalIndex];
+  
+  if (image && image.display_url) {
+    document.getElementById('modalImage').src = image.display_url;
+  }
 }
+
 
 // ✅ MOSTRAR PRÓXIMA IMAGEM
 function showNextImage() {
-    if (currentProfileGallery.length === 0) return;
-    
-    currentModalIndex = (currentModalIndex + 1) % currentProfileGallery.length;
-    const image = currentProfileGallery[currentModalIndex];
-    
-    if (image && image.display_url) {
-        document.getElementById('modalImage').src = image.display_url;
-    }
+  if (currentProfileGallery.length === 0) return;
+  
+  currentModalIndex = (currentModalIndex + 1) % currentProfileGallery.length;
+  const image = currentProfileGallery[currentModalIndex];
+  
+  if (image && image.display_url) {
+    document.getElementById('modalImage').src = image.display_url;
+  }
 }
+
 
 // ✅ ENVIAR MENSAGEM
 async function sendMessage(userId) {
-    console.log('💌 Iniciando conversa com usuário:', userId);
+  console.log(' Iniciando conversa com usuário:', userId);
+  
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
     
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-            alert('Você precisa estar logado para enviar mensagens!');
-            window.location.href = 'login.html';
-            return;
-        }
-        
-        const { data: userProfile } = await supabase
-            .from('profiles')
-            .select('full_name, birth_date')
-            .eq('id', user.id)
-            .single();
-        
-        if (!userProfile || !userProfile.full_name || !userProfile.birth_date) {
-            alert('Complete seu perfil primeiro para enviar mensagens!');
-            window.location.href = 'painel.html';
-            return;
-        }
-        
-        const { error: messageError } = await supabase
-            .from('messages')
-            .insert({
-                sender_id: user.id,
-                receiver_id: userId,
-                content: '👋 Olá! Gostaria de conversar com você.',
-                is_read: false
-            });
-
-        if (messageError) {
-            console.error('❌ Erro ao criar conversa:', messageError);
-        } else {
-            console.log('✅ Conversa criada com sucesso');
-        }
-        
-        localStorage.setItem('openChatWithUserId', userId);
-        window.location.href = 'mensagens.html';
-        
-    } catch (error) {
-        console.error('❌ Erro ao enviar mensagem:', error);
-        localStorage.setItem('openChatWithUserId', userId);
-        window.location.href = 'mensagens.html';
-    }
-}
-
-// ✅ MOSTRAR ERRO
-function showError(message) {
-    const profileContent = document.getElementById('profileContent');
-    profileContent.innerHTML = `
-        <div class="error-state">
-            <div style="font-size: 4rem; margin-bottom: 1rem;">😕</div>
-            <h3 style="margin-bottom: 1rem;">${message}</h3>
-            <p style="margin-bottom: 1.5rem;">Volte para a página inicial e tente novamente.</p>
-            <button class="btn btn-primary" onclick="window.location.href='home.html'" style="margin-top: 1rem;">
-                ← Voltar para Home
-            </button>
-        </div>
-    `;
-}
-
-// ==================== FUNÇÕES DE FORMATAÇÃO ====================
-
-function calculateAge(birthDate) {
-    if (!birthDate) return null;
-    
-    const today = new Date();
-    const birth = new Date(birthDate);
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-        age--;
+    if (!user) {
+      alert('Você precisa estar logado para enviar mensagens!');
+      window.location.href = 'login.html';
+      return;
     }
     
-    return age;
-}
-
-function formatGender(gender) {
-    const genders = {
-        'feminino': 'Feminino',
-        'masculino': 'Masculino',
-        'nao_informar': 'Prefiro não informar',
-        'outro': 'Outro'
-    };
-    return genders[gender] || gender;
-}
-
-function formatZodiac(zodiac) {
-    const zodiacs = {
-        'aries': 'Áries', 'touro': 'Touro', 'gemeos': 'Gêmeos', 'cancer': 'Câncer',
-        'leao': 'Leão', 'virgem': 'Virgem', 'libra': 'Libra', 'escorpiao': 'Escorpião',
-        'sagitario': 'Sagitário', 'capricornio': 'Capricórnio', 'aquario': 'Aquário', 'peixes': 'Peixes'
-    };
-    return zodiacs[zodiac] || zodiac;
-}
-
-function formatSexualOrientation(orientation) {
-    const orientations = {
-        'heterossexual': 'Heterossexual',
-        'homossexual': 'Homossexual', 
-        'bissexual': 'Bissexual',
-        'assexual': 'Assexual',
-        'pansexual': 'Pansexual',
-        'outro': 'Outro',
-        'prefiro_nao_informar': 'Prefiro não informar'
-    };
-    return orientations[orientation] || orientation;
-}
-
-function formatDrinking(drinking) {
-    const options = {
-        'nao_bebo': 'Não bebo',
-        'socialmente': 'Socialmente',
-        'frequentemente': 'Com frequência',
-        'prefiro_nao_informar': 'Prefiro não informar'
-    };
-    return options[drinking] || drinking;
-}
-
-function formatSmoking(smoking) {
-    const options = {
-        'nao_fumo': 'Não fumo',
-        'socialmente': 'Socialmente', 
-        'frequentemente': 'Com frequência',
-        'prefiro_nao_informar': 'Prefiro não informar'
-    };
-    return options[smoking] || smoking;
-}
-
-function formatExercise(exercise, exerciseDetails) {
-    if (!exercise) return null;
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('full_name, birth_date')
+      .eq('id', user.id)
+      .single();
     
-    if (exercise === 'ocasionalmente') {
-        return exerciseDetails ? `Ocasionalmente (${exerciseDetails})` : 'Ocasionalmente';
-    } else if (exercise === 'regularmente') {
-        return exerciseDetails ? `Regularmente (${exerciseDetails})` : 'Regularmente';
-    } else if (exercise === 'nao_pratico') {
-        return 'Não pratico';
-    } else if (exercise === 'prefiro_nao_informar') {
-        return 'Prefiro não informar';
-    }
-    return exercise;
-}
-
-function formatReligion(religion) {
-    const religions = {
-        'catolica': 'Católica',
-        'evangelica': 'Evangélica',
-        'espirita': 'Espírita',
-        'umbanda_candomble': 'Umbanda/Candomblé',
-        'budista': 'Budista',
-        'judaica': 'Judaica',
-        'islamica': 'Islâmica',
-        'outra': 'Outra',
-        'nenhuma': 'Nenhuma',
-        'prefiro_nao_informar': 'Prefiro não informar'
-    };
-    return religions[religion] || religion;
-}
-
-function formatEducation(education) {
-    const levels = {
-        'fundamental_incompleto': 'Fundamental Incompleto',
-        'fundamental_completo': 'Fundamental Completo',
-        'medio_incompleto': 'Médio Incompleto',
-        'medio_completo': 'Médio Completo',
-        'superior_incompleto': 'Superior Incompleto',
-        'superior_completo': 'Superior Completo',
-        'pos_graduacao': 'Pós-graduação',
-        'mestrado': 'Mestrado',
-        'doutorado': 'Doutorado'
-    };
-    return levels[education] || education;
-}
-
-function formatLookingFor(lookingFor) {
-    if (!lookingFor) return null;
-    
-    if (Array.isArray(lookingFor)) {
-        return lookingFor.map(item => {
-            const options = {
-                'amizade': 'Amizade',
-                'namoro': 'Namoro',
-                'relacionamento_serio': 'Relacionamento Sério',
-                'conversa': 'Apenas Conversa',
-                'encontro_casual': 'Encontro Casual'
-            };
-            return options[item] || item;
-        }).join(', ');
+    if (!userProfile || !userProfile.full_name || !userProfile.birth_date) {
+      alert('Complete seu perfil primeiro para enviar mensagens!');
+      window.location.href = 'painel.html';
+      return;
     }
     
-    const options = {
-        'amizade': 'Amizade',
-        'namoro': 'Namoro',
-        'relacionamento_serio': 'Relacionamento Sério',
-        'conversa': 'Apenas Conversa',
-        'encontro_casual': 'Encontro Casual'
-    };
-    return options[lookingFor] || lookingFor;
-}
+    const { error: messageError } = await supabase
+      .from('messages')
+      .insert({
+        sender_id: user.id,
+        receiver_id: userId,
+        content: ' Olá! Gostaria de conversar com você.',
+        is_read: false
+      });
 
-function formatPets(hasPets, petsDetails) {
-    if (!hasPets) return null;
-    
-    if (hasPets === 'sim') {
-        return petsDetails ? `Sim, ${petsDetails}` : 'Sim, tenho animais';
-    } else if (hasPets === 'nao') {
-        return 'Não tenho';
-    } else if (hasPets === 'prefiro_nao_informar') {
-        return 'Prefiro não informar';
-    }
-    return hasPets;
-}
 
-// ==================== FUNÇÕES GLOBAIS ====================
-
-window.openGalleryModal = openGalleryModal;
-window.closeGalleryModal = closeGalleryModal;
-window.showPrevImage = showPrevImage;
-window.showNextImage = showNextImage;
-window.sendMessage = sendMessage;
-window.toggleFavoriteInProfile = toggleFavoriteInProfile;
-
-console.log('✅ perfil.js carregado com sucesso! Sistema de favoritos integrado!');
-
-// ✅ CONFIGURAR MODAL DA GALERIA
-function setupGalleryModal() {
-    const modal = document.getElementById('galleryModal');
-    const modalClose = document.getElementById('modalClose');
-    const modalPrev = document.getElementById('modalPrev');
-    const modalNext = document.getElementById('modalNext');
-
-    if (modalClose) modalClose.addEventListener('click', closeGalleryModal);
-    if (modalPrev) modalPrev.addEventListener('click', showPrevImage);
-    if (modalNext) modalNext.addEventListener('click', showNextImage);
-
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && modal.style.display === 'flex') {
-            closeGalleryModal();
-        }
-    });
-
-    modal.addEventListener('click', function(e) {
-        if (e.target === modal) {
-            closeGalleryModal();
-        }
-    });
-}
-
-// ✅ ABRIR MODAL DA GALERIA
-function openGalleryModal(index) {
-    const modal = document.getElementById('galleryModal');
-    const modalImage = document.getElementById('modalImage');
-    
-    if (currentProfileGallery.length === 0) {
-        console.log('❌ Nenhuma imagem na galeria para abrir modal');
-        return;
-    }
-    
-    currentModalIndex = index;
-    const image = currentProfileGallery[currentModalIndex];
-    
-    if (!image || !image.display_url) {
-        console.log('❌ Imagem não encontrada no índice:', index);
-        return;
-    }
-    
-    console.log('🖼️ Abrindo modal com imagem:', image.display_url);
-    modalImage.src = image.display_url;
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-}
-
-// ✅ FECHAR MODAL DA GALERIA
-function closeGalleryModal() {
-    const modal = document.getElementById('galleryModal');
-    modal.style.display = 'none';
-    document.body.style.overflow = 'auto';
-}
-
-// ✅ MOSTRAR IMAGEM ANTERIOR
-function showPrevImage() {
-    if (currentProfileGallery.length === 0) return;
-    
-    currentModalIndex = (currentModalIndex - 1 + currentProfileGallery.length) % currentProfileGallery.length;
-    const image = currentProfileGallery[currentModalIndex];
-    
-    if (image && image.display_url) {
-        document.getElementById('modalImage').src = image.display_url;
-    }
-}
-
-// ✅ MOSTRAR PRÓXIMA IMAGEM
-function showNextImage() {
-    if (currentProfileGallery.length === 0) return;
-    
-    currentModalIndex = (currentModalIndex + 1) % currentProfileGallery.length;
-    const image = currentProfileGallery[currentModalIndex];
-    
-    if (image && image.display_url) {
-        document.getElementById('modalImage').src = image.display_url;
-    }
-}
-
-// ✅ ENVIAR MENSAGEM
-async function sendMessage(userId) {
-    console.log('💌 Iniciando conversa com usuário:', userId);
-    
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-            alert('Você precisa estar logado para enviar mensagens!');
-            window.location.href = 'login.html';
-            return;
-        }
-        
-        const { data: userProfile } = await supabase
-            .from('profiles')
-            .select('full_name, birth_date')
-            .eq('id', user.id)
-            .single();
-        
-        if (!userProfile || !userProfile.full_name || !userProfile.birth_date) {
-            alert('Complete seu perfil primeiro para enviar mensagens!');
-            window.location.href = 'painel.html';
-            return;
-        }
-        
-        const { error: messageError } = await supabase
-            .from('messages')
-            .insert({
-                sender_id: user.id,
-                receiver_id: userId,
-                content: '👋 Olá! Gostaria de conversar com você.',
-                is_read: false
-            });
-
-        if (messageError) {
-            console.error('❌ Erro ao criar conversa:', messageError);
-        } else {
-            console.log('✅ Conversa criada com sucesso');
-        }
-        
-        localStorage.setItem('openChatWithUserId', userId);
-        window.location.href = 'mensagens.html';
-        
-    } catch (error) {
-        console.error('❌ Erro ao enviar mensagem:', error);
-        localStorage.setItem('openChatWithUserId', userId);
-        window.location.href = 'mensagens.html';
-    }
-}
-
-// ✅ MOSTRAR ERRO
-function showError(message) {
-    const profileContent = document.getElementById('profileContent');
-    profileContent.innerHTML = `
-        <div class="error-state">
-            <div style="font-size: 4rem; margin-bottom: 1rem;">😕</div>
-            <h3 style="margin-bottom: 1rem;">${message}</h3>
-            <p style="margin-bottom: 1.5rem;">Volte para a página inicial e tente novamente.</p>
-            <button class="btn btn-primary" onclick="window.location.href='home.html'" style="margin-top: 1rem;">
-                ← Voltar para Home
-            </button>
-        </div>
-    `;
-}
-
-// ==================== FUNÇÕES DE FORMATAÇÃO ====================
-
-function calculateAge(birthDate) {
-    if (!birthDate) return null;
-    
-    const today = new Date();
-    const birth = new Date(birthDate);
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-        age--;
-    }
-    
-    return age;
-}
-
-function formatGender(gender) {
-    const genders = {
-        'feminino': 'Feminino',
-        'masculino': 'Masculino',
-        'nao_informar': 'Prefiro não informar',
-        'outro': 'Outro'
-    };
-    return genders[gender] || gender;
-}
-
-function formatZodiac(zodiac) {
-    const zodiacs = {
-        'aries': 'Áries', 'touro': 'Touro', 'gemeos': 'Gêmeos', 'cancer': 'Câncer',
-        'leao': 'Leão', 'virgem': 'Virgem', 'libra': 'Libra', 'escorpiao': 'Escorpião',
-        'sagitario': 'Sagitário', 'capricornio': 'Capricórnio', 'aquario': 'Aquário', 'peixes': 'Peixes'
-    };
-    return zodiacs[zodiac] || zodiac;
-}
-
-function formatSexualOrientation(orientation) {
-    const orientations = {
-        'heterossexual': 'Heterossexual',
-        'homossexual': 'Homossexual', 
-        'bissexual': 'Bissexual',
-        'assexual': 'Assexual',
-        'pansexual': 'Pansexual',
-        'outro': 'Outro',
-        'prefiro_nao_informar': 'Prefiro não informar'
-    };
-    return orientations[orientation] || orientation;
-}
-
-function formatDrinking(drinking) {
-    const options = {
-        'nao_bebo': 'Não bebo',
-        'socialmente': 'Socialmente',
-        'frequentemente': 'Com frequência',
-        'prefiro_nao_informar': 'Prefiro não informar'
-    };
-    return options[drinking] || drinking;
-}
-
-function formatSmoking(smoking) {
-    const options = {
-        'nao_fumo': 'Não fumo',
-        'socialmente': 'Socialmente', 
-        'frequentemente': 'Com frequência',
-        'prefiro_nao_informar': 'Prefiro não informar'
-    };
-    return options[smoking] || smoking;
-}
-
-function formatExercise(exercise, exerciseDetails) {
-    if (!exercise) return null;
-    
-    if (exercise === 'ocasionalmente') {
-        return exerciseDetails ? `Ocasionalmente (${exerciseDetails})` : 'Ocasionalmente';
-    } else if (exercise === 'regularmente') {
-        return exerciseDetails ? `Regularmente (${exerciseDetails})` : 'Regularmente';
-    } else if (exercise === 'nao_pratico') {
-        return 'Não pratico';
-    } else if (exercise === 'prefiro_nao_informar') {
-        return 'Prefiro não informar';
-    }
-    return exercise;
-}
-
-function formatReligion(religion) {
-    const religions = {
-        'catolica': 'Católica',
-        'evangelica': 'Evangélica',
-        'espirita': 'Espírita',
-        'umbanda_candomble': 'Umbanda/Candomblé',
-        'budista': 'Budista',
-        'judaica': 'Judaica',
-        'islamica': 'Islâmica',
-        'outra': 'Outra',
-        'nenhuma': 'Nenhuma',
-        'prefiro_nao_informar': 'Prefiro não informar'
-    };
-    return religions[religion] || religion;
-}
-
-function formatEducation(education) {
-    const levels = {
-        'fundamental_incompleto': 'Fundamental Incompleto',
-        'fundamental_completo': 'Fundamental Completo',
-        'medio_incompleto': 'Médio Incompleto',
-        'medio_completo': 'Médio Completo',
-        'superior_incompleto': 'Superior Incompleto',
-        'superior_completo': 'Superior Completo',
-        'pos_graduacao': 'Pós-graduação',
-        'mestrado': 'Mestrado',
-        'doutorado': 'Doutorado'
-    };
-    return levels[education] || education;
-}
-
-function formatLookingFor(lookingFor) {
-    if (!lookingFor) return null;
-    
-    if (Array.isArray(lookingFor)) {
-        return lookingFor.map(item => {
-            const options = {
-                'amizade': 'Amizade',
-                'namoro': 'Namoro',
-                'relacionamento_serio': 'Relacionamento Sério',
-                'conversa': 'Apenas Conversa',
-                'encontro_casual': 'Encontro Casual'
-            };
-            return options[item] || item;
-        }).join(', ');
-    }
-    
-    const options = {
-        'amizade': 'Amizade',
-        'namoro': 'Namoro',
-        'relacionamento_serio': 'Relacionamento Sério',
-        'conversa': 'Apenas Conversa',
-        'encontro_casual': 'Encontro Casual'
-    };
-    return options[lookingFor] || lookingFor;
-}
-
-function formatPets(hasPets, petsDetails) {
-    if (!hasPets) return null;
-    
-    if (hasPets === 'sim') {
-        return petsDetails ? `Sim, ${petsDetails}` : 'Sim, tenho animais';
-    } else if (hasPets === 'nao') {
-        return 'Não tenho';
-    } else if (hasPets === 'prefiro_nao_informar') {
-        return 'Prefiro não informar';
-    }
-    return hasPets;
-}
-
-// ==================== FUNÇÕES GLOBAIS ====================
-
-window.openGalleryModal = openGalleryModal;
-window.closeGalleryModal = closeGalleryModal;
-window.showPrevImage = showPrevImage;
-window.showNextImage = showNextImage;
-window.sendMessage = sendMessage;
-window.toggleFavoriteInProfile = toggleFavoriteInProfile;
-
-// ✅ FUNÇÃO DE TOAST LOCAL (SE NÃO EXISTIR)
-if (typeof showQuickToast === 'undefined') {
-    window.showQuickToast = function(message) {
-        console.log('🔔 TOAST:', message);
-        // Criar um toast básico se necessário
-        const toast = document.createElement('div');
-        toast.textContent = message;
-        toast.style.cssText = `
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: #38a169; color: white; padding: 12px 20px; border-radius: 25px;
-            font-size: 14px; font-weight: 600; z-index: 10000; opacity: 0;
-            transition: opacity 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            text-align: center; min-width: 200px; max-width: 90%;
-        `;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.style.opacity = '1', 100);
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
-    };
-}
-
-console.log('✅ perfil.js carregado com sucesso! Sistema de favoritos integrado!');
-
-// ==================== FUNÇÕES GLOBAIS ====================
-
-window.openGalleryModal = openGalleryModal;
-window.closeGalleryModal = closeGalleryModal;
-window.showPrevImage = showPrevImage;
-window.showNextImage = showNextImage;
-window.sendMessage = sendMessage;
-window.toggleFavoriteInProfile = toggleFavoriteInProfile;
-
-// ✅ FUNÇÃO DE TOAST LOCAL (SE NÃO EXISTIR)
-if (typeof showQuickToast === 'undefined') {
-    window.showQuickToast = function(message) {
-        console.log('🔔 TOAST:', message);
-        // Criar um toast básico se necessário
-        const toast = document.createElement('div');
-        toast.textContent = message;
-        toast.style.cssText = `
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: #38a169; color: white; padding: 12px 20px; border-radius: 25px;
-            font-size: 14px; font-weight: 600; z-index: 10000; opacity: 0;
-            transition: opacity 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            text-align: center; min-width: 200px; max-width: 90%;
-        `;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.style.opacity = '1', 100);
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
-    };
-}
-
-// ✅ COMPATIBILIDADE COM O SISTEMA GLOBAL DE FAVORITOS
-// Se a função global toggleFavorite for chamada no perfil, redirecionar para nossa função local
-window.toggleFavorite = async function(userId, event) {
-    console.log('❤️ toggleFavorite GLOBAL chamado no perfil para:', userId);
-    
-    if (event) {
-        event.stopPropagation();
-        event.preventDefault();
-    }
-    
-    // Encontrar o botão no perfil atual
-    const favoriteButton = document.querySelector('.favorite-btn');
-    if (favoriteButton) {
-        return await toggleFavoriteInProfile(userId, favoriteButton);
+    if (messageError) {
+      console.error('❌ Erro ao criar conversa:', messageError);
     } else {
-        // Se não encontrar botão, usar nossa função diretamente
-        return await toggleFavoriteInProfile(userId, null);
+      console.log('✅ Conversa criada com sucesso');
     }
-};
-
-// ✅ VERIFICAR MUTUAL LIKE (PARA MATCH)
-async function checkMutualLikeInProfile(userId) {
-    try {
-        console.log('🔍 Verificando match no perfil com:', userId);
-        
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return false;
-
-        const { data: mutualLike, error } = await supabase
-            .from('user_favorites')
-            .select('id')
-            .eq('user_id', userId)
-            .eq('favorite_user_id', user.id)
-            .single();
-
-        if (error && error.code !== 'PGRST116') {
-            throw error;
-        }
-
-        const hasMutualLike = !!mutualLike;
-        
-        if (hasMutualLike) {
-            console.log('💝 MATCH DETECTADO no perfil!');
-            showQuickToast('💝 Match! Vocês se curtiram!');
-            
-            // Incrementar pulse count se for um match novo
-            await incrementPulseCount();
-        }
-        
-        return hasMutualLike;
-
-    } catch (error) {
-        console.error('❌ Erro ao verificar match no perfil:', error);
-        return false;
-    }
+    
+    localStorage.setItem('openChatWithUserId', userId);
+    window.location.href = 'mensagens.html';
+    
+  } catch (error) {
+    console.error('❌ Erro ao enviar mensagem:', error);
+    localStorage.setItem('openChatWithUserId', userId);
+    window.location.href = 'mensagens.html';
+  }
 }
 
-// ✅ INCREMENTAR PULSE COUNT PARA MATCH
-async function incrementPulseCount() {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
 
-        const { data: existingPulse } = await supabase
-            .from('user_pulses')
-            .select('*')
-            .eq('user_id', user.id)
-            .single();
-
-        if (existingPulse) {
-            await supabase
-                .from('user_pulses')
-                .update({ 
-                    pulse_count: existingPulse.pulse_count + 1,
-                    last_updated: new Date().toISOString()
-                })
-                .eq('user_id', user.id);
-        } else {
-            await supabase
-                .from('user_pulses')
-                .insert({
-                    user_id: user.id,
-                    pulse_count: 1,
-                    last_updated: new Date().toISOString()
-                });
-        }
-
-        console.log('📈 Pulse count atualizado no perfil');
-
-    } catch (error) {
-        console.error('❌ Erro ao incrementar pulse no perfil:', error);
-    }
+// ✅ MOSTRAR ERRO
+function showError(message) {
+  const profileContent = document.getElementById('profileContent');
+  profileContent.innerHTML = `
+    <div class="error-state">
+      <div style="font-size: 4rem; margin-bottom: 1rem;"></div>
+      <h3 style="margin-bottom: 1rem;">${message}</h3>
+      <p style="margin-bottom: 1.5rem;">Volte para a página inicial e tente novamente.</p>
+      <button class="btn btn-primary" onclick="window.location.href='home.html'" style="margin-top: 1rem;">
+        ← Voltar para Home
+      </button>
+    </div>
+  `;
 }
 
-// ✅ ATUALIZAR A FUNÇÃO toggleFavoriteInProfile PARA INCLUIR MATCH
-// MODIFICAR a função existente para incluir verificação de match
-async function toggleFavoriteInProfile(userId, buttonElement) {
-    console.log('❤️ toggleFavoriteInProfile chamado para:', userId);
-    
-    try {
-        // Garantir que o sistema está carregado
-        if (!window.favoriteSystem || !window.favoriteSystem.isInitialized) {
-            console.log('🔄 Sistema não inicializado - tentando inicializar...');
-            const success = await initializeFavoriteSystemInProfile();
-            
-            if (!success) {
-                showQuickToast('⚠️ Sistema carregando... tente novamente.');
-                return;
-            }
-        }
 
-        let result;
-        
-        // Usar o sistema global se disponível
-        if (window.favoriteSystem && window.favoriteSystem.isInitialized) {
-            result = await window.favoriteSystem.toggleFavorite(userId, null);
-        } else {
-            // Fallback: toggle manual
-            result = await toggleFavoriteDirectly(userId, buttonElement);
-        }
-        
-        // Se foi adicionado como favorito, verificar match
-        if (result === true) {
-            setTimeout(async () => {
-                await checkMutualLikeInProfile(userId);
-            }, 1000);
-        }
+// ==================== FUNÇÕES DE FORMATAÇÃO ====================
 
-        // Atualizar UI do botão
-        if (buttonElement) {
-            if (result) {
-                buttonElement.innerHTML = '❤️';
-                buttonElement.classList.add('favorited');
-                buttonElement.title = 'Remover dos favoritos';
-            } else {
-                buttonElement.innerHTML = '🤍';
-                buttonElement.classList.remove('favorited');
-                buttonElement.title = 'Adicionar aos favoritos';
-            }
-            
-            // Animação
-            buttonElement.style.transform = 'scale(1.2)';
-            setTimeout(() => {
-                buttonElement.style.transform = 'scale(1)';
-            }, 300);
-        }
-        
-        return result;
 
-    } catch (error) {
-        console.error('❌ Erro no toggleFavoriteInProfile:', error);
-        showQuickToast('❌ Erro ao processar curtida');
-        return false;
-    }
+function calculateAge(birthDate) {
+  if (!birthDate) return null;
+  
+  const today = new Date();
+  const birth = new Date(birthDate);
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+  
+  return age;
 }
 
-// ✅ ADICIONAR CSS PARA O BOTÃO DE FAVORITO
-// Adicionar estilos para o botão de favorito no perfil
-const favoriteStyles = `
-    .favorite-btn {
-        background: none;
-        border: none;
-        font-size: 2.5rem;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        padding: 0.5rem;
-        border-radius: 50%;
-    }
-    
-    .favorite-btn:hover {
-        background: rgba(209, 101, 109, 0.1);
-        transform: scale(1.1);
-    }
-    
-    .favorite-btn.favorited {
-        animation: pulse 0.5s ease;
-    }
-    
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.3); }
-        100% { transform: scale(1); }
-    }
-    
-    .favorite-btn:active {
-        transform: scale(0.9);
-    }
-`;
 
-// ✅ INJECTAR OS ESTILOS
-const styleSheet = document.createElement('style');
-styleSheet.textContent = favoriteStyles;
-document.head.appendChild(styleSheet);
-
-// ✅ DEBUG HELPER PARA O PERFIL
-window.debugProfileFavoriteSystem = async function() {
-    console.log('🔍 DEBUG - Sistema de Favoritos no Perfil:');
-    console.log('- currentProfileId:', currentProfileId);
-    console.log('- favoriteSystem:', window.favoriteSystem);
-    console.log('- isInitialized:', window.favoriteSystem?.isInitialized);
-    console.log('- isPremium:', window.favoriteSystem?.isPremium);
-    console.log('- supabase:', window.supabase);
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    console.log('- currentUser:', user);
-    
-    // Verificar se o perfil atual é favorito
-    if (currentProfileId) {
-        const isFav = await checkIfFavorite(currentProfileId);
-        console.log('- perfil atual é favorito:', isFav);
-    }
-};
-
-// ✅ VERIFICAR STATUS DO SISTEMA PERIODICAMENTE
-setInterval(() => {
-    if (!window.favoriteSystem || !window.favoriteSystem.isInitialized) {
-        console.log('🔄 Verificando sistema de favoritos...');
-        initializeFavoriteSystemInProfile();
-    }
-}, 10000); // Verificar a cada 10 segundos
-
-// ✅ LISTENER PARA ATUALIZAÇÕES EM TEMPO REAL
-// Se o usuário curtir/descurtir em outra página, atualizar o perfil
-if (window.supabase) {
-    const subscription = supabase
-        .channel('favorite-changes')
-        .on(
-            'postgres_changes',
-            {
-                event: '*',
-                schema: 'public',
-                table: 'user_favorites'
-            },
-            (payload) => {
-                console.log('🔄 Mudança detectada na tabela de favoritos:', payload);
-                
-                // Se a mudança é relacionada ao perfil atual, atualizar UI
-                if (currentProfileId && 
-                    (payload.new?.favorite_user_id === currentProfileId || 
-                     payload.old?.favorite_user_id === currentProfileId)) {
-                    
-                    console.log('🔄 Atualizando UI do favorito no perfil');
-                    updateFavoriteButtonUI();
-                }
-            }
-        )
-        .subscribe();
-
-    // Função para atualizar o botão de favorito
-    async function updateFavoriteButtonUI() {
-        const favoriteButton = document.querySelector('.favorite-btn');
-        if (favoriteButton && currentProfileId) {
-            const isFav = await checkIfFavorite(currentProfileId);
-            
-            if (isFav) {
-                favoriteButton.innerHTML = '❤️';
-                favoriteButton.classList.add('favorited');
-                favoriteButton.title = 'Remover dos favoritos';
-            } else {
-                favoriteButton.innerHTML = '🤍';
-                favoriteButton.classList.remove('favorited');
-                favoriteButton.title = 'Adicionar aos favoritos';
-            }
-        }
-    }
+function formatGender(gender) {
+  const genders = {
+    'feminino': 'Feminino',
+    'masculino': 'Masculino',
+    'nao_informar': 'Prefiro não informar',
+    'outro': 'Outro'
+  };
+  return genders[gender] || gender;
 }
 
-console.log('✅ perfil.js carregado com sucesso! Sistema de favoritos totalmente integrado!');
 
-// ✅ INICIALIZAÇÃO FINAL - VERIFICAR SE TUDO ESTÁ FUNCIONANDO
-setTimeout(async () => {
-    console.log('🎯 Verificação final do sistema de favoritos no perfil...');
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user && currentProfileId) {
-        console.log('👤 Usuário:', user.email);
-        console.log('📊 Perfil visualizado:', currentProfileId);
-        console.log('❤️ Sistema de favoritos:', window.favoriteSystem?.isInitialized ? '✅ INICIALIZADO' : '❌ NÃO INICIALIZADO');
-        
-        // Verificar se o perfil atual é favorito
-        const isFav = await checkIfFavorite(currentProfileId);
-        console.log('💖 Perfil atual é favorito:', isFav);
-    }
-}, 3000);
+function formatZodiac(zodiac) {
+  const zodiacs = {
+    'aries': 'Áries', 'touro': 'Touro', 'gemeos': 'Gêmeos', 'cancer': 'Câncer',
+    'leao': 'Leão', 'virgem': 'Virgem', 'libra': 'Libra', 'escorpiao': 'Escorpião',
+    'sagitario': 'Sagitário', 'capricornio': 'Capricórnio', 'aquario': 'Aquário', 'peixes': 'Peixes'
+  };
+  return zodiacs[zodiac] || zodiac;
+}
+
+
+function formatSexualOrientation(orientation) {
+  const orientations = {
+    'heterossexual': 'Heterossexual',
+    'homossexual': 'Homossexual',
+    'bissexual': 'Bissexual',
+    'assexual': 'Assexual',
+    'pansexual': 'Pansexual',
+    'outro': 'Outro',
+    'prefiro_nao_informar': 'Prefiro não informar'
+  };
+  return orientations[orientation] || orientation;
+}
+
+
+function formatDrinking(drinking) {
+  const options = {
+    'nao_bebo': 'Não bebo',
+    'socialmente': 'Socialmente',
+    'frequentemente': 'Com frequência',
+    'prefiro_nao_informar': 'Prefiro não informar'
+  };
+  return options[drinking] || drinking;
+}
+
+
+function formatSmoking(smoking) {
+  const options = {
+    'nao_fumo': 'Não fumo',
+    'socialmente': 'Socialmente',
+    'frequentemente': 'Com frequência',
+    'prefiro_nao_informar': 'Prefiro não informar'
+  };
+  return options[smoking] || smoking;
+}
+
+
+function formatExercise(exercise, exerciseDetails) {
+  if (!exercise) return null;
+  
+  if (exercise === 'ocasionalmente') {
+    return exerciseDetails ? `Ocasionalmente (${exerciseDetails})` : 'Ocasionalmente';
+  } else if (exercise === 'regularmente') {
+    return exerciseDetails ? `Regularmente (${exerciseDetails})` : 'Regularmente';
+  } else if (exercise === 'nao_pratico') {
+    return 'Não pratico';
+  } else if (exercise === 'prefiro_nao_informar') {
+    return 'Prefiro não informar';
+  }
+  return exercise;
+}
+
+
+function formatReligion(religion) {
+  const religions = {
+    'catolica': 'Católica',
+    'evangelica': 'Evangélica',
+    'espirita': 'Espírita',
+    'umbanda_candomble': 'Umbanda/Candomblé',
+    'budista': 'Budista',
+    'judaica': 'Judaica',
+    'islamica': 'Islâmica',
+    'outra': 'Outra',
+    'nenhuma': 'Nenhuma',
+    'prefiro_nao_informar': 'Prefiro não informar'
+  };
+  return religions[religion] || religion;
+}
+
+
+function formatEducation(education) {
+  const levels = {
+    'fundamental_incompleto': 'Fundamental Incompleto',
+    'fundamental_completo': 'Fundamental Completo',
+    'medio_incompleto': 'Médio Incompleto',
+    'medio_completo': 'Médio Completo',
+    'superior_incompleto': 'Superior Incompleto',
+    'superior_completo': 'Superior Completo',
+    'pos_graduacao': 'Pós-graduação',
+    'mestrado': 'Mestrado',
+    'doutorado': 'Doutorado'
+  };
+  return levels[education] || education;
+}
+
+
+function formatLookingFor(lookingFor) {
+  if (!lookingFor) return null;
+  
+  if (Array.isArray(lookingFor)) {
+    return lookingFor.map(item => {
+      const options = {
+        'amizade': 'Amizade',
+        'namoro': 'Namoro',
+        'relacionamento_serio': 'Relacionamento Sério',
+        'conversa': 'Apenas Conversa',
+        'encontro_casual': 'Encontro Casual'
+      };
+      return options[item] || item;
+    }).join(', ');
+  }
+  
+  const options = {
+    'amizade': 'Amizade',
+    'namoro': 'Namoro',
+    'relacionamento_serio': 'Relacionamento Sério',
+    'conversa': 'Apenas Conversa',
+    'encontro_casual': 'Encontro Casual'
+  };
+  return options[lookingFor] || lookingFor;
+}
+
+
+function formatPets(hasPets, petsDetails) {
+  if (!hasPets) return null;
+  
+  if (hasPets === 'sim') {
+    return petsDetails ? `Sim, ${petsDetails}` : 'Sim, tenho animais';
+  } else if (hasPets === 'nao') {
+    return 'Não tenho';
+  } else if (hasPets === 'prefiro_nao_informar') {
+    return 'Prefiro não informar';
+  }
+  return hasPets;
+}
+
+
+// ==================== FUNÇÕES GLOBAIS ====================
+
+
+window.openGalleryModal = openGalleryModal;
+window.closeGalleryModal = closeGalleryModal;
+window.showPrevImage = showPrevImage;
+window.showNextImage = showNextImage;
+window.sendMessage = sendMessage;
+
+
+console.log('✅ perfil.js carregado com sucesso!');
 </script>
 </body>
 </html>
