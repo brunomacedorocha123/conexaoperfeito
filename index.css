@@ -57,17 +57,18 @@ header {
 
 .logo {
     display: flex;
-    align-items: flex-start;
+    align-items: center;      /* 👈 MUDEI: flex-start → center */
     flex-shrink: 0;
-    margin-top: -40px;
-    height: 160px;
+    margin-top: 0px;          /* 👈 MUDEI: -40px → 0px */
+    height: 80px;             /* 👈 MUDEI: 160px → 80px */
+    justify-content: center;  /* 👈 ADICIONEI */
 }
 
 /* LOGO EXPANSÍVEL */
 .logo img {
     width: auto;
-    height: 250px;
-    max-height: 180px;
+    height: 120px;            /* 👈 REDUZI: 250px → 120px */
+    max-height: 140px;        /* 👈 AJUSTEI */
     object-fit: contain;
     transition: var(--transition);
 }
