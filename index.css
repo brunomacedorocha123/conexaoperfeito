@@ -35,10 +35,10 @@ body {
     padding: 0 20px;
 }
 
-/* Header */
+/* Header - LOGO EXPANSÍVEL */
 header {
     background: var(--card-bg);
-    padding: 0.5rem 0;
+    padding: 0.8rem 0;
     box-shadow: var(--shadow);
     position: sticky;
     top: 0;
@@ -50,19 +50,21 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 90px;
+    min-height: 80px;
+    height: auto;
 }
 
 .logo {
     display: flex;
     align-items: center;
-    gap: 12px;
     flex-shrink: 0;
 }
 
+/* LOGO EXPANSÍVEL - CRESCE LIVREMENTE */
 .logo img {
-    height: 80px;
     width: auto;
+    height: 80px;
+    max-height: 100px;
     object-fit: contain;
     transition: var(--transition);
 }

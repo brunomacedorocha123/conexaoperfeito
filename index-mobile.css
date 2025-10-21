@@ -13,10 +13,11 @@
         flex: 0 0 auto;
     }
 
+    /* LOGO GRANDE NO MOBILE TAMBÉM */
     .logo img {
-        height: 70px !important;
-        width: auto !important;
-        max-width: 200px !important;
+        width: auto;
+        height: 70px;
+        max-height: 90px;
         object-fit: contain;
         margin: 0 !important;
         display: block;
@@ -156,8 +157,8 @@
 
 @media (max-width: 480px) {
     .logo img {
-        height: 65px !important;
-        max-width: 180px !important;
+        height: 65px;
+        max-height: 85px;
     }
 
     .auth-buttons {
@@ -206,8 +207,8 @@
 
 @media (max-width: 360px) {
     .logo img {
-        height: 60px !important;
-        max-width: 160px !important;
+        height: 60px;
+        max-height: 80px;
     }
 
     .auth-buttons .btn {
