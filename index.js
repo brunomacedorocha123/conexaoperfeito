@@ -4,7 +4,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const nav = document.querySelector('nav');
     
     if (menuToggle) {
-        menuToggle.addEventListener('click', function() {
+        menuToggle.addEventListener('click', function(e) {
+            e.stopPropagation(); // Impede que o clique se propague
             this.classList.toggle('active');
             nav.classList.toggle('active');
         });
@@ -20,6 +21,24 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // Fechar menu ao clicar fora
+    document.addEventListener('click', function(e) {
+        if (nav && nav.classList.contains('active') && 
+            !e.target.closest('nav') && 
+            !e.target.closest('.menu-toggle')) {
+            menuToggle.classList.remove('active');
+            nav.classList.remove('active');
+        }
+    });
+
+    // Fechar menu ao rolar
+    window.addEventListener('scroll', function() {
+        if (nav && nav.classList.contains('active')) {
+            menuToggle.classList.remove('active');
+            nav.classList.remove('active');
+        }
+    });
+
     // Smooth scrolling para links internos
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
@@ -29,20 +48,18 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const targetElement = document.querySelector(targetId);
             if(targetElement) {
+                // Fecha o menu se estiver aberto
+                if (nav && nav.classList.contains('active')) {
+                    menuToggle.classList.remove('active');
+                    nav.classList.remove('active');
+                }
+                
                 window.scrollTo({
                     top: targetElement.offsetTop - 80,
                     behavior: 'smooth'
                 });
             }
         });
-    });
-
-    // Fechar menu ao rolar a página
-    window.addEventListener('scroll', function() {
-        if (nav && nav.classList.contains('active')) {
-            menuToggle.classList.remove('active');
-            nav.classList.remove('active');
-        }
     });
 
     // Animação de entrada dos elementos
@@ -66,15 +83,5 @@ document.addEventListener('DOMContentLoaded', function() {
         el.style.transform = 'translateY(30px)';
         el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
         observer.observe(el);
-    });
-
-    // Fechar menu ao clicar fora
-    document.addEventListener('click', function(e) {
-        if (nav && nav.classList.contains('active') && 
-            !e.target.closest('nav') && 
-            !e.target.closest('.menu-toggle')) {
-            menuToggle.classList.remove('active');
-            nav.classList.remove('active');
-        }
     });
 });
