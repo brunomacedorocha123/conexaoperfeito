@@ -14,20 +14,25 @@
     }
 
     :root {
-        --bege: #f6ecc5;
-        --vermelho-rosado: #d1656d;
-        --lilas: #dfc9ed;
-        --branco: #ffffff;
-        --text: #444;
-        --text-light: #666;
-        --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        --gold: #C6A664;
+        --light-gold: #D4B978;
+        --burgundy: #A65B5B;
+        --dark-bg: #1E1E1E;
+        --card-bg: #2A2A2A;
+        --section-bg: #F8F5F0;
+        --white: #FFFFFF;
+        --beige: #E8DCC3;
+        --light-beige: #F0E9D8;
+        --text: #2A2A2A;
+        --text-light: #666666;
+        --shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
         --transition: all 0.3s ease;
         --success: #22c55e;
         --error: #ef4444;
     }
 
     body {
-        background-color: var(--bege);
+        background-color: var(--section-bg);
         color: var(--text);
         line-height: 1.6;
         min-height: 100vh;
@@ -42,15 +47,16 @@
         padding: 0 20px;
     }
 
-    /* Header - COM SUA LOGO */
+    /* Header - ELEGANTE */
     header {
-        background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
-        color: var(--branco);
+        background: var(--card-bg);
+        color: var(--white);
         padding: 0.5rem 0;
         box-shadow: var(--shadow);
         position: sticky;
         top: 0;
         z-index: 100;
+        border-bottom: 2px solid var(--gold);
     }
 
     .header-content {
@@ -68,19 +74,19 @@
     }
 
     .logo img {
-    height: 160px; /* AUMENTADO */
-    width: auto;
-    object-fit: contain;
-    position: relative;
-    top: -25px; /* COMPENSA para cima */
-    margin-bottom: -50px; /* COMPENSA para baixo */
-    z-index: 101;
-}
+        height: 160px;
+        width: auto;
+        object-fit: contain;
+        position: relative;
+        top: -25px;
+        margin-bottom: -50px;
+        z-index: 101;
+    }
 
     .logo h1 {
         font-size: 1.6rem;
         font-weight: 700;
-        color: var(--branco);
+        color: var(--gold);
         white-space: nowrap;
     }
 
@@ -105,37 +111,39 @@
 
     .btn-outline {
         background: transparent;
-        border: 2px solid var(--branco);
-        color: var(--branco);
+        border: 2px solid var(--gold);
+        color: var(--gold);
     }
 
     .btn-primary {
-        background: var(--branco);
-        color: var(--vermelho-rosado);
+        background: var(--burgundy);
+        color: var(--white);
+        border: 2px solid var(--burgundy);
     }
 
     .btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 5px 15px rgba(198, 166, 100, 0.3);
     }
 
-    /* Main Content - COM SUA LOGO NO CARD */
+    /* Main Content - CARD ELEGANTE */
     .main-content {
         flex: 1;
         padding: 2rem 0;
         display: flex;
         align-items: center;
         justify-content: center;
+        background: linear-gradient(135deg, var(--section-bg) 0%, var(--light-beige) 100%);
     }
 
     .auth-container {
         width: 90%;
         max-width: 500px;
-        background: var(--branco);
+        background: var(--white);
         border-radius: 20px;
         box-shadow: var(--shadow);
         padding: 3rem;
-        border: 1px solid var(--lilas);
+        border: 2px solid var(--gold);
         margin: 0 auto;
     }
 
@@ -144,21 +152,21 @@
         margin-bottom: 2rem;
     }
 
-    /* SUA LOGO NO LUGAR DO EMOJI - CORRIGIDO */
-   .auth-logo {
-    width: 250px; /* AUMENTADO */
-    height: 250px; /* AUMENTADO */
-    margin: -25px auto 1rem auto; /* COMPENSAÇÃO: -25px top, 1rem bottom */
-    object-fit: contain;
-    display: block;
-    position: relative;
-    z-index: 1;
-}
+    .auth-logo {
+        width: 250px;
+        height: 250px;
+        margin: -25px auto 1rem auto;
+        object-fit: contain;
+        display: block;
+        position: relative;
+        z-index: 1;
+    }
 
     .auth-header h1 {
         font-size: 2.2rem;
-        color: var(--vermelho-rosado);
+        color: var(--burgundy);
         margin-bottom: 0.5rem;
+        font-weight: 700;
     }
 
     .auth-header p {
@@ -175,23 +183,24 @@
         display: block;
         margin-bottom: 0.5rem;
         color: var(--text);
-        font-weight: 500;
+        font-weight: 600;
     }
 
     .form-control {
         width: 100%;
         padding: 0.75rem 1rem;
-        border: 2px solid var(--lilas);
+        border: 2px solid var(--beige);
         border-radius: 10px;
         font-size: 1rem;
         transition: var(--transition);
-        background: var(--branco);
+        background: var(--white);
+        color: var(--text);
     }
 
     .form-control:focus {
         outline: none;
-        border-color: var(--vermelho-rosado);
-        box-shadow: 0 0 0 3px rgba(209, 101, 109, 0.1);
+        border-color: var(--gold);
+        box-shadow: 0 0 0 3px rgba(198, 166, 100, 0.1);
     }
 
     .form-row {
@@ -205,22 +214,32 @@
         padding: 1rem;
         font-size: 1.1rem;
         margin-top: 1rem;
+        background: var(--burgundy);
+        color: var(--white);
+        border: 2px solid var(--burgundy);
+    }
+
+    .btn-block:hover {
+        background: var(--gold);
+        border-color: var(--gold);
+        transform: translateY(-2px);
     }
 
     .auth-footer {
         text-align: center;
         margin-top: 2rem;
         padding-top: 2rem;
-        border-top: 1px solid var(--lilas);
+        border-top: 1px solid var(--beige);
     }
 
     .auth-footer a {
-        color: var(--vermelho-rosado);
+        color: var(--burgundy);
         text-decoration: none;
-        font-weight: 500;
+        font-weight: 600;
     }
 
     .auth-footer a:hover {
+        color: var(--gold);
         text-decoration: underline;
     }
 
@@ -244,39 +263,20 @@
         color: var(--success);
     }
 
-    /* Loading */
-    .loading {
-        display: none;
-        text-align: center;
-        padding: 1rem;
-        color: var(--vermelho-rosado);
-    }
-
-    /* Error Messages */
-    .error-message {
-        color: var(--error);
-        font-size: 0.8rem;
-        margin-top: 0.25rem;
-        display: none;
-    }
-
-    .form-control.error {
-        border-color: var(--error);
-    }
-
-    /* Password Requirements - MELHORADO */
+    /* Password Requirements */
     .password-requirements {
-        background: var(--bege);
+        background: var(--light-beige);
         padding: 1rem;
         border-radius: 10px;
         margin-top: 0.5rem;
-        border: 1px solid var(--lilas);
+        border: 1px solid var(--gold);
     }
 
     .password-requirements h4 {
-        color: var(--vermelho-rosado);
+        color: var(--burgundy);
         margin-bottom: 0.5rem;
         font-size: 0.9rem;
+        font-weight: 600;
     }
 
     .requirements-list {
@@ -309,67 +309,12 @@
         content: "❌ ";
     }
 
-    /* Password Strength Meter */
-    .password-strength {
-        margin-top: 0.5rem;
-        height: 4px;
-        border-radius: 2px;
-        background: #e5e7eb;
-        overflow: hidden;
-    }
-
-    .strength-bar {
-        height: 100%;
-        width: 0%;
-        transition: var(--transition);
-        border-radius: 2px;
-    }
-
-    .strength-weak { background: var(--error); width: 25%; }
-    .strength-fair { background: #f59e0b; width: 50%; }
-    .strength-good { background: #eab308; width: 75%; }
-    .strength-strong { background: var(--success); width: 100%; }
-
-    .strength-text {
-        font-size: 0.75rem;
-        margin-top: 0.25rem;
-        text-align: right;
-        font-weight: 500;
-    }
-
-    /* Terms Checkbox */
-    .terms-group {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.75rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .terms-group input[type="checkbox"] {
-        margin-top: 0.25rem;
-        accent-color: var(--vermelho-rosado);
-    }
-
-    .terms-group label {
-        font-size: 0.9rem;
-        line-height: 1.4;
-    }
-
-    .terms-group a {
-        color: var(--vermelho-rosado);
-        text-decoration: none;
-    }
-
-    .terms-group a:hover {
-        text-decoration: underline;
-    }
-
     /* Footer */
     footer {
-        background-color: var(--bege);
-        color: var(--text);
+        background-color: var(--card-bg);
+        color: var(--white);
         padding: 2rem 0 1rem;
-        border-top: 1px solid var(--lilas);
+        border-top: 2px solid var(--gold);
     }
 
     .footer-content {
@@ -382,7 +327,7 @@
     .footer-column h3 {
         margin-bottom: 1rem;
         font-size: 1.1rem;
-        color: var(--vermelho-rosado);
+        color: var(--gold);
     }
 
     .footer-column ul {
@@ -394,22 +339,22 @@
     }
 
     .footer-column a {
-        color: var(--text);
+        color: var(--beige);
         text-decoration: none;
         transition: var(--transition);
         font-size: 0.9rem;
     }
 
     .footer-column a:hover {
-        color: var(--vermelho-rosado);
+        color: var(--gold);
     }
 
     .copyright {
         text-align: center;
         padding-top: 1rem;
-        border-top: 1px solid var(--lilas);
+        border-top: 1px solid var(--gold);
         font-size: 0.8rem;
-        color: var(--text-light);
+        color: var(--beige);
     }
 
     /* Responsividade */
@@ -425,12 +370,12 @@
             display: none;
         }
 
-       .logo img {
-    height: 160px; /* AUMENTADO no mobile */
-    position: relative;
-    top: -15px; /* COMPENSA para cima */
-    margin-bottom: -30px; /* COMPENSA para baixo */
-}
+        .logo img {
+            height: 160px;
+            position: relative;
+            top: -15px;
+            margin-bottom: -30px;
+        }
 
         .auth-buttons {
             gap: 0.8rem;
@@ -449,10 +394,10 @@
         }
 
         .auth-logo {
-    width: 130px; /* AUMENTADO */
-    height: 130px; /* AUMENTADO */
-    margin: -20px auto 0.8rem auto; /* COMPENSAÇÃO ajustada */
-}
+            width: 130px;
+            height: 130px;
+            margin: -20px auto 0.8rem auto;
+        }
 
         .auth-header h1 {
             font-size: 2rem;
@@ -466,73 +411,6 @@
             padding: 1.5rem 0;
         }
     }
-
-    @media (max-width: 480px) {
-        .header-content {
-            height: 65px;
-        }
-
-        .logo img {
-            height: 100px;
-            margin-top: 5px;
-            margin-bottom: 5px;
-        }
-
-        .auth-container {
-            padding: 2rem;
-            margin: 1rem auto;
-            width: 95%;
-        }
-
-        .auth-logo {
-            width: 80px;
-            height: 80px;
-        }
-
-        .auth-header h1 {
-            font-size: 1.8rem;
-        }
-
-        .auth-header p {
-            font-size: 0.95rem;
-        }
-
-        .btn {
-            padding: 0.6rem 1rem;
-        }
-    }
-
-    @media (max-width: 360px) {
-        .header-content {
-            height: 60px;
-        }
-
-        .logo img {
-            height: 90px;
-            margin-top: 3px;
-            margin-bottom: 3px;
-        }
-
-        .auth-buttons {
-            gap: 0.5rem;
-        }
-
-        .btn {
-            padding: 0.5rem 0.8rem;
-            font-size: 0.8rem;
-        }
-
-        .auth-container {
-            padding: 1.5rem;
-            margin: 0.5rem auto;
-            width: 98%;
-        }
-
-        .auth-logo {
-            width: 70px;
-            height: 70px;
-        }
-    }
 </style>
 </head>
 <body>
@@ -541,8 +419,7 @@
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <img src="logoamorconect.png" alt="Amor Conect">
-                    <h1>Amor Conect</h1>
+                    <img src="logopulselove.png" alt="Amor Conect">
                 </div>
                 <div class="auth-buttons">
                     <a href="login.html" class="btn btn-outline">Entrar</a>
@@ -557,7 +434,7 @@
         <div class="container">
             <div class="auth-container">
                 <div class="auth-header">
-                    <img src="logoamorconect.png" alt="Amor Conect" class="auth-logo">
+                    <img src="logopulselove.png" alt="Amor Conect" class="auth-logo">
                     <h1>Criar Conta</h1>
                     <p>Junte-se ao Amor Conect e encontre sua conexão perfeita</p>
                 </div>
