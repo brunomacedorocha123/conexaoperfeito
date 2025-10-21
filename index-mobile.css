@@ -3,8 +3,8 @@
     .header-content {
         flex-wrap: wrap;
         height: auto;
-        padding: 15px 0;
-        gap: 15px;
+        padding: 12px 0;
+        gap: 12px;
         align-items: center;
     }
 
@@ -13,11 +13,11 @@
         flex: 0 0 auto;
     }
 
-    /* LOGO GRANDE NO MOBILE TAMBÉM */
+    /* LOGO MAIOR E BEM POSICIONADA */
     .logo img {
         width: auto;
-        height: 70px;
-        max-height: 90px;
+        height: 100px;
+        max-height: 110px;
         object-fit: contain;
         margin: 0 !important;
         display: block;
@@ -27,6 +27,19 @@
         display: flex;
         order: 2;
         margin-left: auto;
+        background: var(--card-bg);
+        border: 2px solid var(--gold);
+        border-radius: 8px;
+        padding: 10px;
+        gap: 4px;
+    }
+
+    .menu-toggle span {
+        width: 22px;
+        height: 2px;
+        background: var(--gold);
+        transition: var(--transition);
+        border-radius: 2px;
     }
 
     .auth-buttons {
@@ -34,153 +47,135 @@
         gap: 0.8rem;
         width: 100%;
         justify-content: center;
-        margin-top: 10px;
+        margin-top: 8px;
+        display: flex;
     }
 
+    /* BOTÕES REFEITOS - PROPORCIONAIS */
     .auth-buttons .btn {
-        padding: 0.8rem 1.5rem;
-        font-size: 1rem;
+        padding: 0.7rem 1.2rem;
+        font-size: 0.9rem;
         white-space: nowrap;
         flex: 1;
         max-width: 140px;
+        min-width: 120px;
+        font-weight: 600;
     }
 
+    /* BOTÃO ENTRAR - CONTORNO DOURADO */
+    .btn-outline {
+        background: transparent;
+        border: 2px solid var(--gold);
+        color: var(--gold);
+    }
+
+    .btn-outline:hover {
+        background: var(--gold);
+        color: var(--dark-bg);
+    }
+
+    /* BOTÃO CADASTRAR - FUNDO DOURADO, TEXTO PRETO */
+    .btn-primary {
+        background: var(--gold);
+        color: var(--dark-bg);
+        border: 2px solid var(--gold);
+        font-weight: 700;
+    }
+
+    .btn-primary:hover {
+        background: var(--light-gold);
+        border-color: var(--light-gold);
+        transform: translateY(-2px);
+    }
+
+    /* MENU HAMBURGUER - TOTALMENTE REFEITO */
     nav {
         display: none;
         width: 100%;
         order: 4;
-        margin-top: 1rem;
+        margin-top: 10px;
+        background: var(--card-bg);
+        border-radius: 12px;
+        border: 2px solid var(--gold);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
     }
 
     nav.active {
         display: block;
+        animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     nav ul {
         flex-direction: column;
         gap: 0;
         width: 100%;
-        background: rgba(36, 36, 36, 0.98);
-        backdrop-filter: blur(20px);
-        border-radius: 15px;
-        padding: 1.5rem 0;
-        border: 2px solid var(--gold);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        padding: 0;
+        margin: 0;
     }
 
     nav ul li {
         width: 100%;
         text-align: center;
+        border-bottom: 1px solid rgba(198, 166, 100, 0.2);
+    }
+
+    nav ul li:last-child {
+        border-bottom: none;
     }
 
     nav a {
         display: block;
-        padding: 1.2rem;
-        border-radius: 0;
-        margin: 0.3rem 1rem;
-        font-size: 1.1rem;
-        border-bottom: 1px solid rgba(198, 166, 100, 0.2);
+        padding: 1rem 1.5rem;
+        color: var(--white);
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 1rem;
+        transition: var(--transition);
+        background: transparent;
     }
 
-    nav a:last-child {
-        border-bottom: none;
+    nav a:hover {
+        background: rgba(198, 166, 100, 0.1);
+        color: var(--gold);
     }
 
+    /* CONTEÚDO PRINCIPAL - AJUSTES */
     .hero {
-        min-height: 70vh;
-        padding: 3rem 0;
+        min-height: 60vh;
+        padding: 2rem 0;
     }
 
     .hero-content {
-        padding: 2.5rem 2rem;
-        margin: 1rem;
-    }
-
-    .hero h2 {
-        font-size: 2.3rem;
-    }
-
-    .hero p {
-        font-size: 1.1rem;
-    }
-
-    .steps {
-        grid-template-columns: 1fr;
-        gap: 2rem;
-    }
-
-    .features-grid,
-    .testimonial-grid {
-        grid-template-columns: 1fr;
-        gap: 2rem;
-    }
-
-    .hero,
-    .features,
-    .how-it-works,
-    .testimonials,
-    .cta {
-        padding: 4rem 0;
-    }
-
-    .section-title h2 {
-        font-size: 2.2rem;
-    }
-
-    .section-title p {
-        font-size: 1.05rem;
-        padding: 0 1rem;
-    }
-
-    .feature-card,
-    .step,
-    .testimonial-card {
-        margin: 0 0.5rem;
         padding: 2rem 1.5rem;
-    }
-
-    .btn-large {
-        padding: 1.1rem 2.5rem;
-        font-size: 1.1rem;
-    }
-
-    .feature-icon {
-        font-size: 3rem;
-    }
-
-    .step-number {
-        width: 60px;
-        height: 60px;
-        font-size: 1.6rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .logo img {
-        height: 65px;
-        max-height: 85px;
-    }
-
-    .auth-buttons {
-        gap: 0.6rem;
-    }
-
-    .auth-buttons .btn {
-        padding: 0.7rem 1.2rem;
-        font-size: 0.9rem;
-        max-width: 130px;
+        margin: 0.5rem;
+        background: rgba(36, 36, 36, 0.85);
     }
 
     .hero h2 {
         font-size: 2rem;
+        line-height: 1.2;
     }
 
     .hero p {
         font-size: 1rem;
+        line-height: 1.5;
     }
 
-    .section-title h2 {
-        font-size: 1.9rem;
+    .steps {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
     }
 
     .features-grid,
@@ -189,14 +184,94 @@
         gap: 1.5rem;
     }
 
+    .hero,
+    .features,
+    .how-it-works,
+    .testimonials,
+    .cta {
+        padding: 3rem 0;
+    }
+
+    .section-title h2 {
+        font-size: 1.8rem;
+    }
+
+    .section-title p {
+        font-size: 1rem;
+        padding: 0 0.5rem;
+    }
+
+    .feature-card,
+    .step,
+    .testimonial-card {
+        margin: 0 0.5rem;
+        padding: 1.5rem 1rem;
+    }
+
+    .btn-large {
+        padding: 1rem 2rem;
+        font-size: 1rem;
+    }
+
+    .feature-icon {
+        font-size: 2.5rem;
+    }
+
+    .step-number {
+        width: 50px;
+        height: 50px;
+        font-size: 1.4rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-content {
+        padding: 10px 0;
+        gap: 8px;
+    }
+
+    .logo img {
+        height: 90px;
+        max-height: 100px;
+    }
+
+    .auth-buttons {
+        gap: 0.6rem;
+        margin-top: 6px;
+    }
+
+    .auth-buttons .btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+        max-width: 130px;
+        min-width: 110px;
+    }
+
+    .hero h2 {
+        font-size: 1.8rem;
+    }
+
+    .hero p {
+        font-size: 0.95rem;
+    }
+
+    .section-title h2 {
+        font-size: 1.6rem;
+    }
+
+    .features-grid,
+    .testimonial-grid {
+        gap: 1rem;
+    }
+
     .feature-card,
     .testimonial-card {
-        padding: 1.8rem 1.2rem;
+        padding: 1.2rem 0.8rem;
     }
 
     .footer-content {
         grid-template-columns: 1fr;
-        gap: 2rem;
+        gap: 1.5rem;
         text-align: center;
     }
 
@@ -206,39 +281,45 @@
 }
 
 @media (max-width: 360px) {
+    .header-content {
+        padding: 8px 0;
+        gap: 6px;
+    }
+
     .logo img {
-        height: 60px;
-        max-height: 80px;
+        height: 80px;
+        max-height: 90px;
     }
 
     .auth-buttons .btn {
-        padding: 0.6rem 1rem;
-        font-size: 0.85rem;
-        max-width: 120px;
+        padding: 0.5rem 0.8rem;
+        font-size: 0.8rem;
+        max-width: 110px;
+        min-width: 100px;
     }
 
     .hero h2 {
-        font-size: 1.8rem;
+        font-size: 1.6rem;
     }
 
     .section-title h2 {
-        font-size: 1.7rem;
+        font-size: 1.5rem;
     }
 
     .hero-content {
-        padding: 2rem 1.5rem;
+        padding: 1.5rem 1rem;
     }
 
     .feature-card,
     .step,
     .testimonial-card {
-        padding: 1.5rem 1rem;
+        padding: 1rem 0.5rem;
     }
 }
 
-/* Menu Toggle Animations */
+/* ANIMAÇÕES DO MENU HAMBURGUER */
 .menu-toggle.active span:nth-child(1) {
-    transform: rotate(45deg) translate(7px, 7px);
+    transform: rotate(45deg) translate(6px, 6px);
 }
 
 .menu-toggle.active span:nth-child(2) {
@@ -246,14 +327,18 @@
 }
 
 .menu-toggle.active span:nth-child(3) {
-    transform: rotate(-45deg) translate(7px, -7px);
+    transform: rotate(-45deg) translate(6px, -6px);
 }
 
-/* Smooth transitions for mobile menu */
+/* TRANSITIONS SUAVES */
 nav {
     transition: all 0.3s ease-in-out;
 }
 
 nav ul {
     transition: all 0.3s ease-in-out;
+}
+
+.btn {
+    transition: all 0.3s ease;
 }

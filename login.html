@@ -14,20 +14,25 @@
     }
 
     :root {
-        --bege: #f6ecc5;
-        --vermelho-rosado: #d1656d;
-        --lilas: #dfc9ed;
-        --branco: #ffffff;
-        --text: #444;
-        --text-light: #666;
-        --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        --gold: #C6A664;
+        --light-gold: #D4B978;
+        --burgundy: #A65B5B;
+        --dark-bg: #1E1E1E;
+        --card-bg: #2A2A2A;
+        --section-bg: #F8F5F0;
+        --white: #FFFFFF;
+        --beige: #E8DCC3;
+        --light-beige: #F0E9D8;
+        --text: #2A2A2A;
+        --text-light: #666666;
+        --shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
         --transition: all 0.3s ease;
-        --error: #e53e3e;
-        --success: #38a169;
+        --success: #22c55e;
+        --error: #ef4444;
     }
 
     body {
-        background-color: var(--bege);
+        background-color: var(--section-bg);
         color: var(--text);
         line-height: 1.6;
         min-height: 100vh;
@@ -42,15 +47,16 @@
         padding: 0 20px;
     }
 
-    /* Header - CORRIGIDO igual cadastro */
+    /* Header - IGUAL AO CADASTRO */
     header {
-        background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
-        color: var(--branco);
+        background: var(--card-bg);
+        color: var(--white);
         padding: 0.5rem 0;
         box-shadow: var(--shadow);
         position: sticky;
         top: 0;
         z-index: 100;
+        border-bottom: 2px solid var(--gold);
     }
 
     .header-content {
@@ -75,13 +81,6 @@
         margin-bottom: 10px;
     }
 
-    .logo h1 {
-        font-size: 1.6rem;
-        font-weight: 700;
-        color: var(--branco);
-        white-space: nowrap;
-    }
-
     .auth-buttons {
         display: flex;
         gap: 1rem;
@@ -103,58 +102,69 @@
 
     .btn-outline {
         background: transparent;
-        border: 2px solid var(--branco);
-        color: var(--branco);
+        border: 2px solid var(--gold);
+        color: var(--gold);
     }
 
     .btn-primary {
-        background: var(--branco);
-        color: var(--vermelho-rosado);
+        background: var(--burgundy);
+        color: var(--white);
+        border: 2px solid var(--burgundy);
     }
 
     .btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 5px 15px rgba(198, 166, 100, 0.3);
     }
 
-    /* Main Content - CORRIGIDO */
+    /* Main Content - IGUAL AO CADASTRO */
     .main-content {
         flex: 1;
         padding: 2rem 0;
         display: flex;
         align-items: center;
         justify-content: center;
+        background: linear-gradient(135deg, var(--section-bg) 0%, var(--light-beige) 100%);
     }
 
     .auth-container {
         width: 90%;
         max-width: 450px;
-        background: var(--branco);
+        background: var(--white);
         border-radius: 20px;
         box-shadow: var(--shadow);
-        overflow: hidden;
-        border: 1px solid var(--lilas);
+        padding: 3rem;
+        border: 2px solid var(--gold);
         margin: 0 auto;
     }
 
     .auth-header {
-        background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
-        color: var(--branco);
-        padding: 2rem;
         text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .auth-logo {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 1rem auto;
+        object-fit: contain;
+        display: block;
     }
 
     .auth-header h2 {
         font-size: 2rem;
+        color: var(--burgundy);
         margin-bottom: 0.5rem;
+        font-weight: 700;
     }
 
     .auth-header p {
-        opacity: 0.9;
+        color: var(--text-light);
+        font-size: 1rem;
     }
 
     .auth-body {
-        padding: 2rem;
+        padding: 0;
     }
 
     .form-group {
@@ -164,24 +174,25 @@
     .form-group label {
         display: block;
         margin-bottom: 0.5rem;
-        font-weight: 500;
+        font-weight: 600;
         color: var(--text);
     }
 
     .form-control {
         width: 100%;
         padding: 0.75rem 1rem;
-        border: 2px solid var(--lilas);
+        border: 2px solid var(--beige);
         border-radius: 10px;
         font-size: 1rem;
         transition: var(--transition);
-        background: var(--branco);
+        background: var(--white);
+        color: var(--text);
     }
 
     .form-control:focus {
         outline: none;
-        border-color: var(--vermelho-rosado);
-        box-shadow: 0 0 0 3px rgba(209, 101, 109, 0.1);
+        border-color: var(--gold);
+        box-shadow: 0 0 0 3px rgba(198, 166, 100, 0.1);
     }
 
     .form-control.error {
@@ -231,12 +242,14 @@
     }
 
     .forgot-password {
-        color: var(--vermelho-rosado);
+        color: var(--burgundy);
         text-decoration: none;
         font-size: 0.9rem;
+        font-weight: 500;
     }
 
     .forgot-password:hover {
+        color: var(--gold);
         text-decoration: underline;
     }
 
@@ -244,80 +257,41 @@
         width: 100%;
         padding: 1rem;
         font-size: 1.1rem;
+        background: var(--burgundy);
+        color: var(--white);
+        border: 2px solid var(--burgundy);
+    }
+
+    .btn-block:hover {
+        background: var(--gold);
+        border-color: var(--gold);
+        transform: translateY(-2px);
     }
 
     .auth-footer {
         text-align: center;
-        margin-top: 1.5rem;
-        padding-top: 1.5rem;
-        border-top: 1px solid var(--lilas);
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--beige);
     }
 
     .auth-footer a {
-        color: var(--vermelho-rosado);
+        color: var(--burgundy);
         text-decoration: none;
-        font-weight: 500;
+        font-weight: 600;
     }
 
     .auth-footer a:hover {
+        color: var(--gold);
         text-decoration: underline;
     }
 
-    /* Loading State */
-    .loading {
-        display: none;
-        text-align: center;
-        margin-top: 1rem;
-    }
-
-    .spinner {
-        width: 30px;
-        height: 30px;
-        border: 3px solid var(--bege);
-        border-top: 3px solid var(--vermelho-rosado);
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin: 0 auto;
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-
-    /* Alert Messages */
-    .alert {
-        padding: 1rem;
-        border-radius: 10px;
-        margin-bottom: 1.5rem;
-        display: none;
-        border: 1px solid;
-    }
-
-    .alert-error {
-        background-color: #fed7d7;
-        border-color: #feb2b2;
-        color: #c53030;
-    }
-
-    .alert-success {
-        background-color: #f0fff4;
-        border-color: #9ae6b4;
-        color: #276749;
-    }
-
-    .alert-info {
-        background-color: #bee3f8;
-        border-color: #90cdf4;
-        color: #2c5aa0;
-    }
-
-    /* Footer */
+    /* Footer - IGUAL AO CADASTRO */
     footer {
-        background-color: var(--bege);
-        color: var(--text);
+        background-color: var(--card-bg);
+        color: var(--white);
         padding: 2rem 0 1rem;
-        border-top: 1px solid var(--lilas);
+        border-top: 2px solid var(--gold);
     }
 
     .footer-content {
@@ -330,7 +304,7 @@
     .footer-column h3 {
         margin-bottom: 1rem;
         font-size: 1.1rem;
-        color: var(--vermelho-rosado);
+        color: var(--gold);
     }
 
     .footer-column ul {
@@ -342,35 +316,31 @@
     }
 
     .footer-column a {
-        color: var(--text);
+        color: var(--beige);
         text-decoration: none;
         transition: var(--transition);
         font-size: 0.9rem;
     }
 
     .footer-column a:hover {
-        color: var(--vermelho-rosado);
+        color: var(--gold);
     }
 
     .copyright {
         text-align: center;
         padding-top: 1rem;
-        border-top: 1px solid var(--lilas);
+        border-top: 1px solid var(--gold);
         font-size: 0.8rem;
-        color: var(--text-light);
+        color: var(--beige);
     }
 
-    /* Responsividade - CORRIGIDO igual cadastro */
+    /* Responsividade - IGUAL AO CADASTRO */
     @media (max-width: 768px) {
         .header-content {
             flex-direction: row;
             justify-content: space-between;
             height: 70px;
             padding: 0;
-        }
-
-        .logo h1 {
-            display: none;
         }
 
         .logo img {
@@ -391,14 +361,16 @@
         .auth-container {
             margin: 1rem auto;
             width: 95%;
+            padding: 2.5rem;
         }
 
-        .auth-header {
-            padding: 1.5rem;
+        .auth-logo {
+            width: 100px;
+            height: 100px;
         }
 
-        .auth-body {
-            padding: 1.5rem;
+        .auth-header h2 {
+            font-size: 1.8rem;
         }
 
         .remember-forgot {
@@ -422,18 +394,16 @@
         .auth-container {
             margin: 1rem auto;
             width: 95%;
+            padding: 2rem;
+        }
+
+        .auth-logo {
+            width: 80px;
+            height: 80px;
         }
 
         .auth-header h2 {
-            font-size: 1.8rem;
-        }
-
-        .auth-body {
-            padding: 1.5rem;
-        }
-
-        .btn {
-            padding: 0.6rem 1rem;
+            font-size: 1.6rem;
         }
     }
 
@@ -458,30 +428,15 @@
         }
 
         .auth-container {
-            padding: 1rem;
+            padding: 1.5rem;
             margin: 0.5rem auto;
             width: 98%;
         }
 
-        .auth-header {
-            padding: 1.2rem;
+        .auth-logo {
+            width: 70px;
+            height: 70px;
         }
-
-        .auth-body {
-            padding: 1.2rem;
-        }
-    }
-
-    /* Garantir centralização perfeita */
-    .main-content .container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .auth-container {
-        margin-left: auto;
-        margin-right: auto;
     }
 </style>
 </head>
@@ -491,8 +446,7 @@
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <img src="logoamorconect.png" alt="Amor Conect">
-                    <h1>Amor Conect</h1>
+                    <img src="logopulselove.png" alt="Amor Conect">
                 </div>
                 <div class="auth-buttons">
                     <a href="login.html" class="btn btn-outline">Entrar</a>
