@@ -49,7 +49,7 @@ header {
 .header-content {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;      /* 👈 VOLTEI para center */
     height: 80px;
     overflow: visible;
     position: relative;
@@ -63,7 +63,7 @@ header {
     height: 160px;
 }
 
-/* LOGO EXPANSÍVEL - CRESCE LIVREMENTE */
+/* LOGO EXPANSÍVEL */
 .logo img {
     width: auto;
     height: 250px;
@@ -72,26 +72,21 @@ header {
     transition: var(--transition);
 }
 
-.logo img:hover {
-    transform: scale(1.05);
-}
-
-/* CENTRALIZAR BOTÕES VERTICALMENTE */
-.auth-buttons {
+/* CENTRALIZAR APENAS O MENU NO MEIO */
+nav {
     display: flex;
-    gap: 1rem;
-    align-items: center;
-    height: 80px;             /* 👈 ADICIONEI - mesma altura do header */
-    margin-top: 0;            /* 👈 GARANTIR */
+    align-items: center;      /* 👈 CENTRALIZA VERTICALMENTE */
+    height: 80px;             /* 👈 MESMA ALTURA DO HEADER */
 }
 
-/* CENTRALIZAR MENU VERTICALMENTE */
 nav ul {
     display: flex;
     list-style: none;
     gap: 2rem;
-    align-items: center;      /* 👈 JÁ TEM - garante centralização */
-    height: 80px;             /* 👈 ADICIONEI - mesma altura do header */
+    align-items: center;      /* 👈 CENTRALIZA OS ITENS */
+    margin: 0;
+    padding: 0;
+    height: 100%;             /* 👈 OCUPA ALTURA TOTAL */
 }
 
 nav a {
@@ -103,8 +98,8 @@ nav a {
     border-radius: 30px;
     font-size: 1rem;
     display: flex;
-    align-items: center;      /* 👈 ADICIONEI - centraliza texto */
-    height: 40px;             /* 👈 ADICIONEI - altura consistente */
+    align-items: center;      /* 👈 CENTRALIZA O TEXTO */
+    height: 100%;             /* 👈 OCUPA ALTURA TOTAL DO LI */
 }
 
 nav a:hover {
