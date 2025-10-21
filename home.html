@@ -2584,21 +2584,68 @@ async function criarSistemaVisitantesFallback() {
     }
 }
 
-// Configurar event listeners
+// ✅✅✅ CORREÇÃO COMPLETA: Configurar event listeners
 function setupEventListeners() {
+    console.log('🎯 Configurando event listeners...');
+    
+    // ✅ CORREÇÃO: Configurar ambos os botões de logout
     const logoutBtn = document.getElementById('logoutBtn');
+    const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+    
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', logout);
+        logoutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🖱️ Botão logout desktop clicado');
+            logout();
+        });
     }
+    
+    if (mobileLogoutBtn) {
+        mobileLogoutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('📱 Botão logout mobile clicado');
+            logout();
+        });
+    }
+    
+    console.log('✅ Event listeners configurados');
 }
 
-// Logout
+// ✅✅✅ CORREÇÃO COMPLETA: Função de logout
 async function logout() {
     try {
-        await supabase.auth.signOut();
+        console.log('🚪 Iniciando logout...');
+        
+        // Parar todos os intervalos e listeners ativos
+        if (window.onlineStatusInterval) {
+            clearInterval(window.onlineStatusInterval);
+        }
+        
+        // Fazer logout no Supabase
+        const { error } = await supabase.auth.signOut();
+        
+        if (error) {
+            console.error('❌ Erro ao fazer logout:', error);
+            showQuickToast('Erro ao sair. Tente novamente.');
+            return;
+        }
+        
+        console.log('✅ Logout realizado com sucesso');
+        
+        // Limpar dados locais
+        localStorage.removeItem('supabase.auth.token');
+        localStorage.removeItem('viewingProfileId');
+        localStorage.removeItem('openChatWithUserId');
+        
+        // Redirecionar para a página inicial
         window.location.href = 'index.html';
+        
     } catch (error) {
-        console.error('Erro ao fazer logout:', error);
+        console.error('❌ Erro crítico no logout:', error);
+        // Forçar redirecionamento mesmo com erro
+        window.location.href = 'index.html';
     }
 }
 
