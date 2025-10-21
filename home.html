@@ -879,6 +879,211 @@ footer {
   font-size: 1.1rem;
   font-weight: bold;
 }
+</style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <button id="hamburgerBtn">☰</button>
+        <div class="logo">
+          <img src="logoamorconect.png" alt="Amor Conect">
+        </div>
+        
+        <!-- SINO DE NOTIFICAÇÕES CORRIGIDO -->
+        <div class="notification-bell-container">
+          <a href="notificacoes.html" class="notification-bell" id="notificationBell" title="Notificações">
+            🔔
+            <span class="notification-badge" id="notificationBadge">0</span>
+          </a>
+        </div>
+
+        <div class="user-menu">
+          <div class="user-info">
+            <div class="user-avatar" id="userAvatar">
+              <img class="user-avatar-img" src="" alt="Avatar" style="display: none;">
+              <div class="user-avatar-fallback">U</div>
+            </div>
+            <span id="userNickname">Usuário</span>
+          </div>
+          <!-- NOVO: Badge Free e Botão Premium -->
+          <div id="freeBadge" class="free-badge" style="display: none;">Free</div>
+          <a href="princing.html" id="premiumBtn" class="btn btn-premium" style="display: none;">Premium</a>
+          <a href="mensagens.html" class="btn btn-outline">Mensagens</a>
+          <a href="busca.html" class="btn btn-outline">Buscar</a>
+          <a href="painel.html" class="btn btn-outline">Perfil</a>
+          <!-- ✅ CORREÇÃO: BOTÃO LISTA VIP ADICIONADO -->
+          <a href="lista-vip.html" class="btn btn-outline">Lista VIP</a>
+          <!-- NOVO: Link para usuários bloqueados -->
+          <a href="blocks.html" class="btn btn-outline">🚫 Bloqueados</a>
+          <button class="btn btn-outline" id="logoutBtn">Sair</button>
+        </div>
+      </div>
+    </div>
+  </header>
+    <!-- Menu Mobile -->
+  <div id="mobileMenu">
+    <button id="closeMobileMenu">×</button>
+    
+    <div class="mobile-user-info">
+      <div class="user-avatar" id="mobileUserAvatar">
+        <img class="user-avatar-img" src="" alt="Avatar" style="display: none;">
+        <div class="user-avatar-fallback">U</div>
+      </div>
+      <div id="mobileUserNickname">Usuário</div>
+    </div>
+
+    <div class="mobile-nav">
+      <!-- SINO DE NOTIFICAÇÕES MOBILE -->
+      <a href="notificacoes.html" class="btn btn-outline notification-mobile-btn">
+        🔔 Notificações
+        <span class="notification-badge" id="mobileNotificationBadge">0</span>
+      </a>
+      
+      <!-- NOVO: Badge Free e Botão Premium Mobile -->
+      <div id="mobileFreeBadge" class="free-badge" style="display: none;">Free</div>
+      <a href="princing.html" id="mobilePremiumBtn" class="btn btn-premium" style="display: none;">Premium</a>
+      <a href="busca.html" class="btn btn-outline">Buscar</a>
+      <a href="painel.html" class="btn btn-outline">Perfil</a>
+      <a href="mensagens.html" class="btn btn-outline">Mensagens</a>
+      <!-- ✅ CORREÇÃO: BOTÃO LISTA VIP ADICIONADO NO MOBILE -->
+      <a href="lista-vip.html" class="btn btn-outline">Lista VIP</a>
+      <!-- NOVO: Link para usuários bloqueados no mobile -->
+      <a href="blocks.html" class="btn btn-outline">🚫 Bloqueados</a>
+      <button class="btn btn-outline" id="mobileLogoutBtn">Sair</button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="container">
+      <!-- Welcome Section -->
+      <section class="welcome-section">
+        <h2>Olá, <span id="welcomeNickname">Amoroso</span>! ❤️</h2>
+        <p>Encontre conexões genuínas e construa relacionamentos significativos</p>
+        <div style="margin-top: 1.5rem;">
+          <a href="princing.html" class="btn btn-premium" style="padding: 0.8rem 2rem; font-size: 1rem;">
+            Desbloqueie Recursos Premium
+          </a>
+        </div>
+      </section>
+
+      <!-- User Stats -->
+      <div class="user-stats">
+        <div class="stat-card">
+          <div class="stat-number" id="usersOnline">0</div>
+          <div class="stat-label">Pessoas Online</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="totalUsers">0</div>
+          <div class="stat-label">Usuários na Plataforma</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="newMatches">0</div>
+          <div class="stat-label">Novos Matches</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="profileViews">0</div>
+          <div class="stat-label">Visualizações do Perfil</div>
+        </div>
+      </div>
+
+      <!-- NOVO: Card de Visitantes ATUALIZADO -->
+      <section class="visitors-section">
+        <div class="visitors-card">
+          <div class="visitors-header">
+            <h2>👀 Quem te visitou</h2>
+            <div class="visitors-count" id="visitorsCount">0 visitas</div>
+          </div>
+
+          <!-- Conteúdo Premium -->
+          <div class="premium-content" id="premiumVisitors" style="display: none;">
+            <!-- NOVO: Grid de Cards Pequenos -->
+            <div class="visitors-grid" id="visitorsGrid">
+              <div class="visitors-loading">
+                <div class="visitors-spinner"></div>
+                <p>Carregando visitantes...</p>
+              </div>
+            </div>
+            
+            <div class="visitors-actions">
+              <button class="btn btn-primary" onclick="window.location.href='visitante.html'">
+                Ver todos os visitantes
+              </button>
+            </div>
+          </div>
+
+          <!-- Conteúdo Free -->
+          <div class="free-content" id="freeVisitors">
+            <div class="icon">👀</div>
+            <h3>Descubra quem se interessou por você!</h3>
+            <p>
+              <span id="freeVisitorsCount">0 pessoas</span> visitaram seu perfil esta semana
+            </p>
+            <a href="princing.html" class="btn btn-premium">
+              Seja Premium para ver
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Users Grid -->
+      <section class="users-section">
+        <div class="section-header">
+          <h2>Conheça Novas Pessoas</h2>
+          <a href="princing.html" class="btn btn-premium btn-sm">Premium</a>
+        </div>
+        <div class="users-grid" id="usersGrid">
+          <div class="loading">
+            <div class="spinner"></div>
+            <p>Carregando usuários...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Quick Actions -->
+      <section class="quick-actions">
+        <h2>Ações Rápidas</h2>
+        <div class="actions-grid">
+          <a href="painel.html" class="action-card">
+            <div class="action-icon">👤</div>
+            <h3>Completar Perfil</h3>
+            <p>Adicione mais informações ao seu perfil</p>
+          </a>
+          <a href="busca.html" class="action-card">
+            <div class="action-icon">🔍</div>
+            <h3>Buscar Pessoas</h3>
+            <p>Encontre pessoas com interesses similares</p>
+          </a>
+          <a href="mensagens.html" class="action-card">
+            <div class="action-icon">💬</div>
+            <h3>Minhas Mensagens</h3>
+            <p>Ver e responder mensagens</p>
+          </a>
+          <!-- ✅ CORREÇÃO: Card para Lista VIP -->
+          <a href="lista-vip.html" class="action-card" style="background: linear-gradient(135deg, #e6fffa, #b2f5ea); border: 2px solid #38b2ac;">
+            <div class="action-icon">⭐</div>
+            <h3>Lista VIP</h3>
+            <p>Seus matches preferidos</p>
+          </a>
+          <!-- NOVO: Card para usuários bloqueados -->
+          <a href="blocks.html" class="action-card" style="background: linear-gradient(135deg, #fed7d7, #feb2b2); border: 2px solid #e53e3e;">
+            <div class="action-icon">🚫</div>
+            <h3>Usuários Bloqueados</h3>
+            <p>Gerencie usuários que você bloqueou</p>
+          </a>
+          <a href="princing.html" class="action-card" style="background: linear-gradient(135deg, #fff9c4, #ffecb3); border: 2px solid #ffd700;">
+            <div class="action-icon">⭐</div>
+            <h3>Plano Premium</h3>
+            <p>Desbloqueie recursos exclusivos</p>
+          </a>
+        </div>
+      </section>
+    </div>
+  </main>
+
+<style>
 /* ==================== SISTEMA DE VISITANTES ATUALIZADO ==================== */
 .visitors-section {
     margin-bottom: 3rem;
@@ -977,12 +1182,11 @@ footer {
     border-radius: 50%;
     margin: 0 auto 0.8rem;
     position: relative;
-    overflow: hidden; /* ✅ IMPEDE que apareça coisa do lado */
+    overflow: hidden;
     border: 3px solid var(--branco);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* ✅ IMAGEM - quando tem foto */
 .visitor-avatar-img {
     width: 100%;
     height: 100%;
@@ -990,7 +1194,6 @@ footer {
     border-radius: 50%;
 }
 
-/* ✅ FALLBACK - quando NÃO tem foto */
 .visitor-avatar-fallback {
     width: 100%;
     height: 100%;
@@ -1004,12 +1207,10 @@ footer {
     font-size: 1.2rem;
 }
 
-/* ✅ REGRA CRÍTICA: Quando a imagem existe, ESCONDER o fallback */
 .visitor-avatar:has(.visitor-avatar-img[src]) .visitor-avatar-fallback {
     display: none !important;
 }
 
-/* ✅ REGRA CRÍTICA: Quando NÃO tem imagem, MOSTRAR o fallback */
 .visitor-avatar:not(:has(.visitor-avatar-img[src])) .visitor-avatar-fallback {
     display: flex !important;
 }
@@ -1109,35 +1310,31 @@ footer {
 }
 
 /* ==================== SISTEMA DE STATUS ONLINE/OFFLINE ==================== */
-
-/* Bolinha Online (Verde) */
 .online-badge {
     position: absolute;
     bottom: 5px;
     right: 5px;
     width: 12px;
     height: 12px;
-    background: #48bb78; /* Verde */
+    background: #48bb78;
     border: 2px solid var(--branco);
     border-radius: 50%;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     animation: pulse-online 2s infinite;
 }
 
-/* Bolinha Offline (Cinza) */
 .offline-badge {
     position: absolute;
     bottom: 5px;
     right: 5px;
     width: 12px;
     height: 12px;
-    background: #a0aec0; /* Cinza */
+    background: #a0aec0;
     border: 2px solid var(--branco);
     border-radius: 50%;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-/* Animação para bolinha online */
 @keyframes pulse-online {
     0% {
         transform: scale(1);
@@ -1153,7 +1350,6 @@ footer {
     }
 }
 
-/* Ajustes para os avatares dos cards de usuário */
 .user-card-avatar {
     position: relative;
     overflow: visible !important;
@@ -1168,7 +1364,6 @@ footer {
     border: 3px solid var(--branco);
 }
 
-/* Ajustes para os avatares dos visitantes */
 .visitor-avatar {
     position: relative;
     overflow: visible !important;
@@ -1183,7 +1378,6 @@ footer {
     border: 2px solid var(--branco);
 }
 
-/* Ajustes para os avatares no header */
 .user-avatar {
     position: relative;
     overflow: visible !important;
@@ -1198,107 +1392,7 @@ footer {
     border: 2px solid var(--branco);
 }
 
-/* Status no tooltip para melhor UX */
-.user-card:hover .online-badge::after,
-.visitor-card:hover .online-badge::after {
-    content: "Online";
-    position: absolute;
-    bottom: -25px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #2d3748;
-    color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.7rem;
-    white-space: nowrap;
-    z-index: 1000;
-}
-
-.user-card:hover .offline-badge::after,
-.visitor-card:hover .offline-badge::after {
-    content: "Offline";
-    position: absolute;
-    bottom: -25px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #2d3748;
-    color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.7rem;
-    white-space: nowrap;
-    z-index: 1000;
-}
-
-/* ==================== INDICADOR MODO INVISÍVEL ==================== */
-.invisible-status {
-    display: none; /* Inicialmente escondido */
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: var(--lilas);
-    color: var(--branco);
-    border-radius: 8px;
-    font-size: 0.9rem;
-    margin-left: auto;
-}
-
-.invisible-status .status-icon {
-    font-size: 1.1rem;
-}
-
-.invisible-status .status-text strong {
-    color: #ffeb3b;
-}
-
-/* ==================== CORREÇÕES MOBILE - BLOQUEIO E MENU ==================== */
-
-/* ✅ CORREÇÃO: Menu de opções desktop */
-.user-card-menu {
-  position: relative;
-  z-index: 100;
-}
-
-.menu-options {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background: var(--branco);
-  border: 1px solid var(--lilas);
-  border-radius: 10px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-  padding: 0.5rem;
-  z-index: 1000;
-  display: none;
-  min-width: 160px;
-  animation: fadeIn 0.2s ease;
-}
-
-.menu-options.show {
-  display: block;
-}
-
-/* ✅ CORREÇÃO: Garantir que cards não cortem o menu */
-.user-card {
-  position: relative;
-  z-index: 1;
-  overflow: visible !important;
-}
-
-.user-card:hover {
-  z-index: 2;
-}
-
-/* ✅ CORREÇÃO: Remoção visual imediata dos cards */
-.user-card.removing {
-  opacity: 0.5 !important;
-  transform: scale(0.95) !important;
-  pointer-events: none !important;
-  transition: all 0.3s ease !important;
-}
-
-/* ==================== CORREÇÃO CRÍTICA PARA MOBILE ==================== */
+/* ==================== CORREÇÕES MOBILE ==================== */
 @media (max-width: 768px) {
   #hamburgerBtn {
     display: flex;
@@ -1373,7 +1467,6 @@ footer {
     justify-content: center;
   }
   
-  /* ✅ CORREÇÃO CRÍTICA: BOTÃO DOS 3 PONTOS NO MOBILE */
   .btn-more {
     width: 44px !important;
     height: 44px !important;
@@ -1400,7 +1493,6 @@ footer {
     position: relative;
   }
 
-  /* ✅ CORREÇÃO CRÍTICA: MENU MOBILE FUNCIONAL */
   .menu-options {
     display: none;
     position: absolute;
@@ -1422,7 +1514,6 @@ footer {
     animation: fadeIn 0.2s ease !important;
   }
 
-  /* ✅ GARANTIR que os cards não cortam o menu */
   .user-card {
     overflow: visible !important;
     position: relative;
@@ -1459,7 +1550,6 @@ footer {
     align-items: flex-start;
   }
 
-  /* Ajustes para modais mobile */
   .modal-content {
     padding: 1.5rem;
     margin: 1rem;
@@ -1473,7 +1563,6 @@ footer {
     width: 100%;
   }
 
-  /* Responsividade Visitantes */
   .visitors-grid {
     gap: 0.8rem;
   }
@@ -1503,35 +1592,6 @@ footer {
   .visitors-count {
     align-self: flex-start;
   }
-
-  .invisible-status {
-    margin-left: 0;
-    align-self: flex-start;
-  }
-
-  /* Ajustes específicos para mobile menu em telas pequenas */
-  @media (max-height: 700px) {
-    #mobileMenu {
-      padding: 1rem;
-      gap: 0.5rem;
-    }
-    
-    .mobile-user-info {
-      margin-top: 1rem;
-      margin-bottom: 0.5rem;
-    }
-    
-    .mobile-nav .btn {
-      padding: 0.7rem;
-      min-height: 44px;
-      font-size: 0.9rem;
-    }
-    
-    .mobile-nav .btn:last-child {
-      margin-top: 1.5rem;
-      margin-bottom: 1rem;
-    }
-  }
 }
 
 @media (max-width: 480px) {
@@ -1560,7 +1620,6 @@ footer {
     height: 70px;
   }
 
-  /* ✅ CORREÇÃO EXTRA PARA MOBILE PEQUENO */
   .user-card-actions .btn {
     font-size: 0.75rem;
     padding: 0.7rem 0.3rem;
@@ -1601,7 +1660,6 @@ footer {
     font-size: 2.5rem;
   }
 
-  /* Ajustes extras para mobile menu em telas muito pequenas */
   #mobileMenu {
     padding: 1rem;
   }
@@ -1620,547 +1678,13 @@ footer {
     font-size: 1rem;
   }
 }
-
-/* ✅ CORREÇÃO DOS BOTÕES NÃO CLICÁVEIS */
-.user-card-actions {
-    position: relative;
-    z-index: 1000;
-}
-
-.user-card-actions button {
-    pointer-events: auto !important;
-    position: relative !important;
-    z-index: 1001 !important;
-    cursor: pointer !important;
-}
-
-.user-card-actions .btn-more {
-    pointer-events: auto !important;
-    z-index: 1002 !important;
-}
-
-.menu-options {
-    z-index: 1003 !important;
-}
-
-/* Garante que os cards não bloqueiem cliques */
-.user-card {
-    position: relative;
-}
-
-.user-card > *:not(.user-card-actions) {
-    pointer-events: none;
-}
-
-.user-card-actions,
-.user-card-actions * {
-    pointer-events: auto !important;
-}
-
-/* ✅ ANIMAÇÃO PARA O MENU MOBILE */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* ==================== CORREÇÃO CRÍTICA - SISTEMA DE VISITANTES ==================== */
-
-/* ✅ CORREÇÃO: Seções de visitantes controladas por JavaScript */
-#premiumVisitors {
-    display: none;
-}
-
-#premiumVisitors.visible {
-    display: block !important;
-}
-
-#freeVisitors {
-    display: none;
-}
-
-#freeVisitors.visible {
-    display: block !important;
-}
-
-/* ✅ CORREÇÃO: Garantir que elementos estão visíveis quando ativos */
-.visitors-card {
-    display: block !important;
-}
-
-.visitors-grid {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-}
-
-/* ✅ CORREÇÃO: Estado de loading sempre visível quando ativo */
-.visitors-loading {
-    display: block !important;
-}
-
-/* ✅ CORREÇÃO: Estado vazio sempre visível quando ativo */
-.visitors-empty {
-    display: block !important;
-}
-
-/* ✅ CORREÇÃO: Conteúdo free sempre visível quando ativo */
-.free-content {
-    display: none;
-}
-
-.free-content.visible {
-    display: block !important;
-}
-
-/* ✅ CORREÇÃO: Garantir que os cards de visitantes são sempre visíveis */
-.visitor-card {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-}
-
-/* ✅ CORREÇÃO: Avatar dos visitantes sempre visível */
-.visitor-avatar {
-    display: flex !important;
-}
-/* ==================== SISTEMA DE NOTIFICAÇÕES - SINO ==================== */
-.notification-bell-container {
-    position: absolute;
-    right: 80px; /* Posicionado após o botão Sair */
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 101;
-}
-
-.notification-bell {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 50px;
-    height: 50px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
-    font-size: 1.5rem;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-}
-
-.notification-bell:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.5);
-    transform: translateY(-2px) scale(1.05);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-}
-
-.notification-badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: linear-gradient(135deg, #e53e3e, #c53030);
-    color: white;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    font-weight: bold;
-    border: 2px solid var(--branco);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-}
-
-.notification-badge:empty {
-    display: none;
-}
-
-.notification-mobile-btn {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-}
-
-.notification-mobile-btn .notification-badge {
-    position: static;
-    margin-left: auto;
-}
-
-/* Badge com muitos números */
-.notification-badge.high-count {
-    width: 25px;
-    height: 25px;
-    font-size: 0.6rem;
-}
-
-/* Animação de pulso para badge */
-@keyframes pulse {
-    0% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.7);
-    }
-    70% {
-        transform: scale(1.1);
-        box-shadow: 0 0 0 6px rgba(229, 62, 62, 0);
-    }
-    100% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(229, 62, 62, 0);
-    }
-}
-
-/* ==================== SISTEMA DE NOTIFICAÇÕES - SINO ==================== */
-.notification-bell-container {
-    position: absolute;
-    right: 20px; /* Mais à direita, próximo à borda */
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 101;
-}
-
-.notification-bell {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 50px;
-    height: 50px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
-    font-size: 1.5rem;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-}
-
-.notification-bell:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.5);
-    transform: translateY(-2px) scale(1.05);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-}
-
-.notification-badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: linear-gradient(135deg, #e53e3e, #c53030);
-    color: white;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    font-weight: bold;
-    border: 2px solid var(--branco);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-}
-
-.notification-badge:empty {
-    display: none;
-}
-
-.notification-mobile-btn {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-}
-
-.notification-mobile-btn .notification-badge {
-    position: static;
-    margin-left: auto;
-}
-
-/* Badge com muitos números */
-.notification-badge.high-count {
-    width: 25px;
-    height: 25px;
-    font-size: 0.6rem;
-}
-
-/* Animação de pulso para badge */
-@keyframes pulse {
-    0% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.7);
-    }
-    70% {
-        transform: scale(1.1);
-        box-shadow: 0 0 0 6px rgba(229, 62, 62, 0);
-    }
-    100% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(229, 62, 62, 0);
-    }
-}
-
-/* Sino quando tem notificações não lidas */
-.notification-bell.has-notifications {
-    background: rgba(229, 62, 62, 0.1);
-    border-color: rgba(229, 62, 62, 0.5);
-    animation: bell-shake 2s ease-in-out infinite;
-}
-
-@keyframes bell-shake {
-    0%, 100% { transform: translateY(-50%) rotate(0); }
-    25% { transform: translateY(-50%) rotate(-10deg); }
-    75% { transform: translateY(-50%) rotate(10deg); }
-}
-
-@media (max-width: 768px) {
-    .notification-bell-container {
-        position: static;
-        transform: none;
-        margin-left: auto;
-        margin-right: 1rem;
-    }
-    
-    .notification-bell {
-        width: 45px;
-        height: 45px;
-        font-size: 1.3rem;
-    }
-    
-    .notification-badge {
-        width: 18px;
-        height: 18px;
-        font-size: 0.65rem;
-    }
-    
-    .notification-bell.has-notifications {
-        animation: bell-shake-mobile 2s ease-in-out infinite;
-    }
-}
-
-@media (max-width: 480px) {
-    .notification-bell-container {
-        margin-right: 0.5rem;
-    }
-    
-    .notification-bell {
-        width: 40px;
-        height: 40px;
-        font-size: 1.2rem;
-    }
-    
-    .notification-badge {
-        width: 16px;
-        height: 16px;
-        font-size: 0.6rem;
-        top: -3px;
-        right: -3px;
-    }
-}
 </style>
-</head>
-<body>
-  <!-- Header -->
-  <header>
-    <div class="container">
-      <div class="header-content">
-        <button id="hamburgerBtn">☰</button>
-        <div class="logo">
-          <img src="logoamorconect.png" alt="Amor Conect">
-        </div>
-        
-        <!--    SINO DE NOTIFICAÇÕES ISOLADO -->
-        <div class="notification-bell-container">
-          <a href="notificacoes.html" class="notification-bell" id="notificationBell" title="Notificações">
-              
-            <span class="notification-badge" id="notificationBadge">0</span>
-          </a>
-        </div>
-
-        <div class="user-menu">
-          <div class="user-info">
-            <div class="user-avatar" id="userAvatar">
-              <img class="user-avatar-img" src="" alt="Avatar" style="display: none;">
-              <div class="user-avatar-fallback">U</div>
-            </div>
-            <span id="userNickname">Usuário</span>
-          </div>
-          <!-- NOVO: Badge Free e Botão Premium -->
-          <div id="freeBadge" class="free-badge" style="display: none;">Free</div>
-          <a href="princing.html" id="premiumBtn" class="btn btn-premium" style="display: none;">Premium</a>
-          <a href="mensagens.html" class="btn btn-outline">Mensagens</a>
-          <a href="busca.html" class="btn btn-outline">Buscar</a>
-          <a href="painel.html" class="btn btn-outline">Perfil</a>
-          <!-- NOVO: Link para usuários bloqueados -->
-          <a href="blocks.html" class="btn btn-outline">   Bloqueados</a>
-          <button class="btn btn-outline" id="logoutBtn">Sair</button>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <!-- Menu Mobile -->
-  <div id="mobileMenu">
-    <button id="closeMobileMenu">×</button>
-    
-    <div class="mobile-user-info">
-      <div class="user-avatar" id="mobileUserAvatar">
-        <img class="user-avatar-img" src="" alt="Avatar" style="display: none;">
-        <div class="user-avatar-fallback">U</div>
-      </div>
-      <div id="mobileUserNickname">Usuário</div>
-    </div>
-
-    <div class="mobile-nav">
-      <!--    SINO DE NOTIFICAÇÕES MOBILE -->
-      <a href="notificacoes.html" class="btn btn-outline notification-mobile-btn">
-           Notificações
-        <span class="notification-badge" id="mobileNotificationBadge">0</span>
-      </a>
-      
-      <!-- NOVO: Badge Free e Botão Premium Mobile -->
-      <div id="mobileFreeBadge" class="free-badge" style="display: none;">Free</div>
-      <a href="princing.html" id="mobilePremiumBtn" class="btn btn-premium" style="display: none;">Premium</a>
-      <a href="busca.html" class="btn btn-outline">Buscar</a>
-      <a href="painel.html" class="btn btn-outline">Perfil</a>
-      <a href="mensagens.html" class="btn btn-outline">Mensagens</a>
-      <!-- NOVO: Link para usuários bloqueados no mobile -->
-      <a href="blocks.html" class="btn btn-outline">   Bloqueados</a>
-      <button class="btn btn-outline" id="mobileLogoutBtn">Sair</button>
-    </div>
-  </div>
-
-  <!-- Main Content -->
-  <main class="main-content">
-    <div class="container">
-      <!-- Welcome Section -->
-      <section class="welcome-section">
-        <h2>Olá, <span id="welcomeNickname">Amoroso</span>! ❤️</h2>
-        <p>Encontre conexões genuínas e construa relacionamentos significativos</p>
-        <div style="margin-top: 1.5rem;">
-          <a href="princing.html" class="btn btn-premium" style="padding: 0.8rem 2rem; font-size: 1rem;">
-            Desbloqueie Recursos Premium
-          </a>
-        </div>
-      </section>
-
-      <!-- User Stats -->
-      <div class="user-stats">
-        <div class="stat-card">
-          <div class="stat-number" id="usersOnline">0</div>
-          <div class="stat-label">Pessoas Online</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number" id="totalUsers">0</div>
-          <div class="stat-label">Usuários na Plataforma</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number" id="newMatches">0</div>
-          <div class="stat-label">Novos Matches</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number" id="profileViews">0</div>
-          <div class="stat-label">Visualizações do Perfil</div>
-        </div>
-      </div>
-
-      <!-- NOVO: Card de Visitantes ATUALIZADO -->
-      <section class="visitors-section">
-        <div class="visitors-card">
-          <div class="visitors-header">
-            <h2>   Quem te visitou</h2>
-            <div class="visitors-count" id="visitorsCount">0 visitas</div>
-          </div>
-
-          <!-- Conteúdo Premium -->
-          <div class="premium-content" id="premiumVisitors" style="display: none;">
-            <!-- NOVO: Grid de Cards Pequenos -->
-            <div class="visitors-grid" id="visitorsGrid">
-              <div class="visitors-loading">
-                <div class="visitors-spinner"></div>
-                <p>Carregando visitantes...</p>
-              </div>
-            </div>
-            
-            <div class="visitors-actions">
-              <button class="btn btn-primary" onclick="window.location.href='visitante.html'">
-                Ver todos os visitantes
-              </button>
-            </div>
-          </div>
-
-          <!-- Conteúdo Free -->
-          <div class="free-content" id="freeVisitors">
-            <div class="icon">  </div>
-            <h3>Descubra quem se interessou por você!</h3>
-            <p>
-              <span id="freeVisitorsCount">0 pessoas</span> visitaram seu perfil esta semana
-            </p>
-            <a href="princing.html" class="btn btn-premium">
-              Seja Premium para ver
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <!-- Users Grid -->
-      <section class="users-section">
-        <div class="section-header">
-          <h2>Conheça Novas Pessoas</h2>
-          <a href="princing.html" class="btn btn-premium btn-sm">Premium</a>
-        </div>
-        <div class="users-grid" id="usersGrid">
-          <div class="loading">
-            <div class="spinner"></div>
-            <p>Carregando usuários...</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- Quick Actions -->
-      <section class="quick-actions">
-        <h2>Ações Rápidas</h2>
-        <div class="actions-grid">
-          <a href="painel.html" class="action-card">
-            <div class="action-icon">  </div>
-            <h3>Completar Perfil</h3>
-            <p>Adicione mais informações ao seu perfil</p>
-          </a>
-          <a href="busca.html" class="action-card">
-            <div class="action-icon">  </div>
-            <h3>Buscar Pessoas</h3>
-            <p>Encontre pessoas com interesses similares</p>
-          </a>
-          <a href="mensagens.html" class="action-card">
-            <div class="action-icon">  </div>
-            <h3>Minhas Mensagens</h3>
-            <p>Ver e responder mensagens</p>
-          </a>
-          <!-- NOVO: Card para usuários bloqueados -->
-          <a href="blocks.html" class="action-card" style="background: linear-gradient(135deg, #fed7d7, #feb2b2); border: 2px solid #e53e3e;">
-            <div class="action-icon">  </div>
-            <h3>Usuários Bloqueados</h3>
-            <p>Gerencie usuários que você bloqueou</p>
-          </a>
-          <a href="princing.html" class="action-card" style="background: linear-gradient(135deg, #fff9c4, #ffecb3); border: 2px solid #ffd700;">
-            <div class="action-icon">⭐</div>
-            <h3>Plano Premium</h3>
-            <p>Desbloqueie recursos exclusivos</p>
-          </a>
-        </div>
-      </section>
-    </div>
-  </main>
-
   <!-- ==================== MODAIS DE REPORTE E BLOQUEIO ==================== -->
   <!-- Modal de Reporte -->
   <div class="modal-overlay" id="reportModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>   Reportar Usuário</h3>
+        <h3>⚠️ Reportar Usuário</h3>
         <button class="close-modal" onclick="closeReportModal()">×</button>
       </div>
       
@@ -2172,19 +1696,19 @@ footer {
         <div class="report-categories">
           <label class="report-category">
             <input type="radio" name="reportReason" value="spam" onchange="selectReportCategory(this)">
-            <span>   Spam ou conteúdo comercial</span>
+            <span>📢 Spam ou conteúdo comercial</span>
           </label>
           <label class="report-category">
             <input type="radio" name="reportReason" value="harassment" onchange="selectReportCategory(this)">
-            <span>   Assédio ou bullying</span>
+            <span>🚫 Assédio ou bullying</span>
           </label>
           <label class="report-category">
             <input type="radio" name="reportReason" value="inappropriate" onchange="selectReportCategory(this)">
-            <span>   Conteúdo inadequado</span>
+            <span>🔞 Conteúdo inadequado</span>
           </label>
           <label class="report-category">
             <input type="radio" name="reportReason" value="fake" onchange="selectReportCategory(this)">
-            <span>   Perfil falso</span>
+            <span>🎭 Perfil falso</span>
           </label>
           <label class="report-category">
             <input type="radio" name="reportReason" value="other" onchange="selectReportCategory(this)">
@@ -2214,7 +1738,7 @@ footer {
   <div class="modal-overlay" id="blockModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>   Bloquear Usuário</h3>
+        <h3>🚫 Bloquear Usuário</h3>
         <button class="close-modal" onclick="closeBlockModal()">×</button>
       </div>
       
@@ -2228,7 +1752,7 @@ footer {
           <li>Não aparecerá mais nos seus resultados de busca</li>
           <li>Não poderá ver seu perfil</li>
           <li>Esta ação pode ser revertida a qualquer momento</li>
-          <li>Para gerenciar bloqueios, acesse <strong>"   Bloqueados"</strong> no menu</li>
+          <li>Para gerenciar bloqueios, acesse <strong>"🚫 Bloqueados"</strong> no menu</li>
         </ul>
       </div>
       
@@ -2260,7 +1784,6 @@ footer {
 
   <!-- Footer -->
   <footer>
-    
     <div class="container">
       <div class="footer-content">
         <div class="footer-column">
@@ -2282,7 +1805,7 @@ footer {
             <li><a href="#">Central de Ajuda</a></li>
             <li><a href="#">Política de Privacidade</a></li>
             <li><a href="#">Termos de Uso</a></li>
-            <li><a href="#" onclick="openSupportModal()">   Reportar Problema</a></li>
+            <li><a href="#" onclick="openSupportModal()">📧 Reportar Problema</a></li>
           </ul>
         </div>
       </div>
@@ -2291,6 +1814,7 @@ footer {
       </div>
     </div>
   </footer>
+
 <script>
 // ==================== CONFIGURAÇÃO SUPABASE ====================
 const supabaseUrl = 'https://gcukalndarlgydmgmmmt.supabase.co';
@@ -2303,13 +1827,243 @@ let userProfile = null;
 let currentReportUserId = null;
 let currentReportUserName = null;
 
-/// ==================== INICIALIZAÇÃO CORRIGIDA ====================
+// ==================== CSS DINÂMICO PARA CORREÇÕES ====================
+const dynamicCSS = `
+/* ==================== CORREÇÃO SINO NOTIFICAÇÕES ==================== */
+.notification-bell-container {
+    position: relative !important;
+    right: auto !important;
+    top: auto !important;
+    transform: none !important;
+    margin-left: 10px;
+}
+
+.notification-bell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    font-size: 1.5rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.notification-bell:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: linear-gradient(135deg, #e53e3e, #c53030);
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: bold;
+    border: 2px solid var(--branco);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.notification-badge:empty {
+    display: none;
+}
+
+.notification-mobile-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.notification-mobile-btn .notification-badge {
+    position: static;
+    margin-left: auto;
+}
+
+@media (max-width: 768px) {
+    .notification-bell-container {
+        margin-left: auto;
+        margin-right: 10px;
+    }
+    
+    .notification-bell {
+        width: 45px;
+        height: 45px;
+        font-size: 1.3rem;
+    }
+    
+    .notification-badge {
+        width: 18px;
+        height: 18px;
+        font-size: 0.65rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .notification-bell-container {
+        margin-right: 5px;
+    }
+    
+    .notification-bell {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+    
+    .notification-badge {
+        width: 16px;
+        height: 16px;
+        font-size: 0.6rem;
+        top: -3px;
+        right: -3px;
+    }
+}
+
+/* ==================== CORREÇÃO MENU MOBILE ==================== */
+#mobileMenu {
+    display: none !important;
+}
+
+#hamburgerBtn {
+    display: none !important;
+}
+
+@media (max-width: 768px) {
+    #hamburgerBtn {
+        display: flex !important;
+    }
+    
+    #mobileMenu {
+        display: none !important;
+    }
+    
+    #mobileMenu[style*="display: flex"] {
+        display: flex !important;
+    }
+}
+
+/* ==================== CORREÇÃO BOTÕES CLICÁVEIS ==================== */
+.user-card-actions {
+    position: relative;
+    z-index: 1000;
+}
+
+.user-card-actions button {
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 1001 !important;
+    cursor: pointer !important;
+}
+
+.user-card-actions .btn-more {
+    pointer-events: auto !important;
+    z-index: 1002 !important;
+}
+
+.menu-options {
+    z-index: 1003 !important;
+}
+
+.user-card {
+    position: relative;
+}
+
+.user-card > *:not(.user-card-actions) {
+    pointer-events: none;
+}
+
+.user-card-actions,
+.user-card-actions * {
+    pointer-events: auto !important;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==================== CORREÇÃO VISITANTES ==================== */
+#premiumVisitors {
+    display: none;
+}
+
+#premiumVisitors.visible {
+    display: block !important;
+}
+
+#freeVisitors {
+    display: none;
+}
+
+#freeVisitors.visible {
+    display: block !important;
+}
+
+.visitors-card {
+    display: block !important;
+}
+
+.visitors-grid {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.visitors-loading {
+    display: block !important;
+}
+
+.visitors-empty {
+    display: block !important;
+}
+
+.free-content {
+    display: none;
+}
+
+.free-content.visible {
+    display: block !important;
+}
+
+.visitor-card {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.visitor-avatar {
+    display: flex !important;
+}
+`;
+
+// Inject dynamic CSS
+const style = document.createElement('style');
+style.textContent = dynamicCSS;
+document.head.appendChild(style);
+
+// ==================== INICIALIZAÇÃO CORRIGIDA ====================
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('   Iniciando aplicação...');
+    console.log('🚀 Iniciando aplicação...');
     initializeApp();
 });
 
-// ✅ CORREÇÃO CRÍTICA: Inicialização garantida para visitantes
+// ✅ CORREÇÃO CRÍTICA: Inicialização garantida
 async function initializeApp() {
     try {
         // 1. Verificar autenticação UMA VEZ
@@ -2330,15 +2084,13 @@ async function initializeApp() {
         console.log('✅ Usuário autenticado:', user.id);
         currentUser = user;
 
-        
-        // ✅✅✅ CORREÇÃO: Inicializar sistema de bloqueio COM VERIFICAÇÃO
+        // ✅ CORREÇÃO: Inicializar sistema de bloqueio
         if (window.HomeBlockSystem) {
             window.blockSystem = new HomeBlockSystem(supabase, currentUser);
             await window.blockSystem.initialize();
             console.log('✅ Sistema de bloqueio inicializado!');
         } else {
-            console.error('❌ HomeBlockSystem não carregado - verifique home.block.js');
-            // Fallback emergencial
+            console.error('❌ HomeBlockSystem não carregado');
             initializeBlockSystemFallback();
         }
         
@@ -2348,10 +2100,8 @@ async function initializeApp() {
         // 3. Carregar usuários OTIMIZADO
         await loadRealUsers();
         
-        // ✅✅✅ CORREÇÃO DEFINITIVA: Sistema de visitantes com garantia
-        console.log('   Inicializando sistema de visitantes...');
-        
-        // Aguardar o arquivo home-visitante.js carregar
+        // ✅ CORREÇÃO: Sistema de visitantes com garantia
+        console.log('👀 Inicializando sistema de visitantes...');
         let tentativas = 0;
         while (tentativas < 8) {
             if (window.inicializarSistemaVisitantes) {
@@ -2366,12 +2116,12 @@ async function initializeApp() {
             tentativas++;
             
             if (tentativas === 8) {
-                console.error('❌ Sistema de visitantes não carregou após 8 tentativas');
+                console.error('❌ Sistema de visitantes não carregou');
                 await criarSistemaVisitantesFallback();
             }
         }
         
-        // 🆕 SISTEMA PULSE/CURTIR - ADICIONADO AQUI
+        // ✅ CORREÇÃO: Sistema Pulse
         console.log('🎯 Inicializando sistema Pulse...');
         let pulseTentativas = 0;
         while (pulseTentativas < 8) {
@@ -2380,7 +2130,6 @@ async function initializeApp() {
                 window.pulseSystem = await window.initializePulseSystem(supabase, currentUser);
                 console.log('✅ Sistema Pulse inicializado com sucesso!');
                 
-                // Adicionar cards VIP se for Premium
                 if (window.pulseSystem && window.pulseSystem.userProfile?.is_premium) {
                     window.pulseSystem.addVipCardsToHome().catch(console.error);
                 }
@@ -2392,71 +2141,38 @@ async function initializeApp() {
             pulseTentativas++;
             
             if (pulseTentativas === 8) {
-                console.error('❌ Sistema Pulse não carregou após 8 tentativas');
+                console.error('❌ Sistema Pulse não carregou');
             }
         }
         
-        //    NOVO: Inicializar sistema de notificações
+        // ✅ CORREÇÃO: Sistema de notificações
         initializeNotificationSystem().catch(console.error);
-        
-        //    NOVO: Criar notificação de boas-vindas (opcional)
-        setTimeout(createSampleNotification, 2000);
         
         // 4. Configurar sistemas secundários
         setupEventListeners();
         setupMobileMenu();
         
-        // ✅ CORREÇÃO: Atualizar stats depois de carregar visitantes
+        // ✅ CORREÇÃO: Atualizar stats
         setTimeout(updateStats, 1000);
         startOnlineStatusUpdater();
         
-        console.log('   Aplicação carregada com sucesso!');
+        console.log('🎉 Aplicação carregada com sucesso!');
         
     } catch (error) {
         console.error('❌ Erro crítico na inicialização:', error);
-        // REMOVIDO alerta para usuário - apenas log no console
     }
 }
 
-// Criar notificação de exemplo (para teste)
-async function createSampleNotification() {
-    try {
-        const notificationData = {
-            user_id: currentUser.id,
-            type: 'welcome',
-            title: 'Bem-vindo ao Amor Conect!   ',
-            message: 'Sua jornada para encontrar conexões genuínas começou. Complete seu perfil para ter mais matches!',
-            priority: 'high',
-            actions: [
-                { label: 'Completar Perfil', type: 'primary' },
-                { label: 'Ver Dicas', type: 'secondary' }
-            ],
-            created_at: new Date().toISOString()
-        };
-
-        const { error } = await supabase
-            .from('user_notifications')
-            .insert(notificationData);
-
-        if (error && error.code !== '23505') {
-            console.log('ℹ️ Não foi possível criar notificação de exemplo');
-        }
-    } catch (error) {
-        // Tabela não existe ainda, tudo bem
-    }
-}
-
-// ✅ FALLBACK PARA SISTEMA DE BLOQUEIO (EMERGÊNCIA)
+// ✅ FALLBACK PARA SISTEMA DE BLOQUEIO
 function initializeBlockSystemFallback() {
-    console.log('   Inicializando fallback de bloqueio...');
+    console.log('🔄 Inicializando fallback de bloqueio...');
     
     window.blockSystem = {
         async openBlockModal(userId, userName) {
-            console.log('   Fallback: Abrindo modal para', userName);
+            console.log('🔄 Fallback: Abrindo modal para', userName);
             document.getElementById('blockUserName').textContent = userName;
             document.getElementById('blockModal').classList.add('show');
             
-            // Configurar confirmação direta
             const confirmBtn = document.getElementById('confirmBlockBtn');
             if (confirmBtn) {
                 confirmBtn.onclick = async function() {
@@ -2488,10 +2204,9 @@ function initializeBlockSystemFallback() {
         }
     };
 }
-
 // ✅ FUNÇÃO DE BLOQUEIO DIRETO (GARANTIDA)
 async function blockUserDirect(userId, userName) {
-    console.log('   BLOQUEIO DIRETO:', userName);
+    console.log('🚫 BLOQUEIO DIRETO:', userName);
     
     try {
         // 1. Fechar modal
@@ -2543,9 +2258,8 @@ async function blockUserDirect(userId, userName) {
 
 // ✅ FALLBACK para sistema de visitantes
 async function criarSistemaVisitantesFallback() {
-    console.log('   Criando fallback para sistema de visitantes...');
+    console.log('🔄 Criando fallback para sistema de visitantes...');
     
-    // Sistema básico que atualiza apenas o contador
     try {
         const { data: visits, error } = await supabase
             .from('profile_visits')
@@ -2582,33 +2296,30 @@ async function criarSistemaVisitantesFallback() {
     }
 }
 
-// ✅✅✅ CORREÇÃO COMPLETA: Configurar event listeners
+// ✅✅✅ CORREÇÃO DEFINITIVA: Configurar event listeners
 function setupEventListeners() {
     console.log('🎯 Configurando event listeners...');
     
-    // ✅ CORREÇÃO: Configurar ambos os botões de logout
-    const logoutBtn = document.getElementById('logoutBtn');
-    const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
-    
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', function(e) {
+    // ✅ CORREÇÃO: Usar event delegation para evitar problemas de cache
+    document.addEventListener('click', function(e) {
+        // Logout desktop
+        if (e.target.id === 'logoutBtn' || e.target.closest('#logoutBtn')) {
             e.preventDefault();
             e.stopPropagation();
             console.log('🖱️ Botão logout desktop clicado');
             logout();
-        });
-    }
-    
-    if (mobileLogoutBtn) {
-        mobileLogoutBtn.addEventListener('click', function(e) {
+        }
+        
+        // Logout mobile
+        if (e.target.id === 'mobileLogoutBtn' || e.target.closest('#mobileLogoutBtn')) {
             e.preventDefault();
             e.stopPropagation();
             console.log('📱 Botão logout mobile clicado');
             logout();
-        });
-    }
+        }
+    });
     
-    console.log('✅ Event listeners configurados');
+    console.log('✅ Event listeners configurados (delegation)');
 }
 
 // ✅✅✅ CORREÇÃO COMPLETA: Função de logout
@@ -2782,7 +2493,7 @@ async function loadUserPhoto(avatarUrl) {
 // ✅✅✅ CORREÇÃO CRÍTICA: Carregar usuários OTIMIZADO com função SQL
 async function loadRealUsers() {
     try {
-        console.log('   Carregando usuários OTIMIZADO...');
+        console.log('👥 Carregando usuários OTIMIZADO...');
         
         const limit = window.innerWidth <= 768 ? 4 : 8;
         
@@ -2818,7 +2529,7 @@ async function loadRealUsers() {
 
 // ✅ FALLBACK se a função SQL falhar
 async function loadRealUsersFallback(limit) {
-    console.log('   Usando fallback...');
+    console.log('🔄 Usando fallback...');
     
     const { data: users, error } = await supabase
         .from('profiles')
@@ -2864,7 +2575,7 @@ async function displayUsersWithPhotos(users) {
         if (card) userCards.push(card);
     }
     
-    console.log(`   Exibindo ${userCards.length} cards`);
+    console.log(`🎴 Exibindo ${userCards.length} cards`);
     usersGrid.innerHTML = userCards.join('');
     
     if (userCards.length === 0) {
@@ -2932,18 +2643,18 @@ async function createUserCardWithPhoto(user) {
                 
                 <div class="user-card-info">
                     ${zodiac ? `<div class="user-card-detail">${getZodiacIcon(zodiac)} ${formatZodiac(zodiac)}</div>` : ''}
-                    ${profession ? `<div class="user-card-detail">   ${profession}</div>` : ''}
-                    ${lookingFor ? `<div class="user-card-detail">   ${formatLookingFor(lookingFor)}</div>` : ''}
+                    ${profession ? `<div class="user-card-detail">💼 ${profession}</div>` : ''}
+                    ${lookingFor ? `<div class="user-card-detail">🎯 ${formatLookingFor(lookingFor)}</div>` : ''}
                 </div>
                 
                 <div class="user-card-bio">${bio}</div>
                 
                 <div class="user-card-actions">
                     <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); sendMessage('${userId}')">
-                           Mensagem
+                        💬 Mensagem
                     </button>
                     <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewProfile('${userId}')">
-                           Ver Perfil
+                        👁️ Ver Perfil
                     </button>
                     <div class="user-card-menu">
                         <button class="btn-more" onclick="event.stopPropagation(); toggleMenu(this)" title="Mais opções">
@@ -2951,10 +2662,10 @@ async function createUserCardWithPhoto(user) {
                         </button>
                         <div class="menu-options">
                             <button class="report-btn" onclick="event.stopPropagation(); openReportModal('${userId}', '${nickname}')">
-                                   Reportar
+                                ⚠️ Reportar
                             </button>
                             <button class="block-btn" onclick="event.stopPropagation(); openBlockModal('${userId}', '${nickname}')">
-                                   Bloquear
+                                🚫 Bloquear
                             </button>
                         </div>
                     </div>
@@ -3024,7 +2735,7 @@ async function submitReport() {
     const originalText = submitBtn.innerHTML;
     
     try {
-        console.log('   Iniciando processo de reporte...');
+        console.log('📝 Iniciando processo de reporte...');
         
         // Validações rigorosas
         const reason = document.querySelector('input[name="reportReason"]:checked')?.value;
@@ -3044,7 +2755,7 @@ async function submitReport() {
         submitBtn.innerHTML = '⏳ Enviando...';
         submitBtn.disabled = true;
 
-        console.log('   Dados do reporte:', {
+        console.log('📊 Dados do reporte:', {
             reporter: currentUser.id,
             reported: currentReportUserId,
             reason: reason,
@@ -3063,7 +2774,7 @@ async function submitReport() {
             updated_at: new Date().toISOString()
         };
 
-        console.log('   Estrutura do reporte:', reportData);
+        console.log('📦 Estrutura do reporte:', reportData);
 
         // ✅ INSERÇÃO NO BANCO COM TRATAMENTO DE ERRO
         const { data, error } = await supabase
@@ -3076,7 +2787,7 @@ async function submitReport() {
             console.error('❌ Erro do Supabase:', error);
             
             // ✅ TENTATIVA ALTERNATIVA COM ESTRUTURA MÍNIMA
-            console.log('   Tentando inserção alternativa...');
+            console.log('🔄 Tentando inserção alternativa...');
             
             const minimalData = {
                 reporter_id: currentUser.id,
@@ -3111,7 +2822,7 @@ async function submitReport() {
         closeReportModal();
 
     } catch (error) {
-        console.error('   Erro crítico no reporte:', error);
+        console.error('💥 Erro crítico no reporte:', error);
         
         // ✅ MENSAGENS DE ERRO ESPECÍFICAS
         const errorMessages = {
@@ -3156,14 +2867,14 @@ async function registerReportEvent(reportedUserId, reason) {
 
 // ✅✅✅ CORREÇÃO DAS FUNÇÕES DE BLOQUEIO
 function openBlockModal(userId, userName) {
-    console.log('   Abrindo modal de bloqueio para:', userName);
+    console.log('🚫 Abrindo modal de bloqueio para:', userName);
     
     // Usar sistema principal se disponível
     if (window.blockSystem && window.blockSystem.openBlockModal) {
         window.blockSystem.openBlockModal(userId, userName);
     } else {
         // Fallback direto
-        console.log('   Usando fallback de bloqueio');
+        console.log('🔄 Usando fallback de bloqueio');
         document.getElementById('blockUserName').textContent = userName;
         document.getElementById('blockModal').classList.add('show');
         
@@ -3189,7 +2900,7 @@ function confirmBlock() {
     if (window.blockSystem && window.blockSystem.confirmBlock) {
         window.blockSystem.confirmBlock();
     } else {
-        showQuickToast('   Use o botão "Confirmar Bloqueio" no modal');
+        showQuickToast('💡 Use o botão "Confirmar Bloqueio" no modal');
     }
 }
 
@@ -3198,7 +2909,7 @@ function closeConfirmModal() {
 }
 
 function openSupportModal() {
-    alert('   Entre em contato com nosso suporte: suporte@amorconect.com');
+    alert('📧 Entre em contato com nosso suporte: suporte@amorconect.com');
 }
 
 // ==================== FUNÇÕES DE INTERAÇÃO ====================
@@ -3206,18 +2917,18 @@ function openSupportModal() {
 async function sendMessage(userId, event) {
     if (event) event.stopPropagation();
     
-    console.log('   Enviando mensagem para:', userId);
+    console.log('💬 Enviando mensagem para:', userId);
     
     // Verificação de bloqueio será feita pelo home.block.js
     if (window.blockSystem && window.blockSystem.isUserBlocked(userId)) {
-        showQuickToast('   Você bloqueou este usuário.');
+        showQuickToast('🚫 Você bloqueou este usuário.');
         return;
     }
     
     // Verificar se o usuário te bloqueou
     const isBlockedByUser = await checkIfBlockedByUser(userId);
     if (isBlockedByUser) {
-        showQuickToast('   Este usuário te bloqueou.');
+        showQuickToast('🚫 Este usuário te bloqueou.');
         if (window.blockSystem) {
             window.blockSystem.removeUserCardImmediately(userId);
         }
@@ -3225,7 +2936,7 @@ async function sendMessage(userId, event) {
     }
     
     if (!isProfileComplete()) {
-        showQuickToast('Complete seu perfil primeiro!');
+        showQuickToast('📝 Complete seu perfil primeiro!');
         window.location.href = 'painel.html';
         return;
     }
@@ -3239,14 +2950,14 @@ async function viewProfile(userId, event) {
 
     // Verificação de bloqueio será feita pelo home.block.js
     if (window.blockSystem && window.blockSystem.isUserBlocked(userId)) {
-        showQuickToast('   Você bloqueou este usuário.');
+        showQuickToast('🚫 Você bloqueou este usuário.');
         return;
     }
     
     // Verificar se o usuário te bloqueou
     const isBlockedByUser = await checkIfBlockedByUser(userId);
     if (isBlockedByUser) {
-        showQuickToast('   Este usuário te bloqueou.');
+        showQuickToast('🚫 Este usuário te bloqueou.');
         if (window.blockSystem) {
             window.blockSystem.removeUserCardImmediately(userId);
         }
@@ -3254,7 +2965,7 @@ async function viewProfile(userId, event) {
     }
     
     if (!isProfileComplete()) {
-        showQuickToast('Complete seu perfil primeiro!');
+        showQuickToast('📝 Complete seu perfil primeiro!');
         window.location.href = 'painel.html';
         return;
     }
@@ -3289,64 +3000,93 @@ async function checkIfBlockedByUser(userId) {
     }
 }
 
-// ==================== FUNÇÕES AUXILIARES ====================
+// ==================== SISTEMA DE NOTIFICAÇÕES ====================
 
-function calculateAge(birthDate) {
-    if (!birthDate) return null;
-    const today = new Date();
-    const birth = new Date(birthDate);
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-        age--;
+async function initializeNotificationSystem() {
+    try {
+        console.log('🔔 Inicializando sistema de notificações...');
+        
+        // Carregar notificações não lidas
+        await loadUnreadNotifications();
+        
+        // Configurar atualização automática
+        setInterval(loadUnreadNotifications, 30000); // 30 segundos
+        
+    } catch (error) {
+        console.error('❌ Erro ao inicializar sistema de notificações:', error);
     }
-    return age;
 }
 
-function formatZodiac(zodiac) {
-    const zodiacMap = {
-        'aries': 'Áries', 'taurus': 'Touro', 'gemini': 'Gêmeos', 'cancer': 'Câncer',
-        'leo': 'Leão', 'virgo': 'Virgem', 'libra': 'Libra', 'scorpio': 'Escorpião',
-        'sagittarius': 'Sagitário', 'capricorn': 'Capricórnio', 'aquarius': 'Aquário', 'pisces': 'Peixes'
-    };
-    return zodiacMap[zodiac?.toLowerCase()] || zodiac;
-}
+async function loadUnreadNotifications() {
+    try {
+        const { data: notifications, error } = await supabase
+            .from('user_notifications')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .eq('read', false)
+            .order('created_at', { ascending: false });
 
-function getZodiacIcon(zodiac) {
-    const zodiacIcons = {
-        'aries': '♈', 'taurus': '♉', 'gemini': '♊', 'cancer': '♋',
-        'leo': '♌', 'virgo': '♍', 'libra': '♎', 'scorpio': '♏',
-        'sagittarius': '♐', 'capricorn': '♑', 'aquarius': '♒', 'pisces': '♓'
-    };
-    return zodiacIcons[zodiac?.toLowerCase()] || '✨';
-}
+        if (error) {
+            console.warn('⚠️ Erro ao carregar notificações:', error);
+            return;
+        }
 
-function formatLookingFor(lookingFor) {
-    if (Array.isArray(lookingFor)) {
-        return lookingFor.join(', ');
+        const unreadCount = notifications?.length || 0;
+        
+        // Atualizar badges
+        const desktopBadge = document.getElementById('notificationBadge');
+        const mobileBadge = document.getElementById('mobileNotificationBadge');
+        
+        if (desktopBadge) {
+            desktopBadge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+            desktopBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
+        }
+        
+        if (mobileBadge) {
+            mobileBadge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+            mobileBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
+        }
+        
+        // Adicionar animação se houver notificações
+        const notificationBell = document.getElementById('notificationBell');
+        if (notificationBell && unreadCount > 0) {
+            notificationBell.classList.add('has-notifications');
+        } else if (notificationBell) {
+            notificationBell.classList.remove('has-notifications');
+        }
+        
+        console.log(`🔔 ${unreadCount} notificações não lidas`);
+        
+    } catch (error) {
+        console.error('❌ Erro ao carregar notificações:', error);
     }
-    return lookingFor || 'Não informado';
 }
 
-function isProfileComplete() {
-    return userProfile && userProfile.full_name && userProfile.full_name.trim() !== '' && userProfile.birth_date;
-}
+// Criar notificação de exemplo (para teste)
+async function createSampleNotification() {
+    try {
+        const notificationData = {
+            user_id: currentUser.id,
+            type: 'welcome',
+            title: 'Bem-vindo ao Amor Conect! 🎉',
+            message: 'Sua jornada para encontrar conexões genuínas começou. Complete seu perfil para ter mais matches!',
+            priority: 'high',
+            actions: [
+                { label: 'Completar Perfil', type: 'primary' },
+                { label: 'Ver Dicas', type: 'secondary' }
+            ],
+            created_at: new Date().toISOString()
+        };
 
-function isUserOnline(userProfile, currentUserId) {
-    if (!userProfile.last_online_at) return false;
-    const lastOnline = new Date(userProfile.last_online_at);
-    const now = new Date();
-    const minutesDiff = (now - lastOnline) / (1000 * 60);
-    const isActuallyOnline = minutesDiff <= 5;
-    if (userProfile.id === currentUserId) return true;
-    if (userProfile.is_invisible && userProfile.id !== currentUserId) return false;
-    return isActuallyOnline;
-}
+        const { error } = await supabase
+            .from('user_notifications')
+            .insert(notificationData);
 
-function showEmptyState(message) {
-    const usersGrid = document.getElementById('usersGrid');
-    if (usersGrid) {
-        usersGrid.innerHTML = `<div class="empty-state"><h3>${message}</h3></div>`;
+        if (error && error.code !== '23505') {
+            console.log('ℹ️ Não foi possível criar notificação de exemplo');
+        }
+    } catch (error) {
+        // Tabela não existe ainda, tudo bem
     }
 }
 
@@ -3375,7 +3115,7 @@ function startOnlineStatusUpdater() {
     updateOnlineStatus();
     
     // Atualizar a cada minuto
-    setInterval(updateOnlineStatus, 60000);
+    window.onlineStatusInterval = setInterval(updateOnlineStatus, 60000);
     
     // Atualizar quando a página ficar visível
     document.addEventListener('visibilitychange', function() {
@@ -3445,6 +3185,66 @@ async function updateStats() {
         document.getElementById('profileViews').textContent = '0';
     }
 }
+// ==================== FUNÇÕES AUXILIARES ====================
+
+function calculateAge(birthDate) {
+    if (!birthDate) return null;
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--;
+    }
+    return age;
+}
+
+function formatZodiac(zodiac) {
+    const zodiacMap = {
+        'aries': 'Áries', 'taurus': 'Touro', 'gemini': 'Gêmeos', 'cancer': 'Câncer',
+        'leo': 'Leão', 'virgo': 'Virgem', 'libra': 'Libra', 'scorpio': 'Escorpião',
+        'sagittarius': 'Sagitário', 'capricorn': 'Capricórnio', 'aquarius': 'Aquário', 'pisces': 'Peixes'
+    };
+    return zodiacMap[zodiac?.toLowerCase()] || zodiac;
+}
+
+function getZodiacIcon(zodiac) {
+    const zodiacIcons = {
+        'aries': '♈', 'taurus': '♉', 'gemini': '♊', 'cancer': '♋',
+        'leo': '♌', 'virgo': '♍', 'libra': '♎', 'scorpio': '♏',
+        'sagittarius': '♐', 'capricorn': '♑', 'aquarius': '♒', 'pisces': '♓'
+    };
+    return zodiacIcons[zodiac?.toLowerCase()] || '✨';
+}
+
+function formatLookingFor(lookingFor) {
+    if (Array.isArray(lookingFor)) {
+        return lookingFor.join(', ');
+    }
+    return lookingFor || 'Não informado';
+}
+
+function isProfileComplete() {
+    return userProfile && userProfile.full_name && userProfile.full_name.trim() !== '' && userProfile.birth_date;
+}
+
+function isUserOnline(userProfile, currentUserId) {
+    if (!userProfile.last_online_at) return false;
+    const lastOnline = new Date(userProfile.last_online_at);
+    const now = new Date();
+    const minutesDiff = (now - lastOnline) / (1000 * 60);
+    const isActuallyOnline = minutesDiff <= 5;
+    if (userProfile.id === currentUserId) return true;
+    if (userProfile.is_invisible && userProfile.id !== currentUserId) return false;
+    return isActuallyOnline;
+}
+
+function showEmptyState(message) {
+    const usersGrid = document.getElementById('usersGrid');
+    if (usersGrid) {
+        usersGrid.innerHTML = `<div class="empty-state"><h3>${message}</h3></div>`;
+    }
+}
 
 // ==================== MENU MOBILE ====================
 
@@ -3452,7 +3252,6 @@ function setupMobileMenu() {
     const hamburgerBtn = document.getElementById('hamburgerBtn');
     const mobileMenu = document.getElementById('mobileMenu');
     const closeMobileMenu = document.getElementById('closeMobileMenu');
-    const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
 
     if (!hamburgerBtn || !mobileMenu) {
         console.warn('⚠️ Elementos do menu mobile não encontrados');
@@ -3470,11 +3269,6 @@ function setupMobileMenu() {
         mobileMenu.style.display = 'none';
         document.body.style.overflow = 'auto';
     });
-
-    // Logout mobile
-    if (mobileLogoutBtn) {
-        mobileLogoutBtn.addEventListener('click', logout);
-    }
 
     // Fechar menu ao clicar em links
     mobileMenu.querySelectorAll('a').forEach(link => {
@@ -3508,11 +3302,42 @@ function setupMobileMenu() {
     checkScreenSize();
 }
 
-// ==================== FUNÇÃO DE DEBUG PARA REPORTES ====================
+// ==================== BOTÃO DE EMERGÊNCIA ====================
+
+function addEmergencyLogout() {
+    if (document.getElementById('emergencyLogout')) return;
+    
+    const emergencyBtn = document.createElement('button');
+    emergencyBtn.id = 'emergencyLogout';
+    emergencyBtn.innerHTML = '🚨 SAIR (EMERGÊNCIA)';
+    emergencyBtn.style.cssText = `
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        background: #e53e3e;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        font-weight: bold;
+        z-index: 10000;
+        cursor: pointer;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        font-size: 12px;
+    `;
+    emergencyBtn.onclick = function() {
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = 'index.html';
+    };
+    document.body.appendChild(emergencyBtn);
+}
+
+// ==================== DEBUG E MONITORAMENTO ====================
 
 async function debugReportSystem() {
     try {
-        console.group('   DEBUG SISTEMA DE REPORTES');
+        console.group('🐛 DEBUG SISTEMA DE REPORTES');
         
         // 1. Verificar se usuário está autenticado
         console.log('✅ Usuário autenticado:', currentUser?.id);
@@ -3527,7 +3352,7 @@ async function debugReportSystem() {
             console.error('❌ Tabela user_reports inacessível:', tableError);
         } else {
             console.log('✅ Tabela user_reports acessível');
-            console.log('   Total de reportes:', sampleReports?.length || 0);
+            console.log('📊 Total de reportes:', sampleReports?.length || 0);
         }
         
         // 3. Verificar estrutura da tabela
@@ -3540,18 +3365,36 @@ async function debugReportSystem() {
         if (structureError && structureError.code !== 'PGRST116') {
             console.error('❌ Erro na estrutura:', structureError);
         } else if (structure) {
-            console.log('  ️ Estrutura da tabela:', Object.keys(structure));
+            console.log('📋 Estrutura da tabela:', Object.keys(structure));
         } else {
-            console.log('   Tabela vazia - estrutura pronta para uso');
+            console.log('📭 Tabela vazia - estrutura pronta para uso');
         }
         
         console.groupEnd();
         return true;
         
     } catch (error) {
-        console.error('   Erro no debug:', error);
+        console.error('💥 Erro no debug:', error);
         console.groupEnd();
         return false;
+    }
+}
+
+// Verificar performance e saúde do sistema
+function monitorSystemHealth() {
+    // Verificar uso de memória
+    if (performance.memory) {
+        const usedMB = Math.round(performance.memory.usedJSHeapSize / 1048576);
+        const totalMB = Math.round(performance.memory.totalJSHeapSize / 1048576);
+        console.log(`💾 Memória: ${usedMB}MB / ${totalMB}MB`);
+    }
+    
+    // Verificar conexão
+    if (navigator.onLine) {
+        console.log('🌐 Conexão: Online');
+    } else {
+        console.warn('🌐 Conexão: Offline');
+        showQuickToast('⚠️ Você está offline');
     }
 }
 
@@ -3572,23 +3415,8 @@ window.openSupportModal = openSupportModal;
 
 // ==================== INICIALIZAÇÃO AVANÇADA ====================
 
-// Verificar performance e saúde do sistema
-function monitorSystemHealth() {
-    // Verificar uso de memória
-    if (performance.memory) {
-        const usedMB = Math.round(performance.memory.usedJSHeapSize / 1048576);
-        const totalMB = Math.round(performance.memory.totalJSHeapSize / 1048576);
-        console.log(`   Memória: ${usedMB}MB / ${totalMB}MB`);
-    }
-    
-    // Verificar conexão
-    if (navigator.onLine) {
-        console.log('   Conexão: Online');
-    } else {
-        console.warn('   Conexão: Offline');
-        showQuickToast('⚠️ Você está offline');
-    }
-}
+// Adicionar botão de emergência
+setTimeout(addEmergencyLogout, 2000);
 
 // Inicializar monitoramento
 setTimeout(() => {
@@ -3597,10 +3425,71 @@ setTimeout(() => {
     debugReportSystem().catch(console.error);
 }, 5000);
 
-console.log('✅ SISTEMA HOME.HTML CARREGADO COM SUCESSO!   ');
-console.log('   Usuário:', currentUser?.email);
-console.log('   User ID:', currentUser?.id);
-console.log('   Perfil carregado:', !!userProfile);
+// Comandos úteis para o console
+console.log(`
+🎮 COMANDOS ÚTEIS PARA DEBUG:
+
+• testLogout()       - Testar funcionamento do logout
+• forceLogout()      - Forçar logout emergencial
+• debugReportSystem()- Debug do sistema de reportes
+• monitorSystemHealth()- Verificar saúde do sistema
+
+🛠️  FUNÇÕES DISPONÍVEIS:
+• sendMessage(userId)     - Enviar mensagem
+• viewProfile(userId)     - Ver perfil
+• openReportModal(userId, name) - Reportar usuário
+• openBlockModal(userId, name)  - Bloquear usuário
+`);
+
+// ✅ FUNÇÃO PARA TESTE RÁPIDO DO LOGOUT
+window.testLogout = function() {
+    console.log('🧪 Testando logout...');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+    
+    console.log('🖱️ Botão desktop encontrado:', !!logoutBtn);
+    console.log('📱 Botão mobile encontrado:', !!mobileLogoutBtn);
+    
+    // Simular clique nos botões
+    if (logoutBtn) {
+        logoutBtn.click();
+    } else {
+        console.log('❌ Botão desktop não encontrado');
+    }
+};
+
+// ✅ FORÇAR LOGOUT VIA CONSOLE
+window.forceLogout = function() {
+    console.log('🆘 Forçando logout...');
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.href = 'index.html';
+};
+
+console.log('🎉 SISTEMA HOME.HTML CARREGADO COM SUCESSO!');
+console.log('👤 Usuário:', currentUser?.email);
+console.log('🆔 User ID:', currentUser?.id);
+console.log('📊 Perfil carregado:', !!userProfile);
+
+// Verificar se está em modo desenvolvimento
+function isDevelopmentMode() {
+    return window.location.hostname === 'localhost' || 
+           window.location.hostname === '127.0.0.1' ||
+           window.location.hostname.includes('github.io');
+}
+
+// DETECTAR MUDANÇAS NO CÓDIGO E FORÇAR RELOAD
+if (isDevelopmentMode()) {
+    let lastCodeVersion = localStorage.getItem('code_version') || '1.0';
+    const currentCodeVersion = '2.0.1'; // MUDE ESTA VERSÃO SEMPRE QUE ATUALIZAR
+    
+    if (lastCodeVersion !== currentCodeVersion) {
+        console.log('🔄 Código atualizado detectado! Forçando refresh...');
+        localStorage.setItem('code_version', currentCodeVersion);
+        localStorage.removeItem('supabase.auth.token');
+        sessionStorage.clear();
+    }
+}
 </script>
 </body>
 </html>
