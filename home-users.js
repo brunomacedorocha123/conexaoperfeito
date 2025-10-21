@@ -1,48 +1,73 @@
 // home-users.js - CORRIGIDO E OTIMIZADO
+console.log('👥 Iniciando sistema de usuários...');
+
 class HomeUsersSystem {
     constructor(supabase, currentUser) {
         this.supabase = supabase;
         this.currentUser = currentUser;
         this.userProfile = null;
         this.favoriteSystem = null;
+        this.isInitialized = false;
     }
 
     async initialize(userProfile) {
-        this.userProfile = userProfile;
-        
-        // 🔥 CORREÇÃO: Aguardar sistema de favoritos ficar disponível
-        await this.waitForFavoriteSystem();
-        
-        await this.loadRealUsers();
+        try {
+            this.userProfile = userProfile;
+            
+            console.log('🔄 Inicializando sistema de usuários...');
+            
+            // 🔥 CORREÇÃO: Aguardar sistema de favoritos de forma mais robusta
+            await this.waitForFavoriteSystem();
+            
+            await this.loadRealUsers();
+            this.isInitialized = true;
+            
+            console.log('✅ Sistema de usuários inicializado com sucesso!');
+            
+        } catch (error) {
+            console.error('❌ Erro na inicialização do users system:', error);
+            this.isInitialized = false;
+        }
     }
 
-    // 🔥 NOVO: Aguardar sistema de favoritos ficar disponível
+    // 🔥 CORREÇÃO: Aguardar sistema de favoritos melhorado
     async waitForFavoriteSystem() {
         console.log('⏳ Aguardando sistema de favoritos...');
         
+        // Se já estiver disponível, usar
+        if (window.favoriteSystem && window.favoriteSystem.isInitialized) {
+            this.favoriteSystem = window.favoriteSystem;
+            console.log('✅ Sistema de favoritos já disponível');
+            return;
+        }
+        
+        // Aguardar evento de inicialização
         let tentativas = 0;
-        while (tentativas < 10) {
-            if (window.favoriteSystem && window.favoriteSystem.initialize) {
+        const maxTentativas = 15;
+        
+        while (tentativas < maxTentativas) {
+            if (window.favoriteSystem && window.favoriteSystem.isInitialized) {
                 this.favoriteSystem = window.favoriteSystem;
                 console.log('✅ Sistema de favoritos integrado ao users system');
                 return;
             }
+            
             console.log('⏳ Aguardando favoriteSystem...', tentativas + 1);
-            await new Promise(resolve => setTimeout(resolve, 300));
+            await new Promise(resolve => setTimeout(resolve, 400));
             tentativas++;
         }
         
-        console.warn('⚠️ Sistema de favoritos não carregou após 3 segundos');
+        console.warn('⚠️ Sistema de favoritos não carregou após 6 segundos, continuando sem...');
     }
 
-    // ✅ CORREÇÃO CRÍTICA: Carregar usuários OTIMIZADO com função SQL
+    // ✅ CORREÇÃO: Carregar usuários OTIMIZADO
     async loadRealUsers() {
         try {
             console.log('👥 Carregando usuários OTIMIZADO...');
             
             const limit = window.innerWidth <= 768 ? 4 : 8;
             
-            // ✅ USAR A FUNÇÃO SQL OTIMIZADA QUE JÁ FILTRA BLOQUEIOS
+            // ✅ USAR A FUNÇÃO SQL OTIMIZADA
             const { data: users, error } = await this.supabase.rpc(
                 'get_home_users_optimized', {
                     current_user_uuid: this.currentUser.id,
@@ -115,7 +140,6 @@ class HomeUsersSystem {
         const userCards = [];
         
         for (const user of users) {
-            // ✅ AGORA O FILTRO DE BLOQUEIO É FEITO NO SQL, SEM VERIFICAÇÃO AQUI
             const card = await this.createUserCardWithPhoto(user);
             if (card) userCards.push(card);
         }
@@ -131,7 +155,6 @@ class HomeUsersSystem {
     // ✅ CORREÇÃO: Criar card com BOTÃO DE FAVORITO FUNCIONAL
     async createUserCardWithPhoto(user) {
         try {
-            // ✅ CORREÇÃO: A função SQL retorna campos diferentes, precisamos adaptar
             const userId = user.user_id || user.id;
             const nickname = user.nickname || user.full_name?.split(' ')[0] || 'Usuário';
             const age = user.birth_date ? this.calculateAge(user.birth_date) : null;
@@ -139,9 +162,7 @@ class HomeUsersSystem {
             // ✅ CORREÇÃO: Dados podem vir de user_details JSONB ou do objeto principal
             let details = {};
             if (user.user_details) {
-                details = user.user_details; // Veio da função SQL
-            } else if (user.user_details) {
-                details = user.user_details; // Veio do fallback
+                details = user.user_details;
             }
             
             // 🔥 CORREÇÃO: Verificar se usuário já é favorito de forma segura
@@ -168,7 +189,9 @@ class HomeUsersSystem {
                 if (photoUrl) {
                     avatarHtml = `
                         <div class="user-card-avatar">
-                            <img class="user-card-avatar-img" src="${photoUrl}" alt="${nickname}" style="display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                            <img class="user-card-avatar-img" src="${photoUrl}" alt="${nickname}" 
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                                 style="display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
                             <div class="user-card-avatar-fallback" style="display: none;">${nickname.charAt(0).toUpperCase()}</div>
                             ${onlineBadge}
                         </div>
@@ -377,7 +400,13 @@ window.handleFavoriteClick = async function(userId, event) {
     if (window.favoriteSystem && window.favoriteSystem.toggleFavorite) {
         try {
             const cardElement = event ? event.target.closest('.user-card') : null;
-            await window.favoriteSystem.toggleFavorite(userId, cardElement);
+            const result = await window.favoriteSystem.toggleFavorite(userId, cardElement);
+            
+            // Atualizar o botão localmente se necessário
+            if (result !== undefined && window.updateFavoriteInCard) {
+                window.updateFavoriteInCard(userId, result);
+            }
+            
         } catch (error) {
             console.error('❌ Erro ao curtir:', error);
             showQuickToast('❌ Erro ao processar curtida');
@@ -385,6 +414,11 @@ window.handleFavoriteClick = async function(userId, event) {
     } else {
         console.error('❌ Sistema de favoritos não disponível');
         showQuickToast('⚠️ Sistema de favoritos não carregado');
+        
+        // Tentar inicializar
+        if (window.initializeFavoriteSystem) {
+            window.initializeFavoriteSystem();
+        }
     }
 };
 
@@ -394,6 +428,23 @@ window.updateFavoriteInCard = function(userId, isFavorite) {
         usersSystem.updateFavoriteButton(userId, isFavorite);
     } else {
         console.warn('❌ usersSystem não disponível para atualizar card');
+        
+        // Fallback: atualizar manualmente
+        const card = document.querySelector(`.user-card[data-user-id="${userId}"]`);
+        if (card) {
+            const favoriteBtn = card.querySelector('.favorite-btn');
+            if (favoriteBtn) {
+                if (isFavorite) {
+                    favoriteBtn.innerHTML = '❤️';
+                    favoriteBtn.title = 'Remover dos favoritos';
+                    favoriteBtn.classList.add('favorited');
+                } else {
+                    favoriteBtn.innerHTML = '🤍';
+                    favoriteBtn.title = 'Adicionar aos favoritos';
+                    favoriteBtn.classList.remove('favorited');
+                }
+            }
+        }
     }
 };
 
@@ -402,6 +453,11 @@ window.refreshUsersGrid = function() {
     if (usersSystem) {
         usersSystem.refreshUsers();
     }
+};
+
+// 🔥 NOVO: Verificar se sistema está inicializado
+window.isUsersSystemReady = function() {
+    return usersSystem && usersSystem.isInitialized;
 };
 
 console.log('✅ home-users.js CORRIGIDO com sistema de favoritos!');

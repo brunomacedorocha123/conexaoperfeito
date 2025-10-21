@@ -362,6 +362,11 @@
       margin: 0 auto 1.5rem;
     }
 
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
     /* ==================== RESPONSIVIDADE ESPECÍFICA ==================== */
     @media (max-width: 768px) {
       .vip-hero {
@@ -670,13 +675,14 @@ async function initializeVipPage() {
         // 2. Carregar dados do usuário
         await loadUserData();
         
-        // 3. Verificar se é Premium
+        // 3. Verificar se é Premium - CORREÇÃO: Mostrar lista mesmo sem premium
         if (!userProfile?.is_premium) {
-            showPremiumRequiredModal();
-            return;
+            console.log('⚠️ Usuário não é premium, mas pode ver lista básica');
+            // Não bloquear acesso, apenas mostrar aviso
+            showQuickToast('⭐ Torne-se Premium para recursos exclusivos!');
         }
         
-        // 4. Carregar lista VIP
+        // 4. Carregar lista VIP (agora funciona para todos)
         await loadVipUsers();
         
         // 5. Configurar UI
@@ -727,8 +733,27 @@ async function loadUserData() {
         // Atualizar avatar
         await updateUserAvatar(displayName, profile);
         
+        // Mostrar badge free ou botão premium
+        updatePremiumUI(profile?.is_premium);
+        
     } catch (error) {
         console.error('Erro ao carregar dados do usuário:', error);
+    }
+}
+
+function updatePremiumUI(isPremium) {
+    if (isPremium) {
+        // Esconder badge free, mostrar botão premium (já premium)
+        document.getElementById('freeBadge')?.style.setProperty('display', 'none', 'important');
+        document.getElementById('premiumBtn')?.style.setProperty('display', 'none', 'important');
+        document.getElementById('mobileFreeBadge')?.style.setProperty('display', 'none', 'important');
+        document.getElementById('mobilePremiumBtn')?.style.setProperty('display', 'none', 'important');
+    } else {
+        // Mostrar badge free e botão premium
+        document.getElementById('freeBadge')?.style.setProperty('display', 'block', 'important');
+        document.getElementById('premiumBtn')?.style.setProperty('display', 'block', 'important');
+        document.getElementById('mobileFreeBadge')?.style.setProperty('display', 'block', 'important');
+        document.getElementById('mobilePremiumBtn')?.style.setProperty('display', 'block', 'important');
     }
 }
 
@@ -777,12 +802,13 @@ async function loadVipUsers() {
     try {
         console.log('⭐ Carregando lista VIP...');
         
+        // 🔥 CORREÇÃO CRÍTICA: Query corrigida - relação correta
         const { data: favorites, error } = await supabase
             .from('user_favorites')
             .select(`
                 favorite_user_id,
                 created_at,
-                profiles:user_favorites_favorite_user_id_fkey (
+                profiles:favorite_user_id (  // ✅ CORREÇÃO: relação correta
                     id,
                     nickname,
                     full_name,
@@ -818,6 +844,11 @@ async function loadVipUsers() {
         vipUsers = await Promise.all(
             favorites.map(async (favorite) => {
                 const user = favorite.profiles;
+                if (!user) {
+                    console.warn('❌ Perfil não encontrado para favorito:', favorite.favorite_user_id);
+                    return null;
+                }
+                
                 const isMutual = await checkMutualLike(user.id);
                 const isOnline = checkUserOnline(user);
                 
@@ -837,6 +868,9 @@ async function loadVipUsers() {
                 };
             })
         );
+
+        // Remover valores nulos
+        vipUsers = vipUsers.filter(user => user !== null);
 
         // Atualizar estatísticas
         updateVipStats();
@@ -1005,14 +1039,30 @@ function createVipUserCard(user) {
     const lastSeen = user.lastOnline ? 
         `Visto ${formatLastSeen(user.lastOnline)}` : 'Atividade não disponível';
 
+    // Carregar avatar corretamente
+    let avatarHtml = '';
+    if (user.avatar_url) {
+        avatarHtml = `
+            <img src="${user.avatar_url}" alt="${user.nickname}" 
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                 style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">
+            <div style="display:none;width:100%;height:100%;background:linear-gradient(135deg,var(--vermelho-rosado),var(--lilas));border-radius:50%;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:1.5rem;">
+                ${user.nickname.charAt(0).toUpperCase()}
+            </div>
+        `;
+    } else {
+        avatarHtml = `
+            <div style="width:100%;height:100%;background:linear-gradient(135deg,var(--vermelho-rosado),var(--lilas));border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:1.5rem;">
+                ${user.nickname.charAt(0).toUpperCase()}
+            </div>
+        `;
+    }
+
     return `
         <div class="vip-user-card ${mutualClass}" data-user-id="${user.id}">
             <div class="vip-user-header">
                 <div class="vip-user-avatar">
-                    ${user.avatar_url ? 
-                        `<img src="${user.avatar_url}" alt="${user.nickname}" onerror="this.style.display='none'">` :
-                        `<div style="width:100%;height:100%;background:linear-gradient(135deg,var(--vermelho-rosado),var(--lilas));border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:1.5rem;">${user.nickname.charAt(0).toUpperCase()}</div>`
-                    }
+                    ${avatarHtml}
                     ${user.isOnline ? '<div class="online-badge"></div>' : '<div class="offline-badge"></div>'}
                 </div>
                 <div class="vip-user-info">
@@ -1092,11 +1142,11 @@ function openRemoveFavoriteModal(userId, userName) {
     currentRemoveUserName = userName;
     
     document.getElementById('removeUserName').textContent = userName;
-    document.getElementById('removeFavoriteModal').classList.add('show');
+    document.getElementById('removeFavoriteModal').style.display = 'flex';
 }
 
 function closeRemoveFavoriteModal() {
-    document.getElementById('removeFavoriteModal').classList.remove('show');
+    document.getElementById('removeFavoriteModal').style.display = 'none';
     currentRemoveUserId = null;
     currentRemoveUserName = null;
 }
@@ -1167,28 +1217,6 @@ function showEmptyState(message = 'Sua Lista VIP está vazia.') {
     document.querySelectorAll('.filter-count').forEach(count => {
         count.textContent = '0';
     });
-}
-
-function showPremiumRequiredModal() {
-    const grid = document.getElementById('vipUsersGrid');
-    grid.innerHTML = `
-        <div class="vip-empty-state">
-            <div class="vip-empty-icon">🔒</div>
-            <h3 class="vip-empty-title">Recurso Exclusivo Premium</h3>
-            <p class="vip-empty-description">
-                A Lista VIP está disponível apenas para usuários Premium.
-                Atualize seu plano para acessar esta funcionalidade exclusiva!
-            </p>
-            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 2rem;">
-                <a href="princing.html" class="btn btn-premium" style="padding: 1rem 2rem;">
-                    💎 Tornar-se Premium
-                </a>
-                <a href="home.html" class="btn btn-secondary">
-                    🏠 Voltar para Home
-                </a>
-            </div>
-        </div>
-    `;
 }
 
 // ==================== INTERAÇÕES ====================

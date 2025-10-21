@@ -1,4 +1,4 @@
-// home-favoritos.js - SISTEMA COMPLETO E FUNCIONAL
+// home-favoritos.js - SISTEMA COMPLETO E FUNCIONAL CORRIGIDO
 console.log('🚀 Iniciando sistema de favoritos...');
 
 class FavoriteSystem {
@@ -6,6 +6,7 @@ class FavoriteSystem {
         this.supabase = supabase;
         this.currentUser = currentUser;
         this.isPremium = false;
+        this.isInitialized = false;
         console.log('🎯 FavoriteSystem criado para usuário:', currentUser?.id);
     }
 
@@ -13,9 +14,13 @@ class FavoriteSystem {
         try {
             console.log('🔄 Inicializando sistema de favoritos...');
             await this.checkPremiumStatus();
+            this.isInitialized = true;
             console.log('✅ Sistema de favoritos pronto!');
+            return true;
         } catch (error) {
             console.error('❌ Erro na inicialização:', error);
+            this.isInitialized = false;
+            return false;
         }
     }
 
@@ -33,6 +38,7 @@ class FavoriteSystem {
             }
         } catch (error) {
             console.error('Erro ao verificar premium:', error);
+            this.isPremium = false;
         }
     }
 
@@ -41,9 +47,8 @@ class FavoriteSystem {
         try {
             console.log('❤️ Processando curtida para:', userId);
             
-            // Verificação básica
-            if (!this.supabase || !this.currentUser) {
-                throw new Error('Sistema não inicializado');
+            if (!this.isInitialized) {
+                throw new Error('Sistema de favoritos não inicializado');
             }
 
             // Verificar se já é favorito
@@ -68,9 +73,12 @@ class FavoriteSystem {
                 await this.addFavorite(userId, userCardElement);
             }
 
+            return !isCurrentlyFavorite; // Retorna novo estado
+
         } catch (error) {
             console.error('💥 ERRO CRÍTICO em toggleFavorite:', error);
             showQuickToast('❌ Erro ao processar curtida');
+            throw error;
         }
     }
 
@@ -94,23 +102,18 @@ class FavoriteSystem {
 
             if (error) {
                 console.error('❌ Erro do Supabase ao adicionar:', error);
-                
-                // Tentar inserção alternativa sem .select()
-                const { error: simpleError } = await this.supabase
-                    .from('user_favorites')
-                    .insert(favoriteData);
-
-                if (simpleError) {
-                    throw simpleError;
-                }
-                
-                console.log('✅ Favorito adicionado (inserção simples)');
-            } else {
-                console.log('✅ Favorito adicionado com sucesso:', data);
+                throw error;
             }
+
+            console.log('✅ Favorito adicionado com sucesso:', data);
 
             // Atualizar UI
             this.updateCardUI(userCardElement, true);
+            
+            // Atualizar outros cards se existirem
+            if (window.updateFavoriteInCard) {
+                window.updateFavoriteInCard(userId, true);
+            }
             
             // Feedback para usuário
             if (this.isPremium) {
@@ -147,6 +150,12 @@ class FavoriteSystem {
             
             // Atualizar UI
             this.updateCardUI(userCardElement, false);
+            
+            // Atualizar outros cards se existirem
+            if (window.updateFavoriteInCard) {
+                window.updateFavoriteInCard(userId, false);
+            }
+            
             showQuickToast('💔 Curtida removida');
 
         } catch (error) {
@@ -265,8 +274,14 @@ class FavoriteSystem {
 async function initializeFavoriteSystem() {
     console.log('🔧 Iniciando sistema de favoritos...');
     
+    // Se já estiver inicializado, retornar
+    if (window.favoriteSystem && window.favoriteSystem.isInitialized) {
+        console.log('✅ Sistema de favoritos já inicializado');
+        return true;
+    }
+    
     let tentativas = 0;
-    const maxTentativas = 15; // Aumentei para 15 tentativas
+    const maxTentativas = 20;
     
     while (tentativas < maxTentativas) {
         if (window.supabase && window.currentUser) {
@@ -274,9 +289,15 @@ async function initializeFavoriteSystem() {
             
             try {
                 window.favoriteSystem = new FavoriteSystem(window.supabase, window.currentUser);
-                await window.favoriteSystem.initialize();
-                console.log('✅ Sistema de favoritos inicializado com SUCESSO!');
-                return true;
+                const success = await window.favoriteSystem.initialize();
+                
+                if (success) {
+                    console.log('✅ Sistema de favoritos inicializado com SUCESSO!');
+                    
+                    // Disparar evento de inicialização
+                    window.dispatchEvent(new Event('favoriteSystemReady'));
+                    return true;
+                }
             } catch (error) {
                 console.error('❌ Erro na inicialização:', error);
                 return false;
@@ -294,7 +315,7 @@ async function initializeFavoriteSystem() {
 
 // ==================== FUNÇÃO GLOBAL PRINCIPAL ====================
 
-window.toggleFavorite = function(userId, event) {
+window.toggleFavorite = async function(userId, event) {
     if (event) {
         event.stopPropagation();
         event.preventDefault();
@@ -307,17 +328,25 @@ window.toggleFavorite = function(userId, event) {
         currentUser: !!window.currentUser
     });
     
-    if (window.favoriteSystem) {
-        const cardElement = event ? event.target.closest('.user-card') : null;
-        window.favoriteSystem.toggleFavorite(userId, cardElement);
+    if (window.favoriteSystem && window.favoriteSystem.isInitialized) {
+        try {
+            const cardElement = event ? event.target.closest('.user-card') : null;
+            const result = await window.favoriteSystem.toggleFavorite(userId, cardElement);
+            return result;
+        } catch (error) {
+            console.error('❌ Erro no toggleFavorite:', error);
+            showQuickToast('❌ Erro ao processar curtida');
+            return false;
+        }
     } else {
-        console.error('❌ favoriteSystem não disponível');
+        console.error('❌ favoriteSystem não disponível ou não inicializado');
         showQuickToast('⚠️ Sistema carregando... tente novamente em alguns segundos.');
         
         // Tentar inicializar novamente
         setTimeout(() => {
             initializeFavoriteSystem();
         }, 1000);
+        return false;
     }
 };
 
@@ -342,9 +371,9 @@ document.addEventListener('DOMContentLoaded', function() {
 // Fallback adicional
 window.addEventListener('load', function() {
     console.log('🔄 Window loaded - verificando sistema...');
-    if (!window.favoriteSystem) {
+    if (!window.favoriteSystem || !window.favoriteSystem.isInitialized) {
         console.log('🔄 Tentando inicializar novamente...');
-        setTimeout(initializeFavoriteSystem, 2000);
+        setTimeout(initializeFavoriteSystem, 1000);
     }
 });
 
@@ -352,9 +381,32 @@ window.addEventListener('load', function() {
 window.debugFavoriteSystem = function() {
     console.log('🔍 DEBUG - Sistema de Favoritos:');
     console.log('- favoriteSystem:', window.favoriteSystem);
+    console.log('- isInitialized:', window.favoriteSystem?.isInitialized);
+    console.log('- isPremium:', window.favoriteSystem?.isPremium);
     console.log('- supabase:', window.supabase);
     console.log('- currentUser:', window.currentUser);
-    console.log('- toggleFavorite:', window.toggleFavorite);
 };
+
+// Função global de toast (fallback)
+if (typeof showQuickToast === 'undefined') {
+    window.showQuickToast = function(message) {
+        console.log('🔔 TOAST:', message);
+        // Implementação básica de toast
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: #333; color: white; padding: 12px 20px; border-radius: 25px;
+            font-size: 14px; z-index: 10000; opacity: 0; transition: opacity 0.3s;
+        `;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => toast.style.opacity = '1', 100);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    };
+}
 
 console.log('✅ home-favoritos.js CARREGADO - pronto para inicializar!');
