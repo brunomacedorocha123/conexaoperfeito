@@ -333,7 +333,7 @@ header {
   font-weight: bold;
 }
 
-/* 🔥 NOVO: HEADER DO CARD COM NOME E BOTÃO DE FAVORITO */
+/* 🔥 CORRIGIDO: HEADER DO CARD COM NOME E BOTÃO DE FAVORITO */
 .user-card-header {
   display: flex;
   justify-content: space-between;
@@ -351,7 +351,7 @@ header {
   text-align: left;
 }
 
-/* 🔥 NOVO: BOTÃO DE FAVORITO */
+/* 🔥 CORRIGIDO: BOTÃO DE FAVORITO FUNCIONAL */
 .favorite-btn {
   background: none;
   border: none;
@@ -367,7 +367,8 @@ header {
   width: 40px;
   height: 40px;
   position: relative;
-  z-index: 10;
+  z-index: 1000;
+  pointer-events: auto !important;
 }
 
 .favorite-btn:hover {
@@ -1373,11 +1374,50 @@ footer {
   position: relative;
 }
 
-.user-card > *:not(.user-card-actions) {
+/* 🔥 CORREÇÃO CRÍTICA: Remover pointer-events que bloqueava o botão de favorito */
+.user-card > *:not(.user-card-actions):not(.user-card-header) {
   pointer-events: none;
 }
 
 .user-card-actions,
-.user-card-actions * {
+.user-card-actions *,
+.user-card-header,
+.user-card-header * {
+  pointer-events: auto !important;
+}
+
+/* ==================== CORREÇÕES DO SISTEMA DE FAVORITOS ==================== */
+
+/* 🔥 GARANTIR que o botão de favorito seja SEMPRE clicável */
+.favorite-btn {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  z-index: 1000 !important;
+  position: relative !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 2px solid #ff6b6b !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
+}
+
+.favorite-btn:hover {
+  background: white !important;
+  transform: scale(1.1) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+}
+
+/* 🔥 GARANTIR que o header do card seja clicável */
+.user-card-header {
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 2;
+}
+
+/* 🔥 GARANTIR que todos os elementos clicáveis dentro do header funcionem */
+.user-card-header * {
+  pointer-events: auto !important;
+}
+
+/* 🔥 SOBRESCREVER qualquer regra que possa estar bloqueando cliques */
+.user-card .favorite-btn {
   pointer-events: auto !important;
 }
