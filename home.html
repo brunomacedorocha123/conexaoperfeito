@@ -1994,6 +1994,7 @@ footer {
           <a href="mensagens.html" class="btn btn-outline">Mensagens</a>
           <a href="busca.html" class="btn btn-outline">Buscar</a>
           <a href="painel.html" class="btn btn-outline">Perfil</a>
+          <a href="lista-vip.html" class="btn btn-outline">Lista VIP</a>
           <!-- NOVO: Link para usuários bloqueados -->
           <a href="blocks.html" class="btn btn-outline">   Bloqueados</a>
           <button class="btn btn-outline" id="logoutBtn">Sair</button>
@@ -2027,6 +2028,7 @@ footer {
       <a href="busca.html" class="btn btn-outline">Buscar</a>
       <a href="painel.html" class="btn btn-outline">Perfil</a>
       <a href="mensagens.html" class="btn btn-outline">Mensagens</a>
+      <a href="lista-vip.html" class="btn btn-outline">Lista VIP</a>
       <!-- NOVO: Link para usuários bloqueados no mobile -->
       <a href="blocks.html" class="btn btn-outline">   Bloqueados</a>
       <button class="btn btn-outline" id="mobileLogoutBtn">Sair</button>
@@ -2347,24 +2349,6 @@ async function initializeApp() {
         
         // 3. Carregar usuários OTIMIZADO
         await loadRealUsers();
-
-
-    // ✅✅✅ CORREÇÃO: Inicializar sistema de bloqueio COM VERIFICAÇÃO
-        if (window.HomeBlockSystem) {
-            window.blockSystem = new HomeBlockSystem(supabase, currentUser);
-            await window.blockSystem.initialize();
-            console.log('✅ Sistema de bloqueio inicializado!');
-        } else {
-            console.error('❌ HomeBlockSystem não carregado - verifique home.block.js');
-            // Fallback emergencial
-            initializeBlockSystemFallback();
-        }
-        
-        // 2. Carregar dados do usuário
-        await loadUserData();
-        
-        // 3. Carregar usuários OTIMIZADO
-        await loadRealUsers();
         
         // ✅✅✅ CORREÇÃO DEFINITIVA: Sistema de visitantes com garantia
         console.log('   Inicializando sistema de visitantes...');
@@ -2432,9 +2416,10 @@ async function initializeApp() {
         
     } catch (error) {
         console.error('❌ Erro crítico na inicialização:', error);
-        showQuickToast('Erro ao carregar a página. Recarregue.');
+        // REMOVIDO alerta para usuário - apenas log no console
     }
 }
+
 // Criar notificação de exemplo (para teste)
 async function createSampleNotification() {
     try {
@@ -2455,7 +2440,7 @@ async function createSampleNotification() {
             .from('user_notifications')
             .insert(notificationData);
 
-        if (error && error.code !== '23505') { // Ignora erro de duplicação
+        if (error && error.code !== '23505') {
             console.log('ℹ️ Não foi possível criar notificação de exemplo');
         }
     } catch (error) {
@@ -2936,7 +2921,6 @@ async function createUserCardWithPhoto(user) {
         return '';
     }
 }
-
 // ==================== SISTEMA DE REPORTE COMPLETO ====================
 
 function toggleMenu(button) {
@@ -3360,23 +3344,20 @@ function startOnlineStatusUpdater() {
 }
 
 // ==================== ESTATÍSTICAS ====================
-
+// ✅ CORREÇÃO: Função updateStats melhorada para evitar erros
 async function updateStats() {
-    // Inicializar com valores padrão
-    document.getElementById('totalUsers').textContent = '...';
-    document.getElementById('newMatches').textContent = '0';
-    document.getElementById('usersOnline').textContent = '...';
-    document.getElementById('profileViews').textContent = '...';
-
     try {
+        // Inicializar com valores padrão
+        document.getElementById('totalUsers').textContent = '...';
+        document.getElementById('newMatches').textContent = '0';
+        document.getElementById('usersOnline').textContent = '...';
+        document.getElementById('profileViews').textContent = '...';
+
         const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
         
         // Executar todas as consultas em paralelo
-        const [totalResult, messagesResult, onlineResult] = await Promise.all([
+        const [totalResult, onlineResult] = await Promise.all([
             supabase.from('profiles').select('*', { count: 'exact', head: true }),
-            supabase.from('messages').select('*', { count: 'exact', head: true })
-                .eq('receiver_id', currentUser.id)
-                .eq('is_read', false),
             supabase.from('profiles').select('*', { count: 'exact', head: true })
                 .gte('last_online_at', fiveMinutesAgo)
                 .eq('is_invisible', false)
@@ -3385,25 +3366,30 @@ async function updateStats() {
 
         // Atualizar a interface
         document.getElementById('totalUsers').textContent = totalResult.count || 1;
-        document.getElementById('newMatches').textContent = messagesResult.count || 0;
         document.getElementById('usersOnline').textContent = onlineResult.count || 0;
         
-        // ✅ CORREÇÃO: VISUALIZAÇÕES DO SISTEMA DE VISITANTES
+        // ✅ CORREÇÃO: Matches do sistema Pulse
+        if (window.pulseSystem && typeof window.pulseSystem.getMatchesCount === 'function') {
+            const matchesCount = window.pulseSystem.getMatchesCount();
+            document.getElementById('newMatches').textContent = matchesCount;
+        } else {
+            document.getElementById('newMatches').textContent = '0';
+        }
+        
+        // ✅ CORREÇÃO: Visualizações do sistema de visitantes
+        let visitCount = 0;
         if (window.visitanteSystem && typeof window.visitanteSystem.getVisitCount === 'function') {
-            const visitCount = window.visitanteSystem.getVisitCount();
-            document.getElementById('profileViews').textContent = visitCount;
-            console.log('   Visualizações do perfil:', visitCount);
+            visitCount = window.visitanteSystem.getVisitCount();
         } else {
             // Fallback: contar diretamente
-            const { data: visits, error } = await supabase
+            const { data: visits } = await supabase
                 .from('profile_visits')
                 .select('id', { count: 'exact' })
                 .eq('visited_id', currentUser.id);
-
-            const visitCount = visits?.length || 0;
-            document.getElementById('profileViews').textContent = visitCount;
-            console.log('   Visualizações (fallback):', visitCount);
+            visitCount = visits?.length || 0;
         }
+        
+        document.getElementById('profileViews').textContent = visitCount;
 
     } catch (error) {
         console.error('❌ Erro ao carregar estatísticas:', error);
