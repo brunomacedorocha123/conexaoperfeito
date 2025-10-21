@@ -1,5 +1,5 @@
-// home-favoritos.js - SISTEMA COMPLETO CORRIGIDO
-console.log('🚀 home-favoritos.js carregado - aguardando inicialização...');
+// home-favoritos.js - SISTEMA COMPLETO E FUNCIONAL
+console.log('🚀 Iniciando sistema de favoritos...');
 
 class FavoriteSystem {
     constructor(supabase, currentUser) {
@@ -14,15 +14,19 @@ class FavoriteSystem {
         try {
             console.log('🔄 Inicializando sistema de favoritos...');
             
-            // Verificar se temos as dependências necessárias
-            if (!this.supabase || !this.currentUser) {
-                throw new Error('Supabase ou currentUser não disponíveis');
+            if (!this.supabase) {
+                throw new Error('Supabase não disponível');
+            }
+            
+            if (!this.currentUser) {
+                throw new Error('Usuário não autenticado');
             }
             
             await this.checkPremiumStatus();
             this.isInitialized = true;
-            console.log('✅ Sistema de favoritos pronto!');
+            console.log('✅ Sistema de favoritos inicializado com sucesso!');
             return true;
+            
         } catch (error) {
             console.error('❌ Erro na inicialização:', error);
             this.isInitialized = false;
@@ -38,25 +42,37 @@ class FavoriteSystem {
                 .eq('id', this.currentUser.id)
                 .single();
 
-            if (!error && profile) {
-                this.isPremium = profile.is_premium || false;
-                console.log('👑 Status Premium:', this.isPremium);
+            if (error) {
+                console.warn('⚠️ Erro ao verificar premium:', error);
+                this.isPremium = false;
+                return;
             }
+
+            this.isPremium = profile?.is_premium || false;
+            console.log('👑 Status Premium:', this.isPremium);
+            
         } catch (error) {
             console.error('Erro ao verificar premium:', error);
             this.isPremium = false;
         }
     }
 
-    // ❤️ FUNÇÃO PRINCIPAL DE CURTIR - CORRIGIDA
+    // ❤️ FUNÇÃO PRINCIPAL - CORAÇÃO DOS FAVORITOS
     async toggleFavorite(userId, userCardElement = null) {
+        console.log('❤️ toggleFavorite chamado para:', userId);
+        
         try {
-            console.log('❤️ Processando curtida para:', userId);
-            
+            // Verificações de segurança
             if (!this.isInitialized) {
                 throw new Error('Sistema de favoritos não inicializado');
             }
 
+            if (!userId) {
+                throw new Error('ID do usuário não fornecido');
+            }
+
+            console.log('🔍 Verificando se já é favorito...');
+            
             // Verificar se já é favorito
             const { data: existingFavorite, error: checkError } = await this.supabase
                 .from('user_favorites')
@@ -65,6 +81,7 @@ class FavoriteSystem {
                 .eq('favorite_user_id', userId)
                 .single();
 
+            // PGRST116 = "No rows found" - isso é normal
             if (checkError && checkError.code !== 'PGRST116') {
                 console.error('❌ Erro ao verificar favorito:', checkError);
                 throw checkError;
@@ -82,23 +99,23 @@ class FavoriteSystem {
             return !isCurrentlyFavorite;
 
         } catch (error) {
-            console.error('💥 ERRO CRÍTICO em toggleFavorite:', error);
-            this.showToast('❌ Erro ao processar curtida');
+            console.error('💥 ERRO em toggleFavorite:', error);
+            this.showToast('❌ Erro ao processar curtida: ' + (error.message || 'Erro desconhecido'));
             throw error;
         }
     }
 
     async addFavorite(userId, userCardElement) {
+        console.log('➕ ADICIONANDO favorito:', userId);
+        
         try {
-            console.log('➕ ADICIONANDO favorito:', userId);
-            
             const favoriteData = {
                 user_id: this.currentUser.id,
                 favorite_user_id: userId,
                 created_at: new Date().toISOString()
             };
 
-            console.log('📤 Enviando dados para Supabase:', favoriteData);
+            console.log('📤 Enviando para Supabase:', favoriteData);
 
             const { data, error } = await this.supabase
                 .from('user_favorites')
@@ -108,20 +125,31 @@ class FavoriteSystem {
 
             if (error) {
                 console.error('❌ Erro do Supabase ao adicionar:', error);
-                throw error;
-            }
+                
+                // Tentar inserção simples sem select
+                console.log('🔄 Tentando inserção alternativa...');
+                const { error: simpleError } = await this.supabase
+                    .from('user_favorites')
+                    .insert(favoriteData);
 
-            console.log('✅ Favorito adicionado com sucesso:', data);
+                if (simpleError) {
+                    throw simpleError;
+                }
+                
+                console.log('✅ Favorito adicionado (inserção simples)');
+            } else {
+                console.log('✅ Favorito adicionado com sucesso:', data);
+            }
 
             // Atualizar UI
             this.updateCardUI(userCardElement, true);
             
-            // Atualizar outros cards
+            // Atualizar outros cards se existirem
             if (window.updateFavoriteInCard) {
                 window.updateFavoriteInCard(userId, true);
             }
             
-            // Feedback
+            // Feedback para usuário
             if (this.isPremium) {
                 this.showToast('❤️ Adicionado à Lista VIP!');
             } else {
@@ -138,9 +166,9 @@ class FavoriteSystem {
     }
 
     async removeFavorite(userId, userCardElement) {
+        console.log('➖ REMOVENDO favorito:', userId);
+        
         try {
-            console.log('➖ REMOVENDO favorito:', userId);
-
             const { error } = await this.supabase
                 .from('user_favorites')
                 .delete()
@@ -157,7 +185,7 @@ class FavoriteSystem {
             // Atualizar UI
             this.updateCardUI(userCardElement, false);
             
-            // Atualizar outros cards
+            // Atualizar outros cards se existirem
             if (window.updateFavoriteInCard) {
                 window.updateFavoriteInCard(userId, false);
             }
@@ -249,7 +277,7 @@ class FavoriteSystem {
                 console.log('🎨 UI atualizada: NÃO FAVORITADO');
             }
         } else {
-            console.warn('❌ Botão de favorito não encontrado');
+            console.warn('❌ Botão de favorito não encontrado no card');
         }
     }
 
@@ -275,11 +303,10 @@ class FavoriteSystem {
     }
 
     showToast(message) {
-        // Usar a função global se existir, senão criar uma
         if (window.showQuickToast) {
             window.showQuickToast(message);
         } else {
-            console.log('🔔 TOAST:', message);
+            // Fallback de toast
             const toast = document.createElement('div');
             toast.style.cssText = `
                 position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
@@ -299,71 +326,58 @@ class FavoriteSystem {
     }
 }
 
-// ==================== SISTEMA DE INICIALIZAÇÃO INTELIGENTE ====================
-
-let initializationAttempts = 0;
-const MAX_INITIALIZATION_ATTEMPTS = 25; // 12.5 segundos
+// ==================== INICIALIZAÇÃO AUTOMÁTICA ====================
 
 async function initializeFavoriteSystem() {
-    console.log('🔧 Iniciando sistema de favoritos...');
+    console.log('🔧 Inicializando sistema de favoritos...');
     
-    // Se já estiver inicializado, retornar
-    if (window.favoriteSystem && window.favoriteSystem.isInitialized) {
-        console.log('✅ Sistema de favoritos já inicializado');
-        return true;
-    }
+    let tentativas = 0;
+    const maxTentativas = 20;
     
-    // Verificar se temos as dependências necessárias
-    if (!window.supabase || !window.currentUser) {
-        console.log('⏳ Aguardando supabase e currentUser...');
-        
-        if (initializationAttempts < MAX_INITIALIZATION_ATTEMPTS) {
-            initializationAttempts++;
-            setTimeout(initializeFavoriteSystem, 500);
-            return false;
-        } else {
-            console.error('💥 TIMEOUT: Não foi possível inicializar sistema de favoritos');
-            showQuickToast('⚠️ Sistema de favoritos não carregou');
-            return false;
-        }
-    }
-    
-    try {
-        console.log('🚀 Inicializando FavoriteSystem...');
-        window.favoriteSystem = new FavoriteSystem(window.supabase, window.currentUser);
-        const success = await window.favoriteSystem.initialize();
-        
-        if (success) {
-            console.log('✅ Sistema de favoritos inicializado com SUCESSO!');
+    while (tentativas < maxTentativas) {
+        if (window.supabase && window.currentUser) {
+            console.log('🚀 Dependências encontradas - criando FavoriteSystem...');
             
-            // Disparar evento de inicialização para outros sistemas
-            window.dispatchEvent(new CustomEvent('favoriteSystemReady'));
-            
-            // Notificar usuário
-            if (window.showQuickToast) {
-                window.showQuickToast('✅ Sistema de favoritos pronto!');
+            try {
+                window.favoriteSystem = new FavoriteSystem(window.supabase, window.currentUser);
+                const success = await window.favoriteSystem.initialize();
+                
+                if (success) {
+                    console.log('✅ Sistema de favoritos inicializado com SUCESSO!');
+                    
+                    // Disparar evento de inicialização
+                    window.dispatchEvent(new CustomEvent('favoriteSystemReady'));
+                    
+                    return true;
+                } else {
+                    console.error('❌ Falha na inicialização do FavoriteSystem');
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ Erro na inicialização:', error);
+                return false;
             }
-            
-            return true;
-        } else {
-            console.error('❌ Falha na inicialização do FavoriteSystem');
-            return false;
         }
-    } catch (error) {
-        console.error('❌ Erro na inicialização:', error);
-        return false;
+        
+        console.log('⏳ Aguardando supabase e currentUser...', tentativas + 1);
+        await new Promise(resolve => setTimeout(resolve, 500));
+        tentativas++;
     }
+    
+    console.error('💥 TIMEOUT: Não foi possível inicializar sistema de favoritos');
+    return false;
 }
 
-// ==================== FUNÇÃO GLOBAL PRINCIPAL COM FALLBACKS ====================
+// ==================== FUNÇÃO GLOBAL PRINCIPAL ====================
 
 window.toggleFavorite = async function(userId, event) {
+    console.log('🎯 toggleFavorite GLOBAL chamado para:', userId);
+    
     if (event) {
         event.stopPropagation();
         event.preventDefault();
     }
     
-    console.log('🎯 toggleFavorite CHAMADO para:', userId);
     console.log('📊 Estado do sistema:', {
         favoriteSystem: !!window.favoriteSystem,
         isInitialized: window.favoriteSystem?.isInitialized,
@@ -371,7 +385,6 @@ window.toggleFavorite = async function(userId, event) {
         currentUser: !!window.currentUser
     });
     
-    // Se o sistema está pronto, usar normalmente
     if (window.favoriteSystem && window.favoriteSystem.isInitialized) {
         try {
             const cardElement = event ? event.target.closest('.user-card') : null;
@@ -382,38 +395,14 @@ window.toggleFavorite = async function(userId, event) {
             showQuickToast('❌ Erro ao processar curtida');
             return false;
         }
-    } 
-    // Se o sistema existe mas não está inicializado
-    else if (window.favoriteSystem && !window.favoriteSystem.isInitialized) {
-        console.log('🔄 Sistema existe mas não está inicializado, tentando inicializar...');
-        showQuickToast('⏳ Inicializando sistema...');
+    } else {
+        console.error('❌ favoriteSystem não disponível ou não inicializado');
+        showQuickToast('⚠️ Sistema carregando... tente novamente em alguns segundos.');
         
-        try {
-            const success = await window.favoriteSystem.initialize();
-            if (success) {
-                // Tentar novamente após inicialização
-                const cardElement = event ? event.target.closest('.user-card') : null;
-                const result = await window.favoriteSystem.toggleFavorite(userId, cardElement);
-                return result;
-            } else {
-                throw new Error('Falha na inicialização');
-            }
-        } catch (error) {
-            console.error('❌ Erro ao inicializar e executar:', error);
-            showQuickToast('❌ Sistema indisponível');
-            return false;
-        }
-    }
-    // Se o sistema não existe
-    else {
-        console.error('❌ favoriteSystem não disponível');
-        showQuickToast('⚠️ Sistema carregando... tente novamente.');
-        
-        // Tentar inicializar o sistema
+        // Tentar inicializar novamente
         setTimeout(() => {
             initializeFavoriteSystem();
         }, 1000);
-        
         return false;
     }
 };
@@ -428,38 +417,22 @@ window.goToVipList = function() {
     }
 };
 
-// ==================== INICIALIZAÇÃO AUTOMÁTICA ====================
+// ==================== INICIALIZAÇÃO ====================
 
-// Estratégia 1: Quando DOM estiver pronto
+// Inicializar quando DOM estiver pronto
 document.addEventListener('DOMContentLoaded', function() {
     console.log('📄 DOM carregado - iniciando sistema de favoritos...');
     initializeFavoriteSystem();
 });
 
-// Estratégia 2: Quando window estiver carregada
+// Fallback adicional
 window.addEventListener('load', function() {
     console.log('🔄 Window loaded - verificando sistema...');
     if (!window.favoriteSystem || !window.favoriteSystem.isInitialized) {
         console.log('🔄 Tentando inicializar novamente...');
-        setTimeout(initializeFavoriteSystem, 1000);
+        setTimeout(initializeFavoriteSystem, 2000);
     }
 });
-
-// Estratégia 3: Quando supabase e currentUser ficarem disponíveis
-let dependencyCheckInterval = setInterval(() => {
-    if (window.supabase && window.currentUser && (!window.favoriteSystem || !window.favoriteSystem.isInitialized)) {
-        console.log('🔍 Dependências disponíveis - inicializando sistema...');
-        initializeFavoriteSystem();
-        clearInterval(dependencyCheckInterval);
-    }
-}, 1000);
-
-// Parar a verificação após 30 segundos
-setTimeout(() => {
-    clearInterval(dependencyCheckInterval);
-}, 30000);
-
-// ==================== FUNÇÕES UTILITÁRIAS ====================
 
 // Debug helper
 window.debugFavoriteSystem = function() {
@@ -469,19 +442,21 @@ window.debugFavoriteSystem = function() {
     console.log('- isPremium:', window.favoriteSystem?.isPremium);
     console.log('- supabase:', window.supabase);
     console.log('- currentUser:', window.currentUser);
+    console.log('- currentUser ID:', window.currentUser?.id);
     console.log('- toggleFavorite:', window.toggleFavorite);
 };
 
-// Função global de toast (fallback seguro)
+// Função global de toast (fallback)
 if (typeof showQuickToast === 'undefined') {
     window.showQuickToast = function(message) {
         console.log('🔔 TOAST:', message);
         const toast = document.createElement('div');
         toast.style.cssText = `
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: #333; color: white; padding: 12px 24px; border-radius: 25px;
+            background: #38a169; color: white; padding: 12px 20px; border-radius: 25px;
             font-size: 14px; font-weight: 600; z-index: 10000; opacity: 0;
-            transition: opacity 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: opacity 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            text-align: center; min-width: 200px; max-width: 90%;
         `;
         toast.textContent = message;
         document.body.appendChild(toast);
@@ -494,19 +469,13 @@ if (typeof showQuickToast === 'undefined') {
     };
 }
 
-// Função para integração com outros sistemas
-window.getFavoriteSystem = function() {
+console.log('✅ home-favoritos.js CARREGADO - pronto para inicializar!');
+
+// Teste automático após 3 segundos
+setTimeout(() => {
     if (window.favoriteSystem && window.favoriteSystem.isInitialized) {
-        return window.favoriteSystem;
+        console.log('🎉 Sistema de favoritos funcionando perfeitamente!');
     } else {
-        console.warn('⚠️ Sistema de favoritos não disponível');
-        return null;
+        console.warn('⚠️ Sistema de favoritos ainda não inicializado');
     }
-};
-
-console.log('✅ home-favoritos.js CARREGADO - sistema de inicialização ativo!');
-
-// Export para módulos (se necessário)
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { FavoriteSystem, initializeFavoriteSystem };
-}
+}, 3000);
