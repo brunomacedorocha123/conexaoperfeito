@@ -6,6 +6,7 @@
     <title>Perfil - Amor Conect</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Sistema de Visitantes -->
+     <script src="home-favoritos.js"></script>
 <style>
     * {
         margin: 0;
@@ -616,6 +617,43 @@ const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 let currentProfileGallery = [];
 let currentModalIndex = 0;
 let currentProfileId = null;
+
+// ==================== SISTEMA DE FAVORITOS - INICIALIZAÇÃO RÁPIDA ====================
+
+// ✅ VERIFICAR SE O SISTEMA DE FAVORITOS JÁ EXISTE
+function checkFavoriteSystem() {
+    if (window.favoriteSystem && window.favoriteSystem.isInitialized) {
+        console.log('✅ Sistema de favoritos já carregado globalmente');
+        return true;
+    }
+    return false;
+}
+
+// ✅ INICIALIZAÇÃO RÁPIDA DO SISTEMA DE FAVORITOS
+async function quickInitializeFavorites() {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            console.log('⏳ Aguardando usuário para inicializar favoritos');
+            return false;
+        }
+
+        // Se a classe FavoriteSystem existe, criar instância
+        if (window.FavoriteSystem) {
+            console.log('🚀 Criando sistema de favoritos no perfil...');
+            window.favoriteSystem = new FavoriteSystem(supabase, user);
+            const success = await window.favoriteSystem.initialize();
+            console.log('✅ Sistema de favoritos inicializado:', success);
+            return success;
+        } else {
+            console.warn('⚠️ FavoriteSystem não disponível ainda');
+            return false;
+        }
+    } catch (error) {
+        console.error('❌ Erro na inicialização rápida:', error);
+        return false;
+    }
+}
 
 // ==================== SISTEMA DE GALERIA CORRIGIDO ====================
 
@@ -1377,6 +1415,315 @@ async function createGallerySection(profileId) {
         `;
     }
 }
+
+// ✅ CONFIGURAR MODAL DA GALERIA
+function setupGalleryModal() {
+    const modal = document.getElementById('galleryModal');
+    const modalClose = document.getElementById('modalClose');
+    const modalPrev = document.getElementById('modalPrev');
+    const modalNext = document.getElementById('modalNext');
+
+    if (modalClose) modalClose.addEventListener('click', closeGalleryModal);
+    if (modalPrev) modalPrev.addEventListener('click', showPrevImage);
+    if (modalNext) modalNext.addEventListener('click', showNextImage);
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal.style.display === 'flex') {
+            closeGalleryModal();
+        }
+    });
+
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeGalleryModal();
+        }
+    });
+}
+
+// ✅ ABRIR MODAL DA GALERIA
+function openGalleryModal(index) {
+    const modal = document.getElementById('galleryModal');
+    const modalImage = document.getElementById('modalImage');
+    
+    if (currentProfileGallery.length === 0) {
+        console.log('❌ Nenhuma imagem na galeria para abrir modal');
+        return;
+    }
+    
+    currentModalIndex = index;
+    const image = currentProfileGallery[currentModalIndex];
+    
+    if (!image || !image.display_url) {
+        console.log('❌ Imagem não encontrada no índice:', index);
+        return;
+    }
+    
+    console.log('🖼️ Abrindo modal com imagem:', image.display_url);
+    modalImage.src = image.display_url;
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+// ✅ FECHAR MODAL DA GALERIA
+function closeGalleryModal() {
+    const modal = document.getElementById('galleryModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+// ✅ MOSTRAR IMAGEM ANTERIOR
+function showPrevImage() {
+    if (currentProfileGallery.length === 0) return;
+    
+    currentModalIndex = (currentModalIndex - 1 + currentProfileGallery.length) % currentProfileGallery.length;
+    const image = currentProfileGallery[currentModalIndex];
+    
+    if (image && image.display_url) {
+        document.getElementById('modalImage').src = image.display_url;
+    }
+}
+
+// ✅ MOSTRAR PRÓXIMA IMAGEM
+function showNextImage() {
+    if (currentProfileGallery.length === 0) return;
+    
+    currentModalIndex = (currentModalIndex + 1) % currentProfileGallery.length;
+    const image = currentProfileGallery[currentModalIndex];
+    
+    if (image && image.display_url) {
+        document.getElementById('modalImage').src = image.display_url;
+    }
+}
+
+// ✅ ENVIAR MENSAGEM
+async function sendMessage(userId) {
+    console.log('💌 Iniciando conversa com usuário:', userId);
+    
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+            alert('Você precisa estar logado para enviar mensagens!');
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        const { data: userProfile } = await supabase
+            .from('profiles')
+            .select('full_name, birth_date')
+            .eq('id', user.id)
+            .single();
+        
+        if (!userProfile || !userProfile.full_name || !userProfile.birth_date) {
+            alert('Complete seu perfil primeiro para enviar mensagens!');
+            window.location.href = 'painel.html';
+            return;
+        }
+        
+        const { error: messageError } = await supabase
+            .from('messages')
+            .insert({
+                sender_id: user.id,
+                receiver_id: userId,
+                content: '👋 Olá! Gostaria de conversar com você.',
+                is_read: false
+            });
+
+        if (messageError) {
+            console.error('❌ Erro ao criar conversa:', messageError);
+        } else {
+            console.log('✅ Conversa criada com sucesso');
+        }
+        
+        localStorage.setItem('openChatWithUserId', userId);
+        window.location.href = 'mensagens.html';
+        
+    } catch (error) {
+        console.error('❌ Erro ao enviar mensagem:', error);
+        localStorage.setItem('openChatWithUserId', userId);
+        window.location.href = 'mensagens.html';
+    }
+}
+
+// ✅ MOSTRAR ERRO
+function showError(message) {
+    const profileContent = document.getElementById('profileContent');
+    profileContent.innerHTML = `
+        <div class="error-state">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">😕</div>
+            <h3 style="margin-bottom: 1rem;">${message}</h3>
+            <p style="margin-bottom: 1.5rem;">Volte para a página inicial e tente novamente.</p>
+            <button class="btn btn-primary" onclick="window.location.href='home.html'" style="margin-top: 1rem;">
+                ← Voltar para Home
+            </button>
+        </div>
+    `;
+}
+
+// ==================== FUNÇÕES DE FORMATAÇÃO ====================
+
+function calculateAge(birthDate) {
+    if (!birthDate) return null;
+    
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--;
+    }
+    
+    return age;
+}
+
+function formatGender(gender) {
+    const genders = {
+        'feminino': 'Feminino',
+        'masculino': 'Masculino',
+        'nao_informar': 'Prefiro não informar',
+        'outro': 'Outro'
+    };
+    return genders[gender] || gender;
+}
+
+function formatZodiac(zodiac) {
+    const zodiacs = {
+        'aries': 'Áries', 'touro': 'Touro', 'gemeos': 'Gêmeos', 'cancer': 'Câncer',
+        'leao': 'Leão', 'virgem': 'Virgem', 'libra': 'Libra', 'escorpiao': 'Escorpião',
+        'sagitario': 'Sagitário', 'capricornio': 'Capricórnio', 'aquario': 'Aquário', 'peixes': 'Peixes'
+    };
+    return zodiacs[zodiac] || zodiac;
+}
+
+function formatSexualOrientation(orientation) {
+    const orientations = {
+        'heterossexual': 'Heterossexual',
+        'homossexual': 'Homossexual', 
+        'bissexual': 'Bissexual',
+        'assexual': 'Assexual',
+        'pansexual': 'Pansexual',
+        'outro': 'Outro',
+        'prefiro_nao_informar': 'Prefiro não informar'
+    };
+    return orientations[orientation] || orientation;
+}
+
+function formatDrinking(drinking) {
+    const options = {
+        'nao_bebo': 'Não bebo',
+        'socialmente': 'Socialmente',
+        'frequentemente': 'Com frequência',
+        'prefiro_nao_informar': 'Prefiro não informar'
+    };
+    return options[drinking] || drinking;
+}
+
+function formatSmoking(smoking) {
+    const options = {
+        'nao_fumo': 'Não fumo',
+        'socialmente': 'Socialmente', 
+        'frequentemente': 'Com frequência',
+        'prefiro_nao_informar': 'Prefiro não informar'
+    };
+    return options[smoking] || smoking;
+}
+
+function formatExercise(exercise, exerciseDetails) {
+    if (!exercise) return null;
+    
+    if (exercise === 'ocasionalmente') {
+        return exerciseDetails ? `Ocasionalmente (${exerciseDetails})` : 'Ocasionalmente';
+    } else if (exercise === 'regularmente') {
+        return exerciseDetails ? `Regularmente (${exerciseDetails})` : 'Regularmente';
+    } else if (exercise === 'nao_pratico') {
+        return 'Não pratico';
+    } else if (exercise === 'prefiro_nao_informar') {
+        return 'Prefiro não informar';
+    }
+    return exercise;
+}
+
+function formatReligion(religion) {
+    const religions = {
+        'catolica': 'Católica',
+        'evangelica': 'Evangélica',
+        'espirita': 'Espírita',
+        'umbanda_candomble': 'Umbanda/Candomblé',
+        'budista': 'Budista',
+        'judaica': 'Judaica',
+        'islamica': 'Islâmica',
+        'outra': 'Outra',
+        'nenhuma': 'Nenhuma',
+        'prefiro_nao_informar': 'Prefiro não informar'
+    };
+    return religions[religion] || religion;
+}
+
+function formatEducation(education) {
+    const levels = {
+        'fundamental_incompleto': 'Fundamental Incompleto',
+        'fundamental_completo': 'Fundamental Completo',
+        'medio_incompleto': 'Médio Incompleto',
+        'medio_completo': 'Médio Completo',
+        'superior_incompleto': 'Superior Incompleto',
+        'superior_completo': 'Superior Completo',
+        'pos_graduacao': 'Pós-graduação',
+        'mestrado': 'Mestrado',
+        'doutorado': 'Doutorado'
+    };
+    return levels[education] || education;
+}
+
+function formatLookingFor(lookingFor) {
+    if (!lookingFor) return null;
+    
+    if (Array.isArray(lookingFor)) {
+        return lookingFor.map(item => {
+            const options = {
+                'amizade': 'Amizade',
+                'namoro': 'Namoro',
+                'relacionamento_serio': 'Relacionamento Sério',
+                'conversa': 'Apenas Conversa',
+                'encontro_casual': 'Encontro Casual'
+            };
+            return options[item] || item;
+        }).join(', ');
+    }
+    
+    const options = {
+        'amizade': 'Amizade',
+        'namoro': 'Namoro',
+        'relacionamento_serio': 'Relacionamento Sério',
+        'conversa': 'Apenas Conversa',
+        'encontro_casual': 'Encontro Casual'
+    };
+    return options[lookingFor] || lookingFor;
+}
+
+function formatPets(hasPets, petsDetails) {
+    if (!hasPets) return null;
+    
+    if (hasPets === 'sim') {
+        return petsDetails ? `Sim, ${petsDetails}` : 'Sim, tenho animais';
+    } else if (hasPets === 'nao') {
+        return 'Não tenho';
+    } else if (hasPets === 'prefiro_nao_informar') {
+        return 'Prefiro não informar';
+    }
+    return hasPets;
+}
+
+// ==================== FUNÇÕES GLOBAIS ====================
+
+window.openGalleryModal = openGalleryModal;
+window.closeGalleryModal = closeGalleryModal;
+window.showPrevImage = showPrevImage;
+window.showNextImage = showNextImage;
+window.sendMessage = sendMessage;
+window.toggleFavoriteInProfile = toggleFavoriteInProfile;
+
+console.log('✅ perfil.js carregado com sucesso! Sistema de favoritos integrado!');
 
 // ✅ CONFIGURAR MODAL DA GALERIA
 function setupGalleryModal() {
