@@ -66,7 +66,7 @@ header {
 /* LOGO EXPANSÍVEL - CRESCE LIVREMENTE */
 .logo img {
     width: auto;
-    height: 160px;            /* 👈 AUMENTEI PRA 160px (ENORME!) */
+    height: 250px;            /* 👈 AUMENTEI PRA 160px (ENORME!) */
     max-height: 180px;        /* 👈 AUMENTEI MÁXIMO */
     object-fit: contain;
     transition: var(--transition);
