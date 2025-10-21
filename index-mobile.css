@@ -89,7 +89,7 @@
         transform: translateY(-2px);
     }
 
-    /* MENU HAMBURGUER - ESPAÇO COMPLETAMENTE CORRIGIDO */
+    /* MENU HAMBURGUER - TODOS OS 3 ITENS DENTRO DO RETÂNGULO */
     nav {
         display: none;
         width: 100%;
@@ -99,9 +99,8 @@
         border-radius: 12px;
         border: 2px solid var(--gold);
         box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-        overflow: visible; /* 👈 PERMITE CONTEÚDO COMPLETO */
+        overflow: hidden;
         z-index: 101;
-        position: relative; /* 👈 GARANTE POSICIONAMENTO */
     }
 
     nav.active {
@@ -132,7 +131,7 @@
     nav ul li {
         width: 100%;
         text-align: center;
-        border-bottom: 1px solid rgba(198, 166, 100, 0.2);
+        border-bottom: 1px solid rgba(198, 166, 100, 0.3);
     }
 
     nav ul li:last-child {
@@ -141,32 +140,27 @@
 
     nav a {
         display: block;
-        padding: 1.3rem 1.5rem; /* 👈 AUMENTEI ESPAÇAMENTO */
+        padding: 1.3rem 1.5rem;
         color: var(--white);
         text-decoration: none;
         font-weight: 500;
         font-size: 1.1rem;
         transition: var(--transition);
         background: transparent;
-        line-height: 1.4; /* 👈 MELHORA LEGIBILIDADE */
+        line-height: 1.4;
+    }
+
+    /* TODOS OS ITENS COM MESMO ESTILO - FUNDO ESCURO, TEXTO BRANCO */
+    nav ul li:nth-child(1) a,
+    nav ul li:nth-child(2) a,
+    nav ul li:nth-child(3) a {
+        background: transparent;
+        color: var(--white);
     }
 
     nav a:hover {
-        background: rgba(198, 166, 100, 0.15);
+        background: rgba(198, 166, 100, 0.2);
         color: var(--gold);
-    }
-
-    /* GARANTIR QUE TODOS OS 3 ITENS SÃO VISÍVEIS */
-    nav ul li:nth-child(1) a {
-        background: transparent;
-    }
-
-    nav ul li:nth-child(2) a {
-        background: transparent;
-    }
-
-    nav ul li:nth-child(3) a {
-        background: transparent;
     }
 
     /* CONTEÚDO PRINCIPAL - AJUSTES */
@@ -283,7 +277,7 @@
     }
 
     nav a {
-        padding: 1.2rem 1.2rem; /* 👈 ESPAÇAMENTO CONSISTENTE */
+        padding: 1.2rem 1.2rem;
         font-size: 1rem;
     }
 
@@ -335,7 +329,7 @@
     }
 
     nav a {
-        padding: 1rem 1rem; /* 👈 ESPAÇAMENTO ADEQUADO */
+        padding: 1rem 1rem;
         font-size: 0.95rem;
     }
 
