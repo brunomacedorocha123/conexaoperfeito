@@ -3,41 +3,46 @@ document.addEventListener('DOMContentLoaded', function() {
     const menuToggle = document.querySelector('.menu-toggle');
     const nav = document.querySelector('nav');
     
-    if (menuToggle) {
+    console.log('Menu toggle:', menuToggle);
+    console.log('Nav:', nav);
+
+    if (menuToggle && nav) {
         menuToggle.addEventListener('click', function(e) {
-            e.stopPropagation(); // Impede que o clique se propague
+            e.stopPropagation();
+            console.log('Menu clicado!');
             this.classList.toggle('active');
             nav.classList.toggle('active');
         });
-    }
 
-    // Fechar menu ao clicar em um link
-    document.querySelectorAll('nav a').forEach(link => {
-        link.addEventListener('click', function() {
-            if (menuToggle && menuToggle.classList.contains('active')) {
+        // Fechar menu ao clicar em um link
+        document.querySelectorAll('nav a').forEach(link => {
+            link.addEventListener('click', function() {
+                console.log('Link do menu clicado');
+                menuToggle.classList.remove('active');
+                nav.classList.remove('active');
+            });
+        });
+
+        // Fechar menu ao clicar fora
+        document.addEventListener('click', function(e) {
+            if (nav.classList.contains('active') && 
+                !e.target.closest('nav') && 
+                !e.target.closest('.menu-toggle')) {
+                console.log('Clicou fora - fechando menu');
                 menuToggle.classList.remove('active');
                 nav.classList.remove('active');
             }
         });
-    });
 
-    // Fechar menu ao clicar fora
-    document.addEventListener('click', function(e) {
-        if (nav && nav.classList.contains('active') && 
-            !e.target.closest('nav') && 
-            !e.target.closest('.menu-toggle')) {
-            menuToggle.classList.remove('active');
-            nav.classList.remove('active');
-        }
-    });
-
-    // Fechar menu ao rolar
-    window.addEventListener('scroll', function() {
-        if (nav && nav.classList.contains('active')) {
-            menuToggle.classList.remove('active');
-            nav.classList.remove('active');
-        }
-    });
+        // Fechar menu ao rolar
+        window.addEventListener('scroll', function() {
+            if (nav.classList.contains('active')) {
+                console.log('Rolando - fechando menu');
+                menuToggle.classList.remove('active');
+                nav.classList.remove('active');
+            }
+        });
+    }
 
     // Smooth scrolling para links internos
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -84,4 +89,6 @@ document.addEventListener('DOMContentLoaded', function() {
         el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
         observer.observe(el);
     });
+
+    console.log('JavaScript carregado com sucesso!');
 });
