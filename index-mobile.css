@@ -6,14 +6,19 @@
         padding: 12px 0;
         gap: 12px;
         align-items: center;
+        justify-content: center;
+        position: relative;
     }
 
     .logo {
         order: 1;
         flex: 0 0 auto;
+        display: flex;
+        justify-content: center;
+        width: 100%;
     }
 
-    /* LOGO MAIOR E BEM POSICIONADA */
+    /* LOGO MAIOR E CENTRALIZADA */
     .logo img {
         width: auto;
         height: 100px;
@@ -26,20 +31,15 @@
     .menu-toggle {
         display: flex;
         order: 2;
-        margin-left: auto;
+        position: absolute;
+        right: 20px;
+        top: 25px;
         background: var(--card-bg);
         border: 2px solid var(--gold);
         border-radius: 8px;
         padding: 10px;
         gap: 4px;
-    }
-
-    .menu-toggle span {
-        width: 22px;
-        height: 2px;
-        background: var(--gold);
-        transition: var(--transition);
-        border-radius: 2px;
+        z-index: 102;
     }
 
     .auth-buttons {
@@ -88,7 +88,7 @@
         transform: translateY(-2px);
     }
 
-    /* MENU HAMBURGUER - TOTALMENTE REFEITO */
+    /* MENU HAMBURGUER - COMPLETO COM 3 OPÇÕES */
     nav {
         display: none;
         width: 100%;
@@ -99,6 +99,7 @@
         border: 2px solid var(--gold);
         box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
         overflow: hidden;
+        z-index: 101;
     }
 
     nav.active {
@@ -123,6 +124,7 @@
         width: 100%;
         padding: 0;
         margin: 0;
+        list-style: none;
     }
 
     nav ul li {
@@ -137,17 +139,17 @@
 
     nav a {
         display: block;
-        padding: 1rem 1.5rem;
+        padding: 1.2rem 1.5rem;
         color: var(--white);
         text-decoration: none;
         font-weight: 500;
-        font-size: 1rem;
+        font-size: 1.1rem;
         transition: var(--transition);
         background: transparent;
     }
 
     nav a:hover {
-        background: rgba(198, 166, 100, 0.1);
+        background: rgba(198, 166, 100, 0.15);
         color: var(--gold);
     }
 
@@ -222,6 +224,17 @@
         height: 50px;
         font-size: 1.4rem;
     }
+
+    /* FOOTER MOBILE */
+    .footer-content {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        text-align: center;
+    }
+
+    .social-links {
+        justify-content: center;
+    }
 }
 
 @media (max-width: 480px) {
@@ -235,6 +248,12 @@
         max-height: 100px;
     }
 
+    .menu-toggle {
+        right: 15px;
+        top: 20px;
+        padding: 8px;
+    }
+
     .auth-buttons {
         gap: 0.6rem;
         margin-top: 6px;
@@ -245,6 +264,11 @@
         font-size: 0.85rem;
         max-width: 130px;
         min-width: 110px;
+    }
+
+    nav a {
+        padding: 1rem 1.2rem;
+        font-size: 1rem;
     }
 
     .hero h2 {
@@ -268,16 +292,6 @@
     .testimonial-card {
         padding: 1.2rem 0.8rem;
     }
-
-    .footer-content {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-        text-align: center;
-    }
-
-    .social-links {
-        justify-content: center;
-    }
 }
 
 @media (max-width: 360px) {
@@ -291,11 +305,22 @@
         max-height: 90px;
     }
 
+    .menu-toggle {
+        right: 10px;
+        top: 18px;
+        padding: 6px;
+    }
+
     .auth-buttons .btn {
         padding: 0.5rem 0.8rem;
         font-size: 0.8rem;
         max-width: 110px;
         min-width: 100px;
+    }
+
+    nav a {
+        padding: 0.9rem 1rem;
+        font-size: 0.95rem;
     }
 
     .hero h2 {
@@ -319,7 +344,7 @@
 
 /* ANIMAÇÕES DO MENU HAMBURGUER */
 .menu-toggle.active span:nth-child(1) {
-    transform: rotate(45deg) translate(6px, 6px);
+    transform: rotate(45deg) translate(5px, 5px);
 }
 
 .menu-toggle.active span:nth-child(2) {
@@ -327,7 +352,7 @@
 }
 
 .menu-toggle.active span:nth-child(3) {
-    transform: rotate(-45deg) translate(6px, -6px);
+    transform: rotate(-45deg) translate(5px, -5px);
 }
 
 /* TRANSITIONS SUAVES */
