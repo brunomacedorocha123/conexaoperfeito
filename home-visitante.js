@@ -1,4 +1,4 @@
-// home-visitante.js - SISTEMA COMPLETO E FUNCIONAL
+// home-visitante.js - SISTEMA COMPLETO SEM DUPLICATAS
 console.log('🚀 home-visitante.js carregando...');
 
 class HomeVisitanteSystem {
@@ -19,10 +19,10 @@ class HomeVisitanteSystem {
             // 1. Verificar status premium
             await this.verificarStatusPremium();
             
-            // 2. Carregar contador de visitas
+            // 2. Carregar contador de visitas ÚNICAS
             await this.carregarContadorVisitas();
             
-            // 3. Se for premium, carregar visitantes
+            // 3. Se for premium, carregar visitantes ÚNICOS
             if (this.isPremium) {
                 await this.carregarVisitantesPremium();
             }
@@ -61,12 +61,12 @@ class HomeVisitanteSystem {
 
     async carregarContadorVisitas() {
         try {
-            console.log('🔢 Carregando contador de visitas...');
+            console.log('🔢 Carregando contador de visitas ÚNICAS...');
             
-            // Estratégia 1: Tentar função RPC
+            // Estratégia 1: Tentar função RPC de visitas únicas
             try {
                 const { data: rpcCount, error: rpcError } = await this.supabase.rpc(
-                    'count_user_visits', { 
+                    'count_unique_visits', { 
                         p_user_id: this.currentUser.id,
                         p_days: 7 
                     }
@@ -74,22 +74,24 @@ class HomeVisitanteSystem {
                 
                 if (!rpcError && rpcCount !== null) {
                     this.visitCount = rpcCount;
-                    console.log('✅ RPC funcionou:', this.visitCount);
+                    console.log('✅ RPC visitas únicas:', this.visitCount);
                     return;
                 }
             } catch (rpcError) {
                 console.warn('⚠️ RPC falhou, tentando contagem direta');
             }
             
-            // Estratégia 2: Contar diretamente
+            // Estratégia 2: Contar visitantes únicos diretamente
             const { data: visits, error } = await this.supabase
                 .from('profile_visits')
-                .select('id', { count: 'exact' })
+                .select('visitor_id')
                 .eq('visited_id', this.currentUser.id);
 
             if (!error) {
-                this.visitCount = visits?.length || 0;
-                console.log('✅ Contagem direta:', this.visitCount);
+                // Usar Set para contar visitantes únicos
+                const uniqueVisitors = new Set(visits?.map(v => v.visitor_id) || []);
+                this.visitCount = uniqueVisitors.size;
+                console.log('✅ Contagem direta visitantes únicos:', this.visitCount);
             } else {
                 this.visitCount = 0;
             }
@@ -102,9 +104,9 @@ class HomeVisitanteSystem {
 
     async carregarVisitantesPremium() {
         try {
-            console.log('⭐ Carregando visitantes premium...');
+            console.log('⭐ Carregando visitantes premium ÚNICOS...');
             
-            // Estratégia 1: Usar função RPC otimizada
+            // Estratégia 1: Usar função RPC otimizada (SEM DUPLICATAS)
             try {
                 const { data: visitors, error } = await this.supabase.rpc(
                     'get_recent_visitors', {
@@ -115,18 +117,17 @@ class HomeVisitanteSystem {
 
                 if (!error && visitors) {
                     this.visitantes = await this.processarVisitantesRPC(visitors);
-                    console.log(`✅ RPC visitors: ${this.visitantes.length}`);
+                    console.log(`✅ RPC visitors únicos: ${this.visitantes.length}`);
                     return;
                 }
             } catch (rpcError) {
                 console.warn('⚠️ RPC falhou, usando query direta:', rpcError);
             }
 
-            // Estratégia 2: Query direta
+            // Estratégia 2: Query direta CORRIGIDA (SEM DUPLICATAS)
             const { data: visits, error } = await this.supabase
                 .from('profile_visits')
                 .select(`
-                    id,
                     visitor_id,
                     visited_at,
                     profiles:visitor_id (
@@ -136,22 +137,73 @@ class HomeVisitanteSystem {
                         avatar_url,
                         city,
                         state,
-                        last_online_at
+                        last_online_at,
+                        is_invisible
                     )
                 `)
                 .eq('visited_id', this.currentUser.id)
                 .order('visited_at', { ascending: false })
-                .limit(12);
+                .limit(50); // Pegar mais para depois filtrar
 
             if (error) throw error;
 
-            this.visitantes = await this.processarVisitantes(visits || []);
-            console.log(`✅ Visitantes carregados: ${this.visitantes.length}`);
+            // ✅ CORREÇÃO CRÍTICA: REMOVER DUPLICATAS
+            this.visitantes = await this.removerVisitantesDuplicados(visits || []);
+            console.log(`✅ Visitantes únicos carregados: ${this.visitantes.length}`);
 
         } catch (error) {
             console.error('❌ Erro ao carregar visitantes premium:', error);
             this.visitantes = [];
         }
+    }
+
+    // ✅ MÉTODO NOVO PARA REMOVER DUPLICATAS
+    async removerVisitantesDuplicados(visits) {
+        const visitantesUnicos = new Map();
+        
+        for (const visit of visits) {
+            try {
+                const visitorId = visit.visitor_id;
+                const profile = visit.profiles;
+                
+                if (!profile) continue;
+
+                // Se já existe este visitante, mantém apenas o mais recente
+                const existingVisit = visitantesUnicos.get(visitorId);
+                if (!existingVisit || new Date(visit.visited_at) > new Date(existingVisit.visited_at)) {
+                    const nickname = profile.nickname || profile.full_name?.split(' ')[0] || 'Usuário';
+                    const city = profile.city || 'Cidade não informada';
+                    const timeAgo = this.getTimeAgo(visit.visited_at);
+                    const initial = nickname.charAt(0).toUpperCase();
+                    const isOnline = this.isUserOnline(profile);
+                    const isInvisible = profile.is_invisible;
+
+                    let avatarUrl = null;
+                    if (profile.avatar_url) {
+                        avatarUrl = await this.loadUserPhoto(profile.avatar_url);
+                    }
+
+                    visitantesUnicos.set(visitorId, {
+                        id: visitorId,
+                        nickname: nickname,
+                        city: city,
+                        timeAgo: timeAgo,
+                        initial: initial,
+                        isOnline: isOnline,
+                        isInvisible: isInvisible,
+                        avatarUrl: avatarUrl,
+                        visited_at: visit.visited_at
+                    });
+                }
+            } catch (error) {
+                console.warn('⚠️ Erro ao processar visitante:', error);
+            }
+        }
+
+        // Converter Map para array e ordenar por data mais recente
+        return Array.from(visitantesUnicos.values())
+            .sort((a, b) => new Date(b.visited_at) - new Date(a.visited_at))
+            .slice(0, 12); // Limitar a 12 visitantes
     }
 
     async processarVisitantesRPC(visitors) {
@@ -166,6 +218,7 @@ class HomeVisitanteSystem {
                     timeAgo: this.getTimeAgo(visitor.visited_at),
                     initial: visitor.visitor_nickname?.charAt(0).toUpperCase() || 'U',
                     isOnline: visitor.is_online,
+                    isInvisible: visitor.is_invisible,
                     avatarUrl: visitor.visitor_avatar_url ? 
                         await this.loadUserPhoto(visitor.visitor_avatar_url) : null,
                     visited_at: visitor.visited_at
@@ -174,47 +227,6 @@ class HomeVisitanteSystem {
                 visitantesProcessados.push(visitante);
             } catch (error) {
                 console.warn('⚠️ Erro ao processar visitante RPC:', error);
-            }
-        }
-
-        return visitantesProcessados;
-    }
-
-    async processarVisitantes(visits) {
-        const visitantesProcessados = [];
-        
-        for (const visit of visits) {
-            try {
-                const profile = visit.profiles;
-                if (!profile) continue;
-
-                const nickname = profile.nickname || 
-                                profile.full_name?.split(' ')[0] || 
-                                'Usuário';
-                
-                const city = profile.city || 'Cidade não informada';
-                const timeAgo = this.getTimeAgo(visit.visited_at);
-                const initial = nickname.charAt(0).toUpperCase();
-                const isOnline = this.isUserOnline(profile);
-
-                let avatarUrl = null;
-                if (profile.avatar_url) {
-                    avatarUrl = await this.loadUserPhoto(profile.avatar_url);
-                }
-
-                visitantesProcessados.push({
-                    id: visit.visitor_id,
-                    nickname: nickname,
-                    city: city,
-                    timeAgo: timeAgo,
-                    initial: initial,
-                    isOnline: isOnline,
-                    avatarUrl: avatarUrl,
-                    visited_at: visit.visited_at
-                });
-
-            } catch (error) {
-                console.warn('⚠️ Erro ao processar visitante:', error);
             }
         }
 
@@ -254,7 +266,7 @@ class HomeVisitanteSystem {
                 return;
             }
 
-            // ✅ ATUALIZAR CONTADOR GERAL
+            // ✅ ATUALIZAR CONTADOR GERAL (VISITANTES ÚNICOS)
             if (visitorsCount) {
                 const countText = this.visitCount === 1 ? '1 visita' : `${this.visitCount} visitas`;
                 visitorsCount.textContent = countText;
