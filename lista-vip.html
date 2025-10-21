@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista VIP - Amor Conect</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --bege: #f6ecc5;
+            --vermelho-rosado: #d1656d;
+            --lilas: #dfc9ed;
+            --branco: #ffffff;
+            --text: #444;
+            --text-light: #666;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            background-color: var(--bege);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            color: var(--branco);
+            padding: 0.8rem 0;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo img {
+            height: 180px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .btn {
+            padding: 0.6rem 1rem;
+            border-radius: 30px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--branco);
+            color: var(--branco);
+        }
+
+        .btn-primary {
+            background: var(--branco);
+            color: var(--vermelho-rosado);
+        }
+
+        .btn-premium {
+            background: linear-gradient(135deg, #ffd700, #ff6b00);
+            color: var(--branco);
+            border: none;
+            font-weight: 700;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem 0;
+            min-height: calc(100vh - 140px);
+        }
+
+        .vip-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: var(--branco);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            border: 2px solid var(--lilas);
+        }
+
+        .vip-header h1 {
+            font-size: 2.5rem;
+            color: var(--vermelho-rosado);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .vip-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--branco);
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            transition: var(--transition);
+            border: 1px solid var(--lilas);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--vermelho-rosado);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        /* VIP Users Grid */
+        .vip-users-section {
+            margin-bottom: 3rem;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .section-header h2 {
+            font-size: 2rem;
+            color: var(--vermelho-rosado);
+        }
+
+        .vip-users-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .vip-user-card {
+            background: var(--branco);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            border: 2px solid var(--lilas);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .vip-user-card::before {
+            content: '⭐ VIP';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(135deg, #ffd700, #ff6b00);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        .vip-user-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .vip-user-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .vip-user-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            border: 3px solid var(--lilas);
+        }
+
+        .vip-user-avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .vip-user-avatar-fallback {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .vip-user-info {
+            flex: 1;
+        }
+
+        .vip-user-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--vermelho-rosado);
+            margin-bottom: 0.3rem;
+        }
+
+        .vip-user-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .vip-user-detail {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .vip-user-bio {
+            font-size: 0.9rem;
+            color: var(--text);
+            margin-bottom: 1.5rem;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .vip-user-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: space-between;
+        }
+
+        .vip-user-actions .btn {
+            flex: 1;
+            padding: 0.5rem 0.8rem;
+            font-size: 0.8rem;
+        }
+
+        .btn-pulse {
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            color: white;
+            border: none;
+        }
+
+        .btn-pulse.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .btn-pulse.match {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            animation: pulse 2s infinite;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: var(--branco);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--lilas);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            color: var(--vermelho-rosado);
+            margin-bottom: 1rem;
+        }
+
+        .empty-state p {
+            color: var(--text-light);
+            margin-bottom: 2rem;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--bege);
+            border-top: 4px solid var(--vermelho-rosado);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* Premium Required */
+        .premium-required {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: var(--branco);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            border: 2px solid var(--lilas);
+        }
+
+        .premium-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #ffd700, #ff6b00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .premium-required h2 {
+            color: var(--vermelho-rosado);
+            margin-bottom: 1rem;
+        }
+
+        .premium-required p {
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--bege);
+            color: var(--text);
+            padding: 2rem 0 1rem;
+            border-top: 1px solid var(--lilas);
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-column h3 {
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            color: var(--vermelho-rosado);
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-column a {
+            color: var(--text);
+            text-decoration: none;
+            transition: var(--transition);
+            font-size: 0.9rem;
+        }
+
+        .footer-column a:hover {
+            color: var(--vermelho-rosado);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 1rem;
+            border-top: 1px solid var(--lilas);
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .vip-header h1 {
+                font-size: 2rem;
+            }
+
+            .vip-users-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .vip-user-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .vip-user-actions {
+                flex-direction: column;
+            }
+
+            .header-content {
+                flex-direction: column;
+                height: auto;
+                gap: 1rem;
+                padding: 1rem 0;
+            }
+
+            .user-menu {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="logoamorconect.png" alt="Amor Conect">
+                </div>
+                <div class="user-menu">
+                    <a href="home.html" class="btn btn-outline">Voltar para Home</a>
+                    <a href="princing.html" class="btn btn-premium">Seja Premium</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- VIP Header -->
+            <section class="vip-header">
+                <h1>💖 Sua Lista VIP</h1>
+                <p>Estas são as pessoas que demonstraram interesse em você!</p>
+            </section>
+
+            <!-- VIP Stats -->
+            <div class="vip-stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalLikes">0</div>
+                    <div class="stat-label">Curtidas Recebidas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="mutualMatches">0</div>
+                    <div class="stat-label">Matches Mútuos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="newThisWeek">0</div>
+                    <div class="stat-label">Novos Esta Semana</div>
+                </div>
+            </div>
+
+            <!-- VIP Users Section -->
+            <section class="vip-users-section">
+                <div class="section-header">
+                    <h2>Quem te curtiu</h2>
+                    <div class="vip-count" id="vipCount">0 pessoas</div>
+                </div>
+
+                <!-- Premium Required Message -->
+                <div class="premium-required" id="premiumRequired" style="display: none;">
+                    <div class="premium-icon">⭐</div>
+                    <h2>Recurso Exclusivo Premium</h2>
+                    <p>Para ver quem curtiu seu perfil, assine o plano Premium e desbloqueie esta funcionalidade exclusiva!</p>
+                    <a href="princing.html" class="btn btn-premium" style="padding: 1rem 2rem; font-size: 1.1rem;">
+                        Tornar-se Premium
+                    </a>
+                </div>
+
+                <!-- VIP Users Grid -->
+                <div class="vip-users-grid" id="vipUsersGrid">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Carregando sua lista VIP...</p>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <div class="empty-state-icon">💔</div>
+                    <h3>Nenhuma curtida ainda</h3>
+                    <p>Complete seu perfil e interaja mais com outros usuários para receber curtidas!</p>
+                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                        <a href="painel.html" class="btn btn-primary">Completar Perfil</a>
+                        <a href="home.html" class="btn btn-pulse">Explorar Usuários</a>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Amor Conect</h3>
+                    <p>Conectando corações de forma segura e discreta.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Links Rápidos</h3>
+                    <ul>
+                        <li><a href="home.html">Página Inicial</a></li>
+                        <li><a href="princing.html">Planos Premium</a></li>
+                        <li><a href="busca.html">Buscar Pessoas</a></li>
+                        <li><a href="mensagens.html">Mensagens</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Suporte</h3>
+                    <ul>
+                        <li><a href="#">Central de Ajuda</a></li>
+                        <li><a href="#">Política de Privacidade</a></li>
+                        <li><a href="#">Termos de Uso</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2023 Amor Conect. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+    // ==================== CONFIGURAÇÃO SUPABASE ====================
+    const supabaseUrl = 'https://gcukalndarlgydmgmmmt.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+    // ==================== VARIÁVEIS GLOBAIS ====================
+    let currentUser = null;
+    let userProfile = null;
+
+    // ==================== INICIALIZAÇÃO ====================
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeVipPage();
+    });
+
+    async function initializeVipPage() {
+        try {
+            // Verificar autenticação
+            const { data: { user }, error } = await supabase.auth.getUser();
+            
+            if (error || !user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            currentUser = user;
+            
+            // Carregar perfil do usuário
+            await loadUserProfile();
+            
+            // Verificar se é Premium
+            if (!userProfile?.is_premium) {
+                showPremiumRequired();
+                return;
+            }
+
+            // Carregar lista VIP
+            await loadVipList();
+
+        } catch (error) {
+            console.error('Erro ao inicializar página VIP:', error);
+            showError('Erro ao carregar a página. Tente novamente.');
+        }
+    }
+
+    // ==================== CARREGAR DADOS ====================
+    async function loadUserProfile() {
+        try {
+            const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', currentUser.id)
+                .single();
+
+            if (error) throw error;
+            userProfile = profile;
+
+        } catch (error) {
+            console.error('Erro ao carregar perfil:', error);
+            throw error;
+        }
+    }
+
+    async function loadVipList() {
+        try {
+            // Usar a função do sistema Pulse se disponível
+            if (window.pulseSystem) {
+                await loadVipFromPulseSystem();
+            } else {
+                // Fallback: carregar diretamente do banco
+                await loadVipDirect();
+            }
+
+        } catch (error) {
+            console.error('Erro ao carregar lista VIP:', error);
+            showError('Erro ao carregar lista VIP.');
+        }
+    }
+
+    async function loadVipFromPulseSystem() {
+        const vipUsers = await window.pulseSystem.getVipList();
+        displayVipUsers(vipUsers);
+        updateVipStats(vipUsers);
+    }
+
+    async function loadVipDirect() {
+        try {
+            // Carregar usuários que curtiram o perfil atual
+            const { data: pulses, error } = await supabase
+                .from('pulses')
+                .select(`
+                    user_from_id,
+                    created_at,
+                    profiles:user_from_id (
+                        nickname,
+                        avatar_url,
+                        birth_date,
+                        zodiac,
+                        profession,
+                        user_details (
+                            gender,
+                            interests,
+                            description,
+                            looking_for
+                        )
+                    )
+                `)
+                .eq('user_to_id', currentUser.id)
+                .eq('status', 'active')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            displayVipUsers(pulses || []);
+            updateVipStats(pulses || []);
+
+        } catch (error) {
+            console.error('Erro ao carregar VIP direto:', error);
+            showEmptyState();
+        }
+    }
+
+    // ==================== EXIBIR USUÁRIOS VIP ====================
+    function displayVipUsers(users) {
+        const vipGrid = document.getElementById('vipUsersGrid');
+        
+        if (!users || users.length === 0) {
+            showEmptyState();
+            return;
+        }
+
+        const userCards = users.map(user => createVipUserCard(user)).join('');
+        vipGrid.innerHTML = userCards;
+    }
+
+    function createVipUserCard(pulseData) {
+        const user = pulseData.profiles;
+        const userId = pulseData.user_from_id;
+        const nickname = user.nickname || 'Usuário';
+        const age = user.birth_date ? calculateAge(user.birth_date) : null;
+        const zodiac = user.zodiac;
+        const profession = user.profession;
+        const bio = user.user_details?.description || 'Este usuário ainda não adicionou uma descrição.';
+        const likedAt = new Date(pulseData.created_at).toLocaleDateString('pt-BR');
+
+        // Verificar se é match mútuo
+        const isMatch = window.pulseSystem ? window.pulseSystem.isMatch(userId) : false;
+        const isLiked = window.pulseSystem ? window.pulseSystem.isUserLiked(userId) : false;
+
+        let avatarHtml = '';
+        if (user.avatar_url) {
+            avatarHtml = `
+                <div class="vip-user-avatar">
+                    <img class="vip-user-avatar-img" src="${user.avatar_url}" alt="${nickname}">
+                </div>
+            `;
+        } else {
+            avatarHtml = `
+                <div class="vip-user-avatar">
+                    <div class="vip-user-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
+                </div>
+            `;
+        }
+
+        let pulseButtonText = '💗 Curtir';
+        let pulseButtonClass = 'btn-pulse';
+        
+        if (isMatch) {
+            pulseButtonText = '💝 Match!';
+            pulseButtonClass += ' match';
+        } else if (isLiked) {
+            pulseButtonText = '💗 Curtido';
+            pulseButtonClass += ' active';
+        }
+
+        return `
+            <div class="vip-user-card" data-user-id="${userId}">
+                <div class="vip-user-header">
+                    ${avatarHtml}
+                    <div class="vip-user-info">
+                        <div class="vip-user-name">${nickname}${age ? `, ${age}` : ''}</div>
+                        <div class="vip-user-details">
+                            ${zodiac ? `<div class="vip-user-detail">${getZodiacIcon(zodiac)} ${formatZodiac(zodiac)}</div>` : ''}
+                            ${profession ? `<div class="vip-user-detail">💼 ${profession}</div>` : ''}
+                            <div class="vip-user-detail">⏰ Curtiu em ${likedAt}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="vip-user-bio">${bio}</div>
+                
+                <div class="vip-user-actions">
+                    <button class="btn btn-primary" onclick="sendMessage('${userId}')">
+                        💌 Mensagem
+                    </button>
+                    <button class="btn ${pulseButtonClass}" onclick="handlePulse('${userId}', this)">
+                        ${pulseButtonText}
+                    </button>
+                    <button class="btn btn-outline" onclick="viewProfile('${userId}')">
+                        👀 Ver Perfil
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    // ==================== ATUALIZAR ESTATÍSTICAS ====================
+    function updateVipStats(users) {
+        const totalLikes = users.length;
+        const mutualMatches = users.filter(user => 
+            window.pulseSystem ? window.pulseSystem.isMatch(user.user_from_id) : false
+        ).length;
+        
+        // Novos esta semana
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        const newThisWeek = users.filter(user => 
+            new Date(user.created_at) > oneWeekAgo
+        ).length;
+
+        document.getElementById('totalLikes').textContent = totalLikes;
+        document.getElementById('mutualMatches').textContent = mutualMatches;
+        document.getElementById('newThisWeek').textContent = newThisWeek;
+        document.getElementById('vipCount').textContent = `${totalLikes} pessoa${totalLikes !== 1 ? 's' : ''}`;
+    }
+
+    // ==================== ESTADOS DA PÁGINA ====================
+    function showPremiumRequired() {
+        document.getElementById('premiumRequired').style.display = 'block';
+        document.getElementById('vipUsersGrid').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'none';
+        document.querySelector('.vip-stats').style.display = 'none';
+    }
+
+    function showEmptyState() {
+        document.getElementById('emptyState').style.display = 'block';
+        document.getElementById('vipUsersGrid').style.display = 'none';
+        document.getElementById('premiumRequired').style.display = 'none';
+    }
+
+    function showError(message) {
+        const vipGrid = document.getElementById('vipUsersGrid');
+        vipGrid.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">⚠️</div>
+                <h3>Erro ao carregar</h3>
+                <p>${message}</p>
+                <button class="btn btn-primary" onclick="location.reload()">
+                    🔄 Tentar Novamente
+                </button>
+            </div>
+        `;
+    }
+
+    // ==================== FUNÇÕES DE INTERAÇÃO ====================
+    async function handlePulse(userId, button) {
+        if (!window.pulseSystem) {
+            alert('Sistema de curtidas não disponível. Tente novamente.');
+            return;
+        }
+
+        try {
+            const isCurrentlyLiked = window.pulseSystem.isUserLiked(userId);
+            
+            if (isCurrentlyLiked) {
+                // Descurtir
+                await window.pulseSystem.revokePulse(userId);
+                button.textContent = '💗 Curtir';
+                button.classList.remove('active', 'match');
+            } else {
+                // Curtir
+                await window.pulseSystem.createPulse(userId);
+                button.textContent = '💗 Curtido';
+                button.classList.add('active');
+                
+                // Verificar se agora é match
+                if (window.pulseSystem.isMatch(userId)) {
+                    button.textContent = '💝 Match!';
+                    button.classList.add('match');
+                    showMatchToast();
+                }
+            }
+
+            // Atualizar estatísticas
+            await loadVipList();
+
+        } catch (error) {
+            console.error('Erro ao processar curtida:', error);
+            alert('Erro ao processar curtida. Tente novamente.');
+        }
+    }
+
+    function showMatchToast() {
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            font-weight: bold;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        `;
+        toast.textContent = '💝 Novo match!';
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    async function sendMessage(userId) {
+        if (!currentUser) return;
+        
+        // Verificar se o perfil está completo
+        if (!userProfile?.full_name || !userProfile?.birth_date) {
+            alert('Complete seu perfil antes de enviar mensagens!');
+            window.location.href = 'painel.html';
+            return;
+        }
+
+        localStorage.setItem('openChatWithUserId', userId);
+        window.location.href = 'mensagens.html';
+    }
+
+    async function viewProfile(userId) {
+        if (!currentUser) return;
+        
+        // Registrar visita
+        if (window.registrarVisitaPerfil) {
+            await window.registrarVisitaPerfil(userId);
+        }
+        
+        localStorage.setItem('viewingProfileId', userId);
+        window.location.href = 'perfil.html';
+    }
+
+    // ==================== FUNÇÕES AUXILIARES ====================
+    function calculateAge(birthDate) {
+        if (!birthDate) return null;
+        const today = new Date();
+        const birth = new Date(birthDate);
+        let age = today.getFullYear() - birth.getFullYear();
+        const monthDiff = today.getMonth() - birth.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+            age--;
+        }
+        return age;
+    }
+
+    function formatZodiac(zodiac) {
+        const zodiacMap = {
+            'aries': 'Áries', 'taurus': 'Touro', 'gemini': 'Gêmeos', 'cancer': 'Câncer',
+            'leo': 'Leão', 'virgo': 'Virgem', 'libra': 'Libra', 'scorpio': 'Escorpião',
+            'sagittarius': 'Sagitário', 'capricorn': 'Capricórnio', 'aquarius': 'Aquário', 'pisces': 'Peixes'
+        };
+        return zodiacMap[zodiac?.toLowerCase()] || zodiac;
+    }
+
+    function getZodiacIcon(zodiac) {
+        const zodiacIcons = {
+            'aries': '♈', 'taurus': '♉', 'gemini': '♊', 'cancer': '♋',
+            'leo': '♌', 'virgo': '♍', 'libra': '♎', 'scorpio': '♏',
+            'sagittarius': '♐', 'capricorn': '♑', 'aquarius': '♒', 'pisces': '♓'
+        };
+        return zodiacIcons[zodiac?.toLowerCase()] || '✨';
+    }
+
+    // ==================== EXPORTAR FUNÇÕES GLOBAIS ====================
+    window.handlePulse = handlePulse;
+    window.sendMessage = sendMessage;
+    window.viewProfile = viewProfile;
+
+    console.log('✅ Página Lista VIP carregada!');
+</script>
+</body>
+</html>

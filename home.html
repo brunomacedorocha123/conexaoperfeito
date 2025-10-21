@@ -7,6 +7,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="home.block.js"></script>
   <script src="home-visitante.js"></script>
+  <script src="home-like.js"></script>
  <style>
       * {
   margin: 0;
@@ -2328,8 +2329,27 @@ async function initializeApp() {
         
         console.log('✅ Usuário autenticado:', user.id);
         currentUser = user;
+
         
         // ✅✅✅ CORREÇÃO: Inicializar sistema de bloqueio COM VERIFICAÇÃO
+        if (window.HomeBlockSystem) {
+            window.blockSystem = new HomeBlockSystem(supabase, currentUser);
+            await window.blockSystem.initialize();
+            console.log('✅ Sistema de bloqueio inicializado!');
+        } else {
+            console.error('❌ HomeBlockSystem não carregado - verifique home.block.js');
+            // Fallback emergencial
+            initializeBlockSystemFallback();
+        }
+        
+        // 2. Carregar dados do usuário
+        await loadUserData();
+        
+        // 3. Carregar usuários OTIMIZADO
+        await loadRealUsers();
+
+
+    // ✅✅✅ CORREÇÃO: Inicializar sistema de bloqueio COM VERIFICAÇÃO
         if (window.HomeBlockSystem) {
             window.blockSystem = new HomeBlockSystem(supabase, currentUser);
             await window.blockSystem.initialize();
@@ -2369,8 +2389,33 @@ async function initializeApp() {
             }
         }
         
+        // 🆕 SISTEMA PULSE/CURTIR - ADICIONADO AQUI
+        console.log('🎯 Inicializando sistema Pulse...');
+        let pulseTentativas = 0;
+        while (pulseTentativas < 8) {
+            if (window.initializePulseSystem) {
+                console.log('✅ Sistema Pulse encontrado! Inicializando...');
+                window.pulseSystem = await window.initializePulseSystem(supabase, currentUser);
+                console.log('✅ Sistema Pulse inicializado com sucesso!');
+                
+                // Adicionar cards VIP se for Premium
+                if (window.pulseSystem && window.pulseSystem.userProfile?.is_premium) {
+                    window.pulseSystem.addVipCardsToHome().catch(console.error);
+                }
+                break;
+            }
+            
+            console.log('⏳ Aguardando sistema Pulse...', pulseTentativas + 1);
+            await new Promise(resolve => setTimeout(resolve, 300));
+            pulseTentativas++;
+            
+            if (pulseTentativas === 8) {
+                console.error('❌ Sistema Pulse não carregou após 8 tentativas');
+            }
+        }
+        
         //    NOVO: Inicializar sistema de notificações
-        await initializeNotificationSystem();
+        initializeNotificationSystem().catch(console.error);
         
         //    NOVO: Criar notificação de boas-vindas (opcional)
         setTimeout(createSampleNotification, 2000);
@@ -2390,94 +2435,6 @@ async function initializeApp() {
         showQuickToast('Erro ao carregar a página. Recarregue.');
     }
 }
-
-// ==================== SISTEMA DE NOTIFICAÇÕES ====================
-
-// Função para atualizar o badge de notificações
-async function updateNotificationBadge() {
-    try {
-        if (!currentUser) return;
-        
-        const { data: notifications, error } = await supabase
-            .from('user_notifications')
-            .select('id')
-            .eq('user_id', currentUser.id)
-            .eq('is_read', false);
-
-        if (error) {
-            console.log('ℹ️ Tabela de notificações não encontrada, usando sistema padrão');
-            return;
-        }
-
-        const unreadCount = notifications?.length || 0;
-        
-        // Atualizar badges
-        const badges = document.querySelectorAll('.notification-badge');
-        badges.forEach(badge => {
-            if (unreadCount > 0) {
-                badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
-                badge.style.display = 'flex';
-                
-                // Adicionar classe se tiver muitas notificações
-                if (unreadCount > 9) {
-                    badge.classList.add('high-count');
-                } else {
-                    badge.classList.remove('high-count');
-                }
-            } else {
-                badge.textContent = '0';
-                badge.style.display = 'none';
-            }
-        });
-
-        // Atualizar sino
-        const bell = document.getElementById('notificationBell');
-        if (bell) {
-            if (unreadCount > 0) {
-                bell.classList.add('has-notifications');
-            } else {
-                bell.classList.remove('has-notifications');
-            }
-        }
-
-        // Salvar no localStorage para acesso rápido
-        localStorage.setItem('unreadNotifications', unreadCount);
-
-    } catch (error) {
-        console.error('Erro ao atualizar badge:', error);
-    }
-}
-
-// Inicializar sistema de notificações
-async function initializeNotificationSystem() {
-    if (!currentUser) return;
-    
-    await updateNotificationBadge();
-    
-    // Atualizar a cada 30 segundos
-    setInterval(updateNotificationBadge, 30000);
-    
-    // Escutar por novas notificações em tempo real
-    try {
-        const subscription = supabase
-            .channel('notifications-badge')
-            .on('postgres_changes', 
-                { 
-                    event: '*', 
-                    schema: 'public', 
-                    table: 'user_notifications',
-                    filter: `user_id=eq.${currentUser.id}`
-                }, 
-                () => {
-                    updateNotificationBadge();
-                }
-            )
-            .subscribe();
-    } catch (error) {
-        console.log('ℹ️ Sistema em tempo real não disponível');
-    }
-}
-
 // Criar notificação de exemplo (para teste)
 async function createSampleNotification() {
     try {
