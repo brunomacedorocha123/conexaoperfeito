@@ -1,4 +1,4 @@
-// home-visitante.js - SISTEMA COMPLETO SEM DUPLICATAS
+// home-visitante.js - SISTEMA COMPLETO COM STATUS ONLINE CORRIGIDO
 console.log('🚀 home-visitante.js carregando...');
 
 class HomeVisitanteSystem {
@@ -157,7 +157,7 @@ class HomeVisitanteSystem {
         }
     }
 
-    // ✅ MÉTODO NOVO PARA REMOVER DUPLICATAS
+    // ✅ MÉTODO CORRIGIDO: REMOVER DUPLICATAS COM STATUS ONLINE CORRETO
     async removerVisitantesDuplicados(visits) {
         const visitantesUnicos = new Map();
         
@@ -175,9 +175,10 @@ class HomeVisitanteSystem {
                     const city = profile.city || 'Cidade não informada';
                     const timeAgo = this.getTimeAgo(visit.visited_at);
                     const initial = nickname.charAt(0).toUpperCase();
-                    const isOnline = this.isUserOnline(profile);
-                    const isInvisible = profile.is_invisible;
-
+                    
+                    // ✅✅✅ CORREÇÃO CRÍTICA: USAR MESMA LÓGICA DE STATUS ONLINE DOS CARDS GRANDES
+                    const isOnline = this.isUserOnline(profile, this.currentUser.id);
+                    
                     let avatarUrl = null;
                     if (profile.avatar_url) {
                         avatarUrl = await this.loadUserPhoto(profile.avatar_url);
@@ -189,10 +190,11 @@ class HomeVisitanteSystem {
                         city: city,
                         timeAgo: timeAgo,
                         initial: initial,
-                        isOnline: isOnline,
-                        isInvisible: isInvisible,
+                        isOnline: isOnline, // ✅ AGORA CORRETO
                         avatarUrl: avatarUrl,
-                        visited_at: visit.visited_at
+                        visited_at: visit.visited_at,
+                        last_online_at: profile.last_online_at,
+                        is_invisible: profile.is_invisible
                     });
                 }
             } catch (error) {
@@ -211,17 +213,25 @@ class HomeVisitanteSystem {
         
         for (const visitor of visitors) {
             try {
+                // ✅ CORREÇÃO: APLICAR MESMA LÓGICA DE STATUS ONLINE
+                const isOnline = this.isUserOnline({
+                    last_online_at: visitor.last_online_at,
+                    is_invisible: visitor.is_invisible,
+                    id: visitor.visitor_id
+                }, this.currentUser.id);
+                
                 const visitante = {
                     id: visitor.visitor_id,
                     nickname: visitor.visitor_nickname,
                     city: visitor.visitor_city,
                     timeAgo: this.getTimeAgo(visitor.visited_at),
                     initial: visitor.visitor_nickname?.charAt(0).toUpperCase() || 'U',
-                    isOnline: visitor.is_online,
+                    isOnline: isOnline, // ✅ AGORA CORRETO
                     isInvisible: visitor.is_invisible,
                     avatarUrl: visitor.visitor_avatar_url ? 
                         await this.loadUserPhoto(visitor.visitor_avatar_url) : null,
-                    visited_at: visitor.visited_at
+                    visited_at: visitor.visited_at,
+                    last_online_at: visitor.last_online_at
                 };
                 
                 visitantesProcessados.push(visitante);
@@ -231,6 +241,27 @@ class HomeVisitanteSystem {
         }
 
         return visitantesProcessados;
+    }
+
+    // ✅✅✅ FUNÇÃO CORRIGIDA: MESMA LÓGICA DOS CARDS GRANDES
+    isUserOnline(userProfile, currentUserId) {
+        if (!userProfile.last_online_at) return false;
+        
+        try {
+            const lastOnline = new Date(userProfile.last_online_at);
+            const now = new Date();
+            const minutesDiff = (now - lastOnline) / (1000 * 60);
+            const isActuallyOnline = minutesDiff <= 5;
+            
+            // ✅ MESMA LÓGICA DOS CARDS GRANDES
+            if (userProfile.id === currentUserId) return true;
+            if (userProfile.is_invisible && userProfile.id !== currentUserId) return false;
+            
+            return isActuallyOnline;
+        } catch (error) {
+            console.warn('⚠️ Erro ao verificar status online:', error);
+            return false;
+        }
     }
 
     atualizarUI() {
@@ -402,18 +433,6 @@ class HomeVisitanteSystem {
             return data?.publicUrl || null;
         } catch (error) {
             return null;
-        }
-    }
-
-    isUserOnline(userProfile) {
-        if (!userProfile?.last_online_at) return false;
-        try {
-            const lastOnline = new Date(userProfile.last_online_at);
-            const now = new Date();
-            const minutesDiff = (now - lastOnline) / (1000 * 60);
-            return minutesDiff <= 5;
-        } catch (error) {
-            return false;
         }
     }
 
