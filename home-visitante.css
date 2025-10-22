@@ -96,7 +96,7 @@
     border-radius: 50%;
     margin: 0 auto 0.8rem;
     position: relative;
-    overflow: hidden;
+    overflow: visible !important; /* MUDANÇA CRÍTICA */
     border: 3px solid var(--branco);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
@@ -106,6 +106,8 @@
     height: 100%;
     object-fit: cover;
     border-radius: 50%;
+    position: relative;
+    z-index: 1;
 }
 
 .visitor-avatar-fallback {
@@ -119,6 +121,8 @@
     color: white;
     font-weight: bold;
     font-size: 1.2rem;
+    position: relative;
+    z-index: 1;
 }
 
 .visitor-avatar:has(.visitor-avatar-img[src]) .visitor-avatar-fallback {
@@ -223,32 +227,42 @@
     margin: 0 auto 1rem;
 }
 
-/* ==================== SISTEMA DE STATUS ONLINE/OFFLINE ==================== */
-.online-badge {
+/* ==================== BOLINHA VERDE - CORREÇÃO COMPLETA ==================== */
+
+/* BOLINHA ONLINE - VERDE IGUAL CARDS GRANDES */
+.visitor-avatar .online-badge {
     position: absolute;
-    bottom: 5px;
-    right: 5px;
-    width: 12px;
-    height: 12px;
+    bottom: 8px;
+    right: 8px;
+    width: 14px;
+    height: 14px;
     background: #48bb78;
-    border: 2px solid var(--branco);
+    border: 3px solid var(--branco);
     border-radius: 50%;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
     animation: pulse-online 2s infinite;
+    z-index: 100;
+    display: block !important;
+    visibility: visible !important;
 }
 
-.offline-badge {
+/* BOLINHA OFFLINE - CINZA IGUAL CARDS GRANDES */
+.visitor-avatar .offline-badge {
     position: absolute;
-    bottom: 5px;
-    right: 5px;
-    width: 12px;
-    height: 12px;
+    bottom: 8px;
+    right: 8px;
+    width: 14px;
+    height: 14px;
     background: #a0aec0;
-    border: 2px solid var(--branco);
+    border: 3px solid var(--branco);
     border-radius: 50%;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+    display: block !important;
+    visibility: visible !important;
 }
 
+/* ANIMAÇÃO PULSE PARA ONLINE */
 @keyframes pulse-online {
     0% {
         transform: scale(1);
@@ -262,48 +276,6 @@
         transform: scale(1);
         box-shadow: 0 0 0 0 rgba(72, 187, 120, 0);
     }
-}
-
-.user-card-avatar {
-    position: relative;
-    overflow: visible !important;
-}
-
-.user-card-avatar .online-badge,
-.user-card-avatar .offline-badge {
-    bottom: 8px;
-    right: 8px;
-    width: 14px;
-    height: 14px;
-    border: 3px solid var(--branco);
-}
-
-.visitor-avatar {
-    position: relative;
-    overflow: visible !important;
-}
-
-.visitor-avatar .online-badge,
-.visitor-avatar .offline-badge {
-    bottom: 5px;
-    right: 5px;
-    width: 12px;
-    height: 12px;
-    border: 2px solid var(--branco);
-}
-
-.user-avatar {
-    position: relative;
-    overflow: visible !important;
-}
-
-.user-avatar .online-badge,
-.user-avatar .offline-badge {
-    bottom: 2px;
-    right: 2px;
-    width: 10px;
-    height: 10px;
-    border: 2px solid var(--branco);
 }
 
 /* ==================== CORREÇÕES MOBILE ==================== */
@@ -320,6 +292,16 @@
   .visitor-avatar {
     width: 50px;
     height: 50px;
+  }
+  
+  /* BOLINHA MOBILE */
+  .visitor-avatar .online-badge,
+  .visitor-avatar .offline-badge {
+    bottom: 6px;
+    right: 6px;
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--branco);
   }
   
   .visitors-actions {
@@ -347,6 +329,16 @@
   .visitor-avatar {
     width: 45px;
     height: 45px;
+  }
+  
+  /* BOLINHA MOBILE PEQUENO */
+  .visitor-avatar .online-badge,
+  .visitor-avatar .offline-badge {
+    bottom: 4px;
+    right: 4px;
+    width: 10px;
+    height: 10px;
+    border: 2px solid var(--branco);
   }
   
   .visitor-name {
