@@ -1,0 +1,352 @@
+/* ==================== AJUSTES MOBILE PARA PULSE ==================== */
+@media (max-width: 768px) {
+  .pulse-btn {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.8rem;
+    min-width: 70px;
+  }
+  
+  .user-card-actions {
+    gap: 0.3rem;
+  }
+  
+  .user-card-actions .btn {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.6rem;
+  }
+  
+  .pulse-toast {
+    min-width: 180px;
+    padding: 10px 16px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .pulse-btn {
+    min-width: 65px;
+    font-size: 0.75rem;
+    padding: 0.4rem 0.6rem;
+  }
+}
+
+@media (max-width: 768px) {
+  #hamburgerBtn {
+    display: flex;
+  }
+
+  .user-menu {
+    display: none;
+  }
+
+  .header-content {
+    flex-direction: row;
+    justify-content: space-between;
+    height: 80px;
+    padding: 0;
+  }
+
+  .logo {
+    justify-content: center;
+    flex: 1;
+    margin: 0 auto;
+  }
+
+  .logo img {
+    height: 180px !important;
+  }
+
+  .user-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .stat-card {
+    padding: 1rem;
+  }
+
+  .stat-number {
+    font-size: 1.8rem;
+  }
+
+  .users-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .user-card {
+    padding: 1.2rem;
+  }
+
+  .user-card-avatar {
+    width: 70px;
+    height: 70px;
+  }
+
+  .user-card-name {
+    font-size: 1.1rem;
+  }
+
+  .user-card-actions {
+    flex-direction: row;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .user-card-actions .btn {
+    flex: 1;
+    padding: 0.8rem 0.5rem;
+    font-size: 0.8rem;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .btn-more {
+    width: 44px !important;
+    height: 44px !important;
+    background: var(--lilas) !important;
+    color: white !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.3rem !important;
+    font-weight: bold !important;
+    border: 2px solid var(--branco) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+    flex: 0 0 auto !important;
+  }
+
+  .btn-more:active {
+    transform: scale(0.95);
+    background: var(--vermelho-rosado) !important;
+  }
+
+  .user-card-menu {
+    z-index: 10;
+    position: relative;
+  }
+
+  .menu-options {
+    display: none;
+    position: absolute;
+    bottom: 100% !important;
+    top: auto !important;
+    right: 0;
+    left: auto;
+    min-width: 180px;
+    z-index: 1001 !important;
+    background: var(--branco);
+    border: 1px solid var(--lilas);
+    border-radius: 10px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    transform: none !important;
+  }
+
+  .menu-options.show {
+    display: block !important;
+    animation: fadeIn 0.2s ease !important;
+  }
+
+  .user-card {
+    overflow: visible !important;
+    position: relative;
+  }
+
+  .user-card:hover {
+    z-index: 999;
+  }
+
+  .actions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .action-card {
+    padding: 1.2rem;
+  }
+
+  .welcome-section {
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .welcome-section h2 {
+    font-size: 1.8rem;
+  }
+
+  .quick-actions {
+    padding: 1.5rem;
+  }
+
+  .section-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .modal-content {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .modal-actions .btn {
+    width: 100%;
+  }
+
+  .visitors-grid {
+    gap: 0.8rem;
+  }
+  
+  .visitor-card {
+    width: 110px;
+    padding: 0.8rem;
+  }
+  
+  .visitor-avatar {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .visitors-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .visitors-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .visitors-count {
+    align-self: flex-start;
+  }
+
+  .notification-bell-container {
+    margin-left: auto;
+    margin-right: 10px;
+  }
+  
+  .notification-bell {
+    width: 45px;
+    height: 45px;
+    font-size: 1.3rem;
+  }
+  
+  .notification-badge {
+    width: 18px;
+    height: 18px;
+    font-size: 0.65rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo img {
+    height: 160px !important;
+  }
+
+  .user-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .welcome-section h2 {
+    font-size: 1.5rem;
+  }
+
+  .stat-number {
+    font-size: 1.5rem;
+  }
+
+  .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .header-content {
+    height: 70px;
+  }
+
+  .user-card-actions .btn {
+    font-size: 0.75rem;
+    padding: 0.7rem 0.3rem;
+  }
+
+  .btn-more {
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 1.2rem !important;
+  }
+
+  .visitor-card {
+    width: 100px;
+  }
+  
+  .visitor-avatar {
+    width: 45px;
+    height: 45px;
+  }
+  
+  .visitor-name {
+    font-size: 0.75rem;
+  }
+  
+  .visitor-location {
+    font-size: 0.65rem;
+  }
+  
+  .visitor-time {
+    font-size: 0.65rem;
+  }
+  
+  .free-content {
+    padding: 1.5rem;
+  }
+  
+  .free-content .icon {
+    font-size: 2.5rem;
+  }
+
+  #mobileMenu {
+    padding: 1rem;
+  }
+  
+  .mobile-nav {
+    max-width: 260px;
+  }
+  
+  .mobile-user-info .user-avatar {
+    width: 60px;
+    height: 60px;
+    font-size: 1.1rem;
+  }
+  
+  .mobile-user-info #mobileUserNickname {
+    font-size: 1rem;
+  }
+
+  .notification-bell-container {
+    margin-right: 5px;
+  }
+  
+  .notification-bell {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+  }
+  
+  .notification-badge {
+    width: 16px;
+    height: 16px;
+    font-size: 0.6rem;
+    top: -3px;
+    right: -3px;
+  }
+}
