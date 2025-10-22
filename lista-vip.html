@@ -632,8 +632,8 @@ async function loadVipList() {
 
         if (error) {
             console.error('❌ Erro função SQL:', error);
-            // Fallback: método antigo
-            await loadVipListFallback();
+            // Fallback: método manual
+            await loadVipListManual();
             return;
         }
 
@@ -652,53 +652,56 @@ async function loadVipList() {
     }
 }
 
-// ✅✅✅ FALLBACK SE A FUNÇÃO SQL NÃO EXISTIR
-async function loadVipListFallback() {
+// ✅✅✅ MÉTODO MANUAL SE A FUNÇÃO SQL FALHAR
+async function loadVipListManual() {
     try {
-        console.log('🔄 Usando método fallback...');
+        console.log('🔄 Usando método manual...');
         
-        const { data: simpleVipUsers, error } = await supabase
+        // 1. Buscar IDs da VIP_LIST
+        const { data: vipList, error: vipError } = await supabase
             .from('vip_list')
             .select('vip_user_id, created_at')
             .eq('user_id', currentUser.id)
             .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (vipError) throw vipError;
 
-        if (!simpleVipUsers || simpleVipUsers.length === 0) {
+        console.log('✅ IDs da VIP_LIST:', vipList);
+
+        if (!vipList || vipList.length === 0) {
             showEmptyState();
-        } else {
-            // Carregar perfis manualmente
-            const usersWithProfiles = await loadProfilesManually(simpleVipUsers);
-            displayVipUsers(usersWithProfiles);
-            updateVipStats(usersWithProfiles);
+            return;
         }
 
-    } catch (error) {
-        console.error('❌ Erro fallback:', error);
-        showEmptyState();
-    }
-}
-
-// ✅✅✅ CARREGAR PERFIS MANUALMENTE
-async function loadProfilesManually(vipUsers) {
-    try {
-        console.log('🔍 Carregando perfis manualmente...');
+        // 2. Buscar dados COMPLETOS dos usuários
+        const userIds = vipList.map(item => item.vip_user_id);
         
-        const userIds = vipUsers.map(item => item.vip_user_id);
-        const { data: profiles, error } = await supabase
+        const { data: profiles, error: profilesError } = await supabase
             .from('profiles')
-            .select(`
-                id, nickname, avatar_url, birth_date, zodiac, profession,
-                user_details (gender, interests, description, looking_for)
-            `)
+            .select('id, nickname, avatar_url, birth_date, zodiac, profession')
             .in('id', userIds);
 
-        if (error) throw error;
+        if (profilesError) throw profilesError;
 
-        // Combinar dados
-        const usersWithProfiles = vipUsers.map(vipItem => {
+        console.log('✅ PROFILES encontrados:', profiles);
+
+        // 3. Buscar user_details
+        const { data: userDetails, error: detailsError } = await supabase
+            .from('user_details')
+            .select('user_id, description, gender, interests, looking_for')
+            .in('user_id', userIds);
+
+        if (detailsError) {
+            console.log('ℹ️ user_details não encontrados, usando fallback');
+        }
+
+        console.log('✅ USER_DETAILS:', userDetails);
+
+        // 4. Combinar os dados
+        const completeUsers = vipList.map(vipItem => {
             const profile = profiles.find(p => p.id === vipItem.vip_user_id);
+            const details = userDetails?.find(d => d.user_id === vipItem.vip_user_id);
+            
             return {
                 vip_user_id: vipItem.vip_user_id,
                 created_at: vipItem.created_at,
@@ -707,23 +710,21 @@ async function loadProfilesManually(vipUsers) {
                 user_birth_date: profile?.birth_date,
                 user_zodiac: profile?.zodiac,
                 user_profession: profile?.profession,
-                user_description: profile?.user_details?.description || 'Sem descrição.',
-                user_gender: profile?.user_details?.gender,
-                user_interests: profile?.user_details?.interests,
-                user_looking_for: profile?.user_details?.looking_for
+                user_description: details?.description || profile?.description || 'Sem descrição ainda.',
+                user_gender: details?.gender,
+                user_interests: details?.interests,
+                user_looking_for: details?.looking_for
             };
         });
 
-        return usersWithProfiles;
+        console.log('🎯 Dados completos:', completeUsers);
+        
+        displayVipUsers(completeUsers);
+        updateVipStats(completeUsers);
 
     } catch (error) {
-        console.error('❌ Erro perfis manual:', error);
-        return vipUsers.map(item => ({
-            vip_user_id: item.vip_user_id,
-            created_at: item.created_at,
-            user_nickname: 'Usuário',
-            user_description: 'Perfil não disponível'
-        }));
+        console.error('❌ Erro método manual:', error);
+        showEmptyState();
     }
 }
 
@@ -750,7 +751,7 @@ function createVipUserCard(user) {
         const age = user.user_birth_date ? calculateAge(user.user_birth_date) : null;
         const zodiac = user.user_zodiac;
         const profession = user.user_profession;
-        const bio = user.user_description || 'Sem descrição.';
+        const bio = user.user_description || 'Sem descrição ainda.';
         const likedAt = user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : 'Data desconhecida';
 
         // Avatar
