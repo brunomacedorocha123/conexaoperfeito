@@ -2481,6 +2481,43 @@ async function criarSistemaVisitantesFallback() {
     }
 }
 
+// ✅ FUNÇÃO PARA ATUALIZAR LISTA VIP APÓS CURTIDA
+async function atualizarListaVIP() {
+    try {
+        console.log('🔄 Atualizando lista VIP...');
+        
+        // Se estiver na página lista-vip.html, recarregar a lista
+        if (window.location.pathname.includes('lista-vip.html')) {
+            if (window.loadVipList) {
+                await window.loadVipList();
+            }
+        }
+        
+        // Se estiver na home e for premium, atualizar cards VIP
+        if (window.location.pathname.includes('home.html') && userProfile?.is_premium) {
+            if (window.pulseSystem && window.pulseSystem.addVipCardsToHome) {
+                setTimeout(() => {
+                    window.pulseSystem.addVipCardsToHome().catch(console.error);
+                }, 500);
+            }
+        }
+        
+        // ✅ ATUALIZAR ESTATÍSTICAS NA HOME
+        if (window.updateStats) {
+            setTimeout(() => {
+                window.updateStats().catch(console.error);
+            }, 300);
+        }
+        
+        console.log('✅ Lista VIP atualizada');
+    } catch (error) {
+        console.error('❌ Erro ao atualizar lista VIP:', error);
+    }
+}
+
+// ✅ EXPORTAR PARA ACESSO GLOBAL
+window.atualizarListaVIP = atualizarListaVIP;
+
 // ✅✅✅ CORREÇÃO DEFINITIVA: Configurar event listeners
 function setupEventListeners() {
     console.log('🎯 Configurando event listeners...');
@@ -2564,7 +2601,6 @@ function showQuickToast(message) {
         setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
-
 // ✅ CORREÇÃO: Carregar dados do usuário
 async function loadUserData() {
     try {
@@ -2896,6 +2932,14 @@ async function handlePulseClick(userId, button) {
             button.innerHTML = '💗 Pulse';
             button.classList.remove('pulse-active', 'pulse-match');
             showQuickToast('Curtida removida');
+            
+            // ✅ CORREÇÃO: Atualizar lista VIP após remover curtida
+            if (window.atualizarListaVIP) {
+                setTimeout(() => {
+                    window.atualizarListaVIP().catch(console.error);
+                }, 300);
+            }
+            
         } else {
             // Adicionar curtida
             await window.pulseSystem.createPulse(userId);
@@ -2910,11 +2954,30 @@ async function handlePulseClick(userId, button) {
             } else {
                 showQuickToast('Curtida enviada!');
             }
+            
+            // ✅ CORREÇÃO: Atualizar lista VIP após adicionar curtida
+            if (window.atualizarListaVIP) {
+                setTimeout(() => {
+                    window.atualizarListaVIP().catch(console.error);
+                }, 300);
+            }
         }
 
-        // Atualizar contadores
+        // ✅ CORREÇÃO: Atualizar estatísticas na home
+        if (window.updateStats) {
+            setTimeout(() => {
+                window.updateStats().catch(console.error);
+            }, 500);
+        }
+
+        // Atualizar contadores do Pulse System
         if (window.pulseSystem.updatePulseCounters) {
             window.pulseSystem.updatePulseCounters();
+        }
+        
+        // ✅ CORREÇÃO: Sinalizar para outras páginas atualizarem
+        if (window.location.pathname.includes('home.html')) {
+            localStorage.setItem('vipListUpdate', 'true');
         }
 
     } catch (error) {
@@ -2929,7 +2992,12 @@ function toggleMenu(button) {
     const menu = button.nextElementSibling;
     const isShowing = menu.classList.contains('show');
     
-    document.querySelectorAll('.menu-options').forEach(m => m.classList.remove('show'));
+    // Fechar todos os menus abertos
+    document.querySelectorAll('.menu-options').forEach(m => {
+        if (m !== menu) {
+            m.classList.remove('show');
+        }
+    });
     
     if (!isShowing) {
         menu.classList.add('show');
@@ -2942,6 +3010,8 @@ function toggleMenu(button) {
         };
         
         setTimeout(() => document.addEventListener('click', closeMenuHandler), 10);
+    } else {
+        menu.classList.remove('show');
     }
 }
 
@@ -2950,6 +3020,8 @@ function openReportModal(userId, userName) {
     currentReportUserName = userName;
     
     document.getElementById('reportUserName').textContent = userName;
+    
+    // Resetar formulário
     document.querySelectorAll('input[name="reportReason"]').forEach(radio => {
         radio.checked = false;
         radio.parentElement.classList.remove('selected');
@@ -2957,7 +3029,16 @@ function openReportModal(userId, userName) {
     document.getElementById('reportDescription').value = '';
     document.getElementById('submitReportBtn').disabled = true;
     
+    // Mostrar modal
     document.getElementById('reportModal').classList.add('show');
+    
+    // ✅ CORREÇÃO: Focar no primeiro campo
+    setTimeout(() => {
+        const firstRadio = document.querySelector('input[name="reportReason"]');
+        if (firstRadio) {
+            firstRadio.focus();
+        }
+    }, 100);
 }
 
 function closeReportModal() {
@@ -2967,14 +3048,40 @@ function closeReportModal() {
 }
 
 function selectReportCategory(radio) {
+    // Remover seleção de todas as categorias
     document.querySelectorAll('.report-category').forEach(category => {
         category.classList.remove('selected');
     });
     
+    // Selecionar categoria clicada
     radio.parentElement.classList.add('selected');
     document.getElementById('submitReportBtn').disabled = false;
+    
+    // ✅ CORREÇÃO: Focar na descrição após selecionar categoria
+    setTimeout(() => {
+        document.getElementById('reportDescription').focus();
+    }, 50);
 }
 
+// ✅ CORREÇÃO: Adicionar função auxiliar para atualização da lista VIP
+function sinalizarAtualizacaoVIP() {
+    // Sinalizar para lista VIP atualizar
+    localStorage.setItem('vipListUpdate', 'true');
+    
+    // Se estiver na lista VIP, atualizar imediatamente
+    if (window.location.pathname.includes('lista-vip.html') && window.atualizarListaVIP) {
+        setTimeout(() => {
+            window.atualizarListaVIP().catch(console.error);
+        }, 300);
+    }
+    
+    // Se estiver na home, atualizar estatísticas
+    if (window.location.pathname.includes('home.html') && window.updateStats) {
+        setTimeout(() => {
+            window.updateStats().catch(console.error);
+        }, 500);
+    }
+}
 // ✅✅✅ FUNÇÃO SUBMITREPORT - VERSÃO DEFINITIVA
 async function submitReport() {
     const submitBtn = document.getElementById('submitReportBtn');
