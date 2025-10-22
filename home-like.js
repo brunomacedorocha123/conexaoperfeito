@@ -83,6 +83,9 @@ class PulseSystem {
     async createPulse(userToId) {
         try {
             console.log('💗 Criando pulse para:', userToId);
+            console.log('🔍 Verificando premium...');
+            console.log('📊 UserProfile:', this.userProfile);
+            console.log('⭐ is_premium:', this.userProfile?.is_premium);
             
             // 1. Salvar no pulses (para TODOS os usuários)
             const { error: pulseError } = await this.supabase
@@ -97,22 +100,31 @@ class PulseSystem {
                 throw pulseError;
             }
 
-            // 2. ✅✅✅ CORREÇÃO: SÓ SALVAR NA VIP_LIST SE FOR PREMIUM
+            // 2. ✅✅✅ CORREÇÃO DEFINITIVA: SALVAR NA VIP_LIST SE FOR PREMIUM
             if (this.userProfile?.is_premium) {
-                const { error: vipError } = await this.supabase
+                console.log('🎯 Usuário PREMIUM - Inserindo na VIP_LIST...');
+                
+                const { data: vipData, error: vipError } = await this.supabase
                     .from('vip_list')
                     .insert({
                         user_id: this.currentUser.id,
                         vip_user_id: userToId
-                    });
+                    })
+                    .select();
 
-                if (vipError && vipError.code !== '23505') {
-                    console.log('❌ Erro ao salvar na VIP_LIST:', vipError);
+                if (vipError) {
+                    console.error('❌ ERRO ao salvar na VIP_LIST:', vipError);
+                    console.log('🔍 Detalhes do erro:', {
+                        code: vipError.code,
+                        message: vipError.message,
+                        details: vipError.details
+                    });
                 } else {
-                    console.log('✅ Salvo na VIP_LIST (Premium):', userToId);
+                    console.log('✅✅✅ VIP_LIST salva com SUCESSO:', vipData);
                     
-                    // Sinalizar atualização para lista-vip.html
+                    // Sinalizar atualização IMEDIATA
                     localStorage.setItem('vipListUpdate', 'true');
+                    console.log('📢 Sinal de atualização enviado para lista-vip.html');
                 }
             } else {
                 console.log('ℹ️ Usuário Free - Pulse salvo, mas não na VIP_LIST');
@@ -148,15 +160,22 @@ class PulseSystem {
 
             // 2. ✅✅✅ CORREÇÃO: SÓ REMOVER DA VIP_LIST SE FOR PREMIUM
             if (this.userProfile?.is_premium) {
-                await this.supabase
+                console.log('🎯 Usuário PREMIUM - Removendo da VIP_LIST...');
+                
+                const { error: vipError } = await this.supabase
                     .from('vip_list')
                     .delete()
                     .eq('user_id', this.currentUser.id)
                     .eq('vip_user_id', userToId);
-                console.log('✅ Removido da VIP_LIST (Premium):', userToId);
-                
-                // Sinalizar atualização para lista-vip.html
-                localStorage.setItem('vipListUpdate', 'true');
+
+                if (vipError) {
+                    console.error('❌ Erro ao remover da VIP_LIST:', vipError);
+                } else {
+                    console.log('✅ Removido da VIP_LIST (Premium):', userToId);
+                    
+                    // Sinalizar atualização para lista-vip.html
+                    localStorage.setItem('vipListUpdate', 'true');
+                }
             }
 
             // 3. Atualizar dados locais
@@ -179,6 +198,7 @@ class PulseSystem {
                 return [];
             }
 
+            console.log('🔍 Buscando lista VIP do banco...');
             const { data: vipUsers, error } = await this.supabase
                 .from('vip_list')
                 .select(`
@@ -192,7 +212,10 @@ class PulseSystem {
                 .eq('user_id', this.currentUser.id)
                 .order('created_at', { ascending: false });
 
-            if (error) throw error;
+            if (error) {
+                console.error('❌ Erro na consulta VIP_LIST:', error);
+                throw error;
+            }
             
             console.log('📋 VIP List carregada:', vipUsers?.length || 0, 'usuários');
             return vipUsers || [];
