@@ -558,10 +558,13 @@ const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 let currentUser = null;
 let userProfile = null;
+let pulseSystem = null;
 
 // ==================== INICIALIZAÇÃO ====================
 async function initializeVipPage() {
     try {
+        console.log('🚀 Iniciando página Lista VIP...');
+        
         // Verificar autenticação
         const { data: { user }, error } = await supabase.auth.getUser();
         if (error || !user) {
@@ -577,15 +580,22 @@ async function initializeVipPage() {
         
         // ✅✅✅ VERIFICAÇÃO CRÍTICA: Só carregar lista se for premium
         if (!userProfile?.is_premium) {
+            console.log('ℹ️ Usuário não premium - mostrando mensagem');
             showPremiumRequired();
             return;
         }
 
+        console.log('🎯 Usuário PREMIUM - Inicializando sistemas...');
+        
+        // Inicializar Pulse System para Lista VIP
+        await initializePulseSystemForVip();
+        
+        // Carregar lista VIP
         console.log('🔄 Carregando lista VIP...');
         await loadVipList();
 
         // Configurar atualização automática
-        setupSimpleAutoRefresh();
+        setupAutoRefresh();
 
     } catch (error) {
         console.error('❌ Erro página VIP:', error);
@@ -593,9 +603,160 @@ async function initializeVipPage() {
     }
 }
 
-// ✅ FUNÇÃO DE ATUALIZAÇÃO SIMPLES
-function setupSimpleAutoRefresh() {
-    console.log('⏰ Configurando atualização automática simples...');
+// ✅✅✅ CORREÇÃO: Inicializar Pulse System na Lista VIP
+async function initializePulseSystemForVip() {
+    try {
+        console.log('🎯 Inicializando Pulse System para Lista VIP...');
+        
+        // Tentar usar função global se disponível
+        if (window.initializePulseSystemForVip) {
+            pulseSystem = await window.initializePulseSystemForVip();
+        } else {
+            // Fallback: criar instância diretamente
+            console.log('🔄 Criando Pulse System diretamente...');
+            pulseSystem = new PulseSystem(supabase, currentUser);
+            await pulseSystem.initialize();
+        }
+        
+        console.log('✅ Pulse System inicializado para Lista VIP');
+        return pulseSystem;
+        
+    } catch (error) {
+        console.error('❌ Erro inicializar Pulse System:', error);
+        // Continuar mesmo sem Pulse System
+        return null;
+    }
+}
+
+// ✅✅✅ CORREÇÃO: Sistema Pulse para Lista VIP
+class PulseSystem {
+    constructor(supabase, currentUser) {
+        this.supabase = supabase;
+        this.currentUser = currentUser;
+        this.pulsesData = { 
+            given: new Set(), 
+            received: new Set(), 
+            matches: new Set() 
+        };
+        this.userProfile = null;
+    }
+
+    async initialize() {
+        try {
+            console.log('🎯 Iniciando Pulse System...');
+            if (!this.currentUser) return;
+            
+            await this.loadUserProfile();
+            await this.loadPulsesData();
+            console.log('✅ Pulse System: Pronto!');
+        } catch (error) {
+            console.error('❌ Erro inicialização Pulse:', error);
+        }
+    }
+
+    async loadUserProfile() {
+        try {
+            const { data: profile, error } = await this.supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', this.currentUser.id)
+                .single();
+                
+            if (error) throw error;
+            this.userProfile = profile;
+            console.log('✅ Perfil carregado no Pulse:', profile.nickname, 'Premium:', profile.is_premium);
+        } catch (error) {
+            console.error('❌ Erro carregar perfil:', error);
+        }
+    }
+
+    async loadPulsesData() {
+        try {
+            // Curtidas que EU dei
+            const { data: givenPulses } = await this.supabase
+                .from('pulses')
+                .select('user_to_id')
+                .eq('user_from_id', this.currentUser.id)
+                .eq('status', 'active');
+
+            // Curtidas que EU recebi
+            const { data: receivedPulses } = await this.supabase
+                .from('pulses')
+                .select('user_from_id')
+                .eq('user_to_id', this.currentUser.id)
+                .eq('status', 'active');
+
+            if (givenPulses) {
+                givenPulses.forEach(pulse => this.pulsesData.given.add(pulse.user_to_id));
+            }
+
+            if (receivedPulses) {
+                receivedPulses.forEach(pulse => {
+                    this.pulsesData.received.add(pulse.user_from_id);
+                    if (this.pulsesData.given.has(pulse.user_from_id)) {
+                        this.pulsesData.matches.add(pulse.user_from_id);
+                    }
+                });
+            }
+
+            console.log('📊 Pulses carregados:', {
+                dados: this.pulsesData.given.size,
+                recebidos: this.pulsesData.received.size,
+                matches: this.pulsesData.matches.size
+            });
+
+        } catch (error) {
+            console.error('❌ Erro carregar pulses:', error);
+        }
+    }
+
+    async getVipList() {
+        try {
+            console.log('🔍 Buscando lista VIP do banco...');
+            const { data: vipUsers, error } = await this.supabase
+                .from('vip_list')
+                .select(`
+                    vip_user_id,
+                    created_at,
+                    profiles:vip_user_id (
+                        id, nickname, avatar_url, birth_date, zodiac, profession,
+                        user_details (gender, interests, description, looking_for)
+                    )
+                `)
+                .eq('user_id', this.currentUser.id)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('❌ Erro na consulta VIP_LIST:', error);
+                throw error;
+            }
+            
+            console.log('📋 VIP List carregada:', vipUsers?.length || 0, 'usuários');
+            return vipUsers || [];
+
+        } catch (error) {
+            console.error('❌ Erro buscar lista VIP:', error);
+            return [];
+        }
+    }
+
+    // Métodos de utilidade
+    isUserLiked(userId) {
+        return this.pulsesData.given.has(userId);
+    }
+
+    isMatch(userId) {
+        return this.pulsesData.matches.has(userId);
+    }
+
+    getMatchesCount() {
+        return this.pulsesData.matches.size;
+    }
+}
+
+// ✅ FUNÇÃO DE ATUALIZAÇÃO AUTOMÁTICA
+function setupAutoRefresh() {
+    console.log('⏰ Configurando atualização automática...');
     
     // Atualizar a cada 5 segundos
     setInterval(() => {
@@ -633,12 +794,14 @@ async function loadUserProfile() {
     }
 }
 
+// ✅✅✅ FUNÇÃO PRINCIPAL: Carregar Lista VIP
 async function loadVipList() {
     try {
         console.log('📋 Carregando lista VIP...');
         
         // ✅✅✅ VERIFICAÇÃO: Só carregar se for premium
         if (!userProfile?.is_premium) {
+            console.log('ℹ️ Usuário não premium - mostrando mensagem');
             showPremiumRequired();
             return;
         }
@@ -654,33 +817,11 @@ async function loadVipList() {
             `;
         }
 
-        // Tentar usar sistema Pulse se disponível
-        if (window.pulseSystem && typeof window.pulseSystem.getVipList === 'function') {
-            console.log('🎯 Usando Pulse System...');
-            const vipUsers = await window.pulseSystem.getVipList();
-            displayVipUsers(vipUsers);
-            updateVipStats(vipUsers);
-        } else {
-            // Buscar diretamente do banco
-            console.log('🔄 Buscando diretamente do banco...');
-            await loadVipDirect();
-        }
+        let vipUsers = [];
 
-    } catch (error) {
-        console.error('❌ Erro carregar VIP:', error);
-        showError('Erro ao carregar lista VIP.');
-    }
-}
-
-async function loadVipDirect() {
-    try {
-        // ✅✅✅ VERIFICAÇÃO CRÍTICA: Só buscar se for premium
-        if (!userProfile?.is_premium) {
-            showPremiumRequired();
-            return;
-        }
-
-        const { data: vipUsers, error } = await supabase
+        // ✅✅✅ CORREÇÃO: Buscar SEMPRE diretamente do banco
+        console.log('🔄 Buscando diretamente do banco...');
+        const { data: vipData, error } = await supabase
             .from('vip_list')
             .select(`
                 vip_user_id,
@@ -693,11 +834,15 @@ async function loadVipDirect() {
             .eq('user_id', currentUser.id)
             .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (error) {
+            console.error('❌ Erro buscar VIP direto:', error);
+            throw error;
+        }
 
-        console.log('📊 Pessoas na lista VIP:', vipUsers?.length || 0);
-        
-        if (!vipUsers || vipUsers.length === 0) {
+        vipUsers = vipData || [];
+        console.log('📊 Pessoas na lista VIP:', vipUsers.length);
+
+        if (vipUsers.length === 0) {
             showEmptyState();
         } else {
             displayVipUsers(vipUsers);
@@ -705,8 +850,8 @@ async function loadVipDirect() {
         }
 
     } catch (error) {
-        console.error('❌ Erro buscar VIP direto:', error);
-        showEmptyState();
+        console.error('❌ Erro carregar VIP:', error);
+        showError('Erro ao carregar lista VIP.');
     }
 }
 
@@ -735,7 +880,7 @@ function createVipUserCard(vipData) {
     const likedAt = new Date(vipData.created_at).toLocaleDateString('pt-BR');
 
     // Verificar se é match
-    const isMatch = window.pulseSystem ? window.pulseSystem.isMatch(userId) : false;
+    const isMatch = pulseSystem ? pulseSystem.isMatch(userId) : false;
 
     // Avatar
     let avatarHtml = '';
@@ -794,7 +939,7 @@ function updateVipStats(users) {
     
     // Calcular matches
     const mutualMatches = users.filter(user => {
-        return window.pulseSystem ? window.pulseSystem.isMatch(user.vip_user_id) : false;
+        return pulseSystem ? pulseSystem.isMatch(user.vip_user_id) : false;
     }).length;
 
     // Calcular novos esta semana
@@ -813,31 +958,32 @@ function updateVipStats(users) {
     console.log('📊 Estatísticas VIP atualizadas:', { totalLikes, mutualMatches, newThisWeek });
 }
 
+// ✅✅✅ CORREÇÃO: Função handlePulse para Lista VIP
 async function handlePulse(userId, button) {
     try {
         console.log('💗 Manipulando pulse para:', userId);
         
-        if (!window.pulseSystem) {
+        if (!pulseSystem) {
             alert('Sistema de curtidas não disponível. Recarregue a página.');
             return;
         }
 
-        const isCurrentlyLiked = window.pulseSystem.isUserLiked(userId);
+        const isCurrentlyLiked = pulseSystem.isUserLiked(userId);
         
         if (isCurrentlyLiked) {
             // Remover curtida
-            await window.pulseSystem.revokePulse(userId);
+            await revokePulseDirect(userId);
             button.textContent = '💗 Curtir';
             button.classList.remove('active', 'match');
             showToast('Curtida removida');
         } else {
             // Adicionar curtida
-            await window.pulseSystem.createPulse(userId);
+            await createPulseDirect(userId);
             button.textContent = '💗 Curtido';
             button.classList.add('active');
             
             // Verificar match
-            if (window.pulseSystem.isMatch(userId)) {
+            if (pulseSystem.isMatch(userId)) {
                 button.textContent = '💝 Match!';
                 button.classList.add('match');
                 showToast('💝 Novo match!');
@@ -850,11 +996,75 @@ async function handlePulse(userId, button) {
         console.log('🔄 Recarregando lista VIP após ação...');
         setTimeout(() => {
             loadVipList().catch(console.error);
-        }, 300);
+        }, 500);
 
     } catch (error) {
         console.error('❌ Erro ao manipular pulse:', error);
         showToast('Erro ao curtir.');
+    }
+}
+
+// ✅✅✅ CORREÇÃO: Funções diretas para pulses
+async function createPulseDirect(userToId) {
+    try {
+        console.log('💗 Criando pulse diretamente para:', userToId);
+        
+        // 1. Salvar no pulses
+        const { error: pulseError } = await supabase
+            .from('pulses')
+            .insert({
+                user_from_id: currentUser.id,
+                user_to_id: userToId,
+                status: 'active'
+            });
+
+        if (pulseError && pulseError.code !== '23505') {
+            throw pulseError;
+        }
+
+        // 2. Salvar na VIP_LIST (já verificamos que é premium)
+        const { error: vipError } = await supabase
+            .from('vip_list')
+            .insert({
+                user_id: currentUser.id,
+                vip_user_id: userToId
+            });
+
+        if (vipError && vipError.code !== '23505') {
+            console.error('❌ Erro VIP_LIST:', vipError);
+        }
+
+        console.log('✅ Pulse criado diretamente');
+
+    } catch (error) {
+        console.error('❌ Erro criar pulse direto:', error);
+        throw error;
+    }
+}
+
+async function revokePulseDirect(userToId) {
+    try {
+        console.log('🗑️ Revogando pulse diretamente para:', userToId);
+        
+        // 1. Atualizar pulses
+        await supabase
+            .from('pulses')
+            .update({ status: 'revoked' })
+            .eq('user_from_id', currentUser.id)
+            .eq('user_to_id', userToId);
+
+        // 2. Remover da VIP_LIST
+        await supabase
+            .from('vip_list')
+            .delete()
+            .eq('user_id', currentUser.id)
+            .eq('vip_user_id', userToId);
+
+        console.log('✅ Pulse revogado diretamente');
+
+    } catch (error) {
+        console.error('❌ Erro revogar pulse direto:', error);
+        throw error;
     }
 }
 

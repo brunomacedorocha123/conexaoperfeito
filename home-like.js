@@ -100,7 +100,7 @@ class PulseSystem {
                 throw pulseError;
             }
 
-            // 2. ✅✅✅ CORREÇÃO DEFINITIVA: SALVAR NA VIP_LIST SE FOR PREMIUM
+            // 2. ✅✅✅ CORREÇÃO DEFINITIVA: SALVAR NA VIP_LIST APENAS SE FOR PREMIUM
             if (this.userProfile?.is_premium) {
                 console.log('🎯 Usuário PREMIUM - Inserindo na VIP_LIST...');
                 
@@ -119,6 +119,11 @@ class PulseSystem {
                         message: vipError.message,
                         details: vipError.details
                     });
+                    
+                    // Se for erro de duplicidade, apenas logar
+                    if (vipError.code === '23505') {
+                        console.log('ℹ️ Usuário já está na VIP_LIST');
+                    }
                 } else {
                     console.log('✅✅✅ VIP_LIST salva com SUCESSO:', vipData);
                     
@@ -192,7 +197,7 @@ class PulseSystem {
 
     async getVipList() {
         try {
-            // ✅✅✅ VERIFICAÇÃO: Só buscar se for premium
+            // ✅✅✅ VERIFICAÇÃO CRÍTICA: Só buscar se for premium
             if (!this.userProfile?.is_premium) {
                 console.log('ℹ️ Usuário não premium - VIP list vazia');
                 return [];
@@ -226,6 +231,58 @@ class PulseSystem {
         }
     }
 
+    // ✅✅✅ NOVO MÉTODO: Buscar lista VIP diretamente (para lista-vip.html)
+    async getVipListDirect() {
+        try {
+            console.log('🎯 Buscando lista VIP DIRETAMENTE...');
+            
+            // Verificar autenticação
+            const { data: { user } } = await this.supabase.auth.getUser();
+            if (!user) {
+                console.error('❌ Usuário não autenticado');
+                return [];
+            }
+
+            // ✅✅✅ VERIFICAÇÃO: Só buscar se for premium
+            const { data: profile } = await this.supabase
+                .from('profiles')
+                .select('is_premium')
+                .eq('id', user.id)
+                .single();
+
+            if (!profile?.is_premium) {
+                console.log('ℹ️ Usuário não premium - acesso negado');
+                return [];
+            }
+
+            console.log('🔍 Buscando VIP_LIST diretamente para:', user.id);
+            const { data: vipUsers, error } = await this.supabase
+                .from('vip_list')
+                .select(`
+                    vip_user_id,
+                    created_at,
+                    profiles:vip_user_id (
+                        id, nickname, avatar_url, birth_date, zodiac, profession,
+                        user_details (gender, interests, description, looking_for)
+                    )
+                `)
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('❌ Erro consulta VIP_LIST direta:', error);
+                throw error;
+            }
+
+            console.log('✅ VIP List direta carregada:', vipUsers?.length || 0, 'usuários');
+            return vipUsers || [];
+
+        } catch (error) {
+            console.error('❌ Erro buscar lista VIP direta:', error);
+            return [];
+        }
+    }
+
     // Métodos de utilidade
     isUserLiked(userId) {
         return this.pulsesData.given.has(userId);
@@ -245,6 +302,17 @@ class PulseSystem {
             matchesElement.textContent = this.getMatchesCount();
         }
     }
+
+    // ✅✅✅ NOVO: Verificar status premium
+    isUserPremium() {
+        return this.userProfile?.is_premium || false;
+    }
+
+    // ✅✅✅ NOVO: Forçar atualização do perfil
+    async refreshUserProfile() {
+        await this.loadUserProfile();
+        console.log('🔄 Perfil atualizado. Premium:', this.isUserPremium());
+    }
 }
 
 // INICIALIZAÇÃO GLOBAL
@@ -256,6 +324,35 @@ async function initializePulseSystem(supabase, currentUser) {
     pulseSystem = new PulseSystem(supabase, currentUser);
     await pulseSystem.initialize();
     return pulseSystem;
+}
+
+// ✅✅✅ CORREÇÃO: Inicialização para Lista VIP
+async function initializePulseSystemForVip() {
+    try {
+        console.log('🎯 Inicializando Pulse System para Lista VIP...');
+        
+        const supabaseUrl = 'https://gcukalndarlgydmgmmmt.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // Verificar autenticação
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            console.error('❌ Usuário não autenticado na Lista VIP');
+            return null;
+        }
+        
+        // Inicializar sistema
+        const system = new PulseSystem(supabase, user);
+        await system.initialize();
+        
+        console.log('✅ Pulse System inicializado para Lista VIP');
+        return system;
+        
+    } catch (error) {
+        console.error('❌ Erro inicializar Pulse para Lista VIP:', error);
+        return null;
+    }
 }
 
 // ESTILOS
@@ -286,8 +383,10 @@ function addPulseStyles() {
     document.head.appendChild(styles);
 }
 
+// EXPORTAR PARA USO GLOBAL
 window.PulseSystem = PulseSystem;
 window.initializePulseSystem = initializePulseSystem;
+window.initializePulseSystemForVip = initializePulseSystemForVip;
 addPulseStyles();
 
-console.log('✅ Sistema Pulse carregado!');
+console.log('✅ Sistema Pulse COMPLETO carregado!');
