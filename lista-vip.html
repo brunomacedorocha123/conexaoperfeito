@@ -592,6 +592,7 @@
     <script>
     // ==================== CONFIGURAÇÃO SUPABASE ====================
 
+// CONFIGURAÇÃO
 const supabaseUrl = 'https://gcukalndarlgydmgmmmt.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -599,7 +600,7 @@ const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 let currentUser = null;
 let userProfile = null;
 
-// ==================== INICIALIZAÇÃO ====================
+// INICIALIZAÇÃO
 document.addEventListener('DOMContentLoaded', function() {
     initializeVipPage();
 });
@@ -645,7 +646,6 @@ async function loadUserProfile() {
     }
 }
 
-// ✅ FUNÇÃO PRINCIPAL: CARREGAR QUEM EU CURTI
 async function loadVipList() {
     try {
         // TENTAR USAR SISTEMA PULSE
@@ -664,7 +664,6 @@ async function loadVipList() {
     }
 }
 
-// ✅ BUSCAR DA TABELA VIP_LIST
 async function loadVipDirect() {
     try {
         const { data: vipUsers, error } = await supabase
@@ -673,18 +672,8 @@ async function loadVipDirect() {
                 vip_user_id,
                 created_at,
                 profiles:vip_user_id (
-                    id,
-                    nickname,
-                    avatar_url,
-                    birth_date,
-                    zodiac,
-                    profession,
-                    user_details (
-                        gender,
-                        interests,
-                        description,
-                        looking_for
-                    )
+                    id, nickname, avatar_url, birth_date, zodiac, profession,
+                    user_details (gender, interests, description, looking_for)
                 )
             `)
             .eq('user_id', currentUser.id)
@@ -707,7 +696,6 @@ async function loadVipDirect() {
     }
 }
 
-// ✅ MOSTRAR USUÁRIOS NA TELA
 function displayVipUsers(users) {
     const vipGrid = document.getElementById('vipUsersGrid');
     
@@ -768,21 +756,14 @@ function createVipUserCard(vipData) {
             <div class="vip-user-bio">${bio}</div>
             
             <div class="vip-user-actions">
-                <button class="btn btn-primary" onclick="sendMessage('${userId}')">
-                    💌 Mensagem
-                </button>
-                <button class="btn ${pulseButtonClass}" onclick="handlePulse('${userId}', this)">
-                    ${pulseButtonText}
-                </button>
-                <button class="btn btn-outline" onclick="viewProfile('${userId}')">
-                    👀 Ver Perfil
-                </button>
+                <button class="btn btn-primary" onclick="sendMessage('${userId}')">💌 Mensagem</button>
+                <button class="btn ${pulseButtonClass}" onclick="handlePulse('${userId}', this)">${pulseButtonText}</button>
+                <button class="btn btn-outline" onclick="viewProfile('${userId}')">👀 Ver Perfil</button>
             </div>
         </div>
     `;
 }
 
-// ✅ ATUALIZAR ESTATÍSTICAS
 function updateVipStats(users) {
     const totalLikes = users.length;
     const mutualMatches = users.filter(user => {
@@ -801,7 +782,6 @@ function updateVipStats(users) {
     document.getElementById('vipCount').textContent = `${totalLikes} pessoa${totalLikes !== 1 ? 's' : ''}`;
 }
 
-// ✅ INTERAÇÕES
 async function handlePulse(userId, button) {
     if (!window.pulseSystem) {
         alert('Sistema não disponível.');
@@ -854,7 +834,6 @@ async function viewProfile(userId) {
     window.location.href = 'perfil.html';
 }
 
-// ✅ ESTADOS DA PÁGINA
 function showPremiumRequired() {
     document.getElementById('premiumRequired').style.display = 'block';
     document.getElementById('vipUsersGrid').style.display = 'none';
@@ -880,7 +859,6 @@ function showError(message) {
     `;
 }
 
-// ✅ FUNÇÕES AUXILIARES
 function calculateAge(birthDate) {
     if (!birthDate) return null;
     const today = new Date();
@@ -915,9 +893,7 @@ window.handlePulse = handlePulse;
 window.sendMessage = sendMessage;
 window.viewProfile = viewProfile;
 
-console.log('✅ Lista VIP carregada!');
-
-
+console.log('✅ Lista VIP COMPLETA!');
 </script>
 </body>
 </html>
