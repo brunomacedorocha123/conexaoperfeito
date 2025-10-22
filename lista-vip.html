@@ -625,7 +625,7 @@ async function initializeVipPage() {
             return;
         }
 
-        // Carregar lista VIP
+        // Carregar lista VIP (QUEM EU CURTI)
         await loadVipList();
 
     } catch (error) {
@@ -652,10 +652,10 @@ async function loadUserProfile() {
     }
 }
 
-// ✅ CORREÇÃO: Função loadVipList atualizada
+// ✅ CORREÇÃO: AGORA BUSCA QUEM EU CURTI
 async function loadVipList() {
     try {
-        console.log('📋 Carregando lista VIP...');
+        console.log('📋 Carregando lista VIP (quem EU curti)...');
         
         // ✅ PRIORIDADE: Usar o sistema Pulse se disponível
         if (window.pulseSystem && typeof window.pulseSystem.getVipList === 'function') {
@@ -675,12 +675,12 @@ async function loadVipList() {
     }
 }
 
-// ✅ CORREÇÃO: Função loadVipDirect atualizada
+// ✅ CORREÇÃO CRÍTICA: BUSCAR QUEM EU CURTI (user_from_id = currentUser.id)
 async function loadVipDirect() {
     try {
-        console.log('🔄 Carregando lista VIP diretamente...');
+        console.log('🔄 Carregando quem EU curti...');
         
-        // ✅ CORREÇÃO: Buscar da tabela VIP_LIST em vez de pulses
+        // ✅ CORREÇÃO: Buscar da vip_list onde user_id = currentUser.id (QUEM EU curti)
         const { data: vipUsers, error } = await supabase
             .from('vip_list')
             .select(`
@@ -701,7 +701,7 @@ async function loadVipDirect() {
                     )
                 )
             `)
-            .eq('user_id', currentUser.id)
+            .eq('user_id', currentUser.id)  // ✅ QUEM EU curti
             .order('created_at', { ascending: false });
 
         if (error) {
@@ -713,7 +713,7 @@ async function loadVipDirect() {
             return;
         }
 
-        console.log(`✅ ${vipUsers?.length || 0} usuários encontrados na lista VIP`);
+        console.log(`✅ ${vipUsers?.length || 0} pessoas que VOCÊ curtiu`);
         displayVipUsers(vipUsers || []);
         updateVipStats(vipUsers || []);
 
@@ -723,17 +723,18 @@ async function loadVipDirect() {
     }
 }
 
-// ✅ NOVA FUNÇÃO: Fallback para carregar de pulses
+// ✅ CORREÇÃO: Fallback também busca QUEM EU CURTI
 async function loadVipFromPulsesFallback() {
     try {
-        console.log('🔄 Usando fallback da tabela pulses...');
+        console.log('🔄 Usando fallback da tabela pulses (quem EU curti)...');
         
         const { data: pulses, error } = await supabase
             .from('pulses')
             .select(`
-                user_from_id,
+                user_to_id,  // ✅ QUEM EU curti
                 created_at,
-                profiles:user_from_id (
+                profiles:user_to_id (
+                    id,
                     nickname,
                     avatar_url,
                     birth_date,
@@ -747,15 +748,22 @@ async function loadVipFromPulsesFallback() {
                     )
                 )
             `)
-            .eq('user_to_id', currentUser.id)
+            .eq('user_from_id', currentUser.id)  // ✅ QUEM EU curti
             .eq('status', 'active')
             .order('created_at', { ascending: false });
 
         if (error) throw error;
 
-        console.log(`✅ ${pulses?.length || 0} usuários encontrados via pulses`);
-        displayVipUsers(pulses || []);
-        updateVipStats(pulses || []);
+        // ✅ Formatar para compatibilidade
+        const formattedPulses = pulses?.map(pulse => ({
+            vip_user_id: pulse.user_to_id,
+            created_at: pulse.created_at,
+            profiles: pulse.profiles
+        })) || [];
+
+        console.log(`✅ ${formattedPulses?.length || 0} pessoas que VOCÊ curtiu (via pulses)`);
+        displayVipUsers(formattedPulses || []);
+        updateVipStats(formattedPulses || []);
 
     } catch (error) {
         console.error('❌ Erro no fallback pulses:', error);
@@ -772,7 +780,8 @@ function displayVipUsers(users) {
         return;
     }
 
-    // ✅ CORREÇÃO: Usar Promise.all para carregar todas as imagens
+    console.log(`🎴 Exibindo ${users.length} pessoas que você curtiu`);
+    
     const userCardsPromises = users.map(user => createVipUserCard(user));
     
     Promise.all(userCardsPromises).then(cards => {
@@ -781,34 +790,31 @@ function displayVipUsers(users) {
     });
 }
 
-// ✅ CORREÇÃO: Função createVipUserCard atualizada
-async function createVipUserCard(pulseData) {
+// ✅ CORREÇÃO: Card mostra QUEM EU CURTI
+async function createVipUserCard(vipData) {
     try {
-        const user = pulseData.profiles;
-        const userId = pulseData.user_from_id || pulseData.vip_user_id;
+        const user = vipData.profiles;
+        const userId = vipData.vip_user_id;
         const nickname = user.nickname || 'Usuário';
         const age = user.birth_date ? calculateAge(user.birth_date) : null;
         const zodiac = user.zodiac;
         const profession = user.profession;
         const bio = user.user_details?.description || 'Este usuário ainda não adicionou uma descrição.';
-        const likedAt = new Date(pulseData.created_at).toLocaleDateString('pt-BR');
+        const likedAt = new Date(vipData.created_at).toLocaleDateString('pt-BR');
 
         // Verificar se é match mútuo
         const isMatch = window.pulseSystem ? window.pulseSystem.isMatch(userId) : false;
-        const isLiked = window.pulseSystem ? window.pulseSystem.isUserLiked(userId) : false;
+        const isLiked = true; // ✅ SEMPRE true porque VOCÊ curtiu esta pessoa
 
         // ✅ CORREÇÃO: Gerar avatar HTML corretamente
         const avatarHtml = await createAvatarHtml(user, nickname);
 
-        let pulseButtonText = '💗 Curtir';
-        let pulseButtonClass = 'btn-pulse';
+        let pulseButtonText = '💗 Curtido';
+        let pulseButtonClass = 'btn-pulse active';
         
         if (isMatch) {
             pulseButtonText = '💝 Match!';
-            pulseButtonClass += ' match';
-        } else if (isLiked) {
-            pulseButtonText = '💗 Curtido';
-            pulseButtonClass += ' active';
+            pulseButtonClass = 'btn-pulse match';
         }
 
         return `
@@ -820,7 +826,7 @@ async function createVipUserCard(pulseData) {
                         <div class="vip-user-details">
                             ${zodiac ? `<div class="vip-user-detail">${getZodiacIcon(zodiac)} ${formatZodiac(zodiac)}</div>` : ''}
                             ${profession ? `<div class="vip-user-detail">💼 ${profession}</div>` : ''}
-                            <div class="vip-user-detail">⏰ Curtiu em ${likedAt}</div>
+                            <div class="vip-user-detail">⭐ Você curtiu em ${likedAt}</div>
                         </div>
                     </div>
                 </div>
@@ -846,7 +852,7 @@ async function createVipUserCard(pulseData) {
     }
 }
 
-// ✅ NOVA FUNÇÃO: Criar HTML do avatar
+// ✅ Função para criar avatar
 async function createAvatarHtml(user, nickname) {
     try {
         const initial = nickname.charAt(0).toUpperCase();
@@ -859,12 +865,10 @@ async function createAvatarHtml(user, nickname) {
             `;
         }
 
-        // ✅ CORREÇÃO: Gerar URL correta usando Supabase
         const { data } = supabase.storage.from('avatars').getPublicUrl(user.avatar_url);
         const photoUrl = data?.publicUrl;
         
         if (photoUrl) {
-            // ✅ VERIFICAR se a imagem carrega
             const imgLoads = await checkImageLoads(photoUrl);
             
             if (imgLoads) {
@@ -878,7 +882,6 @@ async function createAvatarHtml(user, nickname) {
             }
         }
 
-        // Fallback se não tiver imagem ou não carregar
         return `
             <div class="vip-user-avatar">
                 <div class="vip-user-avatar-fallback">${initial}</div>
@@ -895,7 +898,7 @@ async function createAvatarHtml(user, nickname) {
     }
 }
 
-// ✅ NOVA FUNÇÃO: Verificar se imagem carrega
+// ✅ Verificar se imagem carrega
 function checkImageLoads(url) {
     return new Promise((resolve) => {
         const img = new Image();
@@ -908,8 +911,10 @@ function checkImageLoads(url) {
 // ==================== ATUALIZAR ESTATÍSTICAS ====================
 function updateVipStats(users) {
     const totalLikes = users.length;
+    
+    // Matches mútuos (quem eu curti E me curtiu de volta)
     const mutualMatches = users.filter(user => {
-        const userId = user.user_from_id || user.vip_user_id;
+        const userId = user.vip_user_id;
         return window.pulseSystem ? window.pulseSystem.isMatch(userId) : false;
     }).length;
     
@@ -969,14 +974,17 @@ async function handlePulse(userId, button) {
             await window.pulseSystem.revokePulse(userId);
             button.textContent = '💗 Curtir';
             button.classList.remove('active', 'match');
+            
+            // Remover da lista VIP
+            await removeFromVipList(userId);
         } else {
             // Curtir
             await window.pulseSystem.createPulse(userId);
             button.textContent = '💗 Curtido';
             button.classList.add('active');
             
-            // ✅ ATUALIZAR LISTA VIP
-            await window.pulseSystem.saveLikeToVipList(userId);
+            // Adicionar à lista VIP
+            await addToVipList(userId);
             
             // Verificar se agora é match
             if (window.pulseSystem.isMatch(userId)) {
@@ -992,6 +1000,42 @@ async function handlePulse(userId, button) {
     } catch (error) {
         console.error('Erro ao processar curtida:', error);
         alert('Erro ao processar curtida. Tente novamente.');
+    }
+}
+
+// ✅ Função para adicionar à lista VIP
+async function addToVipList(userId) {
+    try {
+        const { error } = await supabase
+            .from('vip_list')
+            .insert({
+                user_id: currentUser.id,
+                vip_user_id: userId,
+                created_at: new Date().toISOString()
+            });
+
+        if (error && error.code !== '23505') {
+            console.error('❌ Erro ao adicionar à lista VIP:', error);
+        }
+    } catch (error) {
+        console.error('❌ Erro ao adicionar à lista VIP:', error);
+    }
+}
+
+// ✅ Função para remover da lista VIP
+async function removeFromVipList(userId) {
+    try {
+        const { error } = await supabase
+            .from('vip_list')
+            .delete()
+            .eq('user_id', currentUser.id)
+            .eq('vip_user_id', userId);
+
+        if (error) {
+            console.error('❌ Erro ao remover da lista VIP:', error);
+        }
+    } catch (error) {
+        console.error('❌ Erro ao remover da lista VIP:', error);
     }
 }
 
@@ -1023,7 +1067,6 @@ function showMatchToast() {
 async function sendMessage(userId) {
     if (!currentUser) return;
     
-    // Verificar se o perfil está completo
     if (!userProfile?.full_name || !userProfile?.birth_date) {
         alert('Complete seu perfil antes de enviar mensagens!');
         window.location.href = 'painel.html';
@@ -1037,7 +1080,6 @@ async function sendMessage(userId) {
 async function viewProfile(userId) {
     if (!currentUser) return;
     
-    // Registrar visita
     if (window.registrarVisitaPerfil) {
         await window.registrarVisitaPerfil(userId);
     }
@@ -1082,36 +1124,35 @@ async function debugVipList() {
     console.group('🐛 DEBUG LISTA VIP');
     
     try {
-        // Verificar dados na vip_list
-        const { data: vipData, error: vipError } = await supabase
+        // Verificar quem EU curti na vip_list
+        const { data: myVipList, error: vipError } = await supabase
             .from('vip_list')
             .select('*')
             .eq('user_id', currentUser.id);
 
-        console.log('📊 VIP_LIST:', {
+        console.log('📊 MINHA LISTA VIP (quem EU curti):', {
             error: vipError,
-            data: vipData,
-            count: vipData?.length || 0
+            data: myVipList,
+            count: myVipList?.length || 0
         });
 
-        // Verificar dados em pulses
-        const { data: pulsesData, error: pulsesError } = await supabase
+        // Verificar quem EU curti em pulses
+        const { data: myPulses, error: pulsesError } = await supabase
             .from('pulses')
             .select('*')
-            .eq('user_to_id', currentUser.id)
+            .eq('user_from_id', currentUser.id)
             .eq('status', 'active');
 
-        console.log('📈 PULSES:', {
+        console.log('📈 MEUS PULSES (quem EU curti):', {
             error: pulsesError,
-            data: pulsesData,
-            count: pulsesData?.length || 0
+            data: myPulses,
+            count: myPulses?.length || 0
         });
 
-        // Verificar sistema Pulse
         console.log('🎯 PULSE SYSTEM:', {
             available: !!window.pulseSystem,
-            matches: window.pulseSystem?.getMatchesCount() || 0,
-            received: window.pulseSystem?.getReceivedPulsesCount() || 0
+            given: window.pulseSystem?.getGivenPulsesCount() || 0,
+            matches: window.pulseSystem?.getMatchesCount() || 0
         });
 
     } catch (error) {
@@ -1121,7 +1162,7 @@ async function debugVipList() {
     console.groupEnd();
 }
 
-// ✅ CHAMAR DEBUG (opcional)
+// ✅ CHAMAR DEBUG
 setTimeout(debugVipList, 2000);
 
 // ==================== EXPORTAR FUNÇÕES GLOBAIS ====================
@@ -1130,7 +1171,7 @@ window.sendMessage = sendMessage;
 window.viewProfile = viewProfile;
 window.debugVipList = debugVipList;
 
-console.log('✅ Página Lista VIP carregada!');
+console.log('✅ Página Lista VIP (QUEM EU CURTI) carregada!');
 </script>
 </body>
 </html>
