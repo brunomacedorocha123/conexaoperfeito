@@ -550,9 +550,8 @@
         </div>
     </footer>
 
-    <script>
-    // ==================== CONFIGURAÇÃO SUPABASE ====================
-   // ==================== CONFIGURAÇÃO SUPABASE ====================
+   <script>
+// ==================== CONFIGURAÇÃO SUPABASE ====================
 const supabaseUrl = 'https://gcukalndarlgydmgmmmt.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -576,17 +575,16 @@ async function initializeVipPage() {
         // Carregar perfil
         await loadUserProfile();
         
-        // Verificar se é premium
+        // ✅✅✅ VERIFICAÇÃO CRÍTICA: Só carregar lista se for premium
         if (!userProfile?.is_premium) {
             showPremiumRequired();
             return;
         }
 
-        // ✅✅✅ VERSÃO SIMPLES: APENAS CARREGAR LISTA VIP
         console.log('🔄 Carregando lista VIP...');
         await loadVipList();
 
-        // ✅ CONFIGURAR ATUALIZAÇÃO SIMPLES
+        // Configurar atualização automática
         setupSimpleAutoRefresh();
 
     } catch (error) {
@@ -617,36 +615,6 @@ function setupSimpleAutoRefresh() {
     });
 }
 
-// ✅ FUNÇÃO PARA RECARREGAR MANUALMENTE (DEBUG)
-window.recarregarVIP = function() {
-    console.log('🔄 Recarregando lista VIP manualmente...');
-    loadVipList().catch(console.error);
-};
-// ✅ FUNÇÃO PARA ATUALIZAÇÃO AUTOMÁTICA
-function setupVipAutoRefresh() {
-    console.log('⏰ Configurando atualização automática da lista VIP...');
-    
-    // 1. Atualizar a cada 3 segundos se houver sinal
-    const updateInterval = setInterval(() => {
-        if (localStorage.getItem('vipListUpdate') === 'true') {
-            console.log('🔄 Atualização automática detectada! Recarregando lista...');
-            localStorage.removeItem('vipListUpdate');
-            loadVipList().catch(console.error);
-        }
-    }, 3000);
-    
-    // 2. Atualizar quando a página ficar visível
-    document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) {
-            console.log('📄 Página VIP visível - verificando atualizações...');
-            loadVipList().catch(console.error);
-        }
-    });
-    
-    // 3. Armazenar interval para limpeza posterior
-    window.vipUpdateInterval = updateInterval;
-}
-
 async function loadUserProfile() {
     try {
         const { data: profile, error } = await supabase
@@ -657,7 +625,7 @@ async function loadUserProfile() {
 
         if (error) throw error;
         userProfile = profile;
-        console.log('✅ Perfil carregado:', profile.nickname);
+        console.log('✅ Perfil carregado:', profile.nickname, 'Premium:', profile.is_premium);
 
     } catch (error) {
         console.error('❌ Erro carregar perfil:', error);
@@ -669,6 +637,12 @@ async function loadVipList() {
     try {
         console.log('📋 Carregando lista VIP...');
         
+        // ✅✅✅ VERIFICAÇÃO: Só carregar se for premium
+        if (!userProfile?.is_premium) {
+            showPremiumRequired();
+            return;
+        }
+
         // Mostrar loading
         const vipGrid = document.getElementById('vipUsersGrid');
         if (vipGrid) {
@@ -700,6 +674,12 @@ async function loadVipList() {
 
 async function loadVipDirect() {
     try {
+        // ✅✅✅ VERIFICAÇÃO CRÍTICA: Só buscar se for premium
+        if (!userProfile?.is_premium) {
+            showPremiumRequired();
+            return;
+        }
+
         const { data: vipUsers, error } = await supabase
             .from('vip_list')
             .select(`
@@ -866,7 +846,7 @@ async function handlePulse(userId, button) {
             }
         }
 
-        // ✅✅✅ CORREÇÃO CRÍTICA: Recarregar lista VIP após curtida/descurtida
+        // Recarregar lista VIP após curtida/descurtida
         console.log('🔄 Recarregando lista VIP após ação...');
         setTimeout(() => {
             loadVipList().catch(console.error);
@@ -941,7 +921,6 @@ function showError(message) {
 }
 
 function showToast(message) {
-    // Criar toast simples
     const toast = document.createElement('div');
     toast.style.cssText = `
         position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
@@ -952,28 +931,16 @@ function showToast(message) {
     toast.textContent = message;
     document.body.appendChild(toast);
     
-    // Animar entrada
     setTimeout(() => {
         toast.style.opacity = '1';
         toast.style.transform = 'translateX(-50%) translateY(-10px)';
     }, 100);
     
-    // Remover após 3 segundos
     setTimeout(() => {
         toast.style.opacity = '0';
         toast.style.transform = 'translateX(-50%) translateY(20px)';
         setTimeout(() => toast.remove(), 300);
     }, 3000);
-}
-
-// ✅ FUNÇÃO PARA ATUALIZAR LISTA VIP (CRÍTICA)
-async function atualizarListaVIP() {
-    try {
-        console.log('🔄 Atualizando lista VIP...');
-        await loadVipList();
-    } catch (error) {
-        console.error('❌ Erro ao atualizar lista VIP:', error);
-    }
 }
 
 // ==================== FUNÇÕES AUXILIARES ====================
@@ -1011,7 +978,6 @@ function getZodiacIcon(zodiac) {
 window.handlePulse = handlePulse;
 window.sendMessage = sendMessage;
 window.viewProfile = viewProfile;
-window.atualizarListaVIP = atualizarListaVIP;
 window.loadVipList = loadVipList;
 
 // ✅ FUNÇÃO PARA FORÇAR ATUALIZAÇÃO (DEBUG)
@@ -1019,8 +985,6 @@ window.forceVipUpdate = function() {
     console.log('🔄 Forçando atualização da lista VIP...');
     loadVipList().catch(console.error);
 };
-
-console.log('✅ Lista VIP COMPLETA carregada!');
 
 // ✅ DETECTOR DE ATUALIZAÇÃO AUTOMÁTICA
 window.addEventListener('storage', function(e) {
@@ -1040,6 +1004,12 @@ window.addEventListener('focus', function() {
         loadVipList().catch(console.error);
     }, 1000);
 });
-    </script>
+
+// INICIAR PÁGINA
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Iniciando página VIP...');
+    initializeVipPage();
+});
+</script>
 </body>
 </html>
