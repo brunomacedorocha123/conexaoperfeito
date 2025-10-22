@@ -6,21 +6,37 @@
 }
 
 :root {
-  --bege: #f6ecc5;
-  --vermelho-rosado: #d1656d;
-  --lilas: #dfc9ed;
-  --branco: #ffffff;
-  --text: #444;
-  --text-light: #666;
-  --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  --transition: all 0.3s ease;
+  /* NOVA PALETA DE CORES */
+  --amarelo-dourado: #C6A664;
+  --amarelo-dourado-claro: #D4B978;
+  --vermelho-vinho: #A65B5B;
+  --vermelho-vinho-escuro: #8A4A4A;
+  --grafite: #2A2A2A;
+  --grafite-claro: #444444;
+  --preto: #1A1A1A;
+  
+  /* CORES DE FUNDO (MANTENDO CLARO) */
+  --fundo-claro: #F8F5F0;
+  --fundo-cards: #FFFFFF;
+  --branco: #FFFFFF;
+  
+  /* CORES DE TEXTO */
+  --texto-escuro: #2A2A2A;
+  --texto-cinza: #666666;
+  --texto-claro: #888888;
+  
+  /* CORES SISTEMA */
   --error: #e53e3e;
   --success: #38a169;
+  
+  /* EFEITOS */
+  --sombra: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --transicao: all 0.3s ease;
 }
 
 body {
-  background-color: var(--bege);
-  color: var(--text);
+  background-color: var(--fundo-claro);
+  color: var(--texto-escuro);
   line-height: 1.6;
   overflow-x: hidden;
 }
@@ -32,15 +48,16 @@ body {
   padding: 0 20px;
 }
 
-/* Header */
+/* ==================== HEADER - CABEÇALHO PRETO ==================== */
 header {
-  background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+  background: var(--preto);
   color: var(--branco);
   padding: 0.8rem 0;
-  box-shadow: var(--shadow);
+  box-shadow: var(--sombra);
   position: sticky;
   top: 0;
   z-index: 100;
+  border-bottom: 2px solid var(--amarelo-dourado);
 }
 
 .header-content {
@@ -60,7 +77,7 @@ header {
 }
 
 .logo img {
-  height: 220px;
+  height: 150px; /* TAMANHO DO LOGIN */
   width: auto;
   object-fit: contain;
 }
@@ -86,7 +103,7 @@ header {
   height: 40px;
   border-radius: 50%;
   background: var(--branco);
-  color: var(--vermelho-rosado);
+  color: var(--vermelho-vinho);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -94,6 +111,7 @@ header {
   font-size: 1.2rem;
   position: relative;
   overflow: hidden;
+  border: 2px solid var(--amarelo-dourado);
 }
 
 .user-avatar-img {
@@ -114,7 +132,7 @@ header {
   border: none;
   font-weight: 600;
   cursor: pointer;
-  transition: var(--transition);
+  transition: var(--transicao);
   text-decoration: none;
   display: inline-block;
   text-align: center;
@@ -124,27 +142,28 @@ header {
 
 .btn-outline {
   background: transparent;
-  border: 2px solid var(--branco);
-  color: var(--branco);
+  border: 2px solid var(--amarelo-dourado);
+  color: var(--amarelo-dourado);
 }
 
 .btn-primary {
-  background: var(--branco);
-  color: var(--vermelho-rosado);
+  background: var(--vermelho-vinho);
+  color: var(--branco);
+  border: 2px solid var(--vermelho-vinho);
 }
 
 .btn-secondary {
   background: transparent;
-  border: 2px solid var(--vermelho-rosado);
-  color: var(--vermelho-rosado);
+  border: 2px solid var(--vermelho-vinho);
+  color: var(--vermelho-vinho);
 }
 
 .btn-premium {
-  background: linear-gradient(135deg, #ffd700, #ff6b00);
-  color: var(--branco);
+  background: linear-gradient(135deg, var(--amarelo-dourado), #B8860B);
+  color: var(--preto);
   border: none;
   font-weight: 700;
-  box-shadow: 0 4px 15px rgba(255, 107, 0, 0.3);
+  box-shadow: 0 4px 15px rgba(198, 166, 100, 0.3);
 }
 
 .free-badge {
@@ -160,7 +179,7 @@ header {
   white-space: nowrap;
   border: 2px solid #d0d0d0;
   cursor: default;
-  transition: var(--transition);
+  transition: var(--transicao);
 }
 
 .free-badge:hover {
@@ -170,15 +189,26 @@ header {
 
 .btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+.btn-outline:hover {
+  background: var(--amarelo-dourado);
+  color: var(--preto);
+}
+
+.btn-primary:hover {
+  background: var(--vermelho-vinho-escuro);
+  border-color: var(--vermelho-vinho-escuro);
 }
 
 .btn-premium:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 107, 0, 0.4);
+  box-shadow: 0 6px 20px rgba(198, 166, 100, 0.4);
+  background: linear-gradient(135deg, var(--amarelo-dourado-claro), #DAA520);
 }
 
-/* Main Content */
+/* ==================== MAIN CONTENT ==================== */
 .main-content {
   padding: 2rem 0;
 }
@@ -187,20 +217,20 @@ header {
   text-align: center;
   margin-bottom: 3rem;
   padding: 2rem;
-  background: var(--branco);
+  background: var(--fundo-cards);
   border-radius: 15px;
-  box-shadow: var(--shadow);
-  border: 1px solid var(--lilas);
+  box-shadow: var(--sombra);
+  border: 1px solid var(--amarelo-dourado-claro);
 }
 
 .welcome-section h2 {
   font-size: 2.5rem;
-  color: var(--vermelho-rosado);
+  color: var(--vermelho-vinho);
   margin-bottom: 1rem;
 }
 
 .welcome-section p {
-  color: var(--text-light);
+  color: var(--texto-cinza);
   font-size: 1.1rem;
 }
 
@@ -212,32 +242,33 @@ header {
 }
 
 .stat-card {
-  background: var(--branco);
+  background: var(--fundo-cards);
   padding: 1.5rem;
   border-radius: 15px;
-  box-shadow: var(--shadow);
+  box-shadow: var(--sombra);
   text-align: center;
-  transition: var(--transition);
-  border: 1px solid var(--lilas);
+  transition: var(--transicao);
+  border: 1px solid var(--amarelo-dourado-claro);
 }
 
 .stat-card:hover {
   transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(198, 166, 100, 0.15);
 }
 
 .stat-number {
   font-size: 2.5rem;
   font-weight: bold;
-  color: var(--vermelho-rosado);
+  color: var(--vermelho-vinho);
   margin-bottom: 0.5rem;
 }
 
 .stat-label {
-  color: var(--text-light);
+  color: var(--texto-cinza);
   font-size: 0.9rem;
 }
 
-/* Users Grid */
+/* ==================== USERS GRID ==================== */
 .users-section {
   margin-bottom: 3rem;
 }
@@ -251,22 +282,22 @@ header {
 
 .section-header h2 {
   font-size: 2rem;
-  color: var(--vermelho-rosado);
+  color: var(--vermelho-vinho);
 }
 
-/* Quick Actions */
+/* ==================== QUICK ACTIONS ==================== */
 .quick-actions {
-  background: var(--branco);
+  background: var(--fundo-cards);
   padding: 2rem;
   border-radius: 15px;
-  box-shadow: var(--shadow);
+  box-shadow: var(--sombra);
   margin-bottom: 3rem;
-  border: 1px solid var(--lilas);
+  border: 1px solid var(--amarelo-dourado-claro);
 }
 
 .quick-actions h2 {
   margin-bottom: 1.5rem;
-  color: var(--vermelho-rosado);
+  color: var(--vermelho-vinho);
 }
 
 .actions-grid {
@@ -276,20 +307,21 @@ header {
 }
 
 .action-card {
-  background: var(--bege);
+  background: var(--fundo-claro);
   padding: 1.5rem;
   border-radius: 10px;
   text-align: center;
-  transition: var(--transition);
+  transition: var(--transicao);
   cursor: pointer;
   text-decoration: none;
   color: inherit;
-  border: 1px solid var(--lilas);
+  border: 1px solid var(--amarelo-dourado-claro);
 }
 
 .action-card:hover {
-  background: var(--lilas);
+  background: var(--amarelo-dourado-claro);
   transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(198, 166, 100, 0.2);
 }
 
 .action-icon {
@@ -297,12 +329,12 @@ header {
   margin-bottom: 1rem;
 }
 
-/* Footer */
+/* ==================== FOOTER ==================== */
 footer {
-  background-color: var(--bege);
-  color: var(--text);
+  background-color: var(--fundo-claro);
+  color: var(--texto-escuro);
   padding: 2rem 0 1rem;
-  border-top: 1px solid var(--lilas);
+  border-top: 1px solid var(--amarelo-dourado);
 }
 
 .footer-content {
@@ -315,7 +347,7 @@ footer {
 .footer-column h3 {
   margin-bottom: 1rem;
   font-size: 1.1rem;
-  color: var(--vermelho-rosado);
+  color: var(--vermelho-vinho);
 }
 
 .footer-column ul {
@@ -327,25 +359,25 @@ footer {
 }
 
 .footer-column a {
-  color: var(--text);
+  color: var(--texto-escuro);
   text-decoration: none;
-  transition: var(--transition);
+  transition: var(--transicao);
   font-size: 0.9rem;
 }
 
 .footer-column a:hover {
-  color: var(--vermelho-rosado);
+  color: var(--vermelho-vinho);
 }
 
 .copyright {
   text-align: center;
   padding-top: 1rem;
-  border-top: 1px solid var(--lilas);
+  border-top: 1px solid var(--amarelo-dourado);
   font-size: 0.8rem;
-  color: var(--text-light);
+  color: var(--texto-cinza);
 }
 
-/* Loading State */
+/* ==================== LOADING STATE ==================== */
 .loading {
   text-align: center;
   padding: 3rem;
@@ -354,8 +386,8 @@ footer {
 .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid var(--bege);
-  border-top: 4px solid var(--vermelho-rosado);
+  border: 4px solid var(--fundo-claro);
+  border-top: 4px solid var(--vermelho-vinho);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 1rem;
@@ -366,23 +398,24 @@ footer {
   100% { transform: rotate(360deg); }
 }
 
-/* Estados Vazios */
+/* ==================== ESTADOS VAZIOS ==================== */
 .empty-state {
   text-align: center;
   padding: 3rem;
-  background: var(--branco);
+  background: var(--fundo-cards);
   border-radius: 15px;
-  box-shadow: var(--shadow);
-  border: 1px solid var(--lilas);
+  box-shadow: var(--sombra);
+  border: 1px solid var(--amarelo-dourado-claro);
 }
 
 .empty-state-icon {
   font-size: 4rem;
   margin-bottom: 1rem;
   opacity: 0.5;
+  color: var(--vermelho-vinho);
 }
 
-/* Alertas */
+/* ==================== ALERTAS ==================== */
 .alert {
   padding: 1rem;
   border-radius: 10px;
@@ -392,12 +425,12 @@ footer {
 }
 
 .alert-info {
-  background-color: #bee3f8;
-  border-color: #90cdf4;
-  color: #2c5aa0;
+  background-color: rgba(198, 166, 100, 0.1);
+  border-color: var(--amarelo-dourado);
+  color: var(--grafite);
 }
 
-/* Menu Hamburguer Mobile */
+/* ==================== MENU HAMBURGUER MOBILE ==================== */
 #hamburgerBtn {
   display: none;
   background: none;
@@ -421,7 +454,7 @@ footer {
   left: 0;
   width: 100%;
   height: 100vh;
-  background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+  background: var(--preto);
   z-index: 1000;
   padding: 1.5rem;
   flex-direction: column;
@@ -429,6 +462,7 @@ footer {
   justify-content: flex-start;
   gap: 1rem;
   overflow-y: auto;
+  border-right: 2px solid var(--amarelo-dourado);
 }
 
 #closeMobileMenu {
@@ -437,7 +471,7 @@ footer {
   right: 1rem;
   background: none;
   border: none;
-  color: var(--branco);
+  color: var(--amarelo-dourado);
   font-size: 2rem;
   cursor: pointer;
   width: 40px;
@@ -460,11 +494,15 @@ footer {
   height: 70px;
   font-size: 1.3rem;
   margin: 0 auto 0.5rem;
+  background: var(--branco);
+  color: var(--vermelho-vinho);
+  border: 2px solid var(--amarelo-dourado);
 }
 
 .mobile-user-info #mobileUserNickname {
   font-size: 1.1rem;
   font-weight: bold;
+  color: var(--amarelo-dourado);
 }
 
 .mobile-nav {
@@ -489,22 +527,25 @@ footer {
   font-size: 0.95rem;
   border-radius: 10px;
   min-height: 48px;
+  background: transparent;
+  border: 2px solid var(--amarelo-dourado);
+  color: var(--amarelo-dourado);
 }
 
 .mobile-nav .btn-premium {
-  background: linear-gradient(135deg, #ffd700, #ff6b00);
-  color: var(--branco);
+  background: linear-gradient(135deg, var(--amarelo-dourado), #B8860B);
+  color: var(--preto);
   border: none;
   font-weight: 700;
-  box-shadow: 0 4px 15px rgba(255, 107, 0, 0.3);
+  box-shadow: 0 4px 15px rgba(198, 166, 100, 0.3);
 }
 
 .mobile-nav .btn:last-child {
   margin-top: 2rem;
   margin-bottom: 2rem;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  color: var(--branco);
+  background: rgba(198, 166, 100, 0.1);
+  border: 2px solid var(--amarelo-dourado);
+  color: var(--amarelo-dourado);
   font-weight: 600;
   position: relative;
 }
@@ -516,10 +557,17 @@ footer {
   left: 0;
   right: 0;
   height: 1px;
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--amarelo-dourado);
+  opacity: 0.3;
 }
 
-.mobile-nav .btn:last-child:hover {
-  background: rgba(255, 255, 255, 0.2);
+.mobile-nav .btn:hover {
+  background: var(--amarelo-dourado);
+  color: var(--preto);
   transform: translateY(-2px);
+}
+
+.mobile-nav .btn-premium:hover {
+  background: linear-gradient(135deg, var(--amarelo-dourado-claro), #DAA520);
+  color: var(--preto);
 }
