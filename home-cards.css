@@ -178,14 +178,14 @@
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
-/* ✅ AVATAR CORRIGIDO - SÓ MOSTRA FOTO OU SÓ MOSTRA FALLBACK (NUNCA OS DOIS) */
+/* ✅ AVATAR CORRIGIDO - OVERFLOW VISIBLE PARA OS BADGES APARECEREM */
 .visitor-avatar {
   width: 60px;
   height: 60px;
   border-radius: 50%;
   margin: 0 auto 0.8rem;
   position: relative;
-  overflow: hidden;
+  overflow: visible !important; /* ✅ CORREÇÃO CRÍTICA */
   border: 3px solid var(--branco);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
@@ -367,18 +367,15 @@
   border: 3px solid var(--branco);
 }
 
-.visitor-avatar {
-  position: relative;
-  overflow: visible !important;
-}
-
+/* ✅ CORREÇÃO - BADGES MAIS VISÍVEIS NOS CARDS PEQUENOS */
 .visitor-avatar .online-badge,
 .visitor-avatar .offline-badge {
-  bottom: 5px;
-  right: 5px;
-  width: 12px;
-  height: 12px;
-  border: 2px solid var(--branco);
+  bottom: 3px !important;
+  right: 3px !important;
+  width: 14px !important;
+  height: 14px !important;
+  border: 3px solid var(--branco) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
 }
 
 .user-avatar {
