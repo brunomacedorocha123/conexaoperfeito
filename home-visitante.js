@@ -1,4 +1,4 @@
-// home-visitante.js - SISTEMA COMPLETO COM CORREÇÃO URGENTE
+// home-visitante.js - SISTEMA COMPLETO COM LÓGICA IDÊNTICA AOS CARDS GRANDES
 console.log('🚀 home-visitante.js carregando...');
 
 class HomeVisitanteSystem {
@@ -175,7 +175,7 @@ class HomeVisitanteSystem {
                     const timeAgo = this.getTimeAgo(visit.visited_at);
                     const initial = nickname.charAt(0).toUpperCase();
                     
-                    // ✅ CORREÇÃO: USAR MESMA LÓGICA DE STATUS ONLINE DOS CARDS GRANDES
+                    // ✅✅✅ LÓGICA IDÊNTICA AOS CARDS GRANDES
                     const isOnline = this.isUserOnline(profile, this.currentUser.id);
                     
                     let avatarUrl = null;
@@ -195,6 +195,8 @@ class HomeVisitanteSystem {
                         last_online_at: profile.last_online_at,
                         is_invisible: profile.is_invisible
                     });
+
+                    console.log(`🔍 Processado ${nickname}: online=${isOnline}, last_online=${profile.last_online_at}`);
                 }
             } catch (error) {
                 console.warn('⚠️ Erro ao processar visitante:', error);
@@ -211,7 +213,7 @@ class HomeVisitanteSystem {
         
         for (const visitor of visitors) {
             try {
-                // ✅ CORREÇÃO: APLICAR MESMA LÓGICA DE STATUS ONLINE
+                // ✅✅✅ LÓGICA IDÊNTICA AOS CARDS GRANDES
                 const isOnline = this.isUserOnline({
                     last_online_at: visitor.last_online_at,
                     is_invisible: visitor.is_invisible,
@@ -233,6 +235,7 @@ class HomeVisitanteSystem {
                 };
                 
                 visitantesProcessados.push(visitante);
+                console.log(`🔍 RPC ${visitor.visitor_nickname}: online=${isOnline}`);
             } catch (error) {
                 console.warn('⚠️ Erro ao processar visitante RPC:', error);
             }
@@ -241,6 +244,7 @@ class HomeVisitanteSystem {
         return visitantesProcessados;
     }
 
+    // ✅✅✅ FUNÇÃO IDÊNTICA AOS CARDS GRANDES - MESMO CÓDIGO
     isUserOnline(userProfile, currentUserId) {
         if (!userProfile.last_online_at) return false;
         
@@ -250,7 +254,7 @@ class HomeVisitanteSystem {
             const minutesDiff = (now - lastOnline) / (1000 * 60);
             const isActuallyOnline = minutesDiff <= 5;
             
-            // ✅ MESMA LÓGICA DOS CARDS GRANDES
+            // ✅✅✅ LÓGICA EXATA DOS CARDS GRANDES
             if (userProfile.id === currentUserId) return true;
             if (userProfile.is_invisible && userProfile.id !== currentUserId) return false;
             
@@ -280,13 +284,6 @@ class HomeVisitanteSystem {
             const freeVisitorsCount = document.getElementById('freeVisitorsCount');
             const visitorsCount = document.getElementById('visitorsCount');
             const visitorsGrid = document.getElementById('visitorsGrid');
-
-            console.log('🔍 Elementos encontrados:', {
-                premiumSection: !!premiumSection,
-                freeSection: !!freeSection,
-                visitorsCount: !!visitorsCount,
-                visitorsGrid: !!visitorsGrid
-            });
 
             if (!premiumSection || !freeSection) {
                 console.error('❌ Elementos da UI não encontrados!');
@@ -330,7 +327,6 @@ class HomeVisitanteSystem {
         }
     }
 
-    // ✅✅✅ CORREÇÃO URGENTE: HTML DOS VISITANTES COM BADGES
     criarHTMLVisitantes() {
         if (this.visitantes.length === 0) {
             return this.criarHTMLEstadoVazio();
@@ -340,11 +336,6 @@ class HomeVisitanteSystem {
 
         return this.visitantes.map(visitante => {
             console.log(`👤 Visitante ${visitante.nickname}: online=${visitante.isOnline}`);
-            
-            // ✅ CORREÇÃO URGENTE: FORÇAR BADGE ONLINE/OFFLINE
-            const badgeHTML = visitante.isOnline ? 
-                '<div class="online-badge" title="Online"></div>' : 
-                '<div class="offline-badge" title="Offline"></div>';
             
             return `
             <div class="visitor-card" onclick="window.viewProfile('${visitante.id}')">
@@ -357,7 +348,10 @@ class HomeVisitanteSystem {
                     <div class="visitor-avatar-fallback" style="${visitante.avatarUrl ? 'display: none;' : 'display: flex;'}">
                         ${visitante.initial}
                     </div>
-                    ${badgeHTML}
+                    ${visitante.isOnline ? 
+                        '<div class="online-badge" title="Online"></div>' : 
+                        '<div class="offline-badge" title="Offline"></div>'
+                    }
                 </div>
                 <div class="visitor-name">${this.escapeHTML(visitante.nickname)}</div>
                 <div class="visitor-location">${this.escapeHTML(visitante.city)}</div>
