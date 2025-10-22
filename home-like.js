@@ -303,11 +303,17 @@ class PulseSystem {
                     this.pulsesData.matches.delete(userId);
                 }
                 
+                // Remover da lista VIP também
+                await this.removeFromVipList(userId);
+                
                 this.showPulseToast('Curtida removida', 'info');
             } else {
                 // Curtir - criar pulse
                 await this.createPulse(userId);
                 this.pulsesData.given.add(userId);
+                
+                // ✅ SALVAR NA LISTA VIP
+                await this.saveLikeToVipList(userId);
                 
                 // Verificar se agora é match
                 if (this.pulsesData.received.has(userId)) {
@@ -366,6 +372,63 @@ class PulseSystem {
         if (error) throw error;
     }
 
+    // ==================== ✅ FUNÇÃO CRÍTICA: SALVAR NA LISTA VIP ====================
+    async saveLikeToVipList(targetUserId) {
+        try {
+            console.log('💖 Salvando like na lista VIP:', targetUserId);
+            
+            // ✅ INSERIR na tabela vip_list
+            const { data: vipData, error: vipError } = await this.supabase
+                .from('vip_list')
+                .insert({
+                    user_id: this.currentUser.id,
+                    vip_user_id: targetUserId,
+                    created_at: new Date().toISOString()
+                })
+                .select()
+                .single();
+
+            if (vipError) {
+                if (vipError.code === '23505') {
+                    console.log('ℹ️ Usuário já está na lista VIP');
+                } else {
+                    console.error('❌ Erro ao salvar na lista VIP:', vipError);
+                    // Tentar criar tabela se não existir
+                    await this.createVipListTable();
+                }
+            } else {
+                console.log('✅ Like salvo na lista VIP com sucesso!', vipData);
+            }
+
+        } catch (error) {
+            console.error('❌ Erro crítico ao salvar na lista VIP:', error);
+        }
+    }
+
+    async removeFromVipList(targetUserId) {
+        try {
+            const { error } = await this.supabase
+                .from('vip_list')
+                .delete()
+                .eq('user_id', this.currentUser.id)
+                .eq('vip_user_id', targetUserId);
+
+            if (error) {
+                console.error('❌ Erro ao remover da lista VIP:', error);
+            } else {
+                console.log('✅ Removido da lista VIP:', targetUserId);
+            }
+        } catch (error) {
+            console.error('❌ Erro ao remover da lista VIP:', error);
+        }
+    }
+
+    async createVipListTable() {
+        console.log('🔄 Tentando criar tabela vip_list...');
+        // Esta função seria chamada apenas se a tabela não existir
+        // Em produção, a tabela deve ser criada via SQL
+    }
+
     // ==================== CONTADORES E STATS ====================
     updatePulseCounters() {
         // Atualizar contador de matches (apenas para Premium)
@@ -411,53 +474,49 @@ class PulseSystem {
         }
 
         try {
-            const { data: pulses, error } = await this.supabase
-                .from('pulses')
+            // ✅ AGORA BUSCA DA TABELA vip_list
+            const { data: vipUsers, error } = await this.supabase
+                .from('vip_list')
                 .select(`
-                    user_from_id,
+                    vip_user_id,
                     created_at,
-                    profiles:user_from_id (
+                    profiles:vip_user_id (
+                        id,
                         nickname,
                         avatar_url,
                         birth_date,
                         zodiac,
-                        profession
+                        profession,
+                        user_details (
+                            gender,
+                            interests,
+                            description,
+                            looking_for
+                        )
                     )
                 `)
-                .eq('user_to_id', this.currentUser.id)
-                .eq('status', 'active')
+                .eq('user_id', this.currentUser.id)
                 .order('created_at', { ascending: false });
 
-            if (error) throw error;
+            if (error) {
+                console.error('❌ Erro ao carregar lista VIP:', error);
+                return [];
+            }
 
-            // Registrar visualização na lista VIP
-            await this.recordVipListView(pulses.map(p => p.user_from_id));
+            console.log(`✅ ${vipUsers?.length || 0} usuários na lista VIP`);
 
-            return pulses || [];
+            // Formatar dados para compatibilidade
+            const formattedVipUsers = vipUsers?.map(vip => ({
+                user_from_id: vip.vip_user_id,
+                created_at: vip.created_at,
+                profiles: vip.profiles
+            })) || [];
+
+            return formattedVipUsers;
 
         } catch (error) {
-            console.error('Erro ao carregar lista VIP:', error);
+            console.error('❌ Erro ao carregar lista VIP:', error);
             return [];
-        }
-    }
-
-    async recordVipListView(userIds) {
-        if (!this.userProfile?.is_premium) return;
-
-        try {
-            const views = userIds.map(userId => ({
-                user_id: this.currentUser.id,
-                viewed_user_id: userId
-            }));
-
-            const { error } = await this.supabase
-                .from('vip_list_views')
-                .upsert(views, { onConflict: 'user_id,viewed_user_id' });
-
-            if (error) console.warn('Erro ao registrar views VIP:', error);
-
-        } catch (error) {
-            console.warn('Erro no registro de views VIP:', error);
         }
     }
 
@@ -469,6 +528,8 @@ class PulseSystem {
             const vipUsers = await this.getVipList();
             if (vipUsers.length === 0) return;
 
+            console.log(`⭐ Adicionando ${vipUsers.length} cards VIP na home`);
+
             // Encontrar seção "Conheça Novas Pessoas"
             const usersSection = document.querySelector('.users-section');
             if (!usersSection) return;
@@ -477,7 +538,7 @@ class PulseSystem {
             this.createVipUsersSection(usersSection, vipUsers);
 
         } catch (error) {
-            console.error('Erro ao adicionar cards VIP:', error);
+            console.error('❌ Erro ao adicionar cards VIP:', error);
         }
     }
 
@@ -487,9 +548,10 @@ class PulseSystem {
 
         const vipSection = document.createElement('div');
         vipSection.id = 'vipUsersSection';
+        vipSection.style.marginBottom = '3rem';
         vipSection.innerHTML = `
             <div class="section-header">
-                <h2>💖 Quem te curtiu</h2>
+                <h2>⭐ Sua Lista VIP</h2>
                 <span class="pulse-badge">${vipUsers.length} pessoas</span>
             </div>
             <div class="users-grid" id="vipUsersGrid">
@@ -508,33 +570,74 @@ class PulseSystem {
         const vipGrid = document.getElementById('vipUsersGrid');
         if (!vipGrid) return;
 
-        for (const pulse of vipUsers) {
-            const card = await this.createVipUserCard(pulse);
+        vipGrid.innerHTML = ''; // Limpar loading
+
+        for (const vip of vipUsers) {
+            const card = await this.createVipUserCard(vip);
             if (card) {
                 vipGrid.appendChild(card);
             }
         }
     }
 
-    async createVipUserCard(pulseData) {
-        // Similar ao createUserCardWithPhoto, mas com estilo VIP
-        // Implementação específica para cards VIP
-        const card = document.createElement('div');
-        card.className = 'user-card vip-card';
-        card.setAttribute('data-user-id', pulseData.user_from_id);
-        
-        // Estilo especial para cards VIP
-        card.style.border = '2px solid #d1656d';
-        card.style.background = 'linear-gradient(135deg, #fff, #f6ecc5)';
-        
-        // ... resto da implementação do card
-        
-        return card;
+    async createVipUserCard(vipData) {
+        try {
+            const user = vipData.profiles;
+            const userId = vipData.user_from_id;
+            const nickname = user.nickname || 'Usuário';
+            const age = user.birth_date ? this.calculateAge(user.birth_date) : null;
+            const zodiac = user.zodiac;
+            const profession = user.profession;
+            const bio = user.user_details?.description || 'Este usuário ainda não adicionou uma descrição.';
+
+            // Avatar
+            let avatarHtml = '';
+            if (user.avatar_url) {
+                avatarHtml = `
+                    <div class="user-card-avatar">
+                        <img class="user-card-avatar-img" src="${user.avatar_url}" alt="${nickname}">
+                        <div class="user-card-avatar-fallback" style="display: none;">${nickname.charAt(0).toUpperCase()}</div>
+                    </div>
+                `;
+            } else {
+                avatarHtml = `
+                    <div class="user-card-avatar">
+                        <div class="user-card-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="user-card vip-card" data-user-id="${userId}" onclick="viewProfile('${userId}')">
+                    ${avatarHtml}
+                    <div class="user-card-name">${nickname}${age ? `, ${age}` : ''}</div>
+                    
+                    <div class="user-card-info">
+                        ${zodiac ? `<div class="user-card-detail">${this.getZodiacIcon(zodiac)} ${this.formatZodiac(zodiac)}</div>` : ''}
+                        ${profession ? `<div class="user-card-detail">💼 ${profession}</div>` : ''}
+                        <div class="user-card-detail">⭐ Na sua lista VIP</div>
+                    </div>
+                    
+                    <div class="user-card-bio">${bio}</div>
+                    
+                    <div class="user-card-actions">
+                        <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); sendMessage('${userId}')">
+                            💬 Mensagem
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewProfile('${userId}')">
+                            👁️ Ver Perfil
+                        </button>
+                    </div>
+                </div>
+            `;
+        } catch (error) {
+            console.error('Erro ao criar card VIP:', error);
+            return '';
+        }
     }
 
     // ==================== UTILITÁRIOS ====================
     showPulseToast(message, type = 'info') {
-        // Usar o sistema de toast existente ou criar um simples
         const toast = document.createElement('div');
         toast.style.cssText = `
             position: fixed;
@@ -558,6 +661,37 @@ class PulseSystem {
             toast.style.transition = 'opacity 0.3s ease';
             setTimeout(() => toast.remove(), 300);
         }, 3000);
+    }
+
+    // ==================== FUNÇÕES AUXILIARES ====================
+    calculateAge(birthDate) {
+        if (!birthDate) return null;
+        const today = new Date();
+        const birth = new Date(birthDate);
+        let age = today.getFullYear() - birth.getFullYear();
+        const monthDiff = today.getMonth() - birth.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+            age--;
+        }
+        return age;
+    }
+
+    formatZodiac(zodiac) {
+        const zodiacMap = {
+            'aries': 'Áries', 'taurus': 'Touro', 'gemini': 'Gêmeos', 'cancer': 'Câncer',
+            'leo': 'Leão', 'virgo': 'Virgem', 'libra': 'Libra', 'scorpio': 'Escorpião',
+            'sagittarius': 'Sagitário', 'capricorn': 'Capricórnio', 'aquarius': 'Aquário', 'pisces': 'Peixes'
+        };
+        return zodiacMap[zodiac?.toLowerCase()] || zodiac;
+    }
+
+    getZodiacIcon(zodiac) {
+        const zodiacIcons = {
+            'aries': '♈', 'taurus': '♉', 'gemini': '♊', 'cancer': '♋',
+            'leo': '♌', 'virgo': '♍', 'libra': '♎', 'scorpio': '♏',
+            'sagittarius': '♐', 'capricorn': '♑', 'aquarius': '♒', 'pisces': '♓'
+        };
+        return zodiacIcons[zodiac?.toLowerCase()] || '✨';
     }
 
     // ==================== GETTERS PÚBLICOS ====================
@@ -634,8 +768,8 @@ function addPulseStyles() {
         
         .vip-card {
             position: relative;
-            border: 2px solid #d1656d !important;
-            background: linear-gradient(135deg, #fff, #f6ecc5) !important;
+            border: 2px solid #ffd700 !important;
+            background: linear-gradient(135deg, #fffaf0, #fff9c4) !important;
         }
         
         .vip-card::before {
