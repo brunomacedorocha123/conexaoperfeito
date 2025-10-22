@@ -1255,7 +1255,7 @@ async function createUserCardWithPhoto(user) {
                 <div class="user-card-bio">${bio}</div>
                 
                 <div class="user-card-actions">
-                    <button class="${pulseButtonState}" data-user-id="${userId}" onclick="event.stopPropagation();">
+                    <button class="${pulseButtonState}" onclick="event.stopPropagation(); handlePulseClick('${userId}', this)">
                         ${pulseButtonText}
                     </button>
                     <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); sendMessage('${userId}')">
@@ -1713,7 +1713,6 @@ async function updateStats() {
         document.getElementById('profileViews').textContent = '0';
     }
 }
-
 // ==================== FUNÇÕES AUXILIARES ====================
 
 function calculateAge(birthDate) {
