@@ -2933,13 +2933,6 @@ async function handlePulseClick(userId, button) {
             button.classList.remove('pulse-active', 'pulse-match');
             showQuickToast('Curtida removida');
             
-            // ✅ CORREÇÃO: Atualizar lista VIP após remover curtida
-            if (window.atualizarListaVIP) {
-                setTimeout(() => {
-                    window.atualizarListaVIP().catch(console.error);
-                }, 300);
-            }
-            
         } else {
             // Adicionar curtida
             await window.pulseSystem.createPulse(userId);
@@ -2954,38 +2947,45 @@ async function handlePulseClick(userId, button) {
             } else {
                 showQuickToast('Curtida enviada!');
             }
-            
-            // ✅ CORREÇÃO: Atualizar lista VIP após adicionar curtida
-            if (window.atualizarListaVIP) {
+        }
+
+        // ✅✅✅ CORREÇÃO CRÍTICA: ATUALIZAR LISTA VIP IMEDIATAMENTE
+        console.log('🔄 Atualizando lista VIP após curtida...');
+        if (typeof atualizarListaVIP === 'function') {
+            await atualizarListaVIP();
+        } else if (window.atualizarListaVIP) {
+            await window.atualizarListaVIP();
+        } else {
+            console.warn('⚠️ Função atualizarListaVIP não encontrada');
+            // Fallback: recarregar a página se estiver na lista VIP
+            if (window.location.pathname.includes('lista-vip.html')) {
                 setTimeout(() => {
-                    window.atualizarListaVIP().catch(console.error);
-                }, 300);
+                    window.location.reload();
+                }, 1000);
             }
         }
 
-        // ✅ CORREÇÃO: Atualizar estatísticas na home
-        if (window.updateStats) {
+        // ✅ ATUALIZAR ESTATÍSTICAS NA HOME
+        if (typeof updateStats === 'function') {
             setTimeout(() => {
-                window.updateStats().catch(console.error);
+                updateStats().catch(console.error);
             }, 500);
         }
 
-        // Atualizar contadores do Pulse System
-        if (window.pulseSystem.updatePulseCounters) {
+        // ✅ ATUALIZAR CONTADORES DO PULSE SYSTEM
+        if (window.pulseSystem && typeof window.pulseSystem.updatePulseCounters === 'function') {
             window.pulseSystem.updatePulseCounters();
         }
         
-        // ✅ CORREÇÃO: Sinalizar para outras páginas atualizarem
-        if (window.location.pathname.includes('home.html')) {
-            localStorage.setItem('vipListUpdate', 'true');
-        }
+        // ✅ SINCRONIZAR ENTRE PÁGINAS
+        localStorage.setItem('vipListUpdate', 'true');
+        console.log('✅ Sincronização VIP solicitada');
 
     } catch (error) {
         console.error('❌ Erro ao processar pulse:', error);
         showQuickToast('Erro ao curtir');
     }
 }
-
 // ==================== SISTEMA DE REPORTE COMPLETO ====================
 
 function toggleMenu(button) {
