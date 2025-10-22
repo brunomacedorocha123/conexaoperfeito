@@ -1,4 +1,4 @@
-// home-visitante.js - SISTEMA COMPLETO COM STATUS ONLINE CORRIGIDO
+// home-visitante.js - SISTEMA COMPLETO COM CORREÇÃO URGENTE
 console.log('🚀 home-visitante.js carregando...');
 
 class HomeVisitanteSystem {
@@ -143,7 +143,7 @@ class HomeVisitanteSystem {
                 `)
                 .eq('visited_id', this.currentUser.id)
                 .order('visited_at', { ascending: false })
-                .limit(50); // Pegar mais para depois filtrar
+                .limit(50);
 
             if (error) throw error;
 
@@ -157,7 +157,6 @@ class HomeVisitanteSystem {
         }
     }
 
-    // ✅ MÉTODO CORRIGIDO: REMOVER DUPLICATAS COM STATUS ONLINE CORRETO
     async removerVisitantesDuplicados(visits) {
         const visitantesUnicos = new Map();
         
@@ -176,7 +175,7 @@ class HomeVisitanteSystem {
                     const timeAgo = this.getTimeAgo(visit.visited_at);
                     const initial = nickname.charAt(0).toUpperCase();
                     
-                    // ✅✅✅ CORREÇÃO CRÍTICA: USAR MESMA LÓGICA DE STATUS ONLINE DOS CARDS GRANDES
+                    // ✅ CORREÇÃO: USAR MESMA LÓGICA DE STATUS ONLINE DOS CARDS GRANDES
                     const isOnline = this.isUserOnline(profile, this.currentUser.id);
                     
                     let avatarUrl = null;
@@ -190,7 +189,7 @@ class HomeVisitanteSystem {
                         city: city,
                         timeAgo: timeAgo,
                         initial: initial,
-                        isOnline: isOnline, // ✅ AGORA CORRETO
+                        isOnline: isOnline,
                         avatarUrl: avatarUrl,
                         visited_at: visit.visited_at,
                         last_online_at: profile.last_online_at,
@@ -202,10 +201,9 @@ class HomeVisitanteSystem {
             }
         }
 
-        // Converter Map para array e ordenar por data mais recente
         return Array.from(visitantesUnicos.values())
             .sort((a, b) => new Date(b.visited_at) - new Date(a.visited_at))
-            .slice(0, 12); // Limitar a 12 visitantes
+            .slice(0, 12);
     }
 
     async processarVisitantesRPC(visitors) {
@@ -226,7 +224,7 @@ class HomeVisitanteSystem {
                     city: visitor.visitor_city,
                     timeAgo: this.getTimeAgo(visitor.visited_at),
                     initial: visitor.visitor_nickname?.charAt(0).toUpperCase() || 'U',
-                    isOnline: isOnline, // ✅ AGORA CORRETO
+                    isOnline: isOnline,
                     isInvisible: visitor.is_invisible,
                     avatarUrl: visitor.visitor_avatar_url ? 
                         await this.loadUserPhoto(visitor.visitor_avatar_url) : null,
@@ -243,7 +241,6 @@ class HomeVisitanteSystem {
         return visitantesProcessados;
     }
 
-    // ✅✅✅ FUNÇÃO CORRIGIDA: MESMA LÓGICA DOS CARDS GRANDES
     isUserOnline(userProfile, currentUserId) {
         if (!userProfile.last_online_at) return false;
         
@@ -267,7 +264,6 @@ class HomeVisitanteSystem {
     atualizarUI() {
         console.log('🎨 Atualizando UI do sistema de visitantes...');
         
-        // Aguardar o DOM estar pronto
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => this.executarAtualizacaoUI());
         } else {
@@ -297,7 +293,7 @@ class HomeVisitanteSystem {
                 return;
             }
 
-            // ✅ ATUALIZAR CONTADOR GERAL (VISITANTES ÚNICOS)
+            // ✅ ATUALIZAR CONTADOR GERAL
             if (visitorsCount) {
                 const countText = this.visitCount === 1 ? '1 visita' : `${this.visitCount} visitas`;
                 visitorsCount.textContent = countText;
@@ -334,12 +330,23 @@ class HomeVisitanteSystem {
         }
     }
 
+    // ✅✅✅ CORREÇÃO URGENTE: HTML DOS VISITANTES COM BADGES
     criarHTMLVisitantes() {
         if (this.visitantes.length === 0) {
             return this.criarHTMLEstadoVazio();
         }
 
-        return this.visitantes.map(visitante => `
+        console.log('🎯 Gerando HTML dos visitantes:', this.visitantes);
+
+        return this.visitantes.map(visitante => {
+            console.log(`👤 Visitante ${visitante.nickname}: online=${visitante.isOnline}`);
+            
+            // ✅ CORREÇÃO URGENTE: FORÇAR BADGE ONLINE/OFFLINE
+            const badgeHTML = visitante.isOnline ? 
+                '<div class="online-badge" title="Online"></div>' : 
+                '<div class="offline-badge" title="Offline"></div>';
+            
+            return `
             <div class="visitor-card" onclick="window.viewProfile('${visitante.id}')">
                 <div class="visitor-avatar">
                     ${visitante.avatarUrl ? 
@@ -350,16 +357,14 @@ class HomeVisitanteSystem {
                     <div class="visitor-avatar-fallback" style="${visitante.avatarUrl ? 'display: none;' : 'display: flex;'}">
                         ${visitante.initial}
                     </div>
-                    ${visitante.isOnline ? 
-                        '<div class="online-badge" title="Online"></div>' : 
-                        '<div class="offline-badge" title="Offline"></div>'
-                    }
+                    ${badgeHTML}
                 </div>
                 <div class="visitor-name">${this.escapeHTML(visitante.nickname)}</div>
                 <div class="visitor-location">${this.escapeHTML(visitante.city)}</div>
                 <div class="visitor-time">${visitante.timeAgo}</div>
             </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     criarHTMLEstadoVazio() {
@@ -372,7 +377,6 @@ class HomeVisitanteSystem {
         `;
     }
 
-    // ==================== FUNÇÕES DE REGISTRO DE VISITAS ====================
     async registrarVisita(perfilVisitadoId) {
         try {
             console.log(`👀 Registrando visita para: ${perfilVisitadoId}`);
@@ -381,7 +385,6 @@ class HomeVisitanteSystem {
                 return false;
             }
 
-            // Usar função RPC do SQL
             const { data, error } = await this.supabase.rpc(
                 'register_visit_simple', {
                     p_visitor_id: this.currentUser.id,
@@ -391,7 +394,6 @@ class HomeVisitanteSystem {
 
             if (error) {
                 console.error('❌ Erro RPC:', error);
-                // Fallback para insert direto
                 return await this.registrarVisitaFallback(perfilVisitadoId);
             }
 
@@ -425,7 +427,6 @@ class HomeVisitanteSystem {
         }
     }
 
-    // ==================== UTILITÁRIOS ====================
     async loadUserPhoto(avatarUrl) {
         try {
             if (!avatarUrl) return null;
@@ -462,7 +463,6 @@ class HomeVisitanteSystem {
         return div.innerHTML;
     }
 
-    // ==================== MÉTODOS PÚBLICOS ====================
     async recarregar() {
         console.log('🔄 Recarregando sistema de visitantes...');
         await this.carregarContadorVisitas();
@@ -498,7 +498,6 @@ async function inicializarSistemaVisitantes(supabase, currentUser) {
         const sistema = new HomeVisitanteSystem(supabase, currentUser);
         await sistema.initialize();
         
-        // Expor globalmente para acesso fácil
         window.visitanteSystem = sistema;
         
         console.log('✅ Sistema de visitantes inicializado e exposto globalmente!');
@@ -510,7 +509,6 @@ async function inicializarSistemaVisitantes(supabase, currentUser) {
     }
 }
 
-// ==================== FUNÇÕES GLOBAIS ====================
 function registrarVisitaPerfil(perfilVisitadoId) {
     console.log('👀 registrarVisitaPerfil chamada para:', perfilVisitadoId);
     
@@ -536,7 +534,6 @@ function getContadorVisitantes() {
     return 0;
 }
 
-// ==================== EXPORTAÇÕES GLOBAIS ====================
 window.HomeVisitanteSystem = HomeVisitanteSystem;
 window.inicializarSistemaVisitantes = inicializarSistemaVisitantes;
 window.registrarVisitaPerfil = registrarVisitaPerfil;
