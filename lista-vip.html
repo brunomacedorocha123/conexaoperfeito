@@ -559,7 +559,7 @@ const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 let currentUser = null;
 let userProfile = null;
 
-// ==================== INICIALIZAÇÃO SIMPLIFICADA ====================
+// ==================== INICIALIZAÇÃO ====================
 async function initializeVipPage() {
     try {
         console.log('🚀 Iniciando página Lista VIP...');
@@ -612,54 +612,36 @@ async function loadUserProfile() {
     }
 }
 
+// ✅✅✅ FUNÇÃO PRINCIPAL - USANDO SQL
 async function loadVipList() {
     try {
-        console.log('📋 Carregando lista VIP...');
+        console.log('📋 Carregando lista VIP via SQL...');
         
         if (!userProfile?.is_premium) {
             showPremiumRequired();
             return;
         }
 
-        // Mostrar loading
         showLoading();
 
-        // ✅✅✅ QUERY OTIMIZADA - Buscar dados completos
-        const { data: vipUsers, error } = await supabase
-            .from('vip_list')
-            .select(`
-                vip_user_id,
-                created_at,
-                profiles!vip_list_vip_user_id_fkey (
-                    id, nickname, avatar_url, birth_date, zodiac, profession,
-                    user_details (gender, interests, description, looking_for)
-                )
-            `)
-            .eq('user_id', currentUser.id)
-            .order('created_at', { ascending: false });
+        // ✅✅✅ CHAMAR FUNÇÃO SQL DO BANCO
+        const { data: vipUsers, error } = await supabase.rpc(
+            'get_complete_vip_list',
+            { user_uuid: currentUser.id }
+        );
 
         if (error) {
-            console.error('❌ Erro query:', error);
-            // Tentar query alternativa
-            await loadVipListAlternative();
+            console.error('❌ Erro função SQL:', error);
+            // Fallback: método antigo
+            await loadVipListFallback();
             return;
         }
 
-        console.log('✅ Dados recebidos:', vipUsers?.length || 0, 'usuários');
+        console.log('✅ Dados da função SQL:', vipUsers);
 
         if (!vipUsers || vipUsers.length === 0) {
             showEmptyState();
         } else {
-            // ✅ DEBUG: Verificar estrutura dos dados
-            console.log('🔍 Estrutura dos dados:');
-            vipUsers.forEach((user, index) => {
-                console.log(`Usuário ${index + 1}:`, {
-                    vip_user_id: user.vip_user_id,
-                    has_profile: !!user.profiles,
-                    profile_data: user.profiles
-                });
-            });
-            
             displayVipUsers(vipUsers);
             updateVipStats(vipUsers);
         }
@@ -670,10 +652,10 @@ async function loadVipList() {
     }
 }
 
-// ✅✅✅ QUERY ALTERNATIVA SE A PRIMEIRA FALHAR
-async function loadVipListAlternative() {
+// ✅✅✅ FALLBACK SE A FUNÇÃO SQL NÃO EXISTIR
+async function loadVipListFallback() {
     try {
-        console.log('🔄 Usando query alternativa...');
+        console.log('🔄 Usando método fallback...');
         
         const { data: simpleVipUsers, error } = await supabase
             .from('vip_list')
@@ -682,8 +664,6 @@ async function loadVipListAlternative() {
             .order('created_at', { ascending: false });
 
         if (error) throw error;
-
-        console.log('✅ Dados simples:', simpleVipUsers?.length || 0);
 
         if (!simpleVipUsers || simpleVipUsers.length === 0) {
             showEmptyState();
@@ -695,7 +675,7 @@ async function loadVipListAlternative() {
         }
 
     } catch (error) {
-        console.error('❌ Erro query alternativa:', error);
+        console.error('❌ Erro fallback:', error);
         showEmptyState();
     }
 }
@@ -714,35 +694,35 @@ async function loadProfilesManually(vipUsers) {
             `)
             .in('id', userIds);
 
-        if (error) {
-            console.error('❌ Erro perfis:', error);
-            return vipUsers.map(item => ({
-                ...item,
-                profiles: { id: item.vip_user_id, nickname: 'Usuário' }
-            }));
-        }
+        if (error) throw error;
 
         // Combinar dados
         const usersWithProfiles = vipUsers.map(vipItem => {
             const profile = profiles.find(p => p.id === vipItem.vip_user_id);
             return {
-                ...vipItem,
-                profiles: profile || { 
-                    id: vipItem.vip_user_id, 
-                    nickname: 'Usuário',
-                    user_details: { description: 'Perfil não disponível' }
-                }
+                vip_user_id: vipItem.vip_user_id,
+                created_at: vipItem.created_at,
+                user_nickname: profile?.nickname || 'Usuário',
+                user_avatar_url: profile?.avatar_url,
+                user_birth_date: profile?.birth_date,
+                user_zodiac: profile?.zodiac,
+                user_profession: profile?.profession,
+                user_description: profile?.user_details?.description || 'Sem descrição.',
+                user_gender: profile?.user_details?.gender,
+                user_interests: profile?.user_details?.interests,
+                user_looking_for: profile?.user_details?.looking_for
             };
         });
 
-        console.log('✅ Perfis carregados:', usersWithProfiles.length);
         return usersWithProfiles;
 
     } catch (error) {
-        console.error('❌ Erro carregar perfis:', error);
+        console.error('❌ Erro perfis manual:', error);
         return vipUsers.map(item => ({
-            ...item,
-            profiles: { id: item.vip_user_id, nickname: 'Usuário' }
+            vip_user_id: item.vip_user_id,
+            created_at: item.created_at,
+            user_nickname: 'Usuário',
+            user_description: 'Perfil não disponível'
         }));
     }
 }
@@ -763,27 +743,20 @@ function displayVipUsers(users) {
 }
 
 // ✅✅✅ CRIAR CARD DE USUÁRIO VIP
-function createVipUserCard(vipData) {
+function createVipUserCard(user) {
     try {
-        // Verificar dados
-        if (!vipData || !vipData.profiles) {
-            console.warn('⚠️ Dados incompletos:', vipData);
-            return createFallbackCard(vipData?.vip_user_id);
-        }
-
-        const user = vipData.profiles;
-        const userId = user.id || vipData.vip_user_id;
-        const nickname = user.nickname || 'Usuário';
-        const age = user.birth_date ? calculateAge(user.birth_date) : null;
-        const zodiac = user.zodiac;
-        const profession = user.profession;
-        const bio = user.user_details?.description || 'Sem descrição.';
-        const likedAt = vipData.created_at ? new Date(vipData.created_at).toLocaleDateString('pt-BR') : 'Data desconhecida';
+        const userId = user.vip_user_id;
+        const nickname = user.user_nickname || 'Usuário';
+        const age = user.user_birth_date ? calculateAge(user.user_birth_date) : null;
+        const zodiac = user.user_zodiac;
+        const profession = user.user_profession;
+        const bio = user.user_description || 'Sem descrição.';
+        const likedAt = user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : 'Data desconhecida';
 
         // Avatar
         let avatarHtml = '';
-        if (user.avatar_url) {
-            const { data } = supabase.storage.from('avatars').getPublicUrl(user.avatar_url);
+        if (user.user_avatar_url) {
+            const { data } = supabase.storage.from('avatars').getPublicUrl(user.user_avatar_url);
             avatarHtml = `
                 <div class="vip-user-avatar">
                     <img class="vip-user-avatar-img" src="${data?.publicUrl}" alt="${nickname}" 
@@ -826,7 +799,7 @@ function createVipUserCard(vipData) {
         `;
     } catch (error) {
         console.error('❌ Erro criar card:', error);
-        return createFallbackCard(vipData?.vip_user_id);
+        return createFallbackCard(user?.vip_user_id);
     }
 }
 
@@ -860,7 +833,7 @@ function createFallbackCard(userId) {
 // ✅✅✅ ATUALIZAR ESTATÍSTICAS
 function updateVipStats(users) {
     const totalLikes = users.length;
-    const mutualMatches = 0; // Simplificado por enquanto
+    const mutualMatches = 0;
     const newThisWeek = users.filter(user => {
         const oneWeekAgo = new Date();
         oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
@@ -877,7 +850,6 @@ function updateVipStats(users) {
 async function handlePulse(userId, button) {
     try {
         showToast('💗 Curtida mantida!');
-        // Manter o estado atual - já está curtido
     } catch (error) {
         console.error('❌ Erro pulse:', error);
         showToast('Erro ao processar curtida.');
