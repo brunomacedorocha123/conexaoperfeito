@@ -1,20 +1,46 @@
-/* ==================== SISTEMA DE VISITANTES ATUALIZADO ==================== */
+/* ==================== NOVA PALETA DE CORES - VISITANTES ==================== */
+:root {
+  /* CORES PRINCIPAIS */
+  --amarelo-dourado: #C6A664;
+  --amarelo-dourado-claro: #D4B978;
+  --vermelho-vinho: #A65B5B;
+  --vermelho-vinho-escuro: #8A4A4A;
+  --grafite: #2A2A2A;
+  --grafite-claro: #444444;
+  --preto: #1A1A1A;
+  
+  /* CORES DE FUNDO (MANTENDO CLARO) */
+  --branco: #FFFFFF;
+  --fundo-claro: #F8F5F0;
+  --fundo-cards: #FFFFFF;
+  
+  /* CORES SECUNDÁRIAS */
+  --texto-escuro: #2A2A2A;
+  --texto-cinza: #666666;
+  --texto-claro: #888888;
+  
+  /* EFEITOS */
+  --sombra: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --transicao: all 0.3s ease;
+}
+
+/* ==================== VISITANTS SECTION COM NOVAS CORES ==================== */
 .visitors-section {
     margin-bottom: 3rem;
 }
 
 .visitors-card {
-    background: var(--branco);
+    background: var(--fundo-cards);
     padding: 1.5rem;
     border-radius: 15px;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--lilas);
-    transition: var(--transition);
+    box-shadow: var(--sombra);
+    border: 1px solid var(--amarelo-dourado-claro);
+    transition: var(--transicao);
 }
 
 .visitors-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 8px 25px rgba(198, 166, 100, 0.15);
 }
 
 .visitors-header {
@@ -26,7 +52,7 @@
 
 .visitors-header h2 {
     font-size: 1.5rem;
-    color: var(--vermelho-rosado);
+    color: var(--vermelho-vinho);
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -34,7 +60,7 @@
 }
 
 .visitors-count {
-    background: var(--lilas);
+    background: var(--amarelo-dourado);
     color: var(--branco);
     padding: 0.3rem 0.8rem;
     border-radius: 20px;
@@ -42,7 +68,7 @@
     font-weight: bold;
 }
 
-/* NOVO: Grid de Cards Pequenos - IGUAL AO VISITANTE.HTML */
+/* GRID DE CARDS PEQUENOS */
 .visitors-grid {
     display: flex;
     gap: 1rem;
@@ -50,7 +76,7 @@
     padding: 0.5rem 0.2rem;
     margin-bottom: 1.5rem;
     scrollbar-width: thin;
-    scrollbar-color: var(--lilas) var(--bege);
+    scrollbar-color: var(--amarelo-dourado) var(--fundo-claro);
     min-height: 180px;
 }
 
@@ -59,44 +85,43 @@
 }
 
 .visitors-grid::-webkit-scrollbar-track {
-    background: var(--bege);
+    background: var(--fundo-claro);
     border-radius: 3px;
 }
 
 .visitors-grid::-webkit-scrollbar-thumb {
-    background: var(--lilas);
+    background: var(--amarelo-dourado);
     border-radius: 3px;
 }
 
-/* Cards Pequenos - IGUAL AO VISITANTE.HTML */
+/* CARDS DE VISITANTES */
 .visitor-card {
     flex: 0 0 auto;
     width: 120px;
-    background: var(--bege);
+    background: var(--fundo-claro);
     border-radius: 12px;
     padding: 1rem;
     text-align: center;
     cursor: pointer;
-    transition: var(--transition);
+    transition: var(--transicao);
     border: 2px solid transparent;
     position: relative;
-    display: block !important;
 }
 
 .visitor-card:hover {
     transform: translateY(-5px);
-    border-color: var(--lilas);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border-color: var(--amarelo-dourado);
+    box-shadow: 0 8px 25px rgba(198, 166, 100, 0.2);
 }
 
-/* ✅ AVATAR CORRIGIDO - SÓ MOSTRA FOTO OU SÓ MOSTRA FALLBACK (NUNCA OS DOIS) */
+/* AVATAR CORRIGIDO */
 .visitor-avatar {
     width: 60px;
     height: 60px;
     border-radius: 50%;
     margin: 0 auto 0.8rem;
     position: relative;
-    overflow: visible !important; /* MUDANÇA CRÍTICA */
+    overflow: visible !important;
     border: 3px solid var(--branco);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
@@ -106,23 +131,19 @@
     height: 100%;
     object-fit: cover;
     border-radius: 50%;
-    position: relative;
-    z-index: 1;
 }
 
 .visitor-avatar-fallback {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+    background: linear-gradient(135deg, var(--vermelho-vinho), var(--amarelo-dourado));
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
     font-weight: bold;
     font-size: 1.2rem;
-    position: relative;
-    z-index: 1;
 }
 
 .visitor-avatar:has(.visitor-avatar-img[src]) .visitor-avatar-fallback {
@@ -136,7 +157,7 @@
 .visitor-name {
     font-size: 0.9rem;
     font-weight: 600;
-    color: var(--text);
+    color: var(--texto-escuro);
     margin-bottom: 0.3rem;
     white-space: nowrap;
     overflow: hidden;
@@ -145,7 +166,7 @@
 
 .visitor-location {
     font-size: 0.75rem;
-    color: var(--text-light);
+    color: var(--texto-cinza);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -153,7 +174,7 @@
 
 .visitor-time {
     font-size: 0.7rem;
-    color: var(--vermelho-rosado);
+    color: var(--vermelho-vinho);
     margin-top: 0.3rem;
     font-weight: 500;
 }
@@ -166,6 +187,7 @@
     gap: 1rem;
 }
 
+/* CONTEÚDO FREE */
 .free-content {
     text-align: center;
     padding: 2rem;
@@ -183,21 +205,22 @@
 }
 
 .free-content h3 {
-    color: var(--vermelho-rosado);
+    color: var(--vermelho-vinho);
     margin-bottom: 0.5rem;
     font-size: 1.2rem;
 }
 
 .free-content p {
-    color: var(--text-light);
+    color: var(--texto-cinza);
     margin-bottom: 1.5rem;
     font-size: 0.95rem;
 }
 
+/* ESTADOS VAZIO E LOADING */
 .visitors-empty {
     text-align: center;
     padding: 2rem;
-    color: var(--text-light);
+    color: var(--texto-cinza);
     width: 100%;
 }
 
@@ -220,49 +243,46 @@
 .visitors-spinner {
     width: 30px;
     height: 30px;
-    border: 3px solid var(--bege);
-    border-top: 3px solid var(--vermelho-rosado);
+    border: 3px solid var(--fundo-claro);
+    border-top: 3px solid var(--vermelho-vinho);
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin: 0 auto 1rem;
 }
 
-/* ==================== BOLINHA VERDE - CORREÇÃO COMPLETA ==================== */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
 
-/* BOLINHA ONLINE - VERDE IGUAL CARDS GRANDES */
+/* ==================== BOLINHA ONLINE/OFFLINE - CORES ATUALIZADAS ==================== */
 .visitor-avatar .online-badge {
     position: absolute;
-    bottom: 8px;
-    right: 8px;
+    bottom: 3px;
+    right: 3px;
     width: 14px;
     height: 14px;
     background: #48bb78;
     border: 3px solid var(--branco);
     border-radius: 50%;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
     animation: pulse-online 2s infinite;
     z-index: 100;
-    display: block !important;
-    visibility: visible !important;
 }
 
-/* BOLINHA OFFLINE - CINZA IGUAL CARDS GRANDES */
 .visitor-avatar .offline-badge {
     position: absolute;
-    bottom: 8px;
-    right: 8px;
+    bottom: 3px;
+    right: 3px;
     width: 14px;
     height: 14px;
     background: #a0aec0;
     border: 3px solid var(--branco);
     border-radius: 50%;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
     z-index: 100;
-    display: block !important;
-    visibility: visible !important;
 }
 
-/* ANIMAÇÃO PULSE PARA ONLINE */
 @keyframes pulse-online {
     0% {
         transform: scale(1);
@@ -278,86 +298,86 @@
     }
 }
 
-/* ==================== CORREÇÕES MOBILE ==================== */
+/* ==================== RESPONSIVIDADE ==================== */
 @media (max-width: 768px) {
-  .visitors-grid {
-    gap: 0.8rem;
-  }
-  
-  .visitor-card {
-    width: 110px;
-    padding: 0.8rem;
-  }
-  
-  .visitor-avatar {
-    width: 50px;
-    height: 50px;
-  }
-  
-  /* BOLINHA MOBILE */
-  .visitor-avatar .online-badge,
-  .visitor-avatar .offline-badge {
-    bottom: 6px;
-    right: 6px;
-    width: 12px;
-    height: 12px;
-    border: 2px solid var(--branco);
-  }
-  
-  .visitors-actions {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 1rem;
-  }
-  
-  .visitors-header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: flex-start;
-  }
-  
-  .visitors-count {
-    align-self: flex-start;
-  }
+    .visitors-grid {
+        gap: 0.8rem;
+    }
+    
+    .visitor-card {
+        width: 110px;
+        padding: 0.8rem;
+    }
+    
+    .visitor-avatar {
+        width: 50px;
+        height: 50px;
+    }
+    
+    /* BOLINHA MOBILE */
+    .visitor-avatar .online-badge,
+    .visitor-avatar .offline-badge {
+        bottom: 2px;
+        right: 2px;
+        width: 12px;
+        height: 12px;
+        border: 2px solid var(--branco);
+    }
+    
+    .visitors-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+    
+    .visitors-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .visitors-count {
+        align-self: flex-start;
+    }
 }
 
 @media (max-width: 480px) {
-  .visitor-card {
-    width: 100px;
-  }
-  
-  .visitor-avatar {
-    width: 45px;
-    height: 45px;
-  }
-  
-  /* BOLINHA MOBILE PEQUENO */
-  .visitor-avatar .online-badge,
-  .visitor-avatar .offline-badge {
-    bottom: 4px;
-    right: 4px;
-    width: 10px;
-    height: 10px;
-    border: 2px solid var(--branco);
-  }
-  
-  .visitor-name {
-    font-size: 0.75rem;
-  }
-  
-  .visitor-location {
-    font-size: 0.65rem;
-  }
-  
-  .visitor-time {
-    font-size: 0.65rem;
-  }
-  
-  .free-content {
-    padding: 1.5rem;
-  }
-  
-  .free-content .icon {
-    font-size: 2.5rem;
-  }
+    .visitor-card {
+        width: 100px;
+    }
+    
+    .visitor-avatar {
+        width: 45px;
+        height: 45px;
+    }
+    
+    /* BOLINHA MOBILE PEQUENO */
+    .visitor-avatar .online-badge,
+    .visitor-avatar .offline-badge {
+        bottom: 1px;
+        right: 1px;
+        width: 10px;
+        height: 10px;
+        border: 2px solid var(--branco);
+    }
+    
+    .visitor-name {
+        font-size: 0.75rem;
+    }
+    
+    .visitor-location {
+        font-size: 0.65rem;
+    }
+    
+    .visitor-time {
+        font-size: 0.65rem;
+    }
+    
+    .free-content {
+        padding: 1.5rem;
+    }
+    
+    .free-content .icon {
+        font-size: 2.5rem;
+    }
 }
