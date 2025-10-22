@@ -557,6 +557,7 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 let currentUser = null;
+let userProfile = null;
 
 // ==================== INICIALIZAÇÃO ====================
 async function initializeVipPage() {
@@ -570,20 +571,46 @@ async function initializeVipPage() {
 
         currentUser = user;
         
-        // Carregar lista VIP DIRETO
-        await loadVipListDirect();
+        // Carregar perfil para verificar premium
+        await loadUserProfile();
+        
+        // Verificar premium
+        if (!userProfile?.is_premium) {
+            showPremiumRequired();
+            return;
+        }
+
+        // Carregar lista VIP
+        await loadVipList();
+        setupAutoRefresh();
 
     } catch (error) {
-        showError('Erro ao carregar.');
+        showError('Erro ao carregar lista VIP.');
     }
 }
 
-// ==================== FUNÇÃO PRINCIPAL SIMPLES ====================
-async function loadVipListDirect() {
+// ==================== FUNÇÕES PRINCIPAIS ====================
+async function loadUserProfile() {
+    try {
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', currentUser.id)
+            .single();
+
+        if (error) throw error;
+        userProfile = profile;
+
+    } catch (error) {
+        throw error;
+    }
+}
+
+async function loadVipList() {
     try {
         showLoading();
 
-        // Buscar APENAS a VIP_LIST
+        // Buscar lista VIP
         const { data: vipList, error } = await supabase
             .from('vip_list')
             .select('vip_user_id, created_at')
@@ -595,27 +622,23 @@ async function loadVipListDirect() {
             return;
         }
 
-        console.log('VIP_LIST encontrada:', vipList);
-
         if (!vipList || vipList.length === 0) {
             showEmptyState();
             return;
         }
 
-        // Buscar dados básicos dos perfis
+        // Buscar dados dos usuários
         const userIds = vipList.map(item => item.vip_user_id);
         
         const { data: profiles, error: profilesError } = await supabase
             .from('profiles')
-            .select('id, nickname, avatar_url')
+            .select('id, nickname, avatar_url, birth_date, zodiac, profession, description')
             .in('id', userIds);
 
         if (profilesError) {
             showError('Erro ao carregar perfis.');
             return;
         }
-
-        console.log('Perfis encontrados:', profiles);
 
         // Combinar dados
         const completeUsers = vipList.map(vipItem => {
@@ -625,7 +648,11 @@ async function loadVipListDirect() {
                 vip_user_id: vipItem.vip_user_id,
                 created_at: vipItem.created_at,
                 user_nickname: profile?.nickname || 'Usuário',
-                user_avatar_url: profile?.avatar_url
+                user_avatar_url: profile?.avatar_url,
+                user_birth_date: profile?.birth_date,
+                user_zodiac: profile?.zodiac,
+                user_profession: profile?.profession,
+                user_description: profile?.description || 'Sem descrição.'
             };
         });
 
@@ -645,47 +672,106 @@ function displayVipUsers(users) {
         return;
     }
 
-    const userCards = users.map(user => `
-        <div class="vip-user-card">
-            <div class="vip-user-header">
+    const userCards = users.map(user => {
+        const userId = user.vip_user_id;
+        const nickname = user.user_nickname;
+        const age = user.user_birth_date ? calculateAge(user.user_birth_date) : null;
+        const zodiac = user.user_zodiac;
+        const profession = user.user_profession;
+        const bio = user.user_description;
+        const likedAt = user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : '';
+
+        // Avatar seguro - sem erros
+        let avatarHtml = '';
+        if (user.user_avatar_url) {
+            try {
+                const { data } = supabase.storage.from('avatars').getPublicUrl(user.user_avatar_url);
+                if (data?.publicUrl) {
+                    avatarHtml = `
+                        <div class="vip-user-avatar">
+                            <img class="vip-user-avatar-img" src="${data.publicUrl}" alt="${nickname}"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="vip-user-avatar-fallback" style="display: none;">
+                                ${nickname.charAt(0).toUpperCase()}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    throw new Error('URL não gerada');
+                }
+            } catch (error) {
+                avatarHtml = `
+                    <div class="vip-user-avatar">
+                        <div class="vip-user-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
+                    </div>
+                `;
+            }
+        } else {
+            avatarHtml = `
                 <div class="vip-user-avatar">
-                    ${user.user_avatar_url ? 
-                        `<img src="${supabase.storage.from('avatars').getPublicUrl(user.user_avatar_url).data?.publicUrl}" alt="${user.user_nickname}">` : 
-                        `<div class="vip-user-avatar-fallback">${user.user_nickname.charAt(0).toUpperCase()}</div>`
-                    }
+                    <div class="vip-user-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
                 </div>
-                <div class="vip-user-info">
-                    <div class="vip-user-name">${user.user_nickname}</div>
-                    <div class="vip-user-detail">⭐ ${new Date(user.created_at).toLocaleDateString('pt-BR')}</div>
+            `;
+        }
+
+        return `
+            <div class="vip-user-card" data-user-id="${userId}">
+                <div class="vip-user-header">
+                    ${avatarHtml}
+                    <div class="vip-user-info">
+                        <div class="vip-user-name">${nickname}${age ? `, ${age}` : ''}</div>
+                        <div class="vip-user-details">
+                            ${zodiac ? `<div class="vip-user-detail">${getZodiacIcon(zodiac)} ${formatZodiac(zodiac)}</div>` : ''}
+                            ${profession ? `<div class="vip-user-detail">💼 ${profession}</div>` : ''}
+                            ${likedAt ? `<div class="vip-user-detail">⭐ ${likedAt}</div>` : ''}
+                        </div>
+                    </div>
+                </div>
+                
+                ${bio ? `<div class="vip-user-bio">${bio}</div>` : ''}
+                
+                <div class="vip-user-actions">
+                    <button class="btn btn-primary" onclick="sendMessage('${userId}')">💌 Mensagem</button>
+                    <button class="btn btn-pulse active">💗 Curtido</button>
+                    <button class="btn btn-outline" onclick="viewProfile('${userId}')">👀 Ver Perfil</button>
                 </div>
             </div>
-            
-            <div class="vip-user-actions">
-                <button class="btn btn-primary">💌 Mensagem</button>
-                <button class="btn btn-pulse active">💗 Curtido</button>
-                <button class="btn btn-outline">👀 Ver Perfil</button>
-            </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 
     vipGrid.innerHTML = userCards;
 }
 
 function updateVipStats(users) {
     const totalLikes = users.length;
+    
+    const newThisWeek = users.filter(user => {
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        return new Date(user.created_at) > oneWeekAgo;
+    }).length;
+
     document.getElementById('totalLikes').textContent = totalLikes;
     document.getElementById('mutualMatches').textContent = '0';
-    document.getElementById('newThisWeek').textContent = '0';
+    document.getElementById('newThisWeek').textContent = newThisWeek;
     document.getElementById('vipCount').textContent = `${totalLikes} pessoa${totalLikes !== 1 ? 's' : ''}`;
 }
 
+// ==================== INTERFACE ====================
 function showLoading() {
-    document.getElementById('vipUsersGrid').innerHTML = `
+    const vipGrid = document.getElementById('vipUsersGrid');
+    vipGrid.innerHTML = `
         <div class="loading">
             <div class="spinner"></div>
             <p>Carregando sua lista VIP...</p>
         </div>
     `;
+}
+
+function showPremiumRequired() {
+    document.getElementById('premiumRequired').style.display = 'block';
+    document.getElementById('vipUsersGrid').style.display = 'none';
+    document.getElementById('emptyState').style.display = 'none';
 }
 
 function showEmptyState() {
@@ -700,7 +786,8 @@ function showEmptyState() {
 }
 
 function showError(message) {
-    document.getElementById('vipUsersGrid').innerHTML = `
+    const vipGrid = document.getElementById('vipUsersGrid');
+    vipGrid.innerHTML = `
         <div class="empty-state">
             <div class="empty-state-icon">⚠️</div>
             <h3>Erro ao carregar</h3>
@@ -708,6 +795,70 @@ function showError(message) {
             <button class="btn btn-primary" onclick="location.reload()">Tentar Novamente</button>
         </div>
     `;
+}
+
+// ==================== FUNÇÕES AUXILIARES ====================
+function calculateAge(birthDate) {
+    if (!birthDate) return null;
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--;
+    }
+    return age;
+}
+
+function formatZodiac(zodiac) {
+    const zodiacMap = {
+        'aries': 'Áries', 'taurus': 'Touro', 'gemini': 'Gêmeos', 'cancer': 'Câncer',
+        'leo': 'Leão', 'virgo': 'Virgem', 'libra': 'Libra', 'scorpio': 'Escorpião',
+        'sagittarius': 'Sagitário', 'capricorn': 'Capricórnio', 'aquarius': 'Aquário', 'pisces': 'Peixes'
+    };
+    return zodiacMap[zodiac?.toLowerCase()] || zodiac;
+}
+
+function getZodiacIcon(zodiac) {
+    const zodiacIcons = {
+        'aries': '♈', 'taurus': '♉', 'gemini': '♊', 'cancer': '♋',
+        'leo': '♌', 'virgo': '♍', 'libra': '♎', 'scorpio': '♏',
+        'sagittarius': '♐', 'capricorn': '♑', 'aquarius': '♒', 'pisces': '♓'
+    };
+    return zodiacIcons[zodiac?.toLowerCase()] || '✨';
+}
+
+function setupAutoRefresh() {
+    setInterval(() => {
+        if (localStorage.getItem('vipListUpdate') === 'true') {
+            localStorage.removeItem('vipListUpdate');
+            loadVipList().catch(console.error);
+        }
+    }, 5000);
+}
+
+// ==================== INTERAÇÕES ====================
+async function sendMessage(userId) {
+    try {
+        if (!userProfile?.full_name) {
+            alert('Complete seu perfil antes de enviar mensagens!');
+            window.location.href = 'painel.html';
+            return;
+        }
+        localStorage.setItem('openChatWithUserId', userId);
+        window.location.href = 'mensagens.html';
+    } catch (error) {
+        // Silencioso
+    }
+}
+
+async function viewProfile(userId) {
+    try {
+        localStorage.setItem('viewingProfileId', userId);
+        window.location.href = 'perfil.html';
+    } catch (error) {
+        // Silencioso
+    }
 }
 
 // ==================== INICIAR PÁGINA ====================
