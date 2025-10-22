@@ -13,7 +13,6 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
-
     :root {
       --bege: #f6ecc5;
       --vermelho-rosado: #d1656d;
@@ -23,8 +22,9 @@
       --text-light: #666;
       --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
       --transition: all 0.3s ease;
+      --premium-gold: linear-gradient(135deg, #ffd700, #ff6b00);
+      --free-silver: linear-gradient(135deg, #c0c0c0, #808080);
     }
-
 
     body {
       background-color: var(--bege);
@@ -32,14 +32,12 @@
       line-height: 1.6;
     }
 
-
     .container {
       width: 100%;
       max-width: 1200px;
       margin: 0 auto;
       padding: 0 20px;
     }
-
 
     /* Header */
     header {
@@ -52,7 +50,6 @@
       z-index: 100;
     }
 
-
     .header-content {
       display: flex;
       justify-content: space-between;
@@ -60,13 +57,11 @@
       height: 70px;
     }
 
-
     .logo {
       display: flex;
       align-items: center;
       gap: 12px;
     }
-
 
     .logo img {
       height: 180px;
@@ -74,13 +69,11 @@
       object-fit: contain;
     }
 
-
     .user-menu {
       display: flex;
       align-items: center;
       gap: 0.8rem;
     }
-
 
     .btn {
       padding: 0.6rem 1rem;
@@ -94,19 +87,16 @@
       text-align: center;
     }
 
-
     .btn-outline {
       background: transparent;
       border: 2px solid var(--branco);
       color: var(--branco);
     }
 
-
     .btn-primary {
       background: var(--branco);
       color: var(--vermelho-rosado);
     }
-
 
     .btn-premium {
       background: linear-gradient(135deg, #ffd700, #ff6b00);
@@ -115,31 +105,26 @@
       font-weight: 700;
     }
 
-
     .btn-pulse {
       background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
       color: white;
       border: none;
     }
 
-
     .btn-pulse.active {
       background: linear-gradient(135deg, #667eea, #764ba2);
     }
-
 
     .btn-pulse.match {
       background: linear-gradient(135deg, #ff6b6b, #ee5a24);
       animation: pulse 2s infinite;
     }
 
-
     /* Main Content */
     .main-content {
       padding: 2rem 0;
       min-height: calc(100vh - 140px);
     }
-
 
     .vip-header {
       text-align: center;
@@ -151,7 +136,6 @@
       border: 2px solid var(--lilas);
     }
 
-
     .vip-header h1 {
       font-size: 2.5rem;
       color: var(--vermelho-rosado);
@@ -162,14 +146,12 @@
       gap: 0.5rem;
     }
 
-
     .vip-stats {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 1.5rem;
       margin-bottom: 2rem;
     }
-
 
     .stat-card {
       background: var(--branco);
@@ -181,11 +163,9 @@
       border: 1px solid var(--lilas);
     }
 
-
     .stat-card:hover {
       transform: translateY(-5px);
     }
-
 
     .stat-number {
       font-size: 2.5rem;
@@ -194,18 +174,15 @@
       margin-bottom: 0.5rem;
     }
 
-
     .stat-label {
       color: var(--text-light);
       font-size: 0.9rem;
     }
 
-
     /* VIP Users Grid */
     .vip-users-section {
       margin-bottom: 3rem;
     }
-
 
     .section-header {
       display: flex;
@@ -214,12 +191,10 @@
       margin-bottom: 2rem;
     }
 
-
     .section-header h2 {
       font-size: 2rem;
       color: var(--vermelho-rosado);
     }
-
 
     .vip-users-grid {
       display: grid;
@@ -227,25 +202,31 @@
       gap: 1.5rem;
     }
 
-
+    /* CARDS DIFERENCIADOS - PREMIUM vs FREE */
     .vip-user-card {
       background: var(--branco);
       border-radius: 15px;
       padding: 1.5rem;
       box-shadow: var(--shadow);
       transition: var(--transition);
-      border: 2px solid var(--lilas);
       position: relative;
       overflow: hidden;
     }
 
+    .vip-user-card.premium {
+      border: 3px solid #ffd700;
+      background: linear-gradient(135deg, #fff9e6, #ffffff);
+    }
 
-    .vip-user-card::before {
-      content: '⭐ VIP';
+    .vip-user-card.free {
+      border: 2px solid #c0c0c0;
+      background: var(--branco);
+    }
+
+    .user-badge {
       position: absolute;
       top: 10px;
       right: 10px;
-      background: linear-gradient(135deg, #ffd700, #ff6b00);
       color: white;
       padding: 4px 8px;
       border-radius: 12px;
@@ -254,12 +235,18 @@
       z-index: 10;
     }
 
+    .badge-premium {
+      background: var(--premium-gold);
+    }
+
+    .badge-free {
+      background: var(--free-silver);
+    }
 
     .vip-user-card:hover {
       transform: translateY(-5px);
       box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
     }
-
 
     .vip-user-header {
       display: flex;
@@ -268,16 +255,21 @@
       margin-bottom: 1rem;
     }
 
-
     .vip-user-avatar {
       width: 70px;
       height: 70px;
       border-radius: 50%;
       position: relative;
       overflow: hidden;
-      border: 3px solid var(--lilas);
     }
 
+    .vip-user-card.premium .vip-user-avatar {
+      border: 3px solid #ffd700;
+    }
+
+    .vip-user-card.free .vip-user-avatar {
+      border: 3px solid #c0c0c0;
+    }
 
     .vip-user-avatar-img {
       width: 100%;
@@ -285,7 +277,6 @@
       object-fit: cover;
       border-radius: 50%;
     }
-
 
     .vip-user-avatar-fallback {
       width: 100%;
@@ -300,26 +291,29 @@
       font-size: 1.5rem;
     }
 
-
     .vip-user-info {
       flex: 1;
     }
 
-
     .vip-user-name {
       font-size: 1.2rem;
       font-weight: 600;
-      color: var(--vermelho-rosado);
       margin-bottom: 0.3rem;
     }
 
+    .vip-user-card.premium .vip-user-name {
+      color: #b8860b;
+    }
+
+    .vip-user-card.free .vip-user-name {
+      color: var(--vermelho-rosado);
+    }
 
     .vip-user-details {
       display: flex;
       flex-direction: column;
       gap: 0.2rem;
     }
-
 
     .vip-user-detail {
       font-size: 0.85rem;
@@ -328,7 +322,6 @@
       align-items: center;
       gap: 0.3rem;
     }
-
 
     .vip-user-bio {
       font-size: 0.9rem;
@@ -341,20 +334,17 @@
       overflow: hidden;
     }
 
-
     .vip-user-actions {
       display: flex;
       gap: 0.5rem;
       justify-content: space-between;
     }
 
-
     .vip-user-actions .btn {
       flex: 1;
       padding: 0.5rem 0.8rem;
       font-size: 0.8rem;
     }
-
 
     /* Estados */
     .empty-state, .premium-required, .loading {
@@ -366,20 +356,17 @@
       border: 1px solid var(--lilas);
     }
 
-
     .empty-state-icon, .premium-icon {
       font-size: 4rem;
       margin-bottom: 1rem;
       opacity: 0.5;
     }
 
-
     .premium-icon {
       background: linear-gradient(135deg, #ffd700, #ff6b00);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
-
 
     .spinner {
       width: 40px;
@@ -391,19 +378,16 @@
       margin: 0 auto 1rem;
     }
 
-
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-
 
     @keyframes pulse {
       0% { transform: scale(1); }
       50% { transform: scale(1.05); }
       100% { transform: scale(1); }
     }
-
 
     /* Footer */
     footer {
@@ -413,7 +397,6 @@
       border-top: 1px solid var(--lilas);
     }
 
-
     .footer-content {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -421,23 +404,19 @@
       margin-bottom: 1.5rem;
     }
 
-
     .footer-column h3 {
       margin-bottom: 1rem;
       font-size: 1.1rem;
       color: var(--vermelho-rosado);
     }
 
-
     .footer-column ul {
       list-style: none;
     }
 
-
     .footer-column ul li {
       margin-bottom: 0.5rem;
     }
-
 
     .footer-column a {
       color: var(--text);
@@ -446,11 +425,9 @@
       font-size: 0.9rem;
     }
 
-
     .footer-column a:hover {
       color: var(--vermelho-rosado);
     }
-
 
     .copyright {
       text-align: center;
@@ -460,29 +437,24 @@
       color: var(--text-light);
     }
 
-
     /* Responsive */
     @media (max-width: 768px) {
       .vip-header h1 {
         font-size: 2rem;
       }
 
-
       .vip-users-grid {
         grid-template-columns: 1fr;
       }
-
 
       .vip-user-header {
         flex-direction: column;
         text-align: center;
       }
 
-
       .vip-user-actions {
         flex-direction: column;
       }
-
 
       .header-content {
         flex-direction: column;
@@ -490,7 +462,6 @@
         gap: 1rem;
         padding: 1rem 0;
       }
-
 
       .user-menu {
         flex-wrap: wrap;
@@ -515,7 +486,6 @@
     </div>
   </header>
 
-
   <!-- Main Content -->
   <main class="main-content">
     <div class="container">
@@ -524,7 +494,6 @@
         <h1> Sua Lista VIP</h1>
         <p>Estas são as pessoas que você curtiu e seus matches!</p>
       </section>
-
 
       <!-- VIP Stats -->
       <div class="vip-stats">
@@ -542,14 +511,12 @@
         </div>
       </div>
 
-
       <!-- VIP Users Section -->
       <section class="vip-users-section">
         <div class="section-header">
           <h2>Sua Lista VIP</h2>
           <div class="vip-count" id="vipCount">0 pessoas</div>
         </div>
-
 
         <!-- Premium Required Message -->
         <div class="premium-required" id="premiumRequired" style="display: none;">
@@ -561,7 +528,6 @@
           </a>
         </div>
 
-
         <!-- VIP Users Grid -->
         <div class="vip-users-grid" id="vipUsersGrid">
           <div class="loading">
@@ -569,7 +535,6 @@
             <p>Carregando sua lista VIP...</p>
           </div>
         </div>
-
 
         <!-- Empty State -->
         <div class="empty-state" id="emptyState" style="display: none;">
@@ -584,7 +549,6 @@
       </section>
     </div>
   </main>
-
 
   <!-- Footer -->
   <footer>
@@ -618,16 +582,13 @@
     </div>
   </footer>
 
-
 <script>
 // ==================== CONFIGURAÇÃO SUPABASE ====================
 const supabaseUrl = 'https://gcukalndarlgydmgmmmt.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-
 let currentUser = null;
-
 
 // ==================== INICIALIZAÇÃO ====================
 async function initializeVipPage() {
@@ -639,24 +600,20 @@ async function initializeVipPage() {
       return;
     }
 
-
     currentUser = user;
     
     // Carregar lista VIP DIRETO
     await loadVipListDirect();
-
 
   } catch (error) {
     showError('Erro ao carregar.');
   }
 }
 
-
 // ==================== FUNÇÃO PRINCIPAL SIMPLES ====================
 async function loadVipListDirect() {
   try {
     showLoading();
-
 
     // Buscar APENAS a VIP_LIST
     const { data: vipList, error } = await supabase
@@ -665,63 +622,105 @@ async function loadVipListDirect() {
       .eq('user_id', currentUser.id)
       .order('created_at', { ascending: false });
 
-
     if (error) {
       showError('Erro ao carregar lista.');
       return;
     }
 
-
     console.log('VIP_LIST encontrada:', vipList);
-
 
     if (!vipList || vipList.length === 0) {
       showEmptyState();
       return;
     }
 
+    // Buscar dados COMPLETOS dos perfis usando a função SQL
+    const { data: completeUsers, error: completeError } = await supabase
+      .rpc('get_complete_vip_list', { user_uuid: currentUser.id });
 
-    // Buscar dados básicos dos perfis
-    const userIds = vipList.map(item => item.vip_user_id);
-    
-    const { data: profiles, error: profilesError } = await supabase
-      .from('profiles')
-      .select('id, nickname, avatar_url')
-      .in('id', userIds);
-
-
-    if (profilesError) {
-      showError('Erro ao carregar perfis.');
+    if (completeError) {
+      console.log('Erro na função completa, tentando método alternativo...');
+      await loadVipListAlternative(vipList);
       return;
     }
 
-
-    console.log('Perfis encontrados:', profiles);
-
-
-    // Combinar dados
-    const completeUsers = vipList.map(vipItem => {
-      const profile = profiles.find(p => p.id === vipItem.vip_user_id);
-      
-      return {
-        vip_user_id: vipItem.vip_user_id,
-        created_at: vipItem.created_at,
-        user_nickname: profile?.nickname || 'Usuário',
-        user_avatar_url: profile?.avatar_url
-      };
-    });
-
-
+    console.log('Dados completos encontrados:', completeUsers);
     displayVipUsers(completeUsers);
     updateVipStats(completeUsers);
-
 
   } catch (error) {
     showError('Erro ao processar dados.');
   }
 }
 
+// ==================== MÉTODO ALTERNATIVO ====================
+async function loadVipListAlternative(vipList) {
+  try {
+    // Buscar dados básicos dos perfis
+    const userIds = vipList.map(item => item.vip_user_id);
+    
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, nickname, avatar_url, is_premium, birth_date, zodiac, profession')
+      .in('id', userIds);
 
+    if (profilesError) {
+      showError('Erro ao carregar perfis.');
+      return;
+    }
+
+    // Buscar user_details
+    const { data: userDetails, error: detailsError } = await supabase
+      .from('user_details')
+      .select('user_id, description, gender, interests, looking_for')
+      .in('user_id', userIds);
+
+    // Combinar dados
+    const completeUsers = vipList.map(vipItem => {
+      const profile = profiles.find(p => p.id === vipItem.vip_user_id);
+      const details = userDetails?.find(d => d.user_id === vipItem.vip_user_id);
+      
+      return {
+        vip_user_id: vipItem.vip_user_id,
+        created_at: vipItem.created_at,
+        user_nickname: profile?.nickname || 'Usuário',
+        user_avatar_url: profile?.avatar_url,
+        user_birth_date: profile?.birth_date,
+        user_zodiac: profile?.zodiac,
+        user_profession: profile?.profession,
+        user_description: details?.description || 'Sem descrição ainda.',
+        user_gender: details?.gender,
+        user_interests: details?.interests || [],
+        user_looking_for: details?.looking_for || [],
+        is_premium: profile?.is_premium || false
+      };
+    });
+
+    displayVipUsers(completeUsers);
+    updateVipStats(completeUsers);
+
+  } catch (error) {
+    showError('Erro no método alternativo.');
+  }
+}
+
+// ==================== CORREÇÃO DOS AVATARES ====================
+function getCorrectAvatarUrl(avatarPath) {
+  if (!avatarPath) return null;
+  
+  // Se já é uma URL completa, retorna como está
+  if (avatarPath.startsWith('http')) return avatarPath;
+  
+  // Corrigir URL do Supabase Storage
+  if (avatarPath.startsWith('avatars/')) {
+    return `${supabaseUrl}/storage/v1/object/public/${avatarPath}`;
+  }
+  
+  // Se for apenas um nome de arquivo
+  return `${supabaseUrl}/storage/v1/object/public/avatars/${avatarPath}`;
+}
+
+// ==================== EXIBIR USUÁRIOS VIP ====================
 function displayVipUsers(users) {
   const vipGrid = document.getElementById('vipUsersGrid');
   
@@ -730,21 +729,44 @@ function displayVipUsers(users) {
     return;
   }
 
-
-  const userCards = users.map(user => `
-    <div class="vip-user-card">
+  const userCards = users.map(user => {
+    // Determinar se é premium
+    const isPremium = user.is_premium || checkPremiumByLogic(user);
+    const userType = isPremium ? 'premium' : 'free';
+    const badgeText = isPremium ? '⭐ VIP' : '🆓 FREE';
+    const badgeClass = isPremium ? 'badge-premium' : 'badge-free';
+    
+    // URL correta do avatar
+    const avatarUrl = getCorrectAvatarUrl(user.user_avatar_url);
+    
+    return `
+    <div class="vip-user-card ${userType}">
+      <div class="user-badge ${badgeClass}">${badgeText}</div>
+      
       <div class="vip-user-header">
         <div class="vip-user-avatar">
-          ${user.user_avatar_url ?
-            `<img src="${supabase.storage.from('avatars').getPublicUrl(user.user_avatar_url).data?.publicUrl}" alt="${user.user_nickname}">` :
-            `<div class="vip-user-avatar-fallback">${user.user_nickname.charAt(0).toUpperCase()}</div>`
+          ${avatarUrl ?
+            `<img src="${avatarUrl}" alt="${user.user_nickname}" class="vip-user-avatar-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
+            ''
           }
+          <div class="vip-user-avatar-fallback" style="${avatarUrl ? 'display: none;' : ''}">
+            ${user.user_nickname.charAt(0).toUpperCase()}
+          </div>
         </div>
         <div class="vip-user-info">
           <div class="vip-user-name">${user.user_nickname}</div>
-          <div class="vip-user-detail">⭐ ${new Date(user.created_at).toLocaleDateString('pt-BR')}</div>
+          <div class="vip-user-details">
+            ${user.user_age ? `<div class="vip-user-detail">🎂 ${user.user_age} anos</div>` : ''}
+            ${user.user_zodiac ? `<div class="vip-user-detail">♋ ${user.user_zodiac}</div>` : ''}
+            ${user.user_profession ? `<div class="vip-user-detail">💼 ${user.user_profession}</div>` : ''}
+            <div class="vip-user-detail">⭐ ${new Date(user.created_at).toLocaleDateString('pt-BR')}</div>
+          </div>
         </div>
       </div>
+      
+      ${user.user_description ? `
+        <div class="vip-user-bio">${user.user_description}</div>
+      ` : ''}
       
       <div class="vip-user-actions">
         <button class="btn btn-primary"> Mensagem</button>
@@ -752,21 +774,32 @@ function displayVipUsers(users) {
         <button class="btn btn-outline"> Ver Perfil</button>
       </div>
     </div>
-  `).join('');
-
+    `;
+  }).join('');
 
   vipGrid.innerHTML = userCards;
 }
 
+// ==================== LÓGICA PARA IDENTIFICAR PREMIUM ====================
+function checkPremiumByLogic(user) {
+  // Lógica para identificar usuários premium
+  // Baseado em: interesses completos, descrição detalhada, etc.
+  const hasCompleteProfile = user.user_description && user.user_description.length > 50;
+  const hasMultipleInterests = user.user_interests && user.user_interests.length > 2;
+  
+  return hasCompleteProfile || hasMultipleInterests;
+}
 
 function updateVipStats(users) {
   const totalLikes = users.length;
+  const premiumCount = users.filter(user => user.is_premium || checkPremiumByLogic(user)).length;
+  const freeCount = totalLikes - premiumCount;
+  
   document.getElementById('totalLikes').textContent = totalLikes;
-  document.getElementById('mutualMatches').textContent = '0';
-  document.getElementById('newThisWeek').textContent = '0';
+  document.getElementById('mutualMatches').textContent = premiumCount;
+  document.getElementById('newThisWeek').textContent = freeCount;
   document.getElementById('vipCount').textContent = `${totalLikes} pessoa${totalLikes !== 1 ? 's' : ''}`;
 }
-
 
 function showLoading() {
   document.getElementById('vipUsersGrid').innerHTML = `
@@ -776,7 +809,6 @@ function showLoading() {
     </div>
   `;
 }
-
 
 function showEmptyState() {
   document.getElementById('emptyState').style.display = 'block';
@@ -789,7 +821,6 @@ function showEmptyState() {
   document.getElementById('vipCount').textContent = '0 pessoas';
 }
 
-
 function showError(message) {
   document.getElementById('vipUsersGrid').innerHTML = `
     <div class="empty-state">
@@ -800,7 +831,6 @@ function showError(message) {
     </div>
   `;
 }
-
 
 // ==================== INICIAR PÁGINA ====================
 document.addEventListener('DOMContentLoaded', initializeVipPage);
