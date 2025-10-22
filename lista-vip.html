@@ -590,9 +590,11 @@ const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 let currentUser = null;
 
-// ==================== INICIALIZAÇÃO ====================
+// ==================== INICIALIZAÇÃO SIMPLES ====================
 async function initializeVipPage() {
   try {
+    console.log('🎯 Iniciando Lista VIP...');
+    
     // Verificar autenticação
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -601,22 +603,24 @@ async function initializeVipPage() {
     }
 
     currentUser = user;
+    console.log('✅ Usuário:', user.id);
     
-    // Carregar lista VIP
-    await loadVipList();
-
+    // Carregar lista VIP DIRETO
+    await loadVipListDirect();
+    
   } catch (error) {
     console.error('Erro na inicialização:', error);
     showError('Erro ao carregar a página.');
   }
 }
 
-// ==================== CARREGAR LISTA VIP ====================
-async function loadVipList() {
+// ==================== CARREGAR LISTA VIP - MÉTODO DIRETO ====================
+async function loadVipListDirect() {
   try {
     showLoading();
+    console.log('🔍 Buscando lista VIP para:', currentUser.id);
 
-    // Buscar lista VIP do usuário atual
+    // 1. Buscar VIP_LIST do usuário
     const { data: vipList, error: vipError } = await supabase
       .from('vip_list')
       .select('vip_user_id, created_at')
@@ -624,65 +628,63 @@ async function loadVipList() {
       .order('created_at', { ascending: false });
 
     if (vipError) {
-      console.error('Erro ao buscar vip_list:', vipError);
+      console.error('❌ Erro ao buscar vip_list:', vipError);
       showError('Erro ao carregar lista VIP.');
       return;
     }
 
-    console.log('VIP List encontrada:', vipList);
+    console.log('📋 VIP List encontrada:', vipList);
 
     if (!vipList || vipList.length === 0) {
       showEmptyState();
       return;
     }
 
-    // Buscar dados dos perfis
-    await loadProfilesData(vipList);
+    // 2. Buscar dados dos perfis MANUALMENTE
+    await loadProfilesManually(vipList);
 
   } catch (error) {
-    console.error('Erro no loadVipList:', error);
+    console.error('Erro no loadVipListDirect:', error);
     showError('Erro ao processar dados.');
   }
 }
 
-// ==================== CARREGAR DADOS DOS PERFIS ====================
-async function loadProfilesData(vipList) {
+// ==================== CARREGAR PERFIS MANUALMENTE ====================
+async function loadProfilesManually(vipList) {
   try {
     const userIds = vipList.map(item => item.vip_user_id);
-    console.log('Buscando perfis para IDs:', userIds);
+    console.log('👥 Buscando perfis para IDs:', userIds);
 
-    // Buscar dados básicos dos perfis
+    // Buscar perfis básicos
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('id, nickname, avatar_url, birth_date, zodiac, profession, is_premium')
       .in('id', userIds);
 
     if (profilesError) {
-      console.error('Erro ao buscar perfis:', profilesError);
+      console.error('❌ Erro ao buscar perfis:', profilesError);
       showError('Erro ao carregar perfis dos usuários.');
       return;
     }
 
-    console.log('Perfis encontrados:', profiles);
+    console.log('✅ Perfis encontrados:', profiles);
 
-    // Buscar detalhes adicionais
+    // Buscar user_details (se existir)
     const { data: userDetails, error: detailsError } = await supabase
       .from('user_details')
       .select('user_id, description, gender, interests, looking_for')
       .in('user_id', userIds);
 
     if (detailsError) {
-      console.log('Erro ao buscar user_details (pode ser normal):', detailsError);
+      console.log('ℹ️ user_details não encontrados (pode ser normal):', detailsError);
     }
 
-    console.log('User details encontrados:', userDetails);
-
-    // Combinar todos os dados
+    // Combinar dados
     const completeUsers = vipList.map(vipItem => {
       const profile = profiles.find(p => p.id === vipItem.vip_user_id);
       const details = userDetails?.find(d => d.user_id === vipItem.vip_user_id);
       
-      // Calcular idade se tiver birth_date
+      // Calcular idade
       let age = null;
       if (profile?.birth_date) {
         const birthDate = new Date(profile.birth_date);
@@ -706,13 +708,13 @@ async function loadProfilesData(vipList) {
       };
     });
 
-    console.log('Usuários completos:', completeUsers);
+    console.log('🎉 Usuários completos:', completeUsers);
     displayVipUsers(completeUsers);
     updateVipStats(completeUsers);
 
   } catch (error) {
-    console.error('Erro no loadProfilesData:', error);
-    showError('Erro ao processar perfis.');
+    console.error('❌ Erro no loadProfilesManually:', error);
+    showError('Erro ao carregar perfis.');
   }
 }
 
@@ -720,15 +722,10 @@ async function loadProfilesData(vipList) {
 function getCorrectAvatarUrl(avatarPath) {
   if (!avatarPath) return null;
   
-  // Se já é uma URL completa, retorna como está
+  // Se já é uma URL completa
   if (avatarPath.startsWith('http')) return avatarPath;
   
-  // Corrigir URL do Supabase Storage
-  if (avatarPath.startsWith('avatars/')) {
-    return `${supabaseUrl}/storage/v1/object/public/${avatarPath}`;
-  }
-  
-  // Se for apenas um nome de arquivo
+  // URL do Supabase Storage
   return `${supabaseUrl}/storage/v1/object/public/avatars/${avatarPath}`;
 }
 
@@ -758,12 +755,9 @@ function displayVipUsers(users) {
       <div class="vip-user-header">
         <div class="vip-user-avatar">
           ${avatarUrl ?
-            `<img src="${avatarUrl}" alt="${user.user_nickname}" class="vip-user-avatar-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
-            ''
+            `<img src="${avatarUrl}" alt="${user.user_nickname}" class="vip-user-avatar-img">` :
+            `<div class="vip-user-avatar-fallback">${user.user_nickname.charAt(0).toUpperCase()}</div>`
           }
-          <div class="vip-user-avatar-fallback" style="${avatarUrl ? 'display: none;' : ''}">
-            ${user.user_nickname.charAt(0).toUpperCase()}
-          </div>
         </div>
         <div class="vip-user-info">
           <div class="vip-user-name">${user.user_nickname}</div>
@@ -780,14 +774,10 @@ function displayVipUsers(users) {
         <div class="vip-user-bio">${user.user_description}</div>
       ` : ''}
       
-      ${user.user_interests && user.user_interests.length > 0 ? `
-        <div class="vip-user-detail">🎯 Interesses: ${user.user_interests.join(', ')}</div>
-      ` : ''}
-      
       <div class="vip-user-actions">
-        <button class="btn btn-primary" onclick="sendMessage('${user.vip_user_id}')"> Mensagem</button>
-        <button class="btn btn-pulse active"> Curtido</button>
-        <button class="btn btn-outline" onclick="viewProfile('${user.vip_user_id}')"> Ver Perfil</button>
+        <button class="btn btn-primary" onclick="sendMessage('${user.vip_user_id}')">💌 Mensagem</button>
+        <button class="btn btn-pulse active">💗 Curtido</button>
+        <button class="btn btn-outline" onclick="viewProfile('${user.vip_user_id}')">👁️ Ver Perfil</button>
       </div>
     </div>
     `;
@@ -810,13 +800,13 @@ function updateVipStats(users) {
 
 // ==================== FUNÇÕES DE AÇÃO ====================
 function sendMessage(userId) {
-  alert(`Abrir conversa com usuário: ${userId}`);
-  // Implementar redirecionamento para mensagens
+  alert(`Abrir conversa com: ${userId}`);
+  // window.location.href = `mensagens.html?user=${userId}`;
 }
 
 function viewProfile(userId) {
-  alert(`Ver perfil do usuário: ${userId}`);
-  // Implementar redirecionamento para perfil
+  alert(`Ver perfil: ${userId}`);
+  // window.location.href = `perfil.html?user=${userId}`;
 }
 
 // ==================== ESTADOS DA PÁGINA ====================
