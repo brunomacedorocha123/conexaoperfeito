@@ -200,6 +200,68 @@ header {
   box-shadow: 0 6px 20px rgba(255, 107, 0, 0.4);
 }
 
+/* ==================== SISTEMA PULSE - BOTÕES ==================== */
+.pulse-btn {
+    background: linear-gradient(135deg, #d1656d, #c44569);
+    color: white;
+    border: none;
+    padding: 0.6rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.85rem;
+    min-width: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+}
+
+.pulse-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(209, 101, 109, 0.3);
+}
+
+.pulse-btn.pulse-active {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.pulse-btn.pulse-match {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Toast para notificações Pulse */
+.pulse-toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: linear-gradient(135deg, #38a169, #2f855a);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-weight: 600;
+    z-index: 10000;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    text-align: center;
+    min-width: 200px;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.pulse-toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
 /* Main Content */
 .main-content {
   padding: 2rem 0;
@@ -810,6 +872,18 @@ footer {
   margin-top: 2rem;
 }
 
+.mobile-user-info .user-avatar {
+  width: 70px;
+  height: 70px;
+  font-size: 1.3rem;
+  margin: 0 auto 0.5rem;
+}
+
+.mobile-user-info #mobileUserNickname {
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
 .mobile-nav {
   display: flex;
   flex-direction: column;
@@ -868,16 +942,36 @@ footer {
   transform: translateY(-2px);
 }
 
-.mobile-user-info .user-avatar {
-  width: 70px;
-  height: 70px;
-  font-size: 1.3rem;
-  margin: 0 auto 0.5rem;
+/* ==================== AJUSTES MOBILE PARA PULSE ==================== */
+@media (max-width: 768px) {
+  .pulse-btn {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.8rem;
+    min-width: 70px;
+  }
+  
+  .user-card-actions {
+    gap: 0.3rem;
+  }
+  
+  .user-card-actions .btn {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.6rem;
+  }
+  
+  .pulse-toast {
+    min-width: 180px;
+    padding: 10px 16px;
+    font-size: 0.9rem;
+  }
 }
 
-.mobile-user-info #mobileUserNickname {
-  font-size: 1.1rem;
-  font-weight: bold;
+@media (max-width: 480px) {
+  .pulse-btn {
+    min-width: 65px;
+    font-size: 0.75rem;
+    padding: 0.4rem 0.6rem;
+  }
 }
 </style>
 </head>
@@ -1896,6 +1990,67 @@ const dynamicCSS = `
     margin-left: auto;
 }
 
+/* ==================== CORREÇÃO BOTÕES PULSE ==================== */
+.pulse-btn {
+    background: linear-gradient(135deg, #d1656d, #c44569);
+    color: white;
+    border: none;
+    padding: 0.6rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.85rem;
+    min-width: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+}
+
+.pulse-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(209, 101, 109, 0.3);
+}
+
+.pulse-btn.pulse-active {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.pulse-btn.pulse-match {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.pulse-toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: linear-gradient(135deg, #38a169, #2f855a);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-weight: 600;
+    z-index: 10000;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    text-align: center;
+    min-width: 200px;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.pulse-toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
 @media (max-width: 768px) {
     .notification-bell-container {
         margin-left: auto;
@@ -1912,6 +2067,12 @@ const dynamicCSS = `
         width: 18px;
         height: 18px;
         font-size: 0.65rem;
+    }
+    
+    .pulse-btn {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.8rem;
+        min-width: 70px;
     }
 }
 
@@ -1933,28 +2094,11 @@ const dynamicCSS = `
         top: -3px;
         right: -3px;
     }
-}
-
-/* ==================== CORREÇÃO MENU MOBILE ==================== */
-#mobileMenu {
-    display: none !important;
-}
-
-#hamburgerBtn {
-    display: none !important;
-}
-
-@media (max-width: 768px) {
-    #hamburgerBtn {
-        display: flex !important;
-    }
     
-    #mobileMenu {
-        display: none !important;
-    }
-    
-    #mobileMenu[style*="display: flex"] {
-        display: flex !important;
+    .pulse-btn {
+        min-width: 65px;
+        font-size: 0.75rem;
+        padding: 0.4rem 0.6rem;
     }
 }
 
@@ -2063,14 +2207,51 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
 });
 
-// ✅ CORREÇÃO CRÍTICA: Inicialização garantida
+// ✅ CORREÇÃO CRÍTICA: Inicialização garantida do Pulse System
+async function initializePulseSystemWithRetry() {
+    console.log('🎯 Inicializando Pulse System com retry...');
+    
+    let attempts = 0;
+    const maxAttempts = 15; // Aumentado para 15 tentativas
+    
+    while (attempts < maxAttempts) {
+        if (window.initializePulseSystem && window.PulseSystem) {
+            try {
+                console.log('✅ Pulse System encontrado, inicializando...');
+                window.pulseSystem = await window.initializePulseSystem(supabase, currentUser);
+                console.log('✅ Pulse System inicializado com sucesso!');
+                
+                // Adicionar cards VIP se for premium
+                if (userProfile?.is_premium && window.pulseSystem.addVipCardsToHome) {
+                    setTimeout(() => {
+                        window.pulseSystem.addVipCardsToHome().catch(console.error);
+                    }, 2000);
+                }
+                return true;
+            } catch (error) {
+                console.error('❌ Erro na inicialização do Pulse:', error);
+            }
+        }
+        
+        console.log(`⏳ Aguardando Pulse System... (${attempts + 1}/${maxAttempts})`);
+        await new Promise(resolve => setTimeout(resolve, 500));
+        attempts++;
+    }
+    
+    console.error('❌ Pulse System não carregou após todas as tentativas');
+    return false;
+}
+
+// ✅ CORREÇÃO CRÍTICA: Inicialização principal
 async function initializeApp() {
     try {
+        console.log('🎯 Iniciando aplicação Amor Conect...');
+        
         // 1. Verificar autenticação UMA VEZ
         const { data: { user }, error } = await supabase.auth.getUser();
         
         if (error) {
-            console.error('Erro de autenticação:', error);
+            console.error('❌ Erro de autenticação:', error);
             window.location.href = 'login.html';
             return;
         }
@@ -2123,38 +2304,10 @@ async function initializeApp() {
         
         // ✅ CORREÇÃO CRÍTICA: Sistema Pulse com CARREGAMENTO GARANTIDO
         console.log('🎯 Inicializando sistema Pulse...');
+        const pulseLoaded = await initializePulseSystemWithRetry();
         
-        // PRIMEIRO: Garantir que o home-like.js carregou
-        let pulseScriptLoaded = false;
-        let pulseTentativas = 0;
-        
-        while (pulseTentativas < 10 && !pulseScriptLoaded) {
-            if (window.initializePulseSystem && window.PulseSystem) {
-                console.log('✅ home-like.js carregado!');
-                pulseScriptLoaded = true;
-                break;
-            }
-            console.log('⏳ Aguardando home-like.js...', pulseTentativas + 1);
-            await new Promise(resolve => setTimeout(resolve, 500));
-            pulseTentativas++;
-        }
-        
-        if (pulseScriptLoaded) {
-            console.log('🎯 Inicializando Pulse System...');
-            window.pulseSystem = await window.initializePulseSystem(supabase, currentUser);
-            console.log('✅ Sistema Pulse inicializado com sucesso!');
-            
-            // ✅ CORREÇÃO: Adicionar cards VIP com DELAY para garantir que a DOM esteja pronta
-            if (window.pulseSystem && userProfile?.is_premium) {
-                console.log('⭐ Usuário Premium - Agendando cards VIP...');
-                setTimeout(() => {
-                    window.pulseSystem.addVipCardsToHome().catch(error => {
-                        console.error('❌ Erro ao adicionar cards VIP:', error);
-                    });
-                }, 1500); // Delay maior para garantir DOM
-            }
-        } else {
-            console.error('❌ home-like.js não carregou após 10 tentativas');
+        if (!pulseLoaded) {
+            console.warn('⚠️ Pulse System não carregou, continuando sem ele...');
         }
         
         // ✅ CORREÇÃO: Sistema de notificações
@@ -2175,7 +2328,6 @@ async function initializeApp() {
     }
 }
 
-// ✅ ADICIONAR ESTA FUNÇÃO NO FINAL DO ARQUIVO (fora do initializeApp)
 // ✅ GARANTIR CARREGAMENTO TARDIO DO PULSE SYSTEM
 setTimeout(() => {
     if (currentUser && window.initializePulseSystem && !window.pulseSystem) {
@@ -2187,13 +2339,14 @@ setTimeout(() => {
             // Tentar adicionar cards VIP se for premium
             if (userProfile?.is_premium) {
                 setTimeout(() => {
-                    window.pulseSystem.addVipCardsToHome().catch(console.error);
+                    if (window.pulseSystem.addVipCardsToHome) {
+                        window.pulseSystem.addVipCardsToHome().catch(console.error);
+                    }
                 }, 1000);
             }
         }).catch(console.error);
     }
 }, 5000);
-
 // ✅ FALLBACK PARA SISTEMA DE BLOQUEIO
 function initializeBlockSystemFallback() {
     console.log('🔄 Inicializando fallback de bloqueio...');
@@ -2510,6 +2663,7 @@ async function updateUserAvatar(displayName, profile) {
         fallback.textContent = displayName.charAt(0).toUpperCase();
     }
 }
+
 // Carregar foto
 async function loadUserPhoto(avatarUrl) {
     try {
@@ -2520,6 +2674,7 @@ async function loadUserPhoto(avatarUrl) {
         return null;
     }
 }
+
 // ✅✅✅ CORREÇÃO CRÍTICA: Carregar usuários OTIMIZADO com função SQL
 async function loadRealUsers() {
     try {
@@ -2612,9 +2767,7 @@ async function displayUsersWithPhotos(users) {
         showEmptyState('Nenhum usuário disponível no momento.');
     }
 }
-
-// Criar card de usuário
-// ✅ CORREÇÃO: Criar card com FOTOS REAIS como IMG (igual perfil.html)
+// Criar card de usuário com botão Pulse
 async function createUserCardWithPhoto(user) {
     try {
         // ✅ CORREÇÃO: A função SQL retorna campos diferentes, precisamos adaptar
@@ -2666,6 +2819,20 @@ async function createUserCardWithPhoto(user) {
         const lookingFor = details.looking_for || user.looking_for;
         const bio = details.description || user.description || 'Este usuário ainda não adicionou uma descrição.';
 
+        // ✅ VERIFICAR SE JÁ TEM PULSE PARA ESTE USUÁRIO
+        let pulseButtonState = 'pulse-btn';
+        let pulseButtonText = '💗 Pulse';
+        
+        if (window.pulseSystem && window.pulseSystem.isUserLiked(userId)) {
+            pulseButtonState = 'pulse-btn pulse-active';
+            pulseButtonText = '💗 Curtido';
+            
+            if (window.pulseSystem.isMatch(userId)) {
+                pulseButtonState = 'pulse-btn pulse-match';
+                pulseButtonText = '💝 Match!';
+            }
+        }
+
         return `
             <div class="user-card" data-user-id="${userId}" onclick="viewProfile('${userId}')">
                 ${avatarHtml}
@@ -2680,6 +2847,9 @@ async function createUserCardWithPhoto(user) {
                 <div class="user-card-bio">${bio}</div>
                 
                 <div class="user-card-actions">
+                    <button class="${pulseButtonState}" onclick="event.stopPropagation(); handlePulseClick('${userId}', this)">
+                        ${pulseButtonText}
+                    </button>
                     <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); sendMessage('${userId}')">
                         💬 Mensagem
                     </button>
@@ -2705,6 +2875,51 @@ async function createUserCardWithPhoto(user) {
     } catch (error) {
         console.error('Erro ao criar card:', error);
         return '';
+    }
+}
+
+// ✅ FUNÇÃO PARA CLIQUE NO BOTÃO PULSE
+async function handlePulseClick(userId, button) {
+    try {
+        console.log('💗 Clique no pulse para:', userId);
+        
+        if (!window.pulseSystem) {
+            showQuickToast('Sistema de curtidas não disponível. Recarregue a página.');
+            return;
+        }
+
+        const isCurrentlyLiked = window.pulseSystem.isUserLiked(userId);
+        
+        if (isCurrentlyLiked) {
+            // Remover curtida
+            await window.pulseSystem.revokePulse(userId);
+            button.innerHTML = '💗 Pulse';
+            button.classList.remove('pulse-active', 'pulse-match');
+            showQuickToast('Curtida removida');
+        } else {
+            // Adicionar curtida
+            await window.pulseSystem.createPulse(userId);
+            button.innerHTML = '💗 Curtido';
+            button.classList.add('pulse-active');
+            
+            // Verificar match
+            if (window.pulseSystem.isMatch(userId)) {
+                button.innerHTML = '💝 Match!';
+                button.classList.add('pulse-match');
+                showQuickToast('💝 Novo match!');
+            } else {
+                showQuickToast('Curtida enviada!');
+            }
+        }
+
+        // Atualizar contadores
+        if (window.pulseSystem.updatePulseCounters) {
+            window.pulseSystem.updatePulseCounters();
+        }
+
+    } catch (error) {
+        console.error('❌ Erro ao processar pulse:', error);
+        showQuickToast('Erro ao curtir');
     }
 }
 
@@ -2760,7 +2975,7 @@ function selectReportCategory(radio) {
     document.getElementById('submitReportBtn').disabled = false;
 }
 
-// ✅✅✅ FUNÇÃO SUBMITREPORT - VERSÃO DEFINITIVA E TESTADA
+// ✅✅✅ FUNÇÃO SUBMITREPORT - VERSÃO DEFINITIVA
 async function submitReport() {
     const submitBtn = document.getElementById('submitReportBtn');
     const originalText = submitBtn.innerHTML;
@@ -2768,7 +2983,7 @@ async function submitReport() {
     try {
         console.log('📝 Iniciando processo de reporte...');
         
-        // Validações rigorosas
+        // Validações
         const reason = document.querySelector('input[name="reportReason"]:checked')?.value;
         const description = document.getElementById('reportDescription').value.trim();
         
@@ -2786,28 +3001,17 @@ async function submitReport() {
         submitBtn.innerHTML = '⏳ Enviando...';
         submitBtn.disabled = true;
 
-        console.log('📊 Dados do reporte:', {
-            reporter: currentUser.id,
-            reported: currentReportUserId,
-            reason: reason,
-            description: description
-        });
-
-        // ✅ ESTRUTURA DE DADOS COMPLETA PARA A NOVA TABELA
+        // ESTRUTURA DE DADOS
         const reportData = {
             reporter_id: currentUser.id,
             reported_user_id: currentReportUserId,
             category: reason,
             reason: description,
-            evidence: description,
             status: 'pending',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+            created_at: new Date().toISOString()
         };
 
-        console.log('📦 Estrutura do reporte:', reportData);
-
-        // ✅ INSERÇÃO NO BANCO COM TRATAMENTO DE ERRO
+        // INSERÇÃO NO BANCO
         const { data, error } = await supabase
             .from('user_reports')
             .insert(reportData)
@@ -2815,132 +3019,22 @@ async function submitReport() {
             .single();
 
         if (error) {
-            console.error('❌ Erro do Supabase:', error);
-            
-            // ✅ TENTATIVA ALTERNATIVA COM ESTRUTURA MÍNIMA
-            console.log('🔄 Tentando inserção alternativa...');
-            
-            const minimalData = {
-                reporter_id: currentUser.id,
-                reported_user_id: currentReportUserId,
-                category: reason,
-                reason: description,
-                status: 'pending'
-            };
-            
-            const { data: altData, error: altError } = await supabase
-                .from('user_reports')
-                .insert(minimalData)
-                .select()
-                .single();
-                
-            if (altError) {
-                throw new Error(`Falha na inserção: ${altError.message} (Código: ${altError.code})`);
-            }
-            
-            console.log('✅ Reporte enviado (formato alternativo):', altData);
-            showQuickToast('✅ Reporte enviado com sucesso!');
-            closeReportModal();
-            return;
+            throw new Error(`Erro: ${error.message}`);
         }
 
         console.log('✅ Reporte enviado com sucesso:', data);
-        
-        // ✅ REGISTRAR EVENTO DE REPORTE (OPCIONAL)
-        await registerReportEvent(currentReportUserId, reason);
-        
         showQuickToast('✅ Reporte enviado! A equipe irá analisar.');
         closeReportModal();
 
     } catch (error) {
-        console.error('💥 Erro crítico no reporte:', error);
-        
-        // ✅ MENSAGENS DE ERRO ESPECÍFICAS
-        const errorMessages = {
-            '23505': '❌ Reporte duplicado.',
-            '42501': '❌ Sem permissão para enviar reportes.',
-            '23503': '❌ Usuário não encontrado.',
-            'PGRST116': '❌ Dados inválidos para o reporte.',
-            '42P01': '❌ Tabela não existe. Execute o SQL primeiro.'
-        };
-        
-        const userMessage = errorMessages[error.code] || `❌ Erro: ${error.message || 'Tente novamente.'}`;
-        showQuickToast(userMessage);
+        console.error('💥 Erro no reporte:', error);
+        showQuickToast('❌ Erro ao enviar reporte. Tente novamente.');
         
     } finally {
         // Restaurar botão
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
     }
-}
-
-// ✅ FUNÇÃO AUXILIAR: Registrar evento de reporte
-async function registerReportEvent(reportedUserId, reason) {
-    try {
-        // Tentar registrar na tabela de atividades se existir
-        const { error } = await supabase
-            .from('user_activities')
-            .insert({
-                user_id: currentUser.id,
-                activity_type: 'user_report',
-                target_user_id: reportedUserId,
-                description: `Reportou usuário por: ${reason}`,
-                created_at: new Date().toISOString()
-            });
-
-        if (error) {
-            console.warn('⚠️ Não foi possível registrar atividade:', error);
-        }
-    } catch (error) {
-        console.warn('⚠️ Erro no registro de atividade:', error);
-    }
-}
-
-// ✅✅✅ CORREÇÃO DAS FUNÇÕES DE BLOQUEIO
-function openBlockModal(userId, userName) {
-    console.log('🚫 Abrindo modal de bloqueio para:', userName);
-    
-    // Usar sistema principal se disponível
-    if (window.blockSystem && window.blockSystem.openBlockModal) {
-        window.blockSystem.openBlockModal(userId, userName);
-    } else {
-        // Fallback direto
-        console.log('🔄 Usando fallback de bloqueio');
-        document.getElementById('blockUserName').textContent = userName;
-        document.getElementById('blockModal').classList.add('show');
-        
-        // Configurar confirmação
-        const confirmBtn = document.getElementById('confirmBlockBtn');
-        if (confirmBtn) {
-            confirmBtn.onclick = async function() {
-                await blockUserDirect(userId, userName);
-            };
-        }
-    }
-}
-
-function closeBlockModal() {
-    if (window.blockSystem && window.blockSystem.closeBlockModal) {
-        window.blockSystem.closeBlockModal();
-    } else {
-        document.getElementById('blockModal').classList.remove('show');
-    }
-}
-
-function confirmBlock() {
-    if (window.blockSystem && window.blockSystem.confirmBlock) {
-        window.blockSystem.confirmBlock();
-    } else {
-        showQuickToast('💡 Use o botão "Confirmar Bloqueio" no modal');
-    }
-}
-
-function closeConfirmModal() {
-    document.getElementById('confirmModal').classList.remove('show');
-}
-
-function openSupportModal() {
-    alert('📧 Entre em contato com nosso suporte: suporte@amorconect.com');
 }
 
 // ==================== FUNÇÕES DE INTERAÇÃO ====================
@@ -2950,7 +3044,7 @@ async function sendMessage(userId, event) {
     
     console.log('💬 Enviando mensagem para:', userId);
     
-    // Verificação de bloqueio será feita pelo home.block.js
+    // Verificação de bloqueio
     if (window.blockSystem && window.blockSystem.isUserBlocked(userId)) {
         showQuickToast('🚫 Você bloqueou este usuário.');
         return;
@@ -2979,7 +3073,7 @@ async function sendMessage(userId, event) {
 async function viewProfile(userId, event) {
     if (event) event.stopPropagation();
 
-    // Verificação de bloqueio será feita pelo home.block.js
+    // Verificação de bloqueio
     if (window.blockSystem && window.blockSystem.isUserBlocked(userId)) {
         showQuickToast('🚫 Você bloqueou este usuário.');
         return;
@@ -3001,7 +3095,7 @@ async function viewProfile(userId, event) {
         return;
     }
     
-    // ✅ REGISTRAR VISITA usando o novo sistema
+    // Registrar visita
     if (window.registrarVisitaPerfil) {
         await window.registrarVisitaPerfil(userId);
     }
@@ -3041,7 +3135,7 @@ async function initializeNotificationSystem() {
         await loadUnreadNotifications();
         
         // Configurar atualização automática
-        setInterval(loadUnreadNotifications, 30000); // 30 segundos
+        setInterval(loadUnreadNotifications, 30000);
         
     } catch (error) {
         console.error('❌ Erro ao inicializar sistema de notificações:', error);
@@ -3078,46 +3172,10 @@ async function loadUnreadNotifications() {
             mobileBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
         }
         
-        // Adicionar animação se houver notificações
-        const notificationBell = document.getElementById('notificationBell');
-        if (notificationBell && unreadCount > 0) {
-            notificationBell.classList.add('has-notifications');
-        } else if (notificationBell) {
-            notificationBell.classList.remove('has-notifications');
-        }
-        
         console.log(`🔔 ${unreadCount} notificações não lidas`);
         
     } catch (error) {
         console.error('❌ Erro ao carregar notificações:', error);
-    }
-}
-
-// Criar notificação de exemplo (para teste)
-async function createSampleNotification() {
-    try {
-        const notificationData = {
-            user_id: currentUser.id,
-            type: 'welcome',
-            title: 'Bem-vindo ao Amor Conect! 🎉',
-            message: 'Sua jornada para encontrar conexões genuínas começou. Complete seu perfil para ter mais matches!',
-            priority: 'high',
-            actions: [
-                { label: 'Completar Perfil', type: 'primary' },
-                { label: 'Ver Dicas', type: 'secondary' }
-            ],
-            created_at: new Date().toISOString()
-        };
-
-        const { error } = await supabase
-            .from('user_notifications')
-            .insert(notificationData);
-
-        if (error && error.code !== '23505') {
-            console.log('ℹ️ Não foi possível criar notificação de exemplo');
-        }
-    } catch (error) {
-        // Tabela não existe ainda, tudo bem
     }
 }
 
@@ -3170,7 +3228,7 @@ async function updateStats() {
 
         const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
         
-        // Executar todas as consultas em paralelo
+        // Executar consultas em paralelo
         const [totalResult, onlineResult] = await Promise.all([
             supabase.from('profiles').select('*', { count: 'exact', head: true }),
             supabase.from('profiles').select('*', { count: 'exact', head: true })
@@ -3191,12 +3249,12 @@ async function updateStats() {
             document.getElementById('newMatches').textContent = '0';
         }
         
-        // ✅ CORREÇÃO: Visualizações do sistema de visitantes
+        // Visualizações
         let visitCount = 0;
         if (window.visitanteSystem && typeof window.visitanteSystem.getVisitCount === 'function') {
             visitCount = window.visitanteSystem.getVisitCount();
         } else {
-            // Fallback: contar diretamente
+            // Fallback
             const { data: visits } = await supabase
                 .from('profile_visits')
                 .select('id', { count: 'exact' })
@@ -3333,71 +3391,6 @@ function setupMobileMenu() {
     checkScreenSize();
 }
 
-// ==================== DEBUG E MONITORAMENTO ====================
-
-async function debugReportSystem() {
-    try {
-        console.group('🐛 DEBUG SISTEMA DE REPORTES');
-        
-        // 1. Verificar se usuário está autenticado
-        console.log('✅ Usuário autenticado:', currentUser?.id);
-        
-        // 2. Verificar se a tabela user_reports está acessível
-        const { data: sampleReports, error: tableError } = await supabase
-            .from('user_reports')
-            .select('id')
-            .limit(1);
-            
-        if (tableError) {
-            console.error('❌ Tabela user_reports inacessível:', tableError);
-        } else {
-            console.log('✅ Tabela user_reports acessível');
-            console.log('📊 Total de reportes:', sampleReports?.length || 0);
-        }
-        
-        // 3. Verificar estrutura da tabela
-        const { data: structure, error: structureError } = await supabase
-            .from('user_reports')
-            .select('*')
-            .limit(1)
-            .single();
-            
-        if (structureError && structureError.code !== 'PGRST116') {
-            console.error('❌ Erro na estrutura:', structureError);
-        } else if (structure) {
-            console.log('📋 Estrutura da tabela:', Object.keys(structure));
-        } else {
-            console.log('📭 Tabela vazia - estrutura pronta para uso');
-        }
-        
-        console.groupEnd();
-        return true;
-        
-    } catch (error) {
-        console.error('💥 Erro no debug:', error);
-        console.groupEnd();
-        return false;
-    }
-}
-
-// Verificar performance e saúde do sistema
-function monitorSystemHealth() {
-    // Verificar uso de memória
-    if (performance.memory) {
-        const usedMB = Math.round(performance.memory.usedJSHeapSize / 1048576);
-        const totalMB = Math.round(performance.memory.totalJSHeapSize / 1048576);
-        console.log(`💾 Memória: ${usedMB}MB / ${totalMB}MB`);
-    }
-    
-    // Verificar conexão
-    if (navigator.onLine) {
-        console.log('🌐 Conexão: Online');
-    } else {
-        console.warn('🌐 Conexão: Offline');
-        showQuickToast('⚠️ Você está offline');
-    }
-}
-
 // ==================== EXPORTAR FUNÇÕES GLOBAIS ====================
 
 window.sendMessage = sendMessage;
@@ -3412,84 +3405,39 @@ window.closeBlockModal = closeBlockModal;
 window.confirmBlock = confirmBlock;
 window.closeConfirmModal = closeConfirmModal;
 window.openSupportModal = openSupportModal;
+window.handlePulseClick = handlePulseClick;
 
-// ==================== INICIALIZAÇÃO AVANÇADA ====================
-
-// ✅ CORREÇÃO: REMOVIDO BOTÃO DE EMERGÊNCIA
-// NÃO CHAMAR: setTimeout(addEmergencyLogout, 2000);
-
-// Inicializar monitoramento
-setTimeout(() => {
-    monitorSystemHealth();
-    // Executar debug do sistema de reportes
-    debugReportSystem().catch(console.error);
-}, 5000);
-
-// Comandos úteis para o console
-console.log(`
-🎮 COMANDOS ÚTEIS PARA DEBUG:
-
-• testLogout()       - Testar funcionamento do logout
-• forceLogout()      - Forçar logout emergencial
-• debugReportSystem()- Debug do sistema de reportes
-• monitorSystemHealth()- Verificar saúde do sistema
-
-🛠️  FUNÇÕES DISPONÍVEIS:
-• sendMessage(userId)     - Enviar mensagem
-• viewProfile(userId)     - Ver perfil
-• openReportModal(userId, name) - Reportar usuário
-• openBlockModal(userId, name)  - Bloquear usuário
-`);
-
-// ✅ FUNÇÃO PARA TESTE RÁPIDO DO LOGOUT
-window.testLogout = function() {
-    console.log('🧪 Testando logout...');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+// ✅ FUNÇÃO PARA DEBUG DO PULSE SYSTEM
+window.debugPulseSystem = function() {
+    console.log('🔍 DEBUG PULSE SYSTEM:');
+    console.log('- window.initializePulseSystem:', !!window.initializePulseSystem);
+    console.log('- window.PulseSystem:', !!window.PulseSystem);
+    console.log('- window.pulseSystem:', window.pulseSystem);
+    console.log('- currentUser:', !!currentUser);
     
-    console.log('🖱️ Botão desktop encontrado:', !!logoutBtn);
-    console.log('📱 Botão mobile encontrado:', !!mobileLogoutBtn);
-    
-    // Simular clique nos botões
-    if (logoutBtn) {
-        logoutBtn.click();
-    } else {
-        console.log('❌ Botão desktop não encontrado');
+    if (window.pulseSystem) {
+        console.log('- pulsesData:', {
+            dados: window.pulseSystem.pulsesData?.given?.size || 0,
+            recebidos: window.pulseSystem.pulsesData?.received?.size || 0,
+            matches: window.pulseSystem.pulsesData?.matches?.size || 0
+        });
     }
+    
+    // Verificar botões pulse nos cards
+    const pulseButtons = document.querySelectorAll('.pulse-btn');
+    console.log('- Botões Pulse encontrados:', pulseButtons.length);
+    
+    return {
+        pulseSystemLoaded: !!window.pulseSystem,
+        pulseButtons: pulseButtons.length,
+        currentUser: !!currentUser
+    };
 };
 
-// ✅ FORÇAR LOGOUT VIA CONSOLE
-window.forceLogout = function() {
-    console.log('🆘 Forçando logout...');
-    localStorage.clear();
-    sessionStorage.clear();
-    window.location.href = 'index.html';
-};
-
-console.log('🎉 SISTEMA HOME.HTML CARREGADO COM SUCESSO!');
+console.log('🎉 SISTEMA HOME.HTML COMPLETO CARREGADO!');
 console.log('👤 Usuário:', currentUser?.email);
 console.log('🆔 User ID:', currentUser?.id);
 console.log('📊 Perfil carregado:', !!userProfile);
-
-// Verificar se está em modo desenvolvimento
-function isDevelopmentMode() {
-    return window.location.hostname === 'localhost' || 
-           window.location.hostname === '127.0.0.1' ||
-           window.location.hostname.includes('github.io');
-}
-
-// DETECTAR MUDANÇAS NO CÓDIGO E FORÇAR RELOAD
-if (isDevelopmentMode()) {
-    let lastCodeVersion = localStorage.getItem('code_version') || '1.0';
-    const currentCodeVersion = '2.0.1'; // MUDE ESTA VERSÃO SEMPRE QUE ATUALIZAR
-    
-    if (lastCodeVersion !== currentCodeVersion) {
-        console.log('🔄 Código atualizado detectado! Forçando refresh...');
-        localStorage.setItem('code_version', currentCodeVersion);
-        localStorage.removeItem('supabase.auth.token');
-        sessionStorage.clear();
-    }
-}
 </script>
 </body>
 </html>
