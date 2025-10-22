@@ -33,6 +33,9 @@ class PulseSystem {
             // 4. Atualizar contadores
             this.updatePulseCounters();
             
+            // ✅ DEBUG: Verificar comunicação com vip_list
+            await this.debugVipListCommunication();
+            
             console.log('✅ Sistema Pulse inicializado!');
             
         } catch (error) {
@@ -99,6 +102,57 @@ class PulseSystem {
         } catch (error) {
             console.error('Erro ao carregar pulses:', error);
         }
+    }
+
+    // ==================== DEBUG COMUNICAÇÃO VIP_LIST ====================
+    async debugVipListCommunication() {
+        console.group('🐛 DEBUG COMUNICAÇÃO VIP_LIST');
+        
+        try {
+            // Testar se a tabela vip_list existe e está acessível
+            const { data: testData, error: testError } = await this.supabase
+                .from('vip_list')
+                .select('count')
+                .limit(1)
+                .single();
+
+            if (testError) {
+                console.error('❌ Tabela vip_list inacessível:', testError);
+                console.log('💡 Solução: Execute o SQL de criação da tabela vip_list');
+            } else {
+                console.log('✅ Tabela vip_list acessível');
+            }
+
+            // Verificar quantos usuários estão na lista VIP atual
+            const { data: currentVip, error: countError } = await this.supabase
+                .from('vip_list')
+                .select('vip_user_id', { count: 'exact' })
+                .eq('user_id', this.currentUser.id);
+
+            if (countError) {
+                console.error('❌ Erro ao contar VIP:', countError);
+            } else {
+                console.log(`📊 Usuário tem ${currentVip?.length || 0} pessoas na lista VIP`);
+            }
+
+            // Verificar pulses ativos
+            const { data: receivedPulses, error: pulsesError } = await this.supabase
+                .from('pulses')
+                .select('user_from_id', { count: 'exact' })
+                .eq('user_to_id', this.currentUser.id)
+                .eq('status', 'active');
+
+            if (pulsesError) {
+                console.error('❌ Erro ao contar pulses:', pulsesError);
+            } else {
+                console.log(`📈 Usuário recebeu ${receivedPulses?.length || 0} curtidas`);
+            }
+
+        } catch (error) {
+            console.error('❌ Erro no debug:', error);
+        }
+        
+        console.groupEnd();
     }
 
     // ==================== INTEGRAÇÃO COM CARDS ====================
@@ -312,7 +366,7 @@ class PulseSystem {
                 await this.createPulse(userId);
                 this.pulsesData.given.add(userId);
                 
-                // ✅ SALVAR NA LISTA VIP
+                // ✅ SALVAR NA LISTA VIP (CORREÇÃO CRÍTICA)
                 await this.saveLikeToVipList(userId);
                 
                 // Verificar se agora é match
@@ -377,6 +431,24 @@ class PulseSystem {
         try {
             console.log('💖 Salvando like na lista VIP:', targetUserId);
             
+            // ✅ VERIFICAR SE JÁ EXISTE NA LISTA VIP
+            const { data: existingVip, error: checkError } = await this.supabase
+                .from('vip_list')
+                .select('id')
+                .eq('user_id', this.currentUser.id)
+                .eq('vip_user_id', targetUserId)
+                .single();
+
+            if (checkError && checkError.code !== 'PGRST116') {
+                console.error('❌ Erro ao verificar lista VIP:', checkError);
+            }
+
+            // ✅ SE JÁ EXISTIR, NÃO INSERIR NOVAMENTE
+            if (existingVip) {
+                console.log('ℹ️ Usuário já está na lista VIP');
+                return;
+            }
+
             // ✅ INSERIR na tabela vip_list
             const { data: vipData, error: vipError } = await this.supabase
                 .from('vip_list')
@@ -390,7 +462,7 @@ class PulseSystem {
 
             if (vipError) {
                 if (vipError.code === '23505') {
-                    console.log('ℹ️ Usuário já está na lista VIP');
+                    console.log('ℹ️ Usuário já está na lista VIP (duplicado)');
                 } else {
                     console.error('❌ Erro ao salvar na lista VIP:', vipError);
                     // Tentar criar tabela se não existir
@@ -474,7 +546,9 @@ class PulseSystem {
         }
 
         try {
-            // ✅ AGORA BUSCA DA TABELA vip_list
+            console.log('📋 Buscando lista VIP...');
+            
+            // ✅ BUSCAR DA TABELA VIP_LIST
             const { data: vipUsers, error } = await this.supabase
                 .from('vip_list')
                 .select(`
@@ -500,7 +574,10 @@ class PulseSystem {
 
             if (error) {
                 console.error('❌ Erro ao carregar lista VIP:', error);
-                return [];
+                
+                // ✅ FALLBACK: Se vip_list não existir, usar pulses
+                console.log('🔄 Tentando fallback com tabela pulses...');
+                return await this.getVipListFromPulses();
             }
 
             console.log(`✅ ${vipUsers?.length || 0} usuários na lista VIP`);
@@ -516,6 +593,44 @@ class PulseSystem {
 
         } catch (error) {
             console.error('❌ Erro ao carregar lista VIP:', error);
+            return [];
+        }
+    }
+
+    // ✅ NOVO MÉTODO: Fallback para buscar de pulses
+    async getVipListFromPulses() {
+        try {
+            const { data: pulses, error } = await this.supabase
+                .from('pulses')
+                .select(`
+                    user_from_id,
+                    created_at,
+                    profiles:user_from_id (
+                        id,
+                        nickname,
+                        avatar_url,
+                        birth_date,
+                        zodiac,
+                        profession,
+                        user_details (
+                            gender,
+                            interests,
+                            description,
+                            looking_for
+                        )
+                    )
+                `)
+                .eq('user_to_id', this.currentUser.id)
+                .eq('status', 'active')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            console.log(`✅ ${pulses?.length || 0} usuários via fallback pulses`);
+            return pulses || [];
+
+        } catch (error) {
+            console.error('❌ Erro no fallback pulses:', error);
             return [];
         }
     }
@@ -544,7 +659,11 @@ class PulseSystem {
 
     createVipUsersSection(container, vipUsers) {
         // Verificar se já existe seção VIP
-        if (document.getElementById('vipUsersSection')) return;
+        if (document.getElementById('vipUsersSection')) {
+            // ✅ CORREÇÃO: Se já existe, apenas atualizar o conteúdo
+            this.addVipUserCards(vipUsers);
+            return;
+        }
 
         const vipSection = document.createElement('div');
         vipSection.id = 'vipUsersSection';
@@ -555,29 +674,76 @@ class PulseSystem {
                 <span class="pulse-badge">${vipUsers.length} pessoas</span>
             </div>
             <div class="users-grid" id="vipUsersGrid">
-                <!-- Cards VIP serão inseridos aqui -->
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Carregando lista VIP...</p>
+                </div>
             </div>
         `;
 
         // Inserir antes da seção principal
         container.parentNode.insertBefore(vipSection, container);
 
-        // Adicionar cards VIP
-        this.addVipUserCards(vipUsers);
+        // ✅ CORREÇÃO: Adicionar cards após a seção ser criada
+        setTimeout(() => {
+            this.addVipUserCards(vipUsers);
+        }, 100);
     }
 
     async addVipUserCards(vipUsers) {
         const vipGrid = document.getElementById('vipUsersGrid');
         if (!vipGrid) return;
 
-        vipGrid.innerHTML = ''; // Limpar loading
+        vipGrid.innerHTML = '<div class="loading"><div class="spinner"></div><p>Carregando lista VIP...</p></div>';
 
+        // ✅ CORREÇÃO: Usar DocumentFragment para melhor performance
+        const fragment = document.createDocumentFragment();
+        
         for (const vip of vipUsers) {
-            const card = await this.createVipUserCard(vip);
-            if (card) {
-                vipGrid.appendChild(card);
+            try {
+                const cardHtml = await this.createVipUserCard(vip);
+                if (cardHtml) {
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = cardHtml;
+                    if (tempDiv.firstElementChild) {
+                        fragment.appendChild(tempDiv.firstElementChild);
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao criar card VIP:', error);
             }
         }
+
+        // ✅ CORREÇÃO: Limpar e adicionar todos de uma vez
+        vipGrid.innerHTML = '';
+        vipGrid.appendChild(fragment);
+
+        // ✅ CORREÇÃO: Re-aplicar event listeners após inserir no DOM
+        this.reapplyEventListeners();
+    }
+
+    // ✅ NOVO MÉTODO: Re-aplicar event listeners
+    reapplyEventListeners() {
+        // Re-aplicar listeners para botões de mensagem e perfil
+        document.querySelectorAll('.vip-card .btn-primary').forEach(btn => {
+            btn.onclick = function(e) {
+                e.stopPropagation();
+                const userId = this.closest('.user-card').getAttribute('data-user-id');
+                if (userId && window.sendMessage) {
+                    sendMessage(userId, e);
+                }
+            };
+        });
+
+        document.querySelectorAll('.vip-card .btn-secondary').forEach(btn => {
+            btn.onclick = function(e) {
+                e.stopPropagation();
+                const userId = this.closest('.user-card').getAttribute('data-user-id');
+                if (userId && window.viewProfile) {
+                    viewProfile(userId, e);
+                }
+            };
+        });
     }
 
     async createVipUserCard(vipData) {
@@ -590,22 +756,8 @@ class PulseSystem {
             const profession = user.profession;
             const bio = user.user_details?.description || 'Este usuário ainda não adicionou uma descrição.';
 
-            // Avatar
-            let avatarHtml = '';
-            if (user.avatar_url) {
-                avatarHtml = `
-                    <div class="user-card-avatar">
-                        <img class="user-card-avatar-img" src="${user.avatar_url}" alt="${nickname}">
-                        <div class="user-card-avatar-fallback" style="display: none;">${nickname.charAt(0).toUpperCase()}</div>
-                    </div>
-                `;
-            } else {
-                avatarHtml = `
-                    <div class="user-card-avatar">
-                        <div class="user-card-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
-                    </div>
-                `;
-            }
+            // ✅ CORREÇÃO CRÍTICA: Carregar avatar corretamente
+            const avatarHtml = await this.createAvatarHtml(user, nickname);
 
             return `
                 <div class="user-card vip-card" data-user-id="${userId}" onclick="viewProfile('${userId}')">
@@ -633,6 +785,76 @@ class PulseSystem {
         } catch (error) {
             console.error('Erro ao criar card VIP:', error);
             return '';
+        }
+    }
+
+    // ✅ NOVO MÉTODO: Criar HTML do avatar com carregamento correto
+    async createAvatarHtml(user, nickname) {
+        try {
+            const initial = nickname.charAt(0).toUpperCase();
+            
+            if (!user.avatar_url) {
+                return `
+                    <div class="user-card-avatar">
+                        <div class="user-card-avatar-fallback">${initial}</div>
+                    </div>
+                `;
+            }
+
+            // ✅ CORREÇÃO: Usar getPublicUrl do Supabase
+            const photoUrl = await this.loadUserPhoto(user.avatar_url);
+            
+            if (photoUrl) {
+                return `
+                    <div class="user-card-avatar">
+                        <img class="user-card-avatar-img" src="${photoUrl}" alt="${nickname}" 
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="user-card-avatar-fallback" style="display: none;">${initial}</div>
+                    </div>
+                `;
+            } else {
+                return `
+                    <div class="user-card-avatar">
+                        <div class="user-card-avatar-fallback">${initial}</div>
+                    </div>
+                `;
+            }
+            
+        } catch (error) {
+            console.error('Erro ao criar avatar:', error);
+            return `
+                <div class="user-card-avatar">
+                    <div class="user-card-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
+                </div>
+            `;
+        }
+    }
+
+    // ✅ NOVO MÉTODO: Carregar foto do usuário (igual ao home.html)
+    async loadUserPhoto(avatarUrl) {
+        try {
+            if (!avatarUrl) return null;
+            
+            // ✅ CORREÇÃO: Usar getPublicUrl corretamente
+            const { data } = this.supabase.storage.from('avatars').getPublicUrl(avatarUrl);
+            const photoUrl = data?.publicUrl;
+            
+            if (!photoUrl) return null;
+            
+            // ✅ VERIFICAR se a imagem é acessível
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => resolve(photoUrl);
+                img.onerror = () => {
+                    console.warn('❌ Imagem não carrega:', photoUrl);
+                    resolve(null);
+                };
+                img.src = photoUrl;
+            });
+            
+        } catch (error) {
+            console.error('❌ Erro ao carregar foto:', error);
+            return null;
         }
     }
 

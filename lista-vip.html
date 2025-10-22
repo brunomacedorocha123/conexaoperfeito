@@ -591,142 +591,201 @@
 
     <script>
     // ==================== CONFIGURAÇÃO SUPABASE ====================
-    const supabaseUrl = 'https://gcukalndarlgydmgmmmt.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+const supabaseUrl = 'https://gcukalndarlgydmgmmmt.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-    // ==================== VARIÁVEIS GLOBAIS ====================
-    let currentUser = null;
-    let userProfile = null;
+// ==================== VARIÁVEIS GLOBAIS ====================
+let currentUser = null;
+let userProfile = null;
 
-    // ==================== INICIALIZAÇÃO ====================
-    document.addEventListener('DOMContentLoaded', function() {
-        initializeVipPage();
-    });
+// ==================== INICIALIZAÇÃO ====================
+document.addEventListener('DOMContentLoaded', function() {
+    initializeVipPage();
+});
 
-    async function initializeVipPage() {
-        try {
-            // Verificar autenticação
-            const { data: { user }, error } = await supabase.auth.getUser();
-            
-            if (error || !user) {
-                window.location.href = 'login.html';
-                return;
-            }
-
-            currentUser = user;
-            
-            // Carregar perfil do usuário
-            await loadUserProfile();
-            
-            // Verificar se é Premium
-            if (!userProfile?.is_premium) {
-                showPremiumRequired();
-                return;
-            }
-
-            // Carregar lista VIP
-            await loadVipList();
-
-        } catch (error) {
-            console.error('Erro ao inicializar página VIP:', error);
-            showError('Erro ao carregar a página. Tente novamente.');
-        }
-    }
-
-    // ==================== CARREGAR DADOS ====================
-    async function loadUserProfile() {
-        try {
-            const { data: profile, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', currentUser.id)
-                .single();
-
-            if (error) throw error;
-            userProfile = profile;
-
-        } catch (error) {
-            console.error('Erro ao carregar perfil:', error);
-            throw error;
-        }
-    }
-
-    async function loadVipList() {
-        try {
-            // Usar a função do sistema Pulse se disponível
-            if (window.pulseSystem) {
-                await loadVipFromPulseSystem();
-            } else {
-                // Fallback: carregar diretamente do banco
-                await loadVipDirect();
-            }
-
-        } catch (error) {
-            console.error('Erro ao carregar lista VIP:', error);
-            showError('Erro ao carregar lista VIP.');
-        }
-    }
-
-    async function loadVipFromPulseSystem() {
-        const vipUsers = await window.pulseSystem.getVipList();
-        displayVipUsers(vipUsers);
-        updateVipStats(vipUsers);
-    }
-
-    async function loadVipDirect() {
-        try {
-            // Carregar usuários que curtiram o perfil atual
-            const { data: pulses, error } = await supabase
-                .from('pulses')
-                .select(`
-                    user_from_id,
-                    created_at,
-                    profiles:user_from_id (
-                        nickname,
-                        avatar_url,
-                        birth_date,
-                        zodiac,
-                        profession,
-                        user_details (
-                            gender,
-                            interests,
-                            description,
-                            looking_for
-                        )
-                    )
-                `)
-                .eq('user_to_id', currentUser.id)
-                .eq('status', 'active')
-                .order('created_at', { ascending: false });
-
-            if (error) throw error;
-
-            displayVipUsers(pulses || []);
-            updateVipStats(pulses || []);
-
-        } catch (error) {
-            console.error('Erro ao carregar VIP direto:', error);
-            showEmptyState();
-        }
-    }
-
-    // ==================== EXIBIR USUÁRIOS VIP ====================
-    function displayVipUsers(users) {
-        const vipGrid = document.getElementById('vipUsersGrid');
+async function initializeVipPage() {
+    try {
+        // Verificar autenticação
+        const { data: { user }, error } = await supabase.auth.getUser();
         
-        if (!users || users.length === 0) {
-            showEmptyState();
+        if (error || !user) {
+            window.location.href = 'login.html';
             return;
         }
 
-        const userCards = users.map(user => createVipUserCard(user)).join('');
-        vipGrid.innerHTML = userCards;
+        currentUser = user;
+        
+        // Carregar perfil do usuário
+        await loadUserProfile();
+        
+        // Verificar se é Premium
+        if (!userProfile?.is_premium) {
+            showPremiumRequired();
+            return;
+        }
+
+        // Carregar lista VIP
+        await loadVipList();
+
+    } catch (error) {
+        console.error('Erro ao inicializar página VIP:', error);
+        showError('Erro ao carregar a página. Tente novamente.');
+    }
+}
+
+// ==================== CARREGAR DADOS ====================
+async function loadUserProfile() {
+    try {
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', currentUser.id)
+            .single();
+
+        if (error) throw error;
+        userProfile = profile;
+
+    } catch (error) {
+        console.error('Erro ao carregar perfil:', error);
+        throw error;
+    }
+}
+
+// ✅ CORREÇÃO: Função loadVipList atualizada
+async function loadVipList() {
+    try {
+        console.log('📋 Carregando lista VIP...');
+        
+        // ✅ PRIORIDADE: Usar o sistema Pulse se disponível
+        if (window.pulseSystem && typeof window.pulseSystem.getVipList === 'function') {
+            console.log('🎯 Usando sistema Pulse para carregar VIP');
+            const vipUsers = await window.pulseSystem.getVipList();
+            displayVipUsers(vipUsers);
+            updateVipStats(vipUsers);
+        } else {
+            // ✅ FALLBACK: Carregar diretamente do banco
+            console.log('🔄 Usando carregamento direto do banco');
+            await loadVipDirect();
+        }
+
+    } catch (error) {
+        console.error('❌ Erro ao carregar lista VIP:', error);
+        showError('Erro ao carregar lista VIP.');
+    }
+}
+
+// ✅ CORREÇÃO: Função loadVipDirect atualizada
+async function loadVipDirect() {
+    try {
+        console.log('🔄 Carregando lista VIP diretamente...');
+        
+        // ✅ CORREÇÃO: Buscar da tabela VIP_LIST em vez de pulses
+        const { data: vipUsers, error } = await supabase
+            .from('vip_list')
+            .select(`
+                vip_user_id,
+                created_at,
+                profiles:vip_user_id (
+                    id,
+                    nickname,
+                    avatar_url,
+                    birth_date,
+                    zodiac,
+                    profession,
+                    user_details (
+                        gender,
+                        interests,
+                        description,
+                        looking_for
+                    )
+                )
+            `)
+            .eq('user_id', currentUser.id)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('❌ Erro ao carregar VIP direto:', error);
+            
+            // ✅ FALLBACK: Tentar carregar de pulses se vip_list falhar
+            console.log('🔄 Tentando fallback para tabela pulses...');
+            await loadVipFromPulsesFallback();
+            return;
+        }
+
+        console.log(`✅ ${vipUsers?.length || 0} usuários encontrados na lista VIP`);
+        displayVipUsers(vipUsers || []);
+        updateVipStats(vipUsers || []);
+
+    } catch (error) {
+        console.error('❌ Erro ao carregar VIP direto:', error);
+        showEmptyState();
+    }
+}
+
+// ✅ NOVA FUNÇÃO: Fallback para carregar de pulses
+async function loadVipFromPulsesFallback() {
+    try {
+        console.log('🔄 Usando fallback da tabela pulses...');
+        
+        const { data: pulses, error } = await supabase
+            .from('pulses')
+            .select(`
+                user_from_id,
+                created_at,
+                profiles:user_from_id (
+                    nickname,
+                    avatar_url,
+                    birth_date,
+                    zodiac,
+                    profession,
+                    user_details (
+                        gender,
+                        interests,
+                        description,
+                        looking_for
+                    )
+                )
+            `)
+            .eq('user_to_id', currentUser.id)
+            .eq('status', 'active')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        console.log(`✅ ${pulses?.length || 0} usuários encontrados via pulses`);
+        displayVipUsers(pulses || []);
+        updateVipStats(pulses || []);
+
+    } catch (error) {
+        console.error('❌ Erro no fallback pulses:', error);
+        showEmptyState();
+    }
+}
+
+// ==================== EXIBIR USUÁRIOS VIP ====================
+function displayVipUsers(users) {
+    const vipGrid = document.getElementById('vipUsersGrid');
+    
+    if (!users || users.length === 0) {
+        showEmptyState();
+        return;
     }
 
-    function createVipUserCard(pulseData) {
+    // ✅ CORREÇÃO: Usar Promise.all para carregar todas as imagens
+    const userCardsPromises = users.map(user => createVipUserCard(user));
+    
+    Promise.all(userCardsPromises).then(cards => {
+        const userCards = cards.filter(card => card).join('');
+        vipGrid.innerHTML = userCards;
+    });
+}
+
+// ✅ CORREÇÃO: Função createVipUserCard atualizada
+async function createVipUserCard(pulseData) {
+    try {
         const user = pulseData.profiles;
-        const userId = pulseData.user_from_id;
+        const userId = pulseData.user_from_id || pulseData.vip_user_id;
         const nickname = user.nickname || 'Usuário';
         const age = user.birth_date ? calculateAge(user.birth_date) : null;
         const zodiac = user.zodiac;
@@ -738,20 +797,8 @@
         const isMatch = window.pulseSystem ? window.pulseSystem.isMatch(userId) : false;
         const isLiked = window.pulseSystem ? window.pulseSystem.isUserLiked(userId) : false;
 
-        let avatarHtml = '';
-        if (user.avatar_url) {
-            avatarHtml = `
-                <div class="vip-user-avatar">
-                    <img class="vip-user-avatar-img" src="${user.avatar_url}" alt="${nickname}">
-                </div>
-            `;
-        } else {
-            avatarHtml = `
-                <div class="vip-user-avatar">
-                    <div class="vip-user-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
-                </div>
-            `;
-        }
+        // ✅ CORREÇÃO: Gerar avatar HTML corretamente
+        const avatarHtml = await createAvatarHtml(user, nickname);
 
         let pulseButtonText = '💗 Curtir';
         let pulseButtonClass = 'btn-pulse';
@@ -793,182 +840,297 @@
                 </div>
             </div>
         `;
+    } catch (error) {
+        console.error('Erro ao criar card VIP:', error);
+        return '';
     }
+}
 
-    // ==================== ATUALIZAR ESTATÍSTICAS ====================
-    function updateVipStats(users) {
-        const totalLikes = users.length;
-        const mutualMatches = users.filter(user => 
-            window.pulseSystem ? window.pulseSystem.isMatch(user.user_from_id) : false
-        ).length;
+// ✅ NOVA FUNÇÃO: Criar HTML do avatar
+async function createAvatarHtml(user, nickname) {
+    try {
+        const initial = nickname.charAt(0).toUpperCase();
         
-        // Novos esta semana
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-        const newThisWeek = users.filter(user => 
-            new Date(user.created_at) > oneWeekAgo
-        ).length;
+        if (!user.avatar_url) {
+            return `
+                <div class="vip-user-avatar">
+                    <div class="vip-user-avatar-fallback">${initial}</div>
+                </div>
+            `;
+        }
 
-        document.getElementById('totalLikes').textContent = totalLikes;
-        document.getElementById('mutualMatches').textContent = mutualMatches;
-        document.getElementById('newThisWeek').textContent = newThisWeek;
-        document.getElementById('vipCount').textContent = `${totalLikes} pessoa${totalLikes !== 1 ? 's' : ''}`;
-    }
+        // ✅ CORREÇÃO: Gerar URL correta usando Supabase
+        const { data } = supabase.storage.from('avatars').getPublicUrl(user.avatar_url);
+        const photoUrl = data?.publicUrl;
+        
+        if (photoUrl) {
+            // ✅ VERIFICAR se a imagem carrega
+            const imgLoads = await checkImageLoads(photoUrl);
+            
+            if (imgLoads) {
+                return `
+                    <div class="vip-user-avatar">
+                        <img class="vip-user-avatar-img" src="${photoUrl}" alt="${nickname}" 
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="vip-user-avatar-fallback" style="display: none;">${initial}</div>
+                    </div>
+                `;
+            }
+        }
 
-    // ==================== ESTADOS DA PÁGINA ====================
-    function showPremiumRequired() {
-        document.getElementById('premiumRequired').style.display = 'block';
-        document.getElementById('vipUsersGrid').style.display = 'none';
-        document.getElementById('emptyState').style.display = 'none';
-        document.querySelector('.vip-stats').style.display = 'none';
-    }
-
-    function showEmptyState() {
-        document.getElementById('emptyState').style.display = 'block';
-        document.getElementById('vipUsersGrid').style.display = 'none';
-        document.getElementById('premiumRequired').style.display = 'none';
-    }
-
-    function showError(message) {
-        const vipGrid = document.getElementById('vipUsersGrid');
-        vipGrid.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-state-icon">⚠️</div>
-                <h3>Erro ao carregar</h3>
-                <p>${message}</p>
-                <button class="btn btn-primary" onclick="location.reload()">
-                    🔄 Tentar Novamente
-                </button>
+        // Fallback se não tiver imagem ou não carregar
+        return `
+            <div class="vip-user-avatar">
+                <div class="vip-user-avatar-fallback">${initial}</div>
+            </div>
+        `;
+        
+    } catch (error) {
+        console.error('Erro ao criar avatar:', error);
+        return `
+            <div class="vip-user-avatar">
+                <div class="vip-user-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
             </div>
         `;
     }
+}
 
-    // ==================== FUNÇÕES DE INTERAÇÃO ====================
-    async function handlePulse(userId, button) {
-        if (!window.pulseSystem) {
-            alert('Sistema de curtidas não disponível. Tente novamente.');
-            return;
-        }
+// ✅ NOVA FUNÇÃO: Verificar se imagem carrega
+function checkImageLoads(url) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(true);
+        img.onerror = () => resolve(false);
+        img.src = url;
+    });
+}
 
-        try {
-            const isCurrentlyLiked = window.pulseSystem.isUserLiked(userId);
+// ==================== ATUALIZAR ESTATÍSTICAS ====================
+function updateVipStats(users) {
+    const totalLikes = users.length;
+    const mutualMatches = users.filter(user => {
+        const userId = user.user_from_id || user.vip_user_id;
+        return window.pulseSystem ? window.pulseSystem.isMatch(userId) : false;
+    }).length;
+    
+    // Novos esta semana
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    const newThisWeek = users.filter(user => 
+        new Date(user.created_at) > oneWeekAgo
+    ).length;
+
+    document.getElementById('totalLikes').textContent = totalLikes;
+    document.getElementById('mutualMatches').textContent = mutualMatches;
+    document.getElementById('newThisWeek').textContent = newThisWeek;
+    document.getElementById('vipCount').textContent = `${totalLikes} pessoa${totalLikes !== 1 ? 's' : ''}`;
+}
+
+// ==================== ESTADOS DA PÁGINA ====================
+function showPremiumRequired() {
+    document.getElementById('premiumRequired').style.display = 'block';
+    document.getElementById('vipUsersGrid').style.display = 'none';
+    document.getElementById('emptyState').style.display = 'none';
+    document.querySelector('.vip-stats').style.display = 'none';
+}
+
+function showEmptyState() {
+    document.getElementById('emptyState').style.display = 'block';
+    document.getElementById('vipUsersGrid').style.display = 'none';
+    document.getElementById('premiumRequired').style.display = 'none';
+}
+
+function showError(message) {
+    const vipGrid = document.getElementById('vipUsersGrid');
+    vipGrid.innerHTML = `
+        <div class="empty-state">
+            <div class="empty-state-icon">⚠️</div>
+            <h3>Erro ao carregar</h3>
+            <p>${message}</p>
+            <button class="btn btn-primary" onclick="location.reload()">
+                🔄 Tentar Novamente
+            </button>
+        </div>
+    `;
+}
+
+// ==================== FUNÇÕES DE INTERAÇÃO ====================
+async function handlePulse(userId, button) {
+    if (!window.pulseSystem) {
+        alert('Sistema de curtidas não disponível. Tente novamente.');
+        return;
+    }
+
+    try {
+        const isCurrentlyLiked = window.pulseSystem.isUserLiked(userId);
+        
+        if (isCurrentlyLiked) {
+            // Descurtir
+            await window.pulseSystem.revokePulse(userId);
+            button.textContent = '💗 Curtir';
+            button.classList.remove('active', 'match');
+        } else {
+            // Curtir
+            await window.pulseSystem.createPulse(userId);
+            button.textContent = '💗 Curtido';
+            button.classList.add('active');
             
-            if (isCurrentlyLiked) {
-                // Descurtir
-                await window.pulseSystem.revokePulse(userId);
-                button.textContent = '💗 Curtir';
-                button.classList.remove('active', 'match');
-            } else {
-                // Curtir
-                await window.pulseSystem.createPulse(userId);
-                button.textContent = '💗 Curtido';
-                button.classList.add('active');
-                
-                // Verificar se agora é match
-                if (window.pulseSystem.isMatch(userId)) {
-                    button.textContent = '💝 Match!';
-                    button.classList.add('match');
-                    showMatchToast();
-                }
+            // ✅ ATUALIZAR LISTA VIP
+            await window.pulseSystem.saveLikeToVipList(userId);
+            
+            // Verificar se agora é match
+            if (window.pulseSystem.isMatch(userId)) {
+                button.textContent = '💝 Match!';
+                button.classList.add('match');
+                showMatchToast();
             }
-
-            // Atualizar estatísticas
-            await loadVipList();
-
-        } catch (error) {
-            console.error('Erro ao processar curtida:', error);
-            alert('Erro ao processar curtida. Tente novamente.');
-        }
-    }
-
-    function showMatchToast() {
-        const toast = document.createElement('div');
-        toast.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-            color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 10px;
-            font-weight: bold;
-            z-index: 10000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        `;
-        toast.textContent = '💝 Novo match!';
-        
-        document.body.appendChild(toast);
-        
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transition = 'opacity 0.3s ease';
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
-    }
-
-    async function sendMessage(userId) {
-        if (!currentUser) return;
-        
-        // Verificar se o perfil está completo
-        if (!userProfile?.full_name || !userProfile?.birth_date) {
-            alert('Complete seu perfil antes de enviar mensagens!');
-            window.location.href = 'painel.html';
-            return;
         }
 
-        localStorage.setItem('openChatWithUserId', userId);
-        window.location.href = 'mensagens.html';
+        // Atualizar estatísticas
+        await loadVipList();
+
+    } catch (error) {
+        console.error('Erro ao processar curtida:', error);
+        alert('Erro ao processar curtida. Tente novamente.');
+    }
+}
+
+function showMatchToast() {
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        font-weight: bold;
+        z-index: 10000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    `;
+    toast.textContent = '💝 Novo match!';
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+async function sendMessage(userId) {
+    if (!currentUser) return;
+    
+    // Verificar se o perfil está completo
+    if (!userProfile?.full_name || !userProfile?.birth_date) {
+        alert('Complete seu perfil antes de enviar mensagens!');
+        window.location.href = 'painel.html';
+        return;
     }
 
-    async function viewProfile(userId) {
-        if (!currentUser) return;
-        
-        // Registrar visita
-        if (window.registrarVisitaPerfil) {
-            await window.registrarVisitaPerfil(userId);
-        }
-        
-        localStorage.setItem('viewingProfileId', userId);
-        window.location.href = 'perfil.html';
+    localStorage.setItem('openChatWithUserId', userId);
+    window.location.href = 'mensagens.html';
+}
+
+async function viewProfile(userId) {
+    if (!currentUser) return;
+    
+    // Registrar visita
+    if (window.registrarVisitaPerfil) {
+        await window.registrarVisitaPerfil(userId);
     }
+    
+    localStorage.setItem('viewingProfileId', userId);
+    window.location.href = 'perfil.html';
+}
 
-    // ==================== FUNÇÕES AUXILIARES ====================
-    function calculateAge(birthDate) {
-        if (!birthDate) return null;
-        const today = new Date();
-        const birth = new Date(birthDate);
-        let age = today.getFullYear() - birth.getFullYear();
-        const monthDiff = today.getMonth() - birth.getMonth();
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-            age--;
-        }
-        return age;
+// ==================== FUNÇÕES AUXILIARES ====================
+function calculateAge(birthDate) {
+    if (!birthDate) return null;
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--;
     }
+    return age;
+}
 
-    function formatZodiac(zodiac) {
-        const zodiacMap = {
-            'aries': 'Áries', 'taurus': 'Touro', 'gemini': 'Gêmeos', 'cancer': 'Câncer',
-            'leo': 'Leão', 'virgo': 'Virgem', 'libra': 'Libra', 'scorpio': 'Escorpião',
-            'sagittarius': 'Sagitário', 'capricorn': 'Capricórnio', 'aquarius': 'Aquário', 'pisces': 'Peixes'
-        };
-        return zodiacMap[zodiac?.toLowerCase()] || zodiac;
+function formatZodiac(zodiac) {
+    const zodiacMap = {
+        'aries': 'Áries', 'taurus': 'Touro', 'gemini': 'Gêmeos', 'cancer': 'Câncer',
+        'leo': 'Leão', 'virgo': 'Virgem', 'libra': 'Libra', 'scorpio': 'Escorpião',
+        'sagittarius': 'Sagitário', 'capricorn': 'Capricórnio', 'aquarius': 'Aquário', 'pisces': 'Peixes'
+    };
+    return zodiacMap[zodiac?.toLowerCase()] || zodiac;
+}
+
+function getZodiacIcon(zodiac) {
+    const zodiacIcons = {
+        'aries': '♈', 'taurus': '♉', 'gemini': '♊', 'cancer': '♋',
+        'leo': '♌', 'virgo': '♍', 'libra': '♎', 'scorpio': '♏',
+        'sagittarius': '♐', 'capricorn': '♑', 'aquarius': '♒', 'pisces': '♓'
+    };
+    return zodiacIcons[zodiac?.toLowerCase()] || '✨';
+}
+
+// ==================== DEBUG ====================
+async function debugVipList() {
+    console.group('🐛 DEBUG LISTA VIP');
+    
+    try {
+        // Verificar dados na vip_list
+        const { data: vipData, error: vipError } = await supabase
+            .from('vip_list')
+            .select('*')
+            .eq('user_id', currentUser.id);
+
+        console.log('📊 VIP_LIST:', {
+            error: vipError,
+            data: vipData,
+            count: vipData?.length || 0
+        });
+
+        // Verificar dados em pulses
+        const { data: pulsesData, error: pulsesError } = await supabase
+            .from('pulses')
+            .select('*')
+            .eq('user_to_id', currentUser.id)
+            .eq('status', 'active');
+
+        console.log('📈 PULSES:', {
+            error: pulsesError,
+            data: pulsesData,
+            count: pulsesData?.length || 0
+        });
+
+        // Verificar sistema Pulse
+        console.log('🎯 PULSE SYSTEM:', {
+            available: !!window.pulseSystem,
+            matches: window.pulseSystem?.getMatchesCount() || 0,
+            received: window.pulseSystem?.getReceivedPulsesCount() || 0
+        });
+
+    } catch (error) {
+        console.error('❌ Erro no debug:', error);
     }
+    
+    console.groupEnd();
+}
 
-    function getZodiacIcon(zodiac) {
-        const zodiacIcons = {
-            'aries': '♈', 'taurus': '♉', 'gemini': '♊', 'cancer': '♋',
-            'leo': '♌', 'virgo': '♍', 'libra': '♎', 'scorpio': '♏',
-            'sagittarius': '♐', 'capricorn': '♑', 'aquarius': '♒', 'pisces': '♓'
-        };
-        return zodiacIcons[zodiac?.toLowerCase()] || '✨';
-    }
+// ✅ CHAMAR DEBUG (opcional)
+setTimeout(debugVipList, 2000);
 
-    // ==================== EXPORTAR FUNÇÕES GLOBAIS ====================
-    window.handlePulse = handlePulse;
-    window.sendMessage = sendMessage;
-    window.viewProfile = viewProfile;
+// ==================== EXPORTAR FUNÇÕES GLOBAIS ====================
+window.handlePulse = handlePulse;
+window.sendMessage = sendMessage;
+window.viewProfile = viewProfile;
+window.debugVipList = debugVipList;
 
-    console.log('✅ Página Lista VIP carregada!');
+console.log('✅ Página Lista VIP carregada!');
 </script>
 </body>
 </html>

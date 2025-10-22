@@ -2121,35 +2121,40 @@ async function initializeApp() {
             }
         }
         
-        // ✅ CORREÇÃO: Sistema Pulse MELHORADO
+        // ✅ CORREÇÃO CRÍTICA: Sistema Pulse com CARREGAMENTO GARANTIDO
         console.log('🎯 Inicializando sistema Pulse...');
+        
+        // PRIMEIRO: Garantir que o home-like.js carregou
+        let pulseScriptLoaded = false;
         let pulseTentativas = 0;
-        while (pulseTentativas < 8) {
-            if (window.initializePulseSystem) {
-                console.log('✅ Sistema Pulse encontrado! Inicializando...');
-                window.pulseSystem = await window.initializePulseSystem(supabase, currentUser);
-                console.log('✅ Sistema Pulse inicializado com sucesso!');
-                
-                // ✅ CORREÇÃO: Sempre verificar premium para lista VIP
-                if (window.pulseSystem) {
-                    console.log('⭐ Verificando status premium para lista VIP...');
-                    if (window.pulseSystem.userProfile?.is_premium) {
-                        console.log('🎉 Usuário Premium - Ativando lista VIP');
-                        window.pulseSystem.addVipCardsToHome().catch(console.error);
-                    } else {
-                        console.log('ℹ️ Usuário Free - Sem acesso à lista VIP');
-                    }
-                }
+        
+        while (pulseTentativas < 10 && !pulseScriptLoaded) {
+            if (window.initializePulseSystem && window.PulseSystem) {
+                console.log('✅ home-like.js carregado!');
+                pulseScriptLoaded = true;
                 break;
             }
-            
-            console.log('⏳ Aguardando sistema Pulse...', pulseTentativas + 1);
-            await new Promise(resolve => setTimeout(resolve, 300));
+            console.log('⏳ Aguardando home-like.js...', pulseTentativas + 1);
+            await new Promise(resolve => setTimeout(resolve, 500));
             pulseTentativas++;
+        }
+        
+        if (pulseScriptLoaded) {
+            console.log('🎯 Inicializando Pulse System...');
+            window.pulseSystem = await window.initializePulseSystem(supabase, currentUser);
+            console.log('✅ Sistema Pulse inicializado com sucesso!');
             
-            if (pulseTentativas === 8) {
-                console.error('❌ Sistema Pulse não carregou');
+            // ✅ CORREÇÃO: Adicionar cards VIP com DELAY para garantir que a DOM esteja pronta
+            if (window.pulseSystem && userProfile?.is_premium) {
+                console.log('⭐ Usuário Premium - Agendando cards VIP...');
+                setTimeout(() => {
+                    window.pulseSystem.addVipCardsToHome().catch(error => {
+                        console.error('❌ Erro ao adicionar cards VIP:', error);
+                    });
+                }, 1500); // Delay maior para garantir DOM
             }
+        } else {
+            console.error('❌ home-like.js não carregou após 10 tentativas');
         }
         
         // ✅ CORREÇÃO: Sistema de notificações
@@ -2169,6 +2174,25 @@ async function initializeApp() {
         console.error('❌ Erro crítico na inicialização:', error);
     }
 }
+
+// ✅ ADICIONAR ESTA FUNÇÃO NO FINAL DO ARQUIVO (fora do initializeApp)
+// ✅ GARANTIR CARREGAMENTO TARDIO DO PULSE SYSTEM
+setTimeout(() => {
+    if (currentUser && window.initializePulseSystem && !window.pulseSystem) {
+        console.log('🔄 Inicialização tardia do Pulse System...');
+        window.initializePulseSystem(supabase, currentUser).then(system => {
+            window.pulseSystem = system;
+            console.log('✅ Pulse System carregado via inicialização tardia');
+            
+            // Tentar adicionar cards VIP se for premium
+            if (userProfile?.is_premium) {
+                setTimeout(() => {
+                    window.pulseSystem.addVipCardsToHome().catch(console.error);
+                }, 1000);
+            }
+        }).catch(console.error);
+    }
+}, 5000);
 
 // ✅ FALLBACK PARA SISTEMA DE BLOQUEIO
 function initializeBlockSystemFallback() {
