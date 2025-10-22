@@ -5,9 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Home - PulseLove</title>
   
- 
-  
-  <!-- Scripts existentes (NÃO MODIFICAR) -->
+  <!-- Scripts existentes -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="home-block.js"></script>
   <script src="home-visitante.js"></script>
@@ -15,260 +13,412 @@
   <script src="home-pulse.js"></script>
   <script src="js/home-status.js"></script>
 
-  <!-- CORRIGINDO OS LINKS CSS -->
-<link rel="stylesheet" href="home-main.css">
-<link rel="stylesheet" href="home-cards.css">
-<link rel="stylesheet" href="home-interactions.css">
-<link rel="stylesheet" href="home-visitante.css">
-<link rel="stylesheet" href="home-mobile.css">
+  <!-- CSS existentes -->
+  <link rel="stylesheet" href="home-main.css">
+  <link rel="stylesheet" href="home-cards.css">
+  <link rel="stylesheet" href="home-interactions.css">
+  <link rel="stylesheet" href="home-visitante.css">
+  <link rel="stylesheet" href="home-mobile.css">
+
+  <style>
+  /* 🔥 DESIGN RADICALMENTE NOVO */
+  :root {
+    --dourado: #C6A664;
+    --dourado-claro: #D4B978;
+    --vinho: #A65B5B;
+    --vinho-escuro: #8A4A4A;
+    --grafite: #2A2A2A;
+    --preto: #1A1A1A;
+    --fundo: #0F0F0F;
+    --card: #1A1A1A;
+    --texto: #FFFFFF;
+    --texto-cinza: #AAAAAA;
+  }
+
+  body {
+    background: var(--fundo);
+    color: var(--texto);
+    font-family: 'Segoe UI', sans-serif;
+  }
+
+  /* HEADER PREMIUM */
+  header {
+    background: var(--preto);
+    border-bottom: 3px solid var(--dourado);
+    padding: 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+
+  .header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 80px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  .logo img {
+    height: 50px;
+    filter: brightness(0) invert(1);
+  }
+
+  .nav-principal {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .nav-item {
+    padding: 10px 20px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 25px;
+    color: var(--texto);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-weight: 500;
+  }
+
+  .nav-item:hover {
+    background: var(--dourado);
+    color: var(--preto);
+    transform: translateY(-2px);
+  }
+
+  .user-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .user-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: var(--dourado);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--preto);
+    font-weight: bold;
+    border: 2px solid var(--dourado-claro);
+  }
+
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,0.05);
+    padding: 8px 15px;
+    border-radius: 25px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .user-name {
+    font-weight: 600;
+    color: var(--texto);
+  }
+
+  .user-status {
+    background: var(--vinho);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: bold;
+  }
+
+  .user-status.premium {
+    background: var(--dourado);
+    color: var(--preto);
+  }
+
+  /* HERO SECTION */
+  .hero-section {
+    background: linear-gradient(135deg, var(--preto) 0%, var(--grafite) 100%);
+    padding: 60px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .hero-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    text-align: center;
+  }
+
+  .hero-title {
+    font-size: 3rem;
+    font-weight: 300;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, var(--dourado), var(--vinho));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .hero-subtitle {
+    font-size: 1.2rem;
+    color: var(--texto-cinza);
+    margin-bottom: 30px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* STATS CARDS */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+  }
+
+  .stat-card {
+    background: var(--card);
+    padding: 30px 20px;
+    border-radius: 15px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: all 0.3s ease;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--dourado);
+  }
+
+  .stat-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--dourado);
+    margin-bottom: 10px;
+  }
+
+  .stat-label {
+    color: var(--texto-cinza);
+    font-size: 0.9rem;
+  }
+
+  /* ACTIONS GRID */
+  .actions-section {
+    max-width: 1200px;
+    margin: 60px auto;
+    padding: 0 20px;
+  }
+
+  .section-title {
+    font-size: 2rem;
+    margin-bottom: 30px;
+    text-align: center;
+    color: var(--texto);
+  }
+
+  .actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  .action-card {
+    background: var(--card);
+    padding: 30px;
+    border-radius: 15px;
+    text-decoration: none;
+    color: var(--texto);
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: all 0.3s ease;
+    text-align: center;
+  }
+
+  .action-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--dourado);
+    background: rgba(198, 166, 100, 0.1);
+  }
+
+  .action-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+  }
+
+  .action-title {
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+    color: var(--dourado);
+  }
+
+  .action-desc {
+    color: var(--texto-cinza);
+    font-size: 0.9rem;
+  }
+
+  /* FOOTER */
+  footer {
+    background: var(--preto);
+    border-top: 3px solid var(--dourado);
+    padding: 40px 0 20px;
+    margin-top: 60px;
+  }
+
+  .footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 40px;
+  }
+
+  .footer-column h3 {
+    color: var(--dourado);
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+  }
+
+  .footer-column p, .footer-column a {
+    color: var(--texto-cinza);
+    text-decoration: none;
+    line-height: 1.6;
+  }
+
+  .footer-column a:hover {
+    color: var(--dourado);
+  }
+
+  .copyright {
+    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    margin-top: 30px;
+    color: var(--texto-cinza);
+    font-size: 0.8rem;
+  }
+  </style>
 </head>
 <body>
-  <!-- NOVO HEADER SIMPLIFICADO -->
+  <!-- HEADER PREMIUM -->
   <header>
-    <div class="container">
-      <div class="header-content">
-        <button id="hamburgerBtn">☰</button>
-        
-        <!-- NOVA LOGO -->
-        <div class="logo">
-          <img src="logopulselove.png" alt="PulseLove">
+    <div class="header-content">
+      <!-- Logo -->
+      <div class="logo">
+        <img src="logopulselove.png" alt="PulseLove">
+      </div>
+
+      <!-- Navegação Principal -->
+      <nav class="nav-principal">
+        <a href="busca.html" class="nav-item">🔍 Buscar</a>
+        <a href="mensagens.html" class="nav-item">💬 Mensagens</a>
+        <a href="notificacoes.html" class="nav-item">🔔 Notificações</a>
+      </nav>
+
+      <!-- Área do Usuário -->
+      <div class="user-header">
+        <div class="user-info">
+          <div class="user-avatar" id="userAvatar">
+            <img class="user-avatar-img" src="" alt="Avatar">
+            <div class="user-avatar-fallback">U</div>
+          </div>
+          <span class="user-name" id="userNickname">Usuário</span>
+          <div class="user-status" id="userStatus">Free</div>
         </div>
-        
-        <!-- MENU SIMPLIFICADO -->
-        <div class="user-menu">
-          <a href="mensagens.html" class="btn btn-outline">💬 Mensagens</a>
-          <a href="busca.html" class="btn btn-outline">🔍 Buscar</a>
-          <a href="notificacoes.html" class="btn btn-outline">🔔</a>
-          <button class="btn btn-outline" id="logoutBtn">Sair</button>
-        </div>
+        <button class="nav-item" id="logoutBtn">🚪 Sair</button>
       </div>
     </div>
   </header>
 
-  <!-- MENU MOBILE SIMPLIFICADO -->
-  <div id="mobileMenu">
-    <button id="closeMobileMenu">×</button>
-    
-    <div class="mobile-user-info">
-      <div class="user-avatar" id="mobileUserAvatar">
-        <img class="user-avatar-img" src="" alt="Avatar" style="display: none;">
-        <div class="user-avatar-fallback">U</div>
-      </div>
-      <div id="mobileUserNickname">Usuário</div>
-      <div class="user-status-badge mobile" id="mobileUserStatusBadge">
-        <span class="badge-text">Free</span>
-      </div>
+  <!-- HERO SECTION -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <h1 class="hero-title">PulseLove</h1>
+      <p class="hero-subtitle">Quando o coração pula no mesmo ritmo, o amor acontece</p>
     </div>
+  </section>
 
-    <div class="mobile-nav">
-      <a href="mensagens.html" class="btn btn-outline">💬 Mensagens</a>
-      <a href="busca.html" class="btn btn-outline">🔍 Buscar</a>
-      <a href="notificacoes.html" class="btn btn-outline">🔔 Notificações</a>
-      <a href="painel.html" class="btn btn-outline">👤 Perfil</a>
-      <a href="lista-vip.html" class="btn btn-outline">⭐ Lista VIP</a>
-      <a href="blocks.html" class="btn btn-outline">🚫 Bloqueados</a>
-      <a href="princing.html" class="btn btn-premium">💎 Premium</a>
-      <button class="btn btn-outline" id="mobileLogoutBtn">Sair</button>
+  <!-- STATS -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-number" id="usersOnline">0</div>
+      <div class="stat-label">Online Agora</div>
     </div>
-  </div>
-
-  <!-- CONTEÚDO PRINCIPAL REDESENHADO -->
-  <main class="main-content">
-    <div class="container">
-      
-      <!-- NOVA WELCOME SECTION COM AVATAR -->
-      <section class="welcome-section">
-        <div class="user-profile-display">
-          <!-- AVATAR COM BADGE ELEGANTE -->
-          <div class="user-avatar-container">
-            <div class="user-avatar-large" id="welcomeUserAvatar">
-              <img class="user-avatar-img" src="" alt="Avatar">
-              <div class="user-avatar-fallback">U</div>
-            </div>
-            <!-- BADGE DE STATUS -->
-            <div class="user-status-badge" id="userStatusBadge">
-              <span class="badge-text">Free</span>
-              <div class="badge-glow"></div>
-            </div>
-          </div>
-          
-          <!-- INFOS DO USUÁRIO -->
-          <div class="user-welcome-info">
-            <h2>Olá, <span id="welcomeNickname">Amoroso</span>! ❤️</h2>
-            <p class="welcome-message">Quando o coração pula no mesmo ritmo, o amor acontece.</p>
-            <div class="premium-upsell">
-              <a href="princing.html" class="btn btn-premium">
-                💎 Tornar-se Premium
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- USER STATS -->
-      <div class="user-stats">
-        <div class="stat-card">
-          <div class="stat-number" id="usersOnline">0</div>
-          <div class="stat-label">Pessoas Online</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number" id="totalUsers">0</div>
-          <div class="stat-label">Usuários na Plataforma</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number" id="newMatches">0</div>
-          <div class="stat-label">Novos Matches</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number" id="profileViews">0</div>
-          <div class="stat-label">Visualizações do Perfil</div>
-        </div>
-      </div>
-
-      <!-- VISITANTES -->
-      <section class="visitors-section">
-        <div class="visitors-card">
-          <div class="visitors-header">
-            <h2>👀 Quem te visitou</h2>
-            <div class="visitors-count" id="visitorsCount">0 visitas</div>
-          </div>
-
-          <!-- Conteúdo Premium -->
-          <div class="premium-content" id="premiumVisitors" style="display: none;">
-            <div class="visitors-grid" id="visitorsGrid">
-              <div class="visitors-loading">
-                <div class="visitors-spinner"></div>
-                <p>Carregando visitantes...</p>
-              </div>
-            </div>
-            
-            <div class="visitors-actions">
-              <button class="btn btn-primary" onclick="window.location.href='visitante.html'">
-                Ver todos os visitantes
-              </button>
-            </div>
-          </div>
-
-          <!-- Conteúdo Free -->
-          <div class="free-content" id="freeVisitors">
-            <div class="icon">👀</div>
-            <h3>Descubra quem se interessou por você!</h3>
-            <p>
-              <span id="freeVisitorsCount">0 pessoas</span> visitaram seu perfil esta semana
-            </p>
-            <a href="princing.html" class="btn btn-premium">
-              Seja Premium para ver
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <!-- USERS GRID -->
-      <section class="users-section">
-        <div class="section-header">
-          <h2>Conheça Novas Pessoas</h2>
-          <a href="princing.html" class="btn btn-premium btn-sm">Premium</a>
-        </div>
-        <div class="users-grid" id="usersGrid">
-          <div class="loading">
-            <div class="spinner"></div>
-            <p>Carregando usuários...</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- QUICK ACTIONS - AGORA 2 LINHAS DE 3 CARDS -->
-      <section class="quick-actions">
-        <h2>Ações Rápidas</h2>
-        <div class="actions-grid">
-          <a href="painel.html" class="action-card">
-            <div class="action-icon">👤</div>
-            <h3>Completar Perfil</h3>
-            <p>Adicione mais informações ao seu perfil</p>
-          </a>
-          <a href="busca.html" class="action-card">
-            <div class="action-icon">🔍</div>
-            <h3>Buscar Pessoas</h3>
-            <p>Encontre pessoas com interesses similares</p>
-          </a>
-          <a href="mensagens.html" class="action-card">
-            <div class="action-icon">💬</div>
-            <h3>Minhas Mensagens</h3>
-            <p>Ver e responder mensagens</p>
-          </a>
-          <a href="lista-vip.html" class="action-card">
-            <div class="action-icon">⭐</div>
-            <h3>Lista VIP</h3>
-            <p>Seus matches preferidos</p>
-          </a>
-          <a href="blocks.html" class="action-card">
-            <div class="action-icon">🚫</div>
-            <h3>Usuários Bloqueados</h3>
-            <p>Gerencie usuários que você bloqueou</p>
-          </a>
-          <a href="princing.html" class="action-card">
-            <div class="action-icon">💎</div>
-            <h3>Plano Premium</h3>
-            <p>Desbloqueie recursos exclusivos</p>
-          </a>
-        </div>
-      </section>
+    <div class="stat-card">
+      <div class="stat-number" id="totalUsers">0</div>
+      <div class="stat-label">Usuários Totais</div>
     </div>
-  </main>
-
-  <!-- MODAIS (MANTIDOS IGUAIS) -->
-  <div class="modal-overlay" id="reportModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>⚠️ Reportar Usuário</h3>
-        <button class="close-modal" onclick="closeReportModal()">×</button>
-      </div>
-      <div id="reportModalContent">
-        <!-- Conteúdo do modal reporte -->
-      </div>
+    <div class="stat-card">
+      <div class="stat-number" id="newMatches">0</div>
+      <div class="stat-label">Novos Matches</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="profileViews">0</div>
+      <div class="stat-label">Suas Visualizações</div>
     </div>
   </div>
 
-  <div class="modal-overlay" id="blockModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>🚫 Bloquear Usuário</h3>
-        <button class="close-modal" onclick="closeBlockModal()">×</button>
-      </div>
-      <div class="modal-body">
-        <p>Você está bloqueando: <strong id="blockUserName">Usuário</strong></p>
-      </div>
+  <!-- ACTIONS -->
+  <section class="actions-section">
+    <h2 class="section-title">Ações Rápidas</h2>
+    <div class="actions-grid">
+      <a href="painel.html" class="action-card">
+        <div class="action-icon">👤</div>
+        <h3 class="action-title">Meu Perfil</h3>
+        <p class="action-desc">Complete e atualize suas informações</p>
+      </a>
+      <a href="busca.html" class="action-card">
+        <div class="action-icon">🔍</div>
+        <h3 class="action-title">Buscar Pessoas</h3>
+        <p class="action-desc">Encontre conexões especiais</p>
+      </a>
+      <a href="mensagens.html" class="action-card">
+        <div class="action-icon">💬</div>
+        <h3 class="action-title">Mensagens</h3>
+        <p class="action-desc">Converse com seus matches</p>
+      </a>
+      <a href="lista-vip.html" class="action-card">
+        <div class="action-icon">⭐</div>
+        <h3 class="action-title">Lista VIP</h3>
+        <p class="action-desc">Seus favoritos especiais</p>
+      </a>
+      <a href="blocks.html" class="action-card">
+        <div class="action-icon">🚫</div>
+        <h3 class="action-title">Bloqueados</h3>
+        <p class="action-desc">Gerencie usuários bloqueados</p>
+      </a>
+      <a href="princing.html" class="action-card">
+        <div class="action-icon">💎</div>
+        <h3 class="action-title">Premium</h3>
+        <p class="action-desc">Recursos exclusivos</p>
+      </a>
     </div>
-  </div>
+  </section>
 
   <!-- FOOTER -->
   <footer>
-    <div class="container">
-      <div class="footer-content">
-        <div class="footer-column">
-          <h3>PulseLove</h3>
-          <p>Uma plataforma segura e discreta para conectar corações e construir relacionamentos genuínos.</p>
-        </div>
-        <div class="footer-column">
-          <h3>Links Rápidos</h3>
-          <ul>
-            <li><a href="index.html">Página Inicial</a></li>
-            <li><a href="princing.html">Planos Premium</a></li>
-            <li><a href="#como-funciona">Como Funciona</a></li>
-          </ul>
-        </div>
-        <div class="footer-column">
-          <h3>Suporte</h3>
-          <ul>
-            <li><a href="#">Central de Ajuda</a></li>
-            <li><a href="#">Política de Privacidade</a></li>
-            <li><a href="#">Termos de Uso</a></li>
-          </ul>
-        </div>
+    <div class="footer-content">
+      <div class="footer-column">
+        <h3>PulseLove</h3>
+        <p>Conectando corações através de pulsações sincronizadas. Uma experiência única em relacionamentos.</p>
       </div>
-      <div class="copyright">
-        <p>&copy; 2024 PulseLove. Todos os direitos reservados.</p>
+      <div class="footer-column">
+        <h3>Navegação</h3>
+        <a href="busca.html">Buscar Pessoas</a><br>
+        <a href="mensagens.html">Mensagens</a><br>
+        <a href="princing.html">Planos Premium</a>
       </div>
+      <div class="footer-column">
+        <h3>Suporte</h3>
+        <a href="#">Ajuda</a><br>
+        <a href="#">Privacidade</a><br>
+        <a href="#">Termos</a>
+      </div>
+    </div>
+    <div class="copyright">
+      &copy; 2024 PulseLove. Todos os direitos reservados.
     </div>
   </footer>
 <script>
