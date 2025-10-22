@@ -558,437 +558,149 @@ const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 let currentUser = null;
 let userProfile = null;
-let pulseSystem = null;
 
-// ==================== DEBUG COMPLETO ====================
-async function debugVipList() {
-    console.log('🔍 INICIANDO DEBUG DA LISTA VIP...');
-    
-    try {
-        // 1. Verificar autenticação
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
-        console.log('✅ Autenticação:', user ? `Usuário ${user.email}` : 'NÃO AUTENTICADO');
-        
-        if (!user) {
-            console.error('❌ ERRO: Usuário não autenticado');
-            return;
-        }
-
-        // 2. Verificar perfil
-        const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('id, nickname, is_premium')
-            .eq('id', user.id)
-            .single();
-            
-        console.log('✅ Perfil:', profile ? `Nickname: ${profile.nickname}, Premium: ${profile.is_premium}` : 'PERFIL NÃO ENCONTRADO');
-        
-        if (profileError) {
-            console.error('❌ ERRO Perfil:', profileError);
-        }
-
-        // 3. Verificar VIP_LIST diretamente
-        console.log('🔍 Verificando tabela vip_list...');
-        const { data: vipData, error: vipError } = await supabase
-            .from('vip_list')
-            .select('*')
-            .eq('user_id', user.id);
-
-        console.log('✅ VIP_LIST:', {
-            registros: vipData?.length || 0,
-            erro: vipError,
-            dados: vipData
-        });
-
-        if (vipError) {
-            console.error('❌ ERRO VIP_LIST:', vipError);
-        }
-
-        // 4. Verificar pulses
-        console.log('🔍 Verificando tabela pulses...');
-        const { data: pulsesData, error: pulsesError } = await supabase
-            .from('pulses')
-            .select('*')
-            .eq('user_from_id', user.id)
-            .eq('status', 'active');
-
-        console.log('✅ PULSES:', {
-            curtidasEnviadas: pulsesData?.length || 0,
-            erro: pulsesError
-        });
-
-    } catch (error) {
-        console.error('💥 ERRO NO DEBUG:', error);
-    }
-}
-
-// ==================== INICIALIZAÇÃO ====================
+// ==================== INICIALIZAÇÃO SIMPLIFICADA ====================
 async function initializeVipPage() {
     try {
-        console.log('🚀 [DEBUG] Iniciando página Lista VIP...');
+        console.log('🚀 Iniciando página Lista VIP...');
         
-        // ✅ DEBUG: Verificar autenticação
-        const { data: { user }, error } = await supabase.auth.getUser();
-        console.log('🔍 [DEBUG] Status autenticação:', {
-            user: user ? `ID: ${user.id}, Email: ${user.email}` : 'NÃO AUTENTICADO',
-            error: error
-        });
-        
-        if (error || !user) {
-            console.error('❌ Erro de autenticação:', error);
+        // Verificar autenticação
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
             window.location.href = 'login.html';
             return;
         }
 
         currentUser = user;
-        console.log('✅ Usuário autenticado:', user.email);
+        console.log('✅ Usuário:', user.email);
 
-        // ✅ CORREÇÃO: Carregar perfil com tratamento de erro
+        // Carregar perfil
         await loadUserProfile();
         
-        // ✅ VERIFICAÇÃO CRÍTICA: Só carregar lista se for premium
-        console.log('🔍 [DEBUG] Verificando status premium:', userProfile?.is_premium);
+        // Verificar premium
         if (!userProfile?.is_premium) {
-            console.log('ℹ️ Usuário não premium - mostrando mensagem');
             showPremiumRequired();
             return;
         }
 
-        console.log('🎯 Usuário PREMIUM - Inicializando sistemas...');
-        
-        // Inicializar Pulse System para Lista VIP
-        await initializePulseSystemForVip();
-        
-        // Carregar lista VIP
-        console.log('🔄 Carregando lista VIP...');
+        console.log('🎯 Usuário PREMIUM - Carregando lista...');
         await loadVipList();
-
-        // Configurar atualização automática
         setupAutoRefresh();
 
     } catch (error) {
-        console.error('❌ Erro página VIP:', error);
-        showError('Erro ao carregar lista VIP: ' + error.message);
+        console.error('❌ Erro:', error);
+        showError('Erro ao carregar lista VIP.');
     }
 }
 
-// ✅✅✅ CORREÇÃO: Função loadUserProfile com tratamento robusto
+// ==================== FUNÇÕES PRINCIPAIS ====================
 async function loadUserProfile() {
     try {
-        console.log('🔍 Carregando perfil do usuário...');
-        
         const { data: profile, error } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', currentUser.id)
             .single();
 
-        if (error) {
-            console.error('❌ Erro ao carregar perfil:', error);
-            // Fallback: criar perfil mínimo
-            userProfile = {
-                id: currentUser.id,
-                nickname: currentUser.email?.split('@')[0] || 'Usuário',
-                is_premium: false
-            };
-            console.log('🔄 Usando perfil fallback:', userProfile);
-            return;
-        }
-
+        if (error) throw error;
         userProfile = profile;
-        console.log('✅ Perfil carregado:', {
-            nickname: profile.nickname,
-            premium: profile.is_premium,
-            id: profile.id
-        });
+        console.log('✅ Perfil:', profile.nickname, 'Premium:', profile.is_premium);
 
     } catch (error) {
-        console.error('❌ Erro crítico ao carregar perfil:', error);
-        // Fallback de emergência
-        userProfile = {
-            id: currentUser.id,
-            nickname: 'Usuário',
-            is_premium: false
-        };
+        console.error('❌ Erro perfil:', error);
+        userProfile = { id: currentUser.id, nickname: 'Usuário', is_premium: false };
     }
 }
 
-// ✅✅✅ CORREÇÃO: Inicializar Pulse System na Lista VIP
-async function initializePulseSystemForVip() {
-    try {
-        console.log('🎯 Inicializando Pulse System para Lista VIP...');
-        
-        // Tentar usar função global se disponível
-        if (window.initializePulseSystemForVip) {
-            pulseSystem = await window.initializePulseSystemForVip();
-        } else {
-            // Fallback: criar instância diretamente
-            console.log('🔄 Criando Pulse System diretamente...');
-            pulseSystem = new PulseSystem(supabase, currentUser);
-            await pulseSystem.initialize();
-        }
-        
-        console.log('✅ Pulse System inicializado para Lista VIP');
-        return pulseSystem;
-        
-    } catch (error) {
-        console.error('❌ Erro inicializar Pulse System:', error);
-        // Continuar mesmo sem Pulse System
-        return null;
-    }
-}
-
-// ✅✅✅ CORREÇÃO: Sistema Pulse para Lista VIP
-class PulseSystem {
-    constructor(supabase, currentUser) {
-        this.supabase = supabase;
-        this.currentUser = currentUser;
-        this.pulsesData = { 
-            given: new Set(), 
-            received: new Set(), 
-            matches: new Set() 
-        };
-        this.userProfile = null;
-    }
-
-    async initialize() {
-        try {
-            console.log('🎯 Iniciando Pulse System...');
-            if (!this.currentUser) return;
-            
-            await this.loadUserProfile();
-            await this.loadPulsesData();
-            console.log('✅ Pulse System: Pronto!');
-        } catch (error) {
-            console.error('❌ Erro inicialização Pulse:', error);
-        }
-    }
-
-    async loadUserProfile() {
-        try {
-            const { data: profile, error } = await this.supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', this.currentUser.id)
-                .single();
-                
-            if (error) throw error;
-            this.userProfile = profile;
-            console.log('✅ Perfil carregado no Pulse:', profile.nickname, 'Premium:', profile.is_premium);
-        } catch (error) {
-            console.error('❌ Erro carregar perfil:', error);
-        }
-    }
-
-    async loadPulsesData() {
-        try {
-            // Curtidas que EU dei
-            const { data: givenPulses } = await this.supabase
-                .from('pulses')
-                .select('user_to_id')
-                .eq('user_from_id', this.currentUser.id)
-                .eq('status', 'active');
-
-            // Curtidas que EU recebi
-            const { data: receivedPulses } = await this.supabase
-                .from('pulses')
-                .select('user_from_id')
-                .eq('user_to_id', this.currentUser.id)
-                .eq('status', 'active');
-
-            if (givenPulses) {
-                givenPulses.forEach(pulse => this.pulsesData.given.add(pulse.user_to_id));
-            }
-
-            if (receivedPulses) {
-                receivedPulses.forEach(pulse => {
-                    this.pulsesData.received.add(pulse.user_from_id);
-                    if (this.pulsesData.given.has(pulse.user_from_id)) {
-                        this.pulsesData.matches.add(pulse.user_from_id);
-                    }
-                });
-            }
-
-            console.log('📊 Pulses carregados:', {
-                dados: this.pulsesData.given.size,
-                recebidos: this.pulsesData.received.size,
-                matches: this.pulsesData.matches.size
-            });
-
-        } catch (error) {
-            console.error('❌ Erro carregar pulses:', error);
-        }
-    }
-
-    async getVipList() {
-        try {
-            console.log('🔍 Buscando lista VIP do banco...');
-            const { data: vipUsers, error } = await this.supabase
-                .from('vip_list')
-                .select(`
-                    vip_user_id,
-                    created_at,
-                    profiles:vip_user_id (
-                        id, nickname, avatar_url, birth_date, zodiac, profession,
-                        user_details (gender, interests, description, looking_for)
-                    )
-                `)
-                .eq('user_id', this.currentUser.id)
-                .order('created_at', { ascending: false });
-
-            if (error) {
-                console.error('❌ Erro na consulta VIP_LIST:', error);
-                throw error;
-            }
-            
-            console.log('📋 VIP List carregada:', vipUsers?.length || 0, 'usuários');
-            return vipUsers || [];
-
-        } catch (error) {
-            console.error('❌ Erro buscar lista VIP:', error);
-            return [];
-        }
-    }
-
-    // Métodos de utilidade
-    isUserLiked(userId) {
-        return this.pulsesData.given.has(userId);
-    }
-
-    isMatch(userId) {
-        return this.pulsesData.matches.has(userId);
-    }
-
-    getMatchesCount() {
-        return this.pulsesData.matches.size;
-    }
-}
-
-// ✅ FUNÇÃO DE ATUALIZAÇÃO AUTOMÁTICA
-function setupAutoRefresh() {
-    console.log('⏰ Configurando atualização automática...');
-    
-    // Atualizar a cada 5 segundos
-    setInterval(() => {
-        if (localStorage.getItem('vipListUpdate') === 'true') {
-            console.log('🔄 Atualização detectada! Recarregando...');
-            localStorage.removeItem('vipListUpdate');
-            loadVipList().catch(console.error);
-        }
-    }, 5000);
-    
-    // Atualizar quando a página ficar visível
-    document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) {
-            console.log('📄 Página visível - atualizando...');
-            loadVipList().catch(console.error);
-        }
-    });
-}
-
-// ✅✅✅ FUNÇÃO PRINCIPAL CORRIGIDA: Carregar Lista VIP
 async function loadVipList() {
     try {
-        console.log('🔄 [DEBUG] Iniciando loadVipList...');
+        console.log('📋 Carregando lista VIP...');
         
-        // ✅ VERIFICAÇÃO EXTRA de autenticação
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            console.error('❌ Usuário não autenticado no loadVipList');
-            showError('Usuário não autenticado');
-            return;
-        }
-
-        // ✅ VERIFICAÇÃO EXTRA de perfil
-        if (!userProfile) {
-            await loadUserProfile();
-        }
-
-        console.log('🔍 [DEBUG] Status premium:', userProfile?.is_premium);
-        
-        // ✅ VERIFICAÇÃO: Só carregar se for premium
         if (!userProfile?.is_premium) {
-            console.log('ℹ️ Usuário não premium - mostrando mensagem');
             showPremiumRequired();
             return;
         }
 
         // Mostrar loading
-        const vipGrid = document.getElementById('vipUsersGrid');
-        if (vipGrid) {
-            vipGrid.innerHTML = `
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p>Carregando sua lista VIP...</p>
-                </div>
-            `;
-        }
+        showLoading();
 
-        console.log('🔍 [DEBUG] Buscando dados da vip_list...');
-        
-        // ✅ BUSCA DIRETA COM TRATAMENTO DE ERRO MELHORADO
+        // ✅✅✅ QUERY OTIMIZADA - Buscar dados completos
         const { data: vipUsers, error } = await supabase
             .from('vip_list')
             .select(`
                 vip_user_id,
                 created_at,
-                profiles:vip_user_id (
+                profiles!vip_list_vip_user_id_fkey (
                     id, nickname, avatar_url, birth_date, zodiac, profession,
                     user_details (gender, interests, description, looking_for)
                 )
             `)
-            .eq('user_id', user.id)
+            .eq('user_id', currentUser.id)
             .order('created_at', { ascending: false });
 
         if (error) {
-            console.error('❌ ERRO na query vip_list:', error);
-            console.log('🔍 Detalhes do erro:', {
-                code: error.code,
-                message: error.message,
-                details: error.details
-            });
-            
-            // Tentar fallback sem relacionamento
-            console.log('🔄 Tentando fallback sem relacionamento...');
-            const { data: simpleVipUsers, error: simpleError } = await supabase
-                .from('vip_list')
-                .select('vip_user_id, created_at')
-                .eq('user_id', user.id)
-                .order('created_at', { ascending: false });
-                
-            if (simpleError) {
-                throw simpleError;
-            }
-            
-            console.log('✅ Fallback carregado:', simpleVipUsers?.length || 0, 'registros');
-            
-            if (!simpleVipUsers || simpleVipUsers.length === 0) {
-                showEmptyState();
-            } else {
-                // Carregar perfis manualmente
-                const usersWithProfiles = await loadProfilesManually(simpleVipUsers);
-                displayVipUsers(usersWithProfiles);
-                updateVipStats(usersWithProfiles);
-            }
+            console.error('❌ Erro query:', error);
+            // Tentar query alternativa
+            await loadVipListAlternative();
             return;
         }
 
-        console.log('✅ Dados carregados:', vipUsers?.length || 0, 'usuários');
+        console.log('✅ Dados recebidos:', vipUsers?.length || 0, 'usuários');
 
         if (!vipUsers || vipUsers.length === 0) {
             showEmptyState();
         } else {
+            // ✅ DEBUG: Verificar estrutura dos dados
+            console.log('🔍 Estrutura dos dados:');
+            vipUsers.forEach((user, index) => {
+                console.log(`Usuário ${index + 1}:`, {
+                    vip_user_id: user.vip_user_id,
+                    has_profile: !!user.profiles,
+                    profile_data: user.profiles
+                });
+            });
+            
             displayVipUsers(vipUsers);
             updateVipStats(vipUsers);
         }
 
     } catch (error) {
         console.error('❌ Erro carregar VIP:', error);
-        showError('Erro ao carregar lista VIP. ' + error.message);
+        showError('Erro ao carregar lista VIP.');
     }
 }
 
-// ✅✅✅ FUNÇÃO AUXILIAR: Carregar perfis manualmente
+// ✅✅✅ QUERY ALTERNATIVA SE A PRIMEIRA FALHAR
+async function loadVipListAlternative() {
+    try {
+        console.log('🔄 Usando query alternativa...');
+        
+        const { data: simpleVipUsers, error } = await supabase
+            .from('vip_list')
+            .select('vip_user_id, created_at')
+            .eq('user_id', currentUser.id)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        console.log('✅ Dados simples:', simpleVipUsers?.length || 0);
+
+        if (!simpleVipUsers || simpleVipUsers.length === 0) {
+            showEmptyState();
+        } else {
+            // Carregar perfis manualmente
+            const usersWithProfiles = await loadProfilesManually(simpleVipUsers);
+            displayVipUsers(usersWithProfiles);
+            updateVipStats(usersWithProfiles);
+        }
+
+    } catch (error) {
+        console.error('❌ Erro query alternativa:', error);
+        showEmptyState();
+    }
+}
+
+// ✅✅✅ CARREGAR PERFIS MANUALMENTE
 async function loadProfilesManually(vipUsers) {
     try {
         console.log('🔍 Carregando perfis manualmente...');
@@ -1003,8 +715,11 @@ async function loadProfilesManually(vipUsers) {
             .in('id', userIds);
 
         if (error) {
-            console.error('❌ Erro carregar perfis:', error);
-            return vipUsers; // Retornar dados básicos
+            console.error('❌ Erro perfis:', error);
+            return vipUsers.map(item => ({
+                ...item,
+                profiles: { id: item.vip_user_id, nickname: 'Usuário' }
+            }));
         }
 
         // Combinar dados
@@ -1012,19 +727,27 @@ async function loadProfilesManually(vipUsers) {
             const profile = profiles.find(p => p.id === vipItem.vip_user_id);
             return {
                 ...vipItem,
-                profiles: profile || { id: vipItem.vip_user_id, nickname: 'Usuário' }
+                profiles: profile || { 
+                    id: vipItem.vip_user_id, 
+                    nickname: 'Usuário',
+                    user_details: { description: 'Perfil não disponível' }
+                }
             };
         });
 
-        console.log('✅ Perfis carregados manualmente:', usersWithProfiles.length);
+        console.log('✅ Perfis carregados:', usersWithProfiles.length);
         return usersWithProfiles;
 
     } catch (error) {
-        console.error('❌ Erro carregar perfis manual:', error);
-        return vipUsers;
+        console.error('❌ Erro carregar perfis:', error);
+        return vipUsers.map(item => ({
+            ...item,
+            profiles: { id: item.vip_user_id, nickname: 'Usuário' }
+        }));
     }
 }
 
+// ✅✅✅ EXIBIR USUÁRIOS VIP
 function displayVipUsers(users) {
     const vipGrid = document.getElementById('vipUsersGrid');
     
@@ -1036,44 +759,20 @@ function displayVipUsers(users) {
     const userCards = users.map(user => createVipUserCard(user)).join('');
     vipGrid.innerHTML = userCards;
     
-    console.log(`✅ ${users.length} cards VIP exibidos`);
+    console.log(`✅ ${users.length} cards exibidos`);
 }
 
-// ✅✅✅ CORREÇÃO CRÍTICA: Função createVipUserCard com tratamento completo
+// ✅✅✅ CRIAR CARD DE USUÁRIO VIP
 function createVipUserCard(vipData) {
     try {
-        console.log('🎴 Criando card VIP:', vipData);
-        
-        // ✅✅✅ CORREÇÃO CRÍTICA: Verificar se os dados existem
+        // Verificar dados
         if (!vipData || !vipData.profiles) {
-            console.error('❌ Dados inválidos no vipData:', vipData);
-            return `
-                <div class="vip-user-card">
-                    <div class="vip-user-header">
-                        <div class="vip-user-avatar">
-                            <div class="vip-user-avatar-fallback">?</div>
-                        </div>
-                        <div class="vip-user-info">
-                            <div class="vip-user-name">Usuário não encontrado</div>
-                            <div class="vip-user-details">
-                                <div class="vip-user-detail">⭐ Dados indisponíveis</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="vip-user-bio">Perfil não disponível no momento.</div>
-                    
-                    <div class="vip-user-actions">
-                        <button class="btn btn-primary" disabled>💌 Mensagem</button>
-                        <button class="btn btn-pulse" disabled>💗 Indisponível</button>
-                        <button class="btn btn-outline" disabled>👀 Ver Perfil</button>
-                    </div>
-                </div>
-            `;
+            console.warn('⚠️ Dados incompletos:', vipData);
+            return createFallbackCard(vipData?.vip_user_id);
         }
 
         const user = vipData.profiles;
-        const userId = vipData.vip_user_id || user.id;
+        const userId = user.id || vipData.vip_user_id;
         const nickname = user.nickname || 'Usuário';
         const age = user.birth_date ? calculateAge(user.birth_date) : null;
         const zodiac = user.zodiac;
@@ -1081,17 +780,17 @@ function createVipUserCard(vipData) {
         const bio = user.user_details?.description || 'Sem descrição.';
         const likedAt = vipData.created_at ? new Date(vipData.created_at).toLocaleDateString('pt-BR') : 'Data desconhecida';
 
-        // Verificar se é match
-        const isMatch = pulseSystem ? pulseSystem.isMatch(userId) : false;
-
         // Avatar
         let avatarHtml = '';
         if (user.avatar_url) {
             const { data } = supabase.storage.from('avatars').getPublicUrl(user.avatar_url);
             avatarHtml = `
                 <div class="vip-user-avatar">
-                    <img class="vip-user-avatar-img" src="${data?.publicUrl}" alt="${nickname}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="vip-user-avatar-fallback" style="display: none;">${nickname.charAt(0).toUpperCase()}</div>
+                    <img class="vip-user-avatar-img" src="${data?.publicUrl}" alt="${nickname}" 
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="vip-user-avatar-fallback" style="display: none;">
+                        ${nickname.charAt(0).toUpperCase()}
+                    </div>
                 </div>
             `;
         } else {
@@ -1100,15 +799,6 @@ function createVipUserCard(vipData) {
                     <div class="vip-user-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
                 </div>
             `;
-        }
-
-        // Botão pulse
-        let pulseButtonText = '💗 Curtido';
-        let pulseButtonClass = 'btn-pulse active';
-        
-        if (isMatch) {
-            pulseButtonText = '💝 Match!';
-            pulseButtonClass = 'btn-pulse match';
         }
 
         return `
@@ -1129,162 +819,68 @@ function createVipUserCard(vipData) {
                 
                 <div class="vip-user-actions">
                     <button class="btn btn-primary" onclick="sendMessage('${userId}')">💌 Mensagem</button>
-                    <button class="btn ${pulseButtonClass}" onclick="handlePulse('${userId}', this)">${pulseButtonText}</button>
+                    <button class="btn btn-pulse active" onclick="handlePulse('${userId}', this)">💗 Curtido</button>
                     <button class="btn btn-outline" onclick="viewProfile('${userId}')">👀 Ver Perfil</button>
                 </div>
             </div>
         `;
     } catch (error) {
-        console.error('❌ Erro ao criar card VIP:', error);
-        return `
-            <div class="vip-user-card">
-                <div class="vip-user-header">
-                    <div class="vip-user-avatar">
-                        <div class="vip-user-avatar-fallback">!</div>
-                    </div>
-                    <div class="vip-user-info">
-                        <div class="vip-user-name">Erro no card</div>
-                        <div class="vip-user-details">
-                            <div class="vip-user-detail">⚠️ Tente recarregar</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
+        console.error('❌ Erro criar card:', error);
+        return createFallbackCard(vipData?.vip_user_id);
     }
 }
 
+// ✅✅✅ CARD DE FALLBACK
+function createFallbackCard(userId) {
+    return `
+        <div class="vip-user-card" data-user-id="${userId || 'unknown'}">
+            <div class="vip-user-header">
+                <div class="vip-user-avatar">
+                    <div class="vip-user-avatar-fallback">?</div>
+                </div>
+                <div class="vip-user-info">
+                    <div class="vip-user-name">Usuário</div>
+                    <div class="vip-user-details">
+                        <div class="vip-user-detail">⭐ Informações limitadas</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="vip-user-bio">Perfil temporariamente indisponível.</div>
+            
+            <div class="vip-user-actions">
+                <button class="btn btn-primary" onclick="showToast('Funcionalidade indisponível')">💌 Mensagem</button>
+                <button class="btn btn-pulse active" onclick="showToast('Você já curtiu este usuário')">💗 Curtido</button>
+                <button class="btn btn-outline" onclick="showToast('Perfil indisponível')">👀 Ver Perfil</button>
+            </div>
+        </div>
+    `;
+}
+
+// ✅✅✅ ATUALIZAR ESTATÍSTICAS
 function updateVipStats(users) {
     const totalLikes = users.length;
-    
-    // Calcular matches
-    const mutualMatches = users.filter(user => {
-        return pulseSystem ? pulseSystem.isMatch(user.vip_user_id) : false;
+    const mutualMatches = 0; // Simplificado por enquanto
+    const newThisWeek = users.filter(user => {
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        return new Date(user.created_at) > oneWeekAgo;
     }).length;
 
-    // Calcular novos esta semana
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    const newThisWeek = users.filter(user => 
-        new Date(user.created_at) > oneWeekAgo
-    ).length;
-
-    // Atualizar UI
     document.getElementById('totalLikes').textContent = totalLikes;
     document.getElementById('mutualMatches').textContent = mutualMatches;
     document.getElementById('newThisWeek').textContent = newThisWeek;
     document.getElementById('vipCount').textContent = `${totalLikes} pessoa${totalLikes !== 1 ? 's' : ''}`;
-    
-    console.log('📊 Estatísticas VIP atualizadas:', { totalLikes, mutualMatches, newThisWeek });
 }
 
-// ✅✅✅ CORREÇÃO: Função handlePulse para Lista VIP
+// ==================== INTERAÇÕES ====================
 async function handlePulse(userId, button) {
     try {
-        console.log('💗 Manipulando pulse para:', userId);
-        
-        if (!pulseSystem) {
-            alert('Sistema de curtidas não disponível. Recarregue a página.');
-            return;
-        }
-
-        const isCurrentlyLiked = pulseSystem.isUserLiked(userId);
-        
-        if (isCurrentlyLiked) {
-            // Remover curtida
-            await revokePulseDirect(userId);
-            button.textContent = '💗 Curtir';
-            button.classList.remove('active', 'match');
-            showToast('Curtida removida');
-        } else {
-            // Adicionar curtida
-            await createPulseDirect(userId);
-            button.textContent = '💗 Curtido';
-            button.classList.add('active');
-            
-            // Verificar match
-            if (pulseSystem.isMatch(userId)) {
-                button.textContent = '💝 Match!';
-                button.classList.add('match');
-                showToast('💝 Novo match!');
-            } else {
-                showToast('Curtida enviada!');
-            }
-        }
-
-        // Recarregar lista VIP após curtida/descurtida
-        console.log('🔄 Recarregando lista VIP após ação...');
-        setTimeout(() => {
-            loadVipList().catch(console.error);
-        }, 500);
-
+        showToast('💗 Curtida mantida!');
+        // Manter o estado atual - já está curtido
     } catch (error) {
-        console.error('❌ Erro ao manipular pulse:', error);
-        showToast('Erro ao curtir.');
-    }
-}
-
-// ✅✅✅ CORREÇÃO: Funções diretas para pulses
-async function createPulseDirect(userToId) {
-    try {
-        console.log('💗 Criando pulse diretamente para:', userToId);
-        
-        // 1. Salvar no pulses
-        const { error: pulseError } = await supabase
-            .from('pulses')
-            .insert({
-                user_from_id: currentUser.id,
-                user_to_id: userToId,
-                status: 'active'
-            });
-
-        if (pulseError && pulseError.code !== '23505') {
-            throw pulseError;
-        }
-
-        // 2. Salvar na VIP_LIST (já verificamos que é premium)
-        const { error: vipError } = await supabase
-            .from('vip_list')
-            .insert({
-                user_id: currentUser.id,
-                vip_user_id: userToId
-            });
-
-        if (vipError && vipError.code !== '23505') {
-            console.error('❌ Erro VIP_LIST:', vipError);
-        }
-
-        console.log('✅ Pulse criado diretamente');
-
-    } catch (error) {
-        console.error('❌ Erro criar pulse direto:', error);
-        throw error;
-    }
-}
-
-async function revokePulseDirect(userToId) {
-    try {
-        console.log('🗑️ Revogando pulse diretamente para:', userToId);
-        
-        // 1. Atualizar pulses
-        await supabase
-            .from('pulses')
-            .update({ status: 'revoked' })
-            .eq('user_from_id', currentUser.id)
-            .eq('user_to_id', userToId);
-
-        // 2. Remover da VIP_LIST
-        await supabase
-            .from('vip_list')
-            .delete()
-            .eq('user_id', currentUser.id)
-            .eq('vip_user_id', userToId);
-
-        console.log('✅ Pulse revogado diretamente');
-
-    } catch (error) {
-        console.error('❌ Erro revogar pulse direto:', error);
-        throw error;
+        console.error('❌ Erro pulse:', error);
+        showToast('Erro ao processar curtida.');
     }
 }
 
@@ -1295,46 +891,45 @@ async function sendMessage(userId) {
             window.location.href = 'painel.html';
             return;
         }
-
         localStorage.setItem('openChatWithUserId', userId);
         window.location.href = 'mensagens.html';
-
     } catch (error) {
-        console.error('❌ Erro enviar mensagem:', error);
+        console.error('❌ Erro mensagem:', error);
         showToast('Erro ao abrir mensagens.');
     }
 }
 
 async function viewProfile(userId) {
     try {
-        // Registrar visita se a função existir
-        if (window.registrarVisitaPerfil) {
-            await window.registrarVisitaPerfil(userId);
-        }
-        
         localStorage.setItem('viewingProfileId', userId);
         window.location.href = 'perfil.html';
-
     } catch (error) {
-        console.error('❌ Erro ver perfil:', error);
+        console.error('❌ Erro perfil:', error);
         showToast('Erro ao abrir perfil.');
     }
+}
+
+// ==================== INTERFACE ====================
+function showLoading() {
+    const vipGrid = document.getElementById('vipUsersGrid');
+    vipGrid.innerHTML = `
+        <div class="loading">
+            <div class="spinner"></div>
+            <p>Carregando sua lista VIP...</p>
+        </div>
+    `;
 }
 
 function showPremiumRequired() {
     document.getElementById('premiumRequired').style.display = 'block';
     document.getElementById('vipUsersGrid').style.display = 'none';
     document.getElementById('emptyState').style.display = 'none';
-    document.querySelector('.vip-stats').style.display = 'none';
-    console.log('ℹ️ Mostrando mensagem premium required');
 }
 
 function showEmptyState() {
     document.getElementById('emptyState').style.display = 'block';
     document.getElementById('vipUsersGrid').style.display = 'none';
     document.getElementById('premiumRequired').style.display = 'none';
-    document.querySelector('.vip-stats').style.display = 'block';
-    console.log('ℹ️ Mostrando estado vazio');
 }
 
 function showError(message) {
@@ -1347,7 +942,6 @@ function showError(message) {
             <button class="btn btn-primary" onclick="location.reload()">Tentar Novamente</button>
         </div>
     `;
-    console.error('❌ Erro exibido:', message);
 }
 
 function showToast(message) {
@@ -1361,14 +955,9 @@ function showToast(message) {
     toast.textContent = message;
     document.body.appendChild(toast);
     
-    setTimeout(() => {
-        toast.style.opacity = '1';
-        toast.style.transform = 'translateX(-50%) translateY(-10px)';
-    }, 100);
-    
+    setTimeout(() => toast.style.opacity = '1', 100);
     setTimeout(() => {
         toast.style.opacity = '0';
-        toast.style.transform = 'translateX(-50%) translateY(20px)';
         setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
@@ -1404,43 +993,23 @@ function getZodiacIcon(zodiac) {
     return zodiacIcons[zodiac?.toLowerCase()] || '✨';
 }
 
+function setupAutoRefresh() {
+    setInterval(() => {
+        if (localStorage.getItem('vipListUpdate') === 'true') {
+            localStorage.removeItem('vipListUpdate');
+            loadVipList().catch(console.error);
+        }
+    }, 5000);
+}
+
 // ==================== EXPORTAR FUNÇÕES ====================
 window.handlePulse = handlePulse;
 window.sendMessage = sendMessage;
 window.viewProfile = viewProfile;
 window.loadVipList = loadVipList;
-window.debugVipList = debugVipList; // ✅ DEBUG DISPONÍVEL
 
-// ✅ FUNÇÃO PARA FORÇAR ATUALIZAÇÃO (DEBUG)
-window.forceVipUpdate = function() {
-    console.log('🔄 Forçando atualização da lista VIP...');
-    loadVipList().catch(console.error);
-};
-
-// ✅ DETECTOR DE ATUALIZAÇÃO AUTOMÁTICA
-window.addEventListener('storage', function(e) {
-    if (e.key === 'vipListUpdate' && e.newValue === 'true') {
-        console.log('📨 Mensagem de atualização recebida via storage');
-        setTimeout(() => {
-            loadVipList().catch(console.error);
-            localStorage.removeItem('vipListUpdate');
-        }, 500);
-    }
-});
-
-// ✅ ATUALIZAR QUANDO PÁGINA GANHA FOCO
-window.addEventListener('focus', function() {
-    console.log('🎯 Página VIP em foco - verificando atualizações...');
-    setTimeout(() => {
-        loadVipList().catch(console.error);
-    }, 1000);
-});
-
-// INICIAR PÁGINA
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Iniciando página VIP...');
-    initializeVipPage();
-});
+// ==================== INICIAR PÁGINA ====================
+document.addEventListener('DOMContentLoaded', initializeVipPage);
 </script>
 </body>
 </html>
