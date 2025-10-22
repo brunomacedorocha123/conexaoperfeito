@@ -63,10 +63,17 @@
 
   .stat-card {
     padding: 1rem;
+    background: var(--fundo-cards);
+    border: 1px solid var(--amarelo-dourado-claro);
   }
 
   .stat-number {
     font-size: 1.8rem;
+    color: var(--vermelho-vinho);
+  }
+
+  .stat-label {
+    color: var(--texto-cinza);
   }
 
   .users-grid {
@@ -76,6 +83,8 @@
 
   .user-card {
     padding: 1.2rem;
+    background: var(--fundo-cards);
+    border: 1px solid var(--amarelo-dourado-claro);
   }
 
   .user-card-avatar {
@@ -85,6 +94,7 @@
 
   .user-card-name {
     font-size: 1.1rem;
+    color: var(--vermelho-vinho);
   }
 
   .user-card-actions {
@@ -102,13 +112,20 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    border-color: var(--amarelo-dourado);
+    color: var(--amarelo-dourado);
+  }
+  
+  .user-card-actions .btn:hover {
+    background: var(--amarelo-dourado);
+    color: var(--preto);
   }
   
   .btn-more {
     width: 44px !important;
     height: 44px !important;
-    background: var(--lilas) !important;
-    color: white !important;
+    background: var(--amarelo-dourado) !important;
+    color: var(--preto) !important;
     border-radius: 50% !important;
     display: flex !important;
     align-items: center !important;
@@ -116,13 +133,13 @@
     font-size: 1.3rem !important;
     font-weight: bold !important;
     border: 2px solid var(--branco) !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+    box-shadow: 0 2px 8px rgba(198, 166, 100, 0.3) !important;
     flex: 0 0 auto !important;
   }
 
   .btn-more:active {
     transform: scale(0.95);
-    background: var(--vermelho-rosado) !important;
+    background: var(--vermelho-vinho) !important;
   }
 
   .user-card-menu {
@@ -139,8 +156,8 @@
     left: auto;
     min-width: 180px;
     z-index: 1001 !important;
-    background: var(--branco);
-    border: 1px solid var(--lilas);
+    background: var(--fundo-cards);
+    border: 1px solid var(--amarelo-dourado);
     border-radius: 10px;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
     transform: none !important;
@@ -166,19 +183,31 @@
 
   .action-card {
     padding: 1.2rem;
+    background: var(--fundo-claro);
+    border: 1px solid var(--amarelo-dourado-claro);
+  }
+
+  .action-card:hover {
+    background: var(--amarelo-dourado-claro);
+    border-color: var(--amarelo-dourado);
   }
 
   .welcome-section {
     padding: 1.5rem;
     margin-bottom: 2rem;
+    background: var(--fundo-cards);
+    border: 1px solid var(--amarelo-dourado-claro);
   }
 
   .welcome-section h2 {
     font-size: 1.8rem;
+    color: var(--vermelho-vinho);
   }
 
   .quick-actions {
     padding: 1.5rem;
+    background: var(--fundo-cards);
+    border: 1px solid var(--amarelo-dourado-claro);
   }
 
   .section-header {
@@ -207,6 +236,8 @@
   .visitor-card {
     width: 110px;
     padding: 0.8rem;
+    background: var(--fundo-claro);
+    border: 1px solid var(--amarelo-dourado-claro);
   }
   
   .visitor-avatar {
@@ -228,6 +259,8 @@
   
   .visitors-count {
     align-self: flex-start;
+    background: var(--amarelo-dourado);
+    color: var(--preto);
   }
 
   .notification-bell-container {
@@ -239,12 +272,15 @@
     width: 45px;
     height: 45px;
     font-size: 1.3rem;
+    border-color: var(--amarelo-dourado);
+    color: var(--amarelo-dourado);
   }
   
   .notification-badge {
     width: 18px;
     height: 18px;
     font-size: 0.65rem;
+    background: linear-gradient(135deg, var(--vermelho-vinho), var(--vermelho-vinho-escuro));
   }
 }
 
@@ -296,14 +332,17 @@
   
   .visitor-name {
     font-size: 0.75rem;
+    color: var(--grafite);
   }
   
   .visitor-location {
     font-size: 0.65rem;
+    color: var(--texto-cinza);
   }
   
   .visitor-time {
     font-size: 0.65rem;
+    color: var(--vermelho-vinho);
   }
   
   .free-content {
@@ -316,6 +355,7 @@
 
   #mobileMenu {
     padding: 1rem;
+    background: var(--preto);
   }
   
   .mobile-nav {
@@ -326,10 +366,14 @@
     width: 60px;
     height: 60px;
     font-size: 1.1rem;
+    background: var(--amarelo-dourado);
+    color: var(--preto);
+    border: 2px solid var(--amarelo-dourado-claro);
   }
   
   .mobile-user-info #mobileUserNickname {
     font-size: 1rem;
+    color: var(--amarelo-dourado);
   }
 
   .notification-bell-container {
