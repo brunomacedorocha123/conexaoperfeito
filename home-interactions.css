@@ -1,6 +1,6 @@
 /* ==================== SISTEMA PULSE - BOTÕES ==================== */
 .pulse-btn {
-    background: linear-gradient(135deg, #d1656d, #c44569);
+    background: linear-gradient(135deg, var(--vermelho-vinho), var(--vermelho-vinho-escuro));
     color: white;
     border: none;
     padding: 0.6rem 1rem;
@@ -18,11 +18,11 @@
 
 .pulse-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(209, 101, 109, 0.3);
+    box-shadow: 0 4px 12px rgba(166, 91, 91, 0.3);
 }
 
 .pulse-btn.pulse-active {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, var(--amarelo-dourado), var(--amarelo-dourado-claro));
 }
 
 .pulse-btn.pulse-match {
@@ -82,7 +82,7 @@
   padding: 0.5rem;
   border-radius: 50%;
   transition: var(--transition);
-  color: var(--text-light);
+  color: var(--texto-cinza);
   width: 40px;
   height: 40px;
   display: flex;
@@ -91,8 +91,8 @@
 }
 
 .btn-more:hover {
-  background: var(--lilas);
-  color: var(--branco);
+  background: var(--amarelo-dourado);
+  color: var(--preto);
   transform: translateY(-2px);
 }
 
@@ -101,7 +101,7 @@
   top: 100%;
   right: 0;
   background: var(--branco);
-  border: 1px solid var(--lilas);
+  border: 1px solid var(--amarelo-dourado);
   border-radius: 10px;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
   padding: 0.5rem;
@@ -128,11 +128,11 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: var(--text);
+  color: var(--grafite);
 }
 
 .menu-options button:hover {
-  background: var(--bege);
+  background: var(--fundo-claro);
 }
 
 .menu-options .report-btn {
@@ -144,11 +144,11 @@
 }
 
 .menu-options .block-btn {
-  color: #d1656d;
+  color: var(--vermelho-vinho);
 }
 
 .menu-options .block-btn:hover {
-  background: #fbd5d5;
+  background: rgba(166, 91, 91, 0.1);
 }
 
 .btn-sm {
@@ -179,7 +179,7 @@
   background: var(--branco);
   padding: 2rem;
   border-radius: 15px;
-  box-shadow: var(--shadow);
+  box-shadow: var(--sombra);
   max-width: 500px;
   width: 90%;
   max-height: 90vh;
@@ -213,11 +213,11 @@
   align-items: center;
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
-  border-bottom: 2px solid var(--bege);
+  border-bottom: 2px solid var(--fundo-claro);
 }
 
 .modal-header h3 {
-  color: var(--vermelho-rosado);
+  color: var(--vermelho-vinho);
   margin: 0;
   font-size: 1.3rem;
 }
@@ -227,15 +227,15 @@
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-  color: var(--text-light);
+  color: var(--texto-cinza);
   padding: 0.5rem;
   border-radius: 50%;
   transition: var(--transition);
 }
 
 .close-modal:hover {
-  background: var(--bege);
-  color: var(--vermelho-rosado);
+  background: var(--fundo-claro);
+  color: var(--vermelho-vinho);
 }
 
 .report-categories {
@@ -246,7 +246,7 @@
 
 .report-category {
   padding: 1rem;
-  border: 2px solid var(--bege);
+  border: 2px solid var(--fundo-claro);
   border-radius: 10px;
   cursor: pointer;
   transition: var(--transition);
@@ -256,13 +256,13 @@
 }
 
 .report-category:hover {
-  border-color: var(--lilas);
-  background: var(--bege);
+  border-color: var(--amarelo-dourado);
+  background: var(--fundo-claro);
 }
 
 .report-category.selected {
-  border-color: var(--vermelho-rosado);
-  background: var(--bege);
+  border-color: var(--vermelho-vinho);
+  background: var(--fundo-claro);
 }
 
 .report-category input[type="radio"] {
@@ -276,7 +276,7 @@
 .report-details textarea {
   width: 100%;
   padding: 1rem;
-  border: 2px solid var(--lilas);
+  border: 2px solid var(--amarelo-dourado);
   border-radius: 10px;
   resize: vertical;
   min-height: 100px;
@@ -286,7 +286,7 @@
 
 .report-details textarea:focus {
   outline: none;
-  border-color: var(--vermelho-rosado);
+  border-color: var(--vermelho-vinho);
 }
 
 .modal-actions {
@@ -301,7 +301,7 @@
 }
 
 .modal-body p {
-  color: var(--text);
+  color: var(--grafite);
   line-height: 1.5;
 }
 
@@ -322,26 +322,28 @@
     width: 50px;
     height: 50px;
     background: rgba(255, 255, 255, 0.1);
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    border: 2px solid var(--amarelo-dourado);
     border-radius: 50%;
     font-size: 1.5rem;
     text-decoration: none;
     transition: all 0.3s ease;
     backdrop-filter: blur(10px);
+    color: var(--amarelo-dourado);
 }
 
 .notification-bell:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.5);
+    background: var(--amarelo-dourado);
+    border-color: var(--amarelo-dourado-claro);
     transform: translateY(-2px) scale(1.05);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 5px 15px rgba(198, 166, 100, 0.3);
+    color: var(--preto);
 }
 
 .notification-badge {
     position: absolute;
     top: -5px;
     right: -5px;
-    background: linear-gradient(135deg, #e53e3e, #c53030);
+    background: linear-gradient(135deg, var(--vermelho-vinho), var(--vermelho-vinho-escuro));
     color: white;
     border-radius: 50%;
     width: 20px;
