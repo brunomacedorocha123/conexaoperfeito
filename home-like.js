@@ -8,6 +8,7 @@ class PulseSystem {
             received: new Set(), 
             matches: new Set() 
         };
+        this.userProfile = null;
     }
 
     async initialize() {
@@ -31,9 +32,11 @@ class PulseSystem {
                 .eq('id', this.currentUser.id)
                 .single();
                 
-            if (!error) this.userProfile = profile;
+            if (error) throw error;
+            this.userProfile = profile;
+            console.log('✅ Perfil carregado no Pulse:', profile.nickname, 'Premium:', profile.is_premium);
         } catch (error) {
-            console.error('Erro perfil:', error);
+            console.error('❌ Erro carregar perfil:', error);
         }
     }
 
@@ -66,8 +69,14 @@ class PulseSystem {
                 });
             }
 
+            console.log('📊 Pulses carregados:', {
+                dados: this.pulsesData.given.size,
+                recebidos: this.pulsesData.received.size,
+                matches: this.pulsesData.matches.size
+            });
+
         } catch (error) {
-            console.error('Erro pulses:', error);
+            console.error('❌ Erro carregar pulses:', error);
         }
     }
 
@@ -75,7 +84,7 @@ class PulseSystem {
         try {
             console.log('💗 Criando pulse para:', userToId);
             
-            // 1. Salvar no pulses
+            // 1. Salvar no pulses (para TODOS os usuários)
             const { error: pulseError } = await this.supabase
                 .from('pulses')
                 .insert({
@@ -88,22 +97,37 @@ class PulseSystem {
                 throw pulseError;
             }
 
-            // 2. ✅ CORREÇÃO CRÍTICA: SALVAR NA VIP_LIST
-            const { error: vipError } = await this.supabase
-                .from('vip_list')
-                .insert({
-                    user_id: this.currentUser.id,
-                    vip_user_id: userToId
-                });
+            // 2. ✅✅✅ CORREÇÃO: SÓ SALVAR NA VIP_LIST SE FOR PREMIUM
+            if (this.userProfile?.is_premium) {
+                const { error: vipError } = await this.supabase
+                    .from('vip_list')
+                    .insert({
+                        user_id: this.currentUser.id,
+                        vip_user_id: userToId
+                    });
 
-            if (vipError && vipError.code !== '23505') {
-                console.log('❌ Erro ao salvar na VIP_LIST:', vipError);
+                if (vipError && vipError.code !== '23505') {
+                    console.log('❌ Erro ao salvar na VIP_LIST:', vipError);
+                } else {
+                    console.log('✅ Salvo na VIP_LIST (Premium):', userToId);
+                    
+                    // Sinalizar atualização para lista-vip.html
+                    localStorage.setItem('vipListUpdate', 'true');
+                }
             } else {
-                console.log('✅ Salvo na VIP_LIST:', userToId);
+                console.log('ℹ️ Usuário Free - Pulse salvo, mas não na VIP_LIST');
             }
 
             // 3. Atualizar dados locais
             this.pulsesData.given.add(userToId);
+
+            // 4. Verificar match
+            if (this.pulsesData.received.has(userToId)) {
+                this.pulsesData.matches.add(userToId);
+                console.log('💝 NOVO MATCH detectado:', userToId);
+            }
+
+            return true;
 
         } catch (error) {
             console.error('❌ Erro ao criar pulse:', error);
@@ -115,25 +139,31 @@ class PulseSystem {
         try {
             console.log('🗑️ Revogando pulse para:', userToId);
             
-            // 1. Atualizar pulses
+            // 1. Atualizar pulses (para TODOS os usuários)
             await this.supabase
                 .from('pulses')
                 .update({ status: 'revoked' })
                 .eq('user_from_id', this.currentUser.id)
                 .eq('user_to_id', userToId);
 
-            // 2. ✅ CORREÇÃO CRÍTICA: REMOVER DA VIP_LIST
-            await this.supabase
-                .from('vip_list')
-                .delete()
-                .eq('user_id', this.currentUser.id)
-                .eq('vip_user_id', userToId);
-
-            console.log('✅ Removido da VIP_LIST:', userToId);
+            // 2. ✅✅✅ CORREÇÃO: SÓ REMOVER DA VIP_LIST SE FOR PREMIUM
+            if (this.userProfile?.is_premium) {
+                await this.supabase
+                    .from('vip_list')
+                    .delete()
+                    .eq('user_id', this.currentUser.id)
+                    .eq('vip_user_id', userToId);
+                console.log('✅ Removido da VIP_LIST (Premium):', userToId);
+                
+                // Sinalizar atualização para lista-vip.html
+                localStorage.setItem('vipListUpdate', 'true');
+            }
 
             // 3. Atualizar dados locais
             this.pulsesData.given.delete(userToId);
             this.pulsesData.matches.delete(userToId);
+
+            return true;
 
         } catch (error) {
             console.error('❌ Erro ao revogar pulse:', error);
@@ -143,6 +173,12 @@ class PulseSystem {
 
     async getVipList() {
         try {
+            // ✅✅✅ VERIFICAÇÃO: Só buscar se for premium
+            if (!this.userProfile?.is_premium) {
+                console.log('ℹ️ Usuário não premium - VIP list vazia');
+                return [];
+            }
+
             const { data: vipUsers, error } = await this.supabase
                 .from('vip_list')
                 .select(`
@@ -157,6 +193,8 @@ class PulseSystem {
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
+            
+            console.log('📋 VIP List carregada:', vipUsers?.length || 0, 'usuários');
             return vipUsers || [];
 
         } catch (error) {

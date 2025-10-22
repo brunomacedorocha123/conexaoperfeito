@@ -896,6 +896,18 @@ function setupEventListeners() {
             console.log('📱 Botão logout mobile clicado');
             logout();
         }
+
+        // ✅ CORREÇÃO: Botões Pulse com event delegation
+        if (e.target.classList.contains('pulse-btn') || e.target.closest('.pulse-btn')) {
+            e.preventDefault();
+            e.stopPropagation();
+            const button = e.target.classList.contains('pulse-btn') ? e.target : e.target.closest('.pulse-btn');
+            const userId = button.getAttribute('data-user-id') || button.closest('[data-user-id]')?.getAttribute('data-user-id');
+            if (userId) {
+                console.log('💗 Pulse button clicado para:', userId);
+                handlePulseClick(userId, button);
+            }
+        }
     });
     
     console.log('✅ Event listeners configurados (delegation)');
@@ -926,6 +938,7 @@ async function logout() {
         localStorage.removeItem('supabase.auth.token');
         localStorage.removeItem('viewingProfileId');
         localStorage.removeItem('openChatWithUserId');
+        localStorage.removeItem('vipListUpdate');
         
         // Redirecionar para a página inicial
         window.location.href = 'index.html';
@@ -1162,7 +1175,7 @@ async function displayUsersWithPhotos(users) {
     }
 }
 
-// Criar card de usuário com botão Pulse
+// ✅✅✅ CORREÇÃO: Criar card de usuário com botão Pulse CORRETO
 async function createUserCardWithPhoto(user) {
     try {
         // ✅ CORREÇÃO: A função SQL retorna campos diferentes, precisamos adaptar
@@ -1242,7 +1255,7 @@ async function createUserCardWithPhoto(user) {
                 <div class="user-card-bio">${bio}</div>
                 
                 <div class="user-card-actions">
-                    <button class="${pulseButtonState}" onclick="event.stopPropagation(); handlePulseClick('${userId}', this)">
+                    <button class="${pulseButtonState}" data-user-id="${userId}" onclick="event.stopPropagation();">
                         ${pulseButtonText}
                     </button>
                     <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); sendMessage('${userId}')">
@@ -1270,6 +1283,58 @@ async function createUserCardWithPhoto(user) {
     } catch (error) {
         console.error('Erro ao criar card:', error);
         return '';
+    }
+}
+
+// ✅✅✅ CORREÇÃO: Função handlePulseClick para home.html
+async function handlePulseClick(userId, button) {
+    try {
+        console.log('💗 Clique no pulse para:', userId);
+        
+        if (!window.pulseSystem) {
+            showQuickToast('Sistema de curtidas não disponível.');
+            return;
+        }
+
+        const isCurrentlyLiked = window.pulseSystem.isUserLiked(userId);
+        
+        if (isCurrentlyLiked) {
+            // Remover curtida
+            await window.pulseSystem.revokePulse(userId);
+            button.innerHTML = '💗 Pulse';
+            button.classList.remove('pulse-active', 'pulse-match');
+            showQuickToast('Curtida removida');
+        } else {
+            // Adicionar curtida
+            await window.pulseSystem.createPulse(userId);
+            button.innerHTML = '💗 Curtido';
+            button.classList.add('pulse-active');
+            
+            // Verificar match
+            if (window.pulseSystem.isMatch(userId)) {
+                button.innerHTML = '💝 Match!';
+                button.classList.add('pulse-match');
+                showQuickToast('💝 Novo match!');
+            } else {
+                showQuickToast('Curtida enviada!');
+            }
+        }
+
+        // Atualizar contadores
+        if (window.pulseSystem.updatePulseCounters) {
+            window.pulseSystem.updatePulseCounters();
+        }
+
+        // Atualizar estatísticas
+        setTimeout(() => {
+            if (window.updateStats) {
+                window.updateStats().catch(console.error);
+            }
+        }, 300);
+
+    } catch (error) {
+        console.error('❌ Erro ao curtir:', error);
+        showQuickToast('Erro ao curtir');
     }
 }
 
