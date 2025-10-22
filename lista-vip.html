@@ -577,11 +577,12 @@ async function initializeVipPage() {
         // Carregar perfil para verificar premium
         await loadUserProfile();
         
-        // ✅ VERIFICAÇÃO PREMIUM - SE NÃO FOR PREMIUM, PARA AQUI
+        // ✅ VERIFICAÇÃO PREMIUM CORRIGIDA
         console.log('🔍 Verificando status premium...');
         console.log('📊 userProfile:', userProfile);
         
-        if (!userProfile?.is_premium) {
+        // Usar is_premium_active da view complete_user_profiles_with_premium
+        if (!userProfile?.is_premium_active) {
             console.log('❌ Usuário NÃO é premium');
             showPremiumRequired();
             return;
@@ -604,21 +605,33 @@ async function loadUserProfile() {
     try {
         console.log('🔍 Carregando perfil do usuário...');
         
+        // ✅ USAR A VIEW CORRETA para verificação premium
         const { data: profile, error } = await supabase
-            .from('profiles')
+            .from('complete_user_profiles_with_premium')
             .select('*')
             .eq('id', currentUser.id)
             .single();
 
         if (error) {
             console.error('❌ Erro ao carregar perfil:', error);
-            throw error;
+            // Fallback: tentar tabela profiles normal
+            const { data: fallbackProfile, error: fallbackError } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', currentUser.id)
+                .single();
+                
+            if (fallbackError) throw fallbackError;
+            
+            userProfile = { ...fallbackProfile, is_premium_active: false };
+            return;
         }
 
         userProfile = profile;
         console.log('✅ Perfil carregado:', {
             nickname: profile.nickname,
-            is_premium: profile.is_premium
+            is_premium_active: profile.is_premium_active,
+            premium_expires: profile.premium_expires
         });
 
     } catch (error) {
