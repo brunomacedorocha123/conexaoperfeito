@@ -587,13 +587,50 @@ async function initializeVipPage() {
             return;
         }
 
+        // ✅✅✅ CORREÇÃO CRÍTICA: VERIFICAR ATUALIZAÇÕES PENDENTES
+        console.log('🔍 Verificando atualizações pendentes...');
+        const hasUpdates = localStorage.getItem('vipListUpdate') === 'true';
+        
+        if (hasUpdates) {
+            console.log('📥 Atualizações pendentes detectadas - limpando cache');
+            localStorage.removeItem('vipListUpdate');
+        }
+
         // Carregar lista VIP
         await loadVipList();
+
+        // ✅✅✅ CORREÇÃO: CONFIGURAR ATUALIZAÇÃO AUTOMÁTICA
+        setupVipAutoRefresh();
 
     } catch (error) {
         console.error('❌ Erro página VIP:', error);
         showError('Erro ao carregar lista VIP.');
     }
+}
+
+// ✅ FUNÇÃO PARA ATUALIZAÇÃO AUTOMÁTICA
+function setupVipAutoRefresh() {
+    console.log('⏰ Configurando atualização automática da lista VIP...');
+    
+    // 1. Atualizar a cada 3 segundos se houver sinal
+    const updateInterval = setInterval(() => {
+        if (localStorage.getItem('vipListUpdate') === 'true') {
+            console.log('🔄 Atualização automática detectada! Recarregando lista...');
+            localStorage.removeItem('vipListUpdate');
+            loadVipList().catch(console.error);
+        }
+    }, 3000);
+    
+    // 2. Atualizar quando a página ficar visível
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            console.log('📄 Página VIP visível - verificando atualizações...');
+            loadVipList().catch(console.error);
+        }
+    });
+    
+    // 3. Armazenar interval para limpeza posterior
+    window.vipUpdateInterval = updateInterval;
 }
 
 async function loadUserProfile() {
@@ -618,6 +655,17 @@ async function loadVipList() {
     try {
         console.log('📋 Carregando lista VIP...');
         
+        // Mostrar loading
+        const vipGrid = document.getElementById('vipUsersGrid');
+        if (vipGrid) {
+            vipGrid.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Carregando sua lista VIP...</p>
+                </div>
+            `;
+        }
+
         // Tentar usar sistema Pulse se disponível
         if (window.pulseSystem && typeof window.pulseSystem.getVipList === 'function') {
             console.log('🎯 Usando Pulse System...');
@@ -804,10 +852,11 @@ async function handlePulse(userId, button) {
             }
         }
 
-        // ✅ CORREÇÃO CRÍTICA: Recarregar lista VIP após curtida/descurtida
+        // ✅✅✅ CORREÇÃO CRÍTICA: Recarregar lista VIP após curtida/descurtida
+        console.log('🔄 Recarregando lista VIP após ação...');
         setTimeout(() => {
             loadVipList().catch(console.error);
-        }, 500);
+        }, 300);
 
     } catch (error) {
         console.error('❌ Erro ao manipular pulse:', error);
@@ -884,12 +933,21 @@ function showToast(message) {
         position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
         background: #38a169; color: white; padding: 12px 24px; border-radius: 25px;
         font-weight: 600; z-index: 10000; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        transition: all 0.3s ease; opacity: 0;
     `;
     toast.textContent = message;
     document.body.appendChild(toast);
     
+    // Animar entrada
+    setTimeout(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateX(-50%) translateY(-10px)';
+    }, 100);
+    
+    // Remover após 3 segundos
     setTimeout(() => {
         toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(20px)';
         setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
@@ -942,25 +1000,32 @@ window.viewProfile = viewProfile;
 window.atualizarListaVIP = atualizarListaVIP;
 window.loadVipList = loadVipList;
 
+// ✅ FUNÇÃO PARA FORÇAR ATUALIZAÇÃO (DEBUG)
+window.forceVipUpdate = function() {
+    console.log('🔄 Forçando atualização da lista VIP...');
+    loadVipList().catch(console.error);
+};
+
 console.log('✅ Lista VIP COMPLETA carregada!');
 
 // ✅ DETECTOR DE ATUALIZAÇÃO AUTOMÁTICA
-// Atualizar lista se receber sinal de atualização
 window.addEventListener('storage', function(e) {
     if (e.key === 'vipListUpdate' && e.newValue === 'true') {
-        console.log('🔄 Recebido sinal para atualizar lista VIP');
-        atualizarListaVIP();
-        localStorage.removeItem('vipListUpdate');
+        console.log('📨 Mensagem de atualização recebida via storage');
+        setTimeout(() => {
+            loadVipList().catch(console.error);
+            localStorage.removeItem('vipListUpdate');
+        }, 500);
     }
 });
 
-// ✅ ATUALIZAR PERIODICAMENTE (a cada 30 segundos)
-setInterval(() => {
-    if (document.visibilityState === 'visible') {
-        console.log('🔄 Atualização periódica da lista VIP');
-        atualizarListaVIP().catch(console.error);
-    }
-}, 30000);
+// ✅ ATUALIZAR QUANDO PÁGINA GANHA FOCO
+window.addEventListener('focus', function() {
+    console.log('🎯 Página VIP em foco - verificando atualizações...');
+    setTimeout(() => {
+        loadVipList().catch(console.error);
+    }, 1000);
+});
     </script>
 </body>
 </html>
