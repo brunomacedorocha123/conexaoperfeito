@@ -550,7 +550,7 @@
         </div>
     </footer>
 
- <script>
+<script>
 // ==================== CONFIGURAÇÃO SUPABASE ====================
 const supabaseUrl = 'https://gcukalndarlgydmgmmmt.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
@@ -1039,69 +1039,119 @@ function displayVipUsers(users) {
     console.log(`✅ ${users.length} cards VIP exibidos`);
 }
 
+// ✅✅✅ CORREÇÃO CRÍTICA: Função createVipUserCard com tratamento completo
 function createVipUserCard(vipData) {
-    const user = vipData.profiles;
-    const userId = vipData.vip_user_id;
-    const nickname = user.nickname || 'Usuário';
-    const age = user.birth_date ? calculateAge(user.birth_date) : null;
-    const zodiac = user.zodiac;
-    const profession = user.profession;
-    const bio = user.user_details?.description || 'Sem descrição.';
-    const likedAt = new Date(vipData.created_at).toLocaleDateString('pt-BR');
+    try {
+        console.log('🎴 Criando card VIP:', vipData);
+        
+        // ✅✅✅ CORREÇÃO CRÍTICA: Verificar se os dados existem
+        if (!vipData || !vipData.profiles) {
+            console.error('❌ Dados inválidos no vipData:', vipData);
+            return `
+                <div class="vip-user-card">
+                    <div class="vip-user-header">
+                        <div class="vip-user-avatar">
+                            <div class="vip-user-avatar-fallback">?</div>
+                        </div>
+                        <div class="vip-user-info">
+                            <div class="vip-user-name">Usuário não encontrado</div>
+                            <div class="vip-user-details">
+                                <div class="vip-user-detail">⭐ Dados indisponíveis</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="vip-user-bio">Perfil não disponível no momento.</div>
+                    
+                    <div class="vip-user-actions">
+                        <button class="btn btn-primary" disabled>💌 Mensagem</button>
+                        <button class="btn btn-pulse" disabled>💗 Indisponível</button>
+                        <button class="btn btn-outline" disabled>👀 Ver Perfil</button>
+                    </div>
+                </div>
+            `;
+        }
 
-    // Verificar se é match
-    const isMatch = pulseSystem ? pulseSystem.isMatch(userId) : false;
+        const user = vipData.profiles;
+        const userId = vipData.vip_user_id || user.id;
+        const nickname = user.nickname || 'Usuário';
+        const age = user.birth_date ? calculateAge(user.birth_date) : null;
+        const zodiac = user.zodiac;
+        const profession = user.profession;
+        const bio = user.user_details?.description || 'Sem descrição.';
+        const likedAt = vipData.created_at ? new Date(vipData.created_at).toLocaleDateString('pt-BR') : 'Data desconhecida';
 
-    // Avatar
-    let avatarHtml = '';
-    if (user.avatar_url) {
-        const { data } = supabase.storage.from('avatars').getPublicUrl(user.avatar_url);
-        avatarHtml = `
-            <div class="vip-user-avatar">
-                <img class="vip-user-avatar-img" src="${data?.publicUrl}" alt="${nickname}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                <div class="vip-user-avatar-fallback" style="display: none;">${nickname.charAt(0).toUpperCase()}</div>
+        // Verificar se é match
+        const isMatch = pulseSystem ? pulseSystem.isMatch(userId) : false;
+
+        // Avatar
+        let avatarHtml = '';
+        if (user.avatar_url) {
+            const { data } = supabase.storage.from('avatars').getPublicUrl(user.avatar_url);
+            avatarHtml = `
+                <div class="vip-user-avatar">
+                    <img class="vip-user-avatar-img" src="${data?.publicUrl}" alt="${nickname}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="vip-user-avatar-fallback" style="display: none;">${nickname.charAt(0).toUpperCase()}</div>
+                </div>
+            `;
+        } else {
+            avatarHtml = `
+                <div class="vip-user-avatar">
+                    <div class="vip-user-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
+                </div>
+            `;
+        }
+
+        // Botão pulse
+        let pulseButtonText = '💗 Curtido';
+        let pulseButtonClass = 'btn-pulse active';
+        
+        if (isMatch) {
+            pulseButtonText = '💝 Match!';
+            pulseButtonClass = 'btn-pulse match';
+        }
+
+        return `
+            <div class="vip-user-card" data-user-id="${userId}">
+                <div class="vip-user-header">
+                    ${avatarHtml}
+                    <div class="vip-user-info">
+                        <div class="vip-user-name">${nickname}${age ? `, ${age}` : ''}</div>
+                        <div class="vip-user-details">
+                            ${zodiac ? `<div class="vip-user-detail">${getZodiacIcon(zodiac)} ${formatZodiac(zodiac)}</div>` : ''}
+                            ${profession ? `<div class="vip-user-detail">💼 ${profession}</div>` : ''}
+                            <div class="vip-user-detail">⭐ Curtido em ${likedAt}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="vip-user-bio">${bio}</div>
+                
+                <div class="vip-user-actions">
+                    <button class="btn btn-primary" onclick="sendMessage('${userId}')">💌 Mensagem</button>
+                    <button class="btn ${pulseButtonClass}" onclick="handlePulse('${userId}', this)">${pulseButtonText}</button>
+                    <button class="btn btn-outline" onclick="viewProfile('${userId}')">👀 Ver Perfil</button>
+                </div>
             </div>
         `;
-    } else {
-        avatarHtml = `
-            <div class="vip-user-avatar">
-                <div class="vip-user-avatar-fallback">${nickname.charAt(0).toUpperCase()}</div>
-            </div>
-        `;
-    }
-
-    // Botão pulse
-    let pulseButtonText = '💗 Curtido';
-    let pulseButtonClass = 'btn-pulse active';
-    
-    if (isMatch) {
-        pulseButtonText = '💝 Match!';
-        pulseButtonClass = 'btn-pulse match';
-    }
-
-    return `
-        <div class="vip-user-card" data-user-id="${userId}">
-            <div class="vip-user-header">
-                ${avatarHtml}
-                <div class="vip-user-info">
-                    <div class="vip-user-name">${nickname}${age ? `, ${age}` : ''}</div>
-                    <div class="vip-user-details">
-                        ${zodiac ? `<div class="vip-user-detail">${getZodiacIcon(zodiac)} ${formatZodiac(zodiac)}</div>` : ''}
-                        ${profession ? `<div class="vip-user-detail">💼 ${profession}</div>` : ''}
-                        <div class="vip-user-detail">⭐ Curtido em ${likedAt}</div>
+    } catch (error) {
+        console.error('❌ Erro ao criar card VIP:', error);
+        return `
+            <div class="vip-user-card">
+                <div class="vip-user-header">
+                    <div class="vip-user-avatar">
+                        <div class="vip-user-avatar-fallback">!</div>
+                    </div>
+                    <div class="vip-user-info">
+                        <div class="vip-user-name">Erro no card</div>
+                        <div class="vip-user-details">
+                            <div class="vip-user-detail">⚠️ Tente recarregar</div>
+                        </div>
                     </div>
                 </div>
             </div>
-            
-            <div class="vip-user-bio">${bio}</div>
-            
-            <div class="vip-user-actions">
-                <button class="btn btn-primary" onclick="sendMessage('${userId}')">💌 Mensagem</button>
-                <button class="btn ${pulseButtonClass}" onclick="handlePulse('${userId}', this)">${pulseButtonText}</button>
-                <button class="btn btn-outline" onclick="viewProfile('${userId}')">👀 Ver Perfil</button>
-            </div>
-        </div>
-    `;
+        `;
+    }
 }
 
 function updateVipStats(users) {
