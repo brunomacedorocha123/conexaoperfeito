@@ -2121,7 +2121,7 @@ async function initializeApp() {
             }
         }
         
-        // ✅ CORREÇÃO: Sistema Pulse
+        // ✅ CORREÇÃO: Sistema Pulse MELHORADO
         console.log('🎯 Inicializando sistema Pulse...');
         let pulseTentativas = 0;
         while (pulseTentativas < 8) {
@@ -2130,8 +2130,15 @@ async function initializeApp() {
                 window.pulseSystem = await window.initializePulseSystem(supabase, currentUser);
                 console.log('✅ Sistema Pulse inicializado com sucesso!');
                 
-                if (window.pulseSystem && window.pulseSystem.userProfile?.is_premium) {
-                    window.pulseSystem.addVipCardsToHome().catch(console.error);
+                // ✅ CORREÇÃO: Sempre verificar premium para lista VIP
+                if (window.pulseSystem) {
+                    console.log('⭐ Verificando status premium para lista VIP...');
+                    if (window.pulseSystem.userProfile?.is_premium) {
+                        console.log('🎉 Usuário Premium - Ativando lista VIP');
+                        window.pulseSystem.addVipCardsToHome().catch(console.error);
+                    } else {
+                        console.log('ℹ️ Usuário Free - Sem acesso à lista VIP');
+                    }
                 }
                 break;
             }
@@ -2204,6 +2211,7 @@ function initializeBlockSystemFallback() {
         }
     };
 }
+
 // ✅ FUNÇÃO DE BLOQUEIO DIRETO (GARANTIDA)
 async function blockUserDirect(userId, userName) {
     console.log('🚫 BLOQUEIO DIRETO:', userName);
@@ -2478,7 +2486,6 @@ async function updateUserAvatar(displayName, profile) {
         fallback.textContent = displayName.charAt(0).toUpperCase();
     }
 }
-
 // Carregar foto
 async function loadUserPhoto(avatarUrl) {
     try {
@@ -2489,7 +2496,6 @@ async function loadUserPhoto(avatarUrl) {
         return null;
     }
 }
-
 // ✅✅✅ CORREÇÃO CRÍTICA: Carregar usuários OTIMIZADO com função SQL
 async function loadRealUsers() {
     try {
@@ -2677,6 +2683,7 @@ async function createUserCardWithPhoto(user) {
         return '';
     }
 }
+
 // ==================== SISTEMA DE REPORTE COMPLETO ====================
 
 function toggleMenu(button) {
@@ -3129,7 +3136,6 @@ function startOnlineStatusUpdater() {
 }
 
 // ==================== ESTATÍSTICAS ====================
-// ✅ CORREÇÃO: Função updateStats melhorada para evitar erros
 async function updateStats() {
     try {
         // Inicializar com valores padrão
@@ -3185,6 +3191,7 @@ async function updateStats() {
         document.getElementById('profileViews').textContent = '0';
     }
 }
+
 // ==================== FUNÇÕES AUXILIARES ====================
 
 function calculateAge(birthDate) {
@@ -3302,37 +3309,6 @@ function setupMobileMenu() {
     checkScreenSize();
 }
 
-// ==================== BOTÃO DE EMERGÊNCIA ====================
-
-function addEmergencyLogout() {
-    if (document.getElementById('emergencyLogout')) return;
-    
-    const emergencyBtn = document.createElement('button');
-    emergencyBtn.id = 'emergencyLogout';
-    emergencyBtn.innerHTML = '🚨 SAIR (EMERGÊNCIA)';
-    emergencyBtn.style.cssText = `
-        position: fixed;
-        top: 10px;
-        right: 10px;
-        background: #e53e3e;
-        color: white;
-        border: none;
-        padding: 10px 15px;
-        border-radius: 5px;
-        font-weight: bold;
-        z-index: 10000;
-        cursor: pointer;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        font-size: 12px;
-    `;
-    emergencyBtn.onclick = function() {
-        localStorage.clear();
-        sessionStorage.clear();
-        window.location.href = 'index.html';
-    };
-    document.body.appendChild(emergencyBtn);
-}
-
 // ==================== DEBUG E MONITORAMENTO ====================
 
 async function debugReportSystem() {
@@ -3415,8 +3391,8 @@ window.openSupportModal = openSupportModal;
 
 // ==================== INICIALIZAÇÃO AVANÇADA ====================
 
-// Adicionar botão de emergência
-setTimeout(addEmergencyLogout, 2000);
+// ✅ CORREÇÃO: REMOVIDO BOTÃO DE EMERGÊNCIA
+// NÃO CHAMAR: setTimeout(addEmergencyLogout, 2000);
 
 // Inicializar monitoramento
 setTimeout(() => {
