@@ -561,11 +561,6 @@ let currentUser = null;
 let userProfile = null;
 
 // ==================== INICIALIZAÇÃO ====================
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🎯 Inicializando página VIP...');
-    initializeVipPage();
-});
-
 async function initializeVipPage() {
     try {
         // Verificar autenticação
@@ -587,20 +582,12 @@ async function initializeVipPage() {
             return;
         }
 
-        // ✅✅✅ CORREÇÃO CRÍTICA: VERIFICAR ATUALIZAÇÕES PENDENTES
-        console.log('🔍 Verificando atualizações pendentes...');
-        const hasUpdates = localStorage.getItem('vipListUpdate') === 'true';
-        
-        if (hasUpdates) {
-            console.log('📥 Atualizações pendentes detectadas - limpando cache');
-            localStorage.removeItem('vipListUpdate');
-        }
-
-        // Carregar lista VIP
+        // ✅✅✅ VERSÃO SIMPLES: APENAS CARREGAR LISTA VIP
+        console.log('🔄 Carregando lista VIP...');
         await loadVipList();
 
-        // ✅✅✅ CORREÇÃO: CONFIGURAR ATUALIZAÇÃO AUTOMÁTICA
-        setupVipAutoRefresh();
+        // ✅ CONFIGURAR ATUALIZAÇÃO SIMPLES
+        setupSimpleAutoRefresh();
 
     } catch (error) {
         console.error('❌ Erro página VIP:', error);
@@ -608,6 +595,33 @@ async function initializeVipPage() {
     }
 }
 
+// ✅ FUNÇÃO DE ATUALIZAÇÃO SIMPLES
+function setupSimpleAutoRefresh() {
+    console.log('⏰ Configurando atualização automática simples...');
+    
+    // Atualizar a cada 5 segundos
+    setInterval(() => {
+        if (localStorage.getItem('vipListUpdate') === 'true') {
+            console.log('🔄 Atualização detectada! Recarregando...');
+            localStorage.removeItem('vipListUpdate');
+            loadVipList().catch(console.error);
+        }
+    }, 5000);
+    
+    // Atualizar quando a página ficar visível
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            console.log('📄 Página visível - atualizando...');
+            loadVipList().catch(console.error);
+        }
+    });
+}
+
+// ✅ FUNÇÃO PARA RECARREGAR MANUALMENTE (DEBUG)
+window.recarregarVIP = function() {
+    console.log('🔄 Recarregando lista VIP manualmente...');
+    loadVipList().catch(console.error);
+};
 // ✅ FUNÇÃO PARA ATUALIZAÇÃO AUTOMÁTICA
 function setupVipAutoRefresh() {
     console.log('⏰ Configurando atualização automática da lista VIP...');

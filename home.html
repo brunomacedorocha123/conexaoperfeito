@@ -2915,12 +2915,13 @@ async function createUserCardWithPhoto(user) {
 }
 
 // ✅ FUNÇÃO PARA CLIQUE NO BOTÃO PULSE
+// ✅ FUNÇÃO SIMPLES PARA CLIQUE NO BOTÃO PULSE
 async function handlePulseClick(userId, button) {
     try {
         console.log('💗 Clique no pulse para:', userId);
         
         if (!window.pulseSystem) {
-            showQuickToast('Sistema de curtidas não disponível. Recarregue a página.');
+            showQuickToast('Sistema de curtidas não disponível.');
             return;
         }
 
@@ -2932,7 +2933,6 @@ async function handlePulseClick(userId, button) {
             button.innerHTML = '💗 Pulse';
             button.classList.remove('pulse-active', 'pulse-match');
             showQuickToast('Curtida removida');
-            
         } else {
             // Adicionar curtida
             await window.pulseSystem.createPulse(userId);
@@ -2949,60 +2949,13 @@ async function handlePulseClick(userId, button) {
             }
         }
 
-        // ✅✅✅ CORREÇÃO CRÍTICA: SINCRONIZAR COM LISTA VIP
-        console.log('🔄 Sincronizando com lista VIP...');
-        
-        // 1. SALVAR NO LOCALSTORAGE PARA OUTRAS PÁGINAS
-        localStorage.setItem('vipListUpdate', 'true');
-        localStorage.setItem('lastPulseAction', JSON.stringify({
-            userId: userId,
-            action: isCurrentlyLiked ? 'unlike' : 'like',
-            timestamp: new Date().toISOString()
-        }));
-        
-        // 2. SE ESTIVER NA LISTA VIP, RECARREGAR DIRETAMENTE
-        if (window.location.pathname.includes('lista-vip.html')) {
-            console.log('📄 Está na lista VIP, recarregando dados...');
-            if (window.loadVipList && typeof window.loadVipList === 'function') {
-                await window.loadVipList();
-            } else {
-                // Fallback: recarregar página
-                setTimeout(() => {
-                    window.location.reload();
-                }, 800);
-            }
-        } 
-        // 3. SE ESTIVER NA HOME, TENTAR ATUALIZAR LISTA VIP
-        else if (window.location.pathname.includes('home.html')) {
-            console.log('🏠 Está na home, verificando atualização VIP...');
-            
-            // Tentar função específica primeiro
-            if (typeof atualizarListaVIP === 'function') {
-                await atualizarListaVIP();
-            } 
-            // Tentar abrir lista VIP se for premium
-            else if (userProfile?.is_premium) {
-                console.log('⭐ Usuário premium, abrindo lista VIP...');
-                window.open('lista-vip.html', '_blank');
-            }
-        }
-
-        // ✅ ATUALIZAR ESTATÍSTICAS NA HOME
-        if (window.location.pathname.includes('home.html') && typeof updateStats === 'function') {
-            setTimeout(() => {
-                updateStats().catch(console.error);
-            }, 500);
-        }
-
-        // ✅ ATUALIZAR CONTADORES DO PULSE SYSTEM
-        if (window.pulseSystem && typeof window.pulseSystem.updatePulseCounters === 'function') {
+        // Atualizar contadores
+        if (window.pulseSystem.updatePulseCounters) {
             window.pulseSystem.updatePulseCounters();
         }
-        
-        console.log('✅ Sincronização VIP concluída');
 
     } catch (error) {
-        console.error('❌ Erro ao processar pulse:', error);
+        console.error('❌ Erro ao curtir:', error);
         showQuickToast('Erro ao curtir');
     }
 }
