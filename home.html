@@ -37,7 +37,7 @@
         text-decoration: none;
         transition: var(--transicao);
         position: relative;
-        font-size: 1.4rem; /* Tamanho dos emojis */
+        font-size: 1.4rem;
     }
 
     .nav-icon:hover {
@@ -129,18 +129,13 @@
         border: 2px solid var(--preto);
     }
 
-    /* WELCOME SECTION COM AVATAR À DIREITA - CORRIGIDO */
+    /* WELCOME SECTION COM AVATAR GRANDE À ESQUERDA */
     .welcome-header {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: flex-start;
         margin-bottom: 1rem;
         gap: 2rem;
-    }
-
-    .welcome-text {
-        flex: 1;
-        text-align: left;
     }
 
     .welcome-avatar-container {
@@ -148,19 +143,19 @@
         flex-direction: column;
         align-items: center;
         gap: 0.5rem;
+        margin-right: 2rem;
     }
 
     .welcome-avatar {
-        width: 80px;
-        height: 80px;
-        border-radius: 15px;
+        width: 120px;  /* AUMENTADO */
+        height: 120px; /* AUMENTADO */
+        border-radius: 20px; /* AUMENTADO */
         background: var(--branco);
         border: 3px solid var(--amarelo-dourado);
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: bold;
-        font-size: 2rem;
         overflow: hidden;
         position: relative;
     }
@@ -169,22 +164,22 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
-        border-radius: 12px;
-        display: none;
+        border-radius: 17px;
+        /* display: none; REMOVIDO - A LÓGICA ORIGINAL CONTROLA */
     }
 
     .welcome-avatar-fallback {
-        font-size: 2rem;
+        font-size: 3rem; /* AUMENTADO */
         color: var(--vermelho-vinho);
     }
 
     .user-status-badge {
-        padding: 0.3rem 1rem;
+        padding: 0.4rem 1.2rem;
         border-radius: 20px;
-        font-size: 0.8rem;
+        font-size: 0.9rem;
         font-weight: bold;
         text-align: center;
-        min-width: 80px;
+        min-width: 90px;
     }
 
     .status-premium {
@@ -199,8 +194,8 @@
 
     /* CORAÇÃO DOURADO NO TEXTO */
     .welcome-heart {
-        width: 24px;
-        height: 24px;
+        width: 28px; /* AUMENTADO */
+        height: 28px; /* AUMENTADO */
         vertical-align: middle;
         margin-left: 0.5rem;
     }
@@ -303,9 +298,17 @@
     <!-- Main Content -->
     <main class="main-content">
         <div class="container">
-            <!-- Welcome Section - ATUALIZADA COM AVATAR -->
+            <!-- Welcome Section - AVATAR GRANDE À ESQUERDA -->
             <section class="welcome-section">
                 <div class="welcome-header">
+                    <div class="welcome-avatar-container">
+                        <div class="welcome-avatar" id="welcomeAvatar">
+                            <!-- MANTENDO A LÓGICA ORIGINAL DE CARREGAR FOTO -->
+                            <img class="welcome-avatar-img" src="" alt="Avatar" style="display: none;">
+                            <div class="welcome-avatar-fallback">U</div>
+                        </div>
+                        <div id="welcomeStatusBadge" class="user-status-badge status-free">FREE</div>
+                    </div>
                     <div class="welcome-text">
                         <h2>Olá, <span id="welcomeNickname"></span>! 
                             <img src="coracaodourado.png" alt="❤️" class="welcome-heart">
@@ -316,13 +319,6 @@
                                 Desbloqueie Recursos Premium
                             </a>
                         </div>
-                    </div>
-                    <div class="welcome-avatar-container">
-                        <div class="welcome-avatar" id="welcomeAvatar">
-                            <img class="welcome-avatar-img" src="" alt="Avatar">
-                            <div class="welcome-avatar-fallback">U</div>
-                        </div>
-                        <div id="welcomeStatusBadge" class="user-status-badge status-free">FREE</div>
                     </div>
                 </div>
             </section>
