@@ -19,6 +19,216 @@
     <script src="home-like.js"></script>
     <script src="home-pulse.js"></script>
     <script src="js/home-status.js"></script>
+
+    <!-- CSS DO HEADER SIMPLIFICADO - ADICIONADO DEPOIS DOS SCRIPTS -->
+    <style>
+    /* ==================== HEADER SIMPLIFICADO ==================== */
+    .user-menu {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+
+    /* BOTÕES COM ÍCONES - MESMO TAMANHO */
+    .nav-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 45px;
+        height: 45px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid var(--amarelo-dourado);
+        border-radius: 50%;
+        text-decoration: none;
+        transition: var(--transicao);
+        position: relative;
+    }
+
+    .nav-icon:hover {
+        background: var(--amarelo-dourado);
+        transform: translateY(-2px);
+    }
+
+    /* ÍCONES COMO IMAGENS */
+    .nav-icon img {
+        width: 22px;
+        height: 22px;
+        filter: brightness(0) saturate(100%) invert(77%) sepia(28%) saturate(415%) hue-rotate(3deg) brightness(92%) contrast(87%);
+    }
+
+    .nav-icon:hover img {
+        filter: brightness(0) saturate(100%) invert(0%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(0%) contrast(100%);
+    }
+
+    /* DROPDOWN DO PERFIL */
+    .profile-dropdown {
+        position: relative;
+    }
+
+    .profile-btn {
+        width: 45px;
+        height: 45px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid var(--amarelo-dourado);
+        border-radius: 50%;
+        cursor: pointer;
+        transition: var(--transicao);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .profile-btn:hover {
+        background: var(--amarelo-dourado);
+    }
+
+    .profile-btn img {
+        width: 22px;
+        height: 22px;
+    }
+
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: var(--preto);
+        border: 2px solid var(--amarelo-dourado);
+        border-radius: 10px;
+        padding: 0.5rem;
+        min-width: 180px;
+        display: none;
+        z-index: 1000;
+        margin-top: 0.5rem;
+    }
+
+    .profile-dropdown:hover .dropdown-menu {
+        display: block;
+    }
+
+    .dropdown-menu a {
+        display: block;
+        padding: 0.7rem 1rem;
+        color: var(--branco);
+        text-decoration: none;
+        border-radius: 5px;
+        transition: var(--transicao);
+        font-size: 0.9rem;
+    }
+
+    .dropdown-menu a:hover {
+        background: var(--amarelo-dourado);
+        color: var(--preto);
+    }
+
+    .dropdown-divider {
+        height: 1px;
+        background: var(--amarelo-dourado);
+        margin: 0.5rem 0;
+    }
+
+    /* BADGE DE NOTIFICAÇÕES */
+    .notification-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: var(--vermelho-vinho);
+        color: white;
+        border-radius: 50%;
+        width: 18px;
+        height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: bold;
+        border: 2px solid var(--preto);
+    }
+
+    /* AVATAR QUADRADO COM BORDAS ARREDONDADAS */
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px; /* Quadrado com bordas arredondadas */
+        background: var(--branco);
+        color: var(--vermelho-vinho);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2rem;
+        position: relative;
+        overflow: hidden;
+        border: 2px solid var(--amarelo-dourado);
+    }
+
+    .user-avatar-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 10px; /* Mesmo arredondamento */
+    }
+
+    /* WELCOME SECTION COM AVATAR */
+    .welcome-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .welcome-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 15px;
+        background: var(--branco);
+        border: 3px solid var(--amarelo-dourado);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.5rem;
+        overflow: hidden;
+    }
+
+    .welcome-avatar-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 12px;
+    }
+
+    .welcome-text {
+        text-align: left;
+    }
+
+    .user-status-badge {
+        display: inline-block;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        margin-top: 0.5rem;
+    }
+
+    .status-premium {
+        background: linear-gradient(135deg, var(--amarelo-dourado), #B8860B);
+        color: var(--preto);
+    }
+
+    .status-free {
+        background: linear-gradient(135deg, #c0c0c0, #a0a0a0);
+        color: white;
+    }
+
+    /* CORAÇÃO DOURADO */
+    .welcome-heart {
+        width: 24px;
+        height: 24px;
+        vertical-align: middle;
+        margin-left: 0.5rem;
+    }
+    </style>
 </head>
 <body>
     <!-- Header -->
@@ -29,34 +239,47 @@
                 <div class="logo">
                     <img src="logopulselove.png" alt="Amor Conect">
                 </div>
-                
-                <!-- SINO DE NOTIFICAÇÕES -->
-                <div class="notification-bell-container">
-                    <a href="notificacoes.html" class="notification-bell" id="notificationBell" title="Notificações">
-                        🔔
-                        <span class="notification-badge" id="notificationBadge">0</span>
-                    </a>
-                </div>
 
                 <div class="user-menu">
-                    <div class="user-info">
-                        <div class="user-avatar" id="userAvatar">
-                            <img class="user-avatar-img" src="" alt="Avatar" style="display: none;">
-                            <div class="user-avatar-fallback">U</div>
+                    <!-- BOTÕES SIMPLIFICADOS -->
+                    <a href="busca.html" class="nav-icon" title="Buscar">
+                        <img src="iconelupa.png" alt="Buscar">
+                    </a>
+                    <a href="mensagens.html" class="nav-icon" title="Mensagens">
+                        <img src="iconemsg.png" alt="Mensagens">
+                    </a>
+                    
+                    <!-- NOTIFICAÇÕES -->
+                    <a href="notificacoes.html" class="nav-icon notification-bell" title="Notificações">
+                        <img src="iconesino.png" alt="Notificações">
+                        <span class="notification-badge" id="notificationBadge">0</span>
+                    </a>
+                    
+                    <!-- MENU DROPDOWN -->
+                    <div class="profile-dropdown">
+                        <button class="profile-btn" title="Meu Perfil">
+                            <img src="iconeperfil.png" alt="Perfil">
+                        </button>
+                        <div class="dropdown-menu">
+                            <a href="painel.html">
+                                <img src="iconeperfil.png" alt="" style="width: 16px; height: 16px; margin-right: 8px;">
+                                Meu Perfil
+                            </a>
+                            <a href="lista-vip.html">
+                                <img src="iconeestrela.png" alt="" style="width: 16px; height: 16px; margin-right: 8px;">
+                                Lista VIP
+                            </a>
+                            <a href="blocks.html">
+                                <img src="iconeescudo.png" alt="" style="width: 16px; height: 16px; margin-right: 8px;">
+                                Bloqueados
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="#" class="logout-btn" id="logoutBtn">
+                                <img src="iconeporta.png" alt="" style="width: 16px; height: 16px; margin-right: 8px;">
+                                Sair
+                            </a>
                         </div>
-                        <span id="userNickname">Usuário</span>
                     </div>
-                    <!-- Badge Free e Botão Premium -->
-                    <div id="freeBadge" class="free-badge" style="display: none;">Free</div>
-                    <a href="princing.html" id="premiumBtn" class="btn btn-premium" style="display: none;">Premium</a>
-                    <a href="mensagens.html" class="btn btn-outline">Mensagens</a>
-                    <a href="busca.html" class="btn btn-outline">Buscar</a>
-                    <a href="painel.html" class="btn btn-outline">Perfil</a>
-                    <!-- Botão Lista VIP -->
-                    <a href="lista-vip.html" class="btn btn-outline">Lista VIP</a>
-                    <!-- Link para usuários bloqueados -->
-                    <a href="blocks.html" class="btn btn-outline">🚫 Bloqueados</a>
-                    <button class="btn btn-outline" id="logoutBtn">Sair</button>
                 </div>
             </div>
         </div>
@@ -100,7 +323,18 @@
         <div class="container">
             <!-- Welcome Section -->
             <section class="welcome-section">
-                <h2>Olá, <span id="welcomeNickname"></span>! ❤️</h2>
+                <div class="welcome-header">
+                    <div class="welcome-avatar" id="welcomeAvatar">
+                        <img class="welcome-avatar-img" src="" alt="Avatar" style="display: none;">
+                        <div class="welcome-avatar-fallback">U</div>
+                    </div>
+                    <div class="welcome-text">
+                        <h2>Olá, <span id="welcomeNickname"></span>! 
+                            <img src="coracaodourado.png" alt="❤️" class="welcome-heart">
+                        </h2>
+                        <div id="welcomeStatusBadge" class="user-status-badge status-free">FREE</div>
+                    </div>
+                </div>
                 <p>Encontre conexões genuínas e construa relacionamentos significativos</p>
                 <div style="margin-top: 1.5rem;">
                     <a href="princing.html" class="btn btn-premium" style="padding: 0.8rem 2rem; font-size: 1rem;">
