@@ -146,34 +146,25 @@
         margin-right: 2rem;
     }
 
-    .welcome-avatar {
-        width: 120px;  /* AUMENTADO */
-        height: 120px; /* AUMENTADO */
-        border-radius: 20px; /* AUMENTADO */
-        background: var(--branco);
+    /* AVATAR GRANDE NO WELCOME - MESMA LÓGICA ORIGINAL */
+    .welcome-avatar-container .user-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 20px;
         border: 3px solid var(--amarelo-dourado);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        overflow: hidden;
-        position: relative;
+        font-size: 3rem;
     }
 
-    .welcome-avatar-img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
+    .welcome-avatar-container .user-avatar-img {
         border-radius: 17px;
-        /* display: none; REMOVIDO - A LÓGICA ORIGINAL CONTROLA */
     }
 
-    .welcome-avatar-fallback {
-        font-size: 3rem; /* AUMENTADO */
-        color: var(--vermelho-vinho);
+    .welcome-avatar-container .user-avatar-fallback {
+        font-size: 3rem;
     }
 
-    .user-status-badge {
+    /* STATUS BADGE NO WELCOME */
+    .welcome-status-badge {
         padding: 0.4rem 1.2rem;
         border-radius: 20px;
         font-size: 0.9rem;
@@ -194,19 +185,19 @@
 
     /* CORAÇÃO DOURADO NO TEXTO */
     .welcome-heart {
-        width: 28px; /* AUMENTADO */
-        height: 28px; /* AUMENTADO */
+        width: 28px;
+        height: 28px;
         vertical-align: middle;
         margin-left: 0.5rem;
     }
 
-    /* CORREÇÃO: REMOVER O AVATAR ANTIGO DO HEADER */
+    /* CORREÇÃO: REMOVER O AVATAR E USER-INFO ANTIGO DO HEADER */
     .user-info {
         display: none !important;
     }
 
-    /* CORREÇÃO: MOSTRAR BADGE FREE/PREMIUM NO HEADER */
-    #freeBadge, #premiumBtn {
+    /* CORREÇÃO: REMOVER OS BOTÕES ANTIGOS DO HEADER */
+    .user-menu .btn-outline {
         display: none !important;
     }
     </style>
@@ -235,6 +226,10 @@
                         🔔
                         <span class="notification-badge" id="notificationBadge">0</span>
                     </a>
+                    
+                    <!-- BADGE FREE/PREMIUM ORIGINAL - MANTIDO PARA A LÓGICA JS -->
+                    <div id="freeBadge" class="free-badge" style="display: none;">Free</div>
+                    <a href="princing.html" id="premiumBtn" class="btn btn-premium" style="display: none;">Premium</a>
                     
                     <!-- MENU DROPDOWN - CORRIGIDO -->
                     <div class="profile-dropdown">
@@ -296,32 +291,33 @@
     </div>
 
     <!-- Main Content -->
-  <main class="main-content">
-    <div class="container">
-        <!-- Welcome Section - AVATAR GRANDE À ESQUERDA -->
-        <section class="welcome-section">
-            <div class="welcome-header">
-                <div class="welcome-avatar-container">
-                    <!-- MESMA ESTRUTURA E MESMO ID DO HEADER ORIGINAL -->
-                    <div class="user-avatar" id="userAvatar" style="width: 120px; height: 120px; border-radius: 20px; font-size: 3rem; border: 3px solid var(--amarelo-dourado);">
-                        <img class="user-avatar-img" src="" alt="Avatar" style="display: none; border-radius: 17px;">
-                        <div class="user-avatar-fallback">U</div>
+    <main class="main-content">
+        <div class="container">
+            <!-- Welcome Section - AVATAR GRANDE À ESQUERDA -->
+            <section class="welcome-section">
+                <div class="welcome-header">
+                    <div class="welcome-avatar-container">
+                        <!-- AVATAR GRANDE - MESMO ID PARA A LÓGICA JS FUNCIONAR -->
+                        <div class="user-avatar" id="userAvatar" style="width: 120px; height: 120px; border-radius: 20px; font-size: 3rem; border: 3px solid var(--amarelo-dourado);">
+                            <img class="user-avatar-img" src="" alt="Avatar" style="display: none; border-radius: 17px;">
+                            <div class="user-avatar-fallback">U</div>
+                        </div>
+                        <!-- STATUS BADGE QUE SERÁ ATUALIZADO PELO JS -->
+                        <div id="welcomeStatusBadge" class="welcome-status-badge status-free" style="display: none;">FREE</div>
                     </div>
-                    <div id="welcomeStatusBadge" class="user-status-badge status-free">FREE</div>
-                </div>
-                <div class="welcome-text">
-                    <h2>Olá, <span id="welcomeNickname"></span>! 
-                        <img src="coracaodourado.png" alt="❤️" class="welcome-heart">
-                    </h2>
-                    <p>Encontre conexões genuínas e construa relacionamentos significativos</p>
-                    <div style="margin-top: 1.5rem;">
-                        <a href="princing.html" class="btn btn-premium" style="padding: 0.8rem 2rem; font-size: 1rem;">
-                            Desbloqueie Recursos Premium
-                        </a>
+                    <div class="welcome-text">
+                        <h2>Olá, <span id="welcomeNickname"></span>! 
+                            <img src="coracaodourado.png" alt="❤️" class="welcome-heart">
+                        </h2>
+                        <p>Encontre conexões genuínas e construa relacionamentos significativos</p>
+                        <div style="margin-top: 1.5rem;">
+                            <a href="princing.html" class="btn btn-premium" style="padding: 0.8rem 2rem; font-size: 1rem;">
+                                Desbloqueie Recursos Premium
+                            </a>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
             <!-- User Stats -->
             <div class="user-stats">
