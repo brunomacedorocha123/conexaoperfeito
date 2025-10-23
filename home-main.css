@@ -571,3 +571,23 @@ footer {
   background: linear-gradient(135deg, var(--amarelo-dourado-claro), #DAA520);
   color: var(--preto);
 }
+/* ==================== CORREÇÃO BADGES PREMIUM/FREE ==================== */
+/* Garantir visibilidade e espaço para os badges */
+#freeBadge, #premiumBtn {
+    display: inline-block !important;
+    min-width: 80px;
+    margin-left: 0.5rem;
+}
+
+/* Corrigir sobreposição no header simplificado */
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    flex-wrap: nowrap;
+}
+
+/* Se ainda não aparecer, forçar visibilidade */
+.user-menu > * {
+    flex-shrink: 0;
+}
