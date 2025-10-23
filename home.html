@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home - Amor Conect</title>
     
+    <!-- CSS Separado -->
+    <link rel="stylesheet" href="home-main.css">
+    <link rel="stylesheet" href="home-cards.css">
+    <link rel="stylesheet" href="home-interactions.css">
+    <link rel="stylesheet" href="home-visitante.css">
+    <link rel="stylesheet" href="home-mobile.css">
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="home-block.js"></script>
@@ -13,1823 +20,8 @@
     <script src="home-pulse.js"></script>
     <script src="js/home-status.js"></script>
 
+    <!-- CSS DO HEADER SIMPLIFICADO - ADICIONADO DEPOIS DOS SCRIPTS -->
     <style>
-    /* ==================== CSS PRINCIPAL - home-main.css ==================== */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
-    :root {
-      /* NOVA PALETA DE CORES */
-      --amarelo-dourado: #C6A664;
-      --amarelo-dourado-claro: #D4B978;
-      --vermelho-vinho: #A65B5B;
-      --vermelho-vinho-escuro: #8A4A4A;
-      --grafite: #2A2A2A;
-      --grafite-claro: #444444;
-      --preto: #1A1A1A;
-      
-      /* CORES DE FUNDO (MANTENDO CLARO) */
-      --fundo-claro: #F8F5F0;
-      --fundo-cards: #FFFFFF;
-      --branco: #FFFFFF;
-      
-      /* CORES DE TEXTO */
-      --texto-escuro: #2A2A2A;
-      --texto-cinza: #666666;
-      --texto-claro: #888888;
-      
-      /* CORES SISTEMA */
-      --error: #e53e3e;
-      --success: #38a169;
-      
-      /* EFEITOS */
-      --sombra: 0 4px 20px rgba(0, 0, 0, 0.08);
-      --transicao: all 0.3s ease;
-    }
-
-    body {
-      background-color: var(--fundo-claro);
-      color: var(--texto-escuro);
-      line-height: 1.6;
-      overflow-x: hidden;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 20px;
-    }
-
-    /* ==================== HEADER - CABEÇALHO PRETO ==================== */
-    header {
-      background: var(--preto);
-      color: var(--branco);
-      padding: 0.8rem 0;
-      box-shadow: var(--sombra);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      border-bottom: 2px solid var(--amarelo-dourado);
-    }
-
-    .header-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      height: 70px;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-shrink: 0;
-      justify-content: center;
-      flex: 1;
-    }
-
-    .logo img {
-      height: 150px;
-      width: auto;
-      object-fit: contain;
-    }
-
-    .logo h1 {
-      display: none;
-    }
-
-    .user-menu {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-    }
-
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .user-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: var(--branco);
-      color: var(--vermelho-vinho);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 1.2rem;
-      position: relative;
-      overflow: hidden;
-      border: 2px solid var(--amarelo-dourado);
-    }
-
-    .user-avatar-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 50%;
-      display: none;
-    }
-
-    .user-avatar-fallback {
-      font-size: 1.2rem;
-    }
-
-    .btn {
-      padding: 0.6rem 1rem;
-      border-radius: 30px;
-      border: none;
-      font-weight: 600;
-      cursor: pointer;
-      transition: var(--transicao);
-      text-decoration: none;
-      display: inline-block;
-      text-align: center;
-      font-size: 0.85rem;
-      white-space: nowrap;
-    }
-
-    .btn-outline {
-      background: transparent;
-      border: 2px solid var(--amarelo-dourado);
-      color: var(--amarelo-dourado);
-    }
-
-    .btn-primary {
-      background: var(--vermelho-vinho);
-      color: var(--branco);
-      border: 2px solid var(--vermelho-vinho);
-    }
-
-    .btn-secondary {
-      background: transparent;
-      border: 2px solid var(--vermelho-vinho);
-      color: var(--vermelho-vinho);
-    }
-
-    .btn-premium {
-      background: linear-gradient(135deg, var(--amarelo-dourado), #B8860B);
-      color: var(--preto);
-      border: none;
-      font-weight: 700;
-      box-shadow: 0 4px 15px rgba(198, 166, 100, 0.3);
-    }
-
-    .free-badge {
-      background: linear-gradient(135deg, #c0c0c0, #a0a0a0);
-      color: white;
-      padding: 0.5rem 1rem;
-      border-radius: 30px;
-      font-weight: 600;
-      font-size: 0.85rem;
-      text-decoration: none;
-      display: inline-block;
-      text-align: center;
-      white-space: nowrap;
-      border: 2px solid #d0d0d0;
-      cursor: default;
-      transition: var(--transicao);
-    }
-
-    .free-badge:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(160, 160, 160, 0.3);
-    }
-
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
-    }
-
-    .btn-outline:hover {
-      background: var(--amarelo-dourado);
-      color: var(--preto);
-    }
-
-    .btn-primary:hover {
-      background: var(--vermelho-vinho-escuro);
-      border-color: var(--vermelho-vinho-escuro);
-    }
-
-    .btn-premium:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(198, 166, 100, 0.4);
-      background: linear-gradient(135deg, var(--amarelo-dourado-claro), #DAA520);
-    }
-
-    /* ==================== MAIN CONTENT ==================== */
-    .main-content {
-      padding: 2rem 0;
-    }
-
-    .welcome-section {
-      text-align: center;
-      margin-bottom: 3rem;
-      padding: 2rem;
-      background: var(--fundo-cards);
-      border-radius: 15px;
-      box-shadow: var(--sombra);
-      border: 1px solid var(--amarelo-dourado-claro);
-    }
-
-    .welcome-section h2 {
-      font-size: 2.5rem;
-      color: var(--vermelho-vinho);
-      margin-bottom: 1rem;
-    }
-
-    .welcome-section p {
-      color: var(--texto-cinza);
-      font-size: 1.1rem;
-    }
-
-    .user-stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 3rem;
-    }
-
-    .stat-card {
-      background: var(--fundo-cards);
-      padding: 1.5rem;
-      border-radius: 15px;
-      box-shadow: var(--sombra);
-      text-align: center;
-      transition: var(--transicao);
-      border: 1px solid var(--amarelo-dourado-claro);
-    }
-
-    .stat-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 25px rgba(198, 166, 100, 0.15);
-    }
-
-    .stat-number {
-      font-size: 2.5rem;
-      font-weight: bold;
-      color: var(--vermelho-vinho);
-      margin-bottom: 0.5rem;
-    }
-
-    .stat-label {
-      color: var(--texto-cinza);
-      font-size: 0.9rem;
-    }
-
-    /* ==================== USERS GRID ==================== */
-    .users-section {
-      margin-bottom: 3rem;
-    }
-
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 2rem;
-    }
-
-    .section-header h2 {
-      font-size: 2rem;
-      color: var(--vermelho-vinho);
-    }
-
-    /* ==================== QUICK ACTIONS ==================== */
-    .quick-actions {
-      background: var(--fundo-cards);
-      padding: 2rem;
-      border-radius: 15px;
-      box-shadow: var(--sombra);
-      margin-bottom: 3rem;
-      border: 1px solid var(--amarelo-dourado-claro);
-    }
-
-    .quick-actions h2 {
-      margin-bottom: 1.5rem;
-      color: var(--vermelho-vinho);
-    }
-
-    .actions-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-    }
-
-    .action-card {
-      background: var(--fundo-claro);
-      padding: 1.5rem;
-      border-radius: 10px;
-      text-align: center;
-      transition: var(--transicao);
-      cursor: pointer;
-      text-decoration: none;
-      color: inherit;
-      border: 1px solid var(--amarelo-dourado-claro);
-    }
-
-    .action-card:hover {
-      background: var(--amarelo-dourado-claro);
-      transform: translateY(-3px);
-      box-shadow: 0 5px 15px rgba(198, 166, 100, 0.2);
-    }
-
-    .action-icon {
-      font-size: 2rem;
-      margin-bottom: 1rem;
-    }
-
-    /* ==================== FOOTER ==================== */
-    footer {
-      background-color: var(--fundo-claro);
-      color: var(--texto-escuro);
-      padding: 2rem 0 1rem;
-      border-top: 1px solid var(--amarelo-dourado);
-    }
-
-    .footer-content {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .footer-column h3 {
-      margin-bottom: 1rem;
-      font-size: 1.1rem;
-      color: var(--vermelho-vinho);
-    }
-
-    .footer-column ul {
-      list-style: none;
-    }
-
-    .footer-column ul li {
-      margin-bottom: 0.5rem;
-    }
-
-    .footer-column a {
-      color: var(--texto-escuro);
-      text-decoration: none;
-      transition: var(--transicao);
-      font-size: 0.9rem;
-    }
-
-    .footer-column a:hover {
-      color: var(--vermelho-vinho);
-    }
-
-    .copyright {
-      text-align: center;
-      padding-top: 1rem;
-      border-top: 1px solid var(--amarelo-dourado);
-      font-size: 0.8rem;
-      color: var(--texto-cinza);
-    }
-
-    /* ==================== LOADING STATE ==================== */
-    .loading {
-      text-align: center;
-      padding: 3rem;
-    }
-
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid var(--fundo-claro);
-      border-top: 4px solid var(--vermelho-vinho);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 1rem;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    /* ==================== ESTADOS VAZIOS ==================== */
-    .empty-state {
-      text-align: center;
-      padding: 3rem;
-      background: var(--fundo-cards);
-      border-radius: 15px;
-      box-shadow: var(--sombra);
-      border: 1px solid var(--amarelo-dourado-claro);
-    }
-
-    .empty-state-icon {
-      font-size: 4rem;
-      margin-bottom: 1rem;
-      opacity: 0.5;
-      color: var(--vermelho-vinho);
-    }
-
-    /* ==================== ALERTAS ==================== */
-    .alert {
-      padding: 1rem;
-      border-radius: 10px;
-      margin-bottom: 1rem;
-      text-align: center;
-      border: 1px solid;
-    }
-
-    .alert-info {
-      background-color: rgba(198, 166, 100, 0.1);
-      border-color: var(--amarelo-dourado);
-      color: var(--grafite);
-    }
-
-    /* ==================== MENU HAMBURGUER MOBILE ==================== */
-    #hamburgerBtn {
-      display: none;
-      background: none;
-      border: none;
-      color: var(--branco);
-      font-size: 1.8rem;
-      cursor: pointer;
-      padding: 0.5rem;
-      z-index: 1001;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #mobileMenu {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100vh;
-      background: var(--preto);
-      z-index: 1000;
-      padding: 1.5rem;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      gap: 1rem;
-      overflow-y: auto;
-      border-right: 2px solid var(--amarelo-dourado);
-    }
-
-    #closeMobileMenu {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      background: none;
-      border: none;
-      color: var(--amarelo-dourado);
-      font-size: 2rem;
-      cursor: pointer;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1002;
-    }
-
-    .mobile-user-info {
-      text-align: center;
-      color: var(--branco);
-      margin-bottom: 1rem;
-      margin-top: 2rem;
-    }
-
-    .mobile-user-info .user-avatar {
-      width: 70px;
-      height: 70px;
-      font-size: 1.3rem;
-      margin: 0 auto 0.5rem;
-      background: var(--branco);
-      color: var(--vermelho-vinho);
-      border: 2px solid var(--amarelo-dourado);
-    }
-
-    .mobile-user-info #mobileUserNickname {
-      font-size: 1.1rem;
-      font-weight: bold;
-      color: var(--amarelo-dourado);
-    }
-
-    .mobile-nav {
-      display: flex;
-      flex-direction: column;
-      gap: 0.7rem;
-      width: 100%;
-      max-width: 280px;
-      flex: 1;
-      justify-content: flex-start;
-      padding-top: 1rem;
-    }
-
-    .mobile-nav .btn {
-      width: 100%;
-      text-align: center;
-      justify-content: center;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.8rem;
-      font-size: 0.95rem;
-      border-radius: 10px;
-      min-height: 48px;
-      background: transparent;
-      border: 2px solid var(--amarelo-dourado);
-      color: var(--amarelo-dourado);
-    }
-
-    .mobile-nav .btn-premium {
-      background: linear-gradient(135deg, var(--amarelo-dourado), #B8860B);
-      color: var(--preto);
-      border: none;
-      font-weight: 700;
-      box-shadow: 0 4px 15px rgba(198, 166, 100, 0.3);
-    }
-
-    .mobile-nav .btn:last-child {
-      margin-top: 2rem;
-      margin-bottom: 2rem;
-      background: rgba(198, 166, 100, 0.1);
-      border: 2px solid var(--amarelo-dourado);
-      color: var(--amarelo-dourado);
-      font-weight: 600;
-      position: relative;
-    }
-
-    .mobile-nav .btn:last-child::before {
-      content: "";
-      position: absolute;
-      top: -1rem;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: var(--amarelo-dourado);
-      opacity: 0.3;
-    }
-
-    .mobile-nav .btn:hover {
-      background: var(--amarelo-dourado);
-      color: var(--preto);
-      transform: translateY(-2px);
-    }
-
-    .mobile-nav .btn-premium:hover {
-      background: linear-gradient(135deg, var(--amarelo-dourado-claro), #DAA520);
-      color: var(--preto);
-    }
-
-    /* ==================== CSS DOS CARDS - home-cards.css ==================== */
-    .users-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 1.5rem;
-    }
-
-    .user-card {
-      background: var(--branco);
-      border-radius: 15px;
-      padding: 1.5rem;
-      box-shadow: var(--sombra);
-      transition: var(--transicao);
-      text-align: center;
-      cursor: pointer;
-      border: 1px solid var(--amarelo-dourado-claro);
-      position: relative;
-    }
-
-    .user-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    }
-
-    /* ✅ AVATAR COM FOTO - ESTILOS ATUALIZADOS */
-    .user-card-avatar {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--vermelho-vinho), var(--amarelo-dourado));
-      color: var(--branco);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2rem;
-      font-weight: bold;
-      margin: 0 auto 1rem;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .user-card-avatar-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 50%;
-      display: none;
-    }
-
-    .user-card-avatar-fallback {
-      font-size: 2rem;
-      font-weight: bold;
-    }
-
-    .user-card-name {
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: var(--vermelho-vinho);
-      margin-bottom: 0.5rem;
-    }
-
-    .user-card-info {
-      display: flex;
-      flex-direction: column;
-      gap: 0.3rem;
-      margin-bottom: 1rem;
-    }
-
-    .user-card-detail {
-      font-size: 0.9rem;
-      color: var(--texto-cinza);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.3rem;
-    }
-
-    .user-card-bio {
-      font-size: 0.9rem;
-      color: var(--texto-escuro);
-      margin-bottom: 1.5rem;
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      min-height: 4.5rem;
-      line-height: 1.4;
-    }
-
-    /* ==================== CSS INTERAÇÕES - home-interactions.css ==================== */
-    .user-card-actions {
-      display: flex;
-      gap: 0.5rem;
-      justify-content: center;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .user-card-menu {
-      position: relative;
-      display: inline-block;
-    }
-
-    .btn-more {
-      background: none;
-      border: none;
-      font-size: 1.2rem;
-      cursor: pointer;
-      padding: 0.5rem;
-      border-radius: 50%;
-      transition: var(--transicao);
-      color: var(--texto-cinza);
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .btn-more:hover {
-      background: var(--amarelo-dourado);
-      color: var(--preto);
-      transform: translateY(-2px);
-    }
-
-    .menu-options {
-      position: absolute;
-      top: 100%;
-      right: 0;
-      background: var(--branco);
-      border: 1px solid var(--amarelo-dourado);
-      border-radius: 10px;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-      padding: 0.5rem;
-      z-index: 100;
-      display: none;
-      min-width: 160px;
-      animation: fadeIn 0.2s ease;
-    }
-
-    .menu-options.show {
-      display: block;
-    }
-
-    .menu-options button {
-      width: 100%;
-      padding: 0.7rem 1rem;
-      border: none;
-      background: none;
-      text-align: left;
-      cursor: pointer;
-      border-radius: 5px;
-      transition: var(--transicao);
-      font-size: 0.9rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      color: var(--grafite);
-    }
-
-    .menu-options button:hover {
-      background: var(--fundo-claro);
-    }
-
-    .menu-options .report-btn {
-      color: #e53e3e;
-    }
-
-    .menu-options .report-btn:hover {
-      background: #fed7d7;
-    }
-
-    .menu-options .block-btn {
-      color: var(--vermelho-vinho);
-    }
-
-    .menu-options .block-btn:hover {
-      background: rgba(166, 91, 91, 0.1);
-    }
-
-    .btn-sm {
-      padding: 0.5rem 1rem;
-      font-size: 0.9rem;
-    }
-
-    /* ==================== SISTEMA PULSE - BOTÕES ==================== */
-    .pulse-btn {
-        background: linear-gradient(135deg, var(--vermelho-vinho), var(--vermelho-vinho-escuro));
-        color: white;
-        border: none;
-        padding: 0.6rem 1rem;
-        border-radius: 20px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        font-size: 0.85rem;
-        min-width: 80px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.3rem;
-    }
-
-    .pulse-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(166, 91, 91, 0.3);
-    }
-
-    .pulse-btn.pulse-active {
-        background: linear-gradient(135deg, var(--amarelo-dourado), var(--amarelo-dourado-claro));
-    }
-
-    .pulse-btn.pulse-match {
-        background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-        animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-        100% { transform: scale(1); }
-    }
-
-    /* Toast para notificações Pulse */
-    .pulse-toast {
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%) translateY(100px);
-        background: linear-gradient(135deg, #38a169, #2f855a);
-        color: white;
-        padding: 12px 24px;
-        border-radius: 25px;
-        font-weight: 600;
-        z-index: 10000;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-        text-align: center;
-        min-width: 200px;
-        opacity: 0;
-        transition: all 0.3s ease;
-    }
-
-    .pulse-toast.show {
-        transform: translateX(-50%) translateY(0);
-        opacity: 1;
-    }
-
-    /* ==================== MODAIS DE REPORTE E BLOQUEIO ==================== */
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      backdrop-filter: blur(5px);
-    }
-
-    .modal-overlay.show {
-      display: flex;
-    }
-
-    .modal-content {
-      background: var(--branco);
-      padding: 2rem;
-      border-radius: 15px;
-      box-shadow: var(--sombra);
-      max-width: 500px;
-      width: 90%;
-      max-height: 90vh;
-      overflow-y: auto;
-      animation: modalSlideIn 0.3s ease;
-    }
-
-    @keyframes modalSlideIn {
-      from {
-        opacity: 0;
-        transform: translateY(-50px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-      }
-      to {
-        opacity: 1;
-      }
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.5rem;
-      padding-bottom: 1rem;
-      border-bottom: 2px solid var(--fundo-claro);
-    }
-
-    .modal-header h3 {
-      color: var(--vermelho-vinho);
-      margin: 0;
-      font-size: 1.3rem;
-    }
-
-    .close-modal {
-      background: none;
-      border: none;
-      font-size: 1.5rem;
-      cursor: pointer;
-      color: var(--texto-cinza);
-      padding: 0.5rem;
-      border-radius: 50%;
-      transition: var(--transicao);
-    }
-
-    .close-modal:hover {
-      background: var(--fundo-claro);
-      color: var(--vermelho-vinho);
-    }
-
-    .report-categories {
-      display: grid;
-      gap: 0.5rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .report-category {
-      padding: 1rem;
-      border: 2px solid var(--fundo-claro);
-      border-radius: 10px;
-      cursor: pointer;
-      transition: var(--transicao);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .report-category:hover {
-      border-color: var(--amarelo-dourado);
-      background: var(--fundo-claro);
-    }
-
-    .report-category.selected {
-      border-color: var(--vermelho-vinho);
-      background: var(--fundo-claro);
-    }
-
-    .report-category input[type="radio"] {
-      margin: 0;
-    }
-
-    .report-details {
-      margin-bottom: 1.5rem;
-    }
-
-    .report-details textarea {
-      width: 100%;
-      padding: 1rem;
-      border: 2px solid var(--amarelo-dourado);
-      border-radius: 10px;
-      resize: vertical;
-      min-height: 100px;
-      font-family: inherit;
-      font-size: 0.9rem;
-    }
-
-    .report-details textarea:focus {
-      outline: none;
-      border-color: var(--vermelho-vinho);
-    }
-
-    .modal-actions {
-      display: flex;
-      gap: 1rem;
-      justify-content: flex-end;
-      flex-wrap: wrap;
-    }
-
-    .modal-body {
-      margin-bottom: 1.5rem;
-    }
-
-    .modal-body p {
-      color: var(--grafite);
-      line-height: 1.5;
-    }
-
-    /* ==================== CSS VISITANTES - home-visitante.css ==================== */
-    .visitors-section {
-        margin-bottom: 3rem;
-    }
-
-    .visitors-card {
-        background: var(--fundo-cards);
-        padding: 1.5rem;
-        border-radius: 15px;
-        box-shadow: var(--sombra);
-        border: 1px solid var(--amarelo-dourado-claro);
-        transition: var(--transicao);
-    }
-
-    .visitors-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(198, 166, 100, 0.15);
-    }
-
-    .visitors-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-    }
-
-    .visitors-header h2 {
-        font-size: 1.5rem;
-        color: var(--vermelho-vinho);
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin: 0;
-    }
-
-    .visitors-count {
-        background: var(--amarelo-dourado);
-        color: var(--branco);
-        padding: 0.3rem 0.8rem;
-        border-radius: 20px;
-        font-size: 0.9rem;
-        font-weight: bold;
-    }
-
-    /* GRID DE CARDS PEQUENOS */
-    .visitors-grid {
-        display: flex;
-        gap: 1rem;
-        overflow-x: auto;
-        padding: 0.5rem 0.2rem;
-        margin-bottom: 1.5rem;
-        scrollbar-width: thin;
-        scrollbar-color: var(--amarelo-dourado) var(--fundo-claro);
-        min-height: 180px;
-    }
-
-    .visitors-grid::-webkit-scrollbar {
-        height: 6px;
-    }
-
-    .visitors-grid::-webkit-scrollbar-track {
-        background: var(--fundo-claro);
-        border-radius: 3px;
-    }
-
-    .visitors-grid::-webkit-scrollbar-thumb {
-        background: var(--amarelo-dourado);
-        border-radius: 3px;
-    }
-
-    /* CARDS DE VISITANTES */
-    .visitor-card {
-        flex: 0 0 auto;
-        width: 120px;
-        background: var(--fundo-claro);
-        border-radius: 12px;
-        padding: 1rem;
-        text-align: center;
-        cursor: pointer;
-        transition: var(--transicao);
-        border: 2px solid transparent;
-        position: relative;
-    }
-
-    .visitor-card:hover {
-        transform: translateY(-5px);
-        border-color: var(--amarelo-dourado);
-        box-shadow: 0 8px 25px rgba(198, 166, 100, 0.2);
-    }
-
-    /* AVATAR CORRIGIDO */
-    .visitor-avatar {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        margin: 0 auto 0.8rem;
-        position: relative;
-        overflow: visible !important;
-        border: 3px solid var(--branco);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-
-    .visitor-avatar-img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 50%;
-    }
-
-    .visitor-avatar-fallback {
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-        background: linear-gradient(135deg, var(--vermelho-vinho), var(--amarelo-dourado));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: bold;
-        font-size: 1.2rem;
-    }
-
-    .visitor-avatar:has(.visitor-avatar-img[src]) .visitor-avatar-fallback {
-        display: none !important;
-    }
-
-    .visitor-avatar:not(:has(.visitor-avatar-img[src])) .visitor-avatar-fallback {
-        display: flex !important;
-    }
-
-    .visitor-name {
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: var(--texto-escuro);
-        margin-bottom: 0.3rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .visitor-location {
-        font-size: 0.75rem;
-        color: var(--texto-cinza);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .visitor-time {
-        font-size: 0.7rem;
-        color: var(--vermelho-vinho);
-        margin-top: 0.3rem;
-        font-weight: 500;
-    }
-
-    .visitors-actions {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 1rem;
-    }
-
-    /* CONTEÚDO FREE */
-    .free-content {
-        text-align: center;
-        padding: 2rem;
-        display: none;
-    }
-
-    .free-content.visible {
-        display: block;
-    }
-
-    .free-content .icon {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-        opacity: 0.7;
-    }
-
-    .free-content h3 {
-        color: var(--vermelho-vinho);
-        margin-bottom: 0.5rem;
-        font-size: 1.2rem;
-    }
-
-    .free-content p {
-        color: var(--texto-cinza);
-        margin-bottom: 1.5rem;
-        font-size: 0.95rem;
-    }
-
-    /* ESTADOS VAZIO E LOADING */
-    .visitors-empty {
-        text-align: center;
-        padding: 2rem;
-        color: var(--texto-cinza);
-        width: 100%;
-    }
-
-    .visitors-empty .icon {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-        opacity: 0.5;
-    }
-
-    .visitors-empty p {
-        margin-bottom: 1rem;
-    }
-
-    .visitors-loading {
-        text-align: center;
-        padding: 2rem;
-        width: 100%;
-    }
-
-    .visitors-spinner {
-        width: 30px;
-        height: 30px;
-        border: 3px solid var(--fundo-claro);
-        border-top: 3px solid var(--vermelho-vinho);
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin: 0 auto 1rem;
-    }
-
-    /* ==================== BOLINHA ONLINE/OFFLINE - CORES ATUALIZADAS ==================== */
-    .visitor-avatar .online-badge {
-        position: absolute;
-        bottom: 3px;
-        right: 3px;
-        width: 14px;
-        height: 14px;
-        background: #48bb78;
-        border: 3px solid var(--branco);
-        border-radius: 50%;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-        animation: pulse-online 2s infinite;
-        z-index: 100;
-    }
-
-    .visitor-avatar .offline-badge {
-        position: absolute;
-        bottom: 3px;
-        right: 3px;
-        width: 14px;
-        height: 14px;
-        background: #a0aec0;
-        border: 3px solid var(--branco);
-        border-radius: 50%;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-        z-index: 100;
-    }
-
-    @keyframes pulse-online {
-        0% {
-            transform: scale(1);
-            box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.7);
-        }
-        70% {
-            transform: scale(1.1);
-            box-shadow: 0 0 0 6px rgba(72, 187, 120, 0);
-        }
-        100% {
-            transform: scale(1);
-            box-shadow: 0 0 0 0 rgba(72, 187, 120, 0);
-        }
-    }
-
-    /* ==================== SISTEMA DE STATUS ONLINE/OFFLINE ==================== */
-    .online-badge {
-      position: absolute;
-      bottom: 5px;
-      right: 5px;
-      width: 12px;
-      height: 12px;
-      background: #48bb78;
-      border: 2px solid var(--branco);
-      border-radius: 50%;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-      animation: pulse-online 2s infinite;
-    }
-
-    .offline-badge {
-      position: absolute;
-      bottom: 5px;
-      right: 5px;
-      width: 12px;
-      height: 12px;
-      background: #a0aec0;
-      border: 2px solid var(--branco);
-      border-radius: 50%;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-
-    .user-card-avatar {
-      position: relative;
-      overflow: visible !important;
-    }
-
-    .user-card-avatar .online-badge,
-    .user-card-avatar .offline-badge {
-      bottom: 8px;
-      right: 8px;
-      width: 14px;
-      height: 14px;
-      border: 3px solid var(--branco);
-    }
-
-    .user-avatar {
-      position: relative;
-      overflow: visible !important;
-    }
-
-    .user-avatar .online-badge,
-    .user-avatar .offline-badge {
-      bottom: 2px;
-      right: 2px;
-      width: 10px;
-      height: 10px;
-      border: 2px solid var(--branco);
-    }
-
-    /* ==================== CSS MOBILE - home-mobile.css ==================== */
-    @media (max-width: 768px) {
-      #hamburgerBtn {
-        display: flex;
-      }
-
-      .user-menu {
-        display: none;
-      }
-
-      .header-content {
-        flex-direction: row;
-        justify-content: space-between;
-        height: 80px;
-        padding: 0;
-      }
-
-      .logo {
-        justify-content: center;
-        flex: 1;
-        margin: 0 auto;
-      }
-
-      .logo img {
-        height: 180px !important;
-      }
-
-      .user-stats {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
-      }
-
-      .stat-card {
-        padding: 1rem;
-        background: var(--fundo-cards);
-        border: 1px solid var(--amarelo-dourado-claro);
-      }
-
-      .stat-number {
-        font-size: 1.8rem;
-        color: var(--vermelho-vinho);
-      }
-
-      .stat-label {
-        color: var(--texto-cinza);
-      }
-
-      .users-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-      }
-
-      .user-card {
-        padding: 1.2rem;
-        background: var(--fundo-cards);
-        border: 1px solid var(--amarelo-dourado-claro);
-      }
-
-      .user-card-avatar {
-        width: 70px;
-        height: 70px;
-      }
-
-      .user-card-name {
-        font-size: 1.1rem;
-        color: var(--vermelho-vinho);
-      }
-
-      .user-card-actions {
-        flex-direction: row;
-        gap: 0.5rem;
-        align-items: center;
-        justify-content: space-between;
-      }
-
-      .user-card-actions .btn {
-        flex: 1;
-        padding: 0.8rem 0.5rem;
-        font-size: 0.8rem;
-        min-height: 44px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-color: var(--amarelo-dourado);
-        color: var(--amarelo-dourado);
-      }
-      
-      .user-card-actions .btn:hover {
-        background: var(--amarelo-dourado);
-        color: var(--preto);
-      }
-      
-      .btn-more {
-        width: 44px !important;
-        height: 44px !important;
-        background: var(--amarelo-dourado) !important;
-        color: var(--preto) !important;
-        border-radius: 50% !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        font-size: 1.3rem !important;
-        font-weight: bold !important;
-        border: 2px solid var(--branco) !important;
-        box-shadow: 0 2px 8px rgba(198, 166, 100, 0.3) !important;
-        flex: 0 0 auto !important;
-      }
-
-      .btn-more:active {
-        transform: scale(0.95);
-        background: var(--vermelho-vinho) !important;
-      }
-
-      .user-card-menu {
-        z-index: 10;
-        position: relative;
-      }
-
-      .menu-options {
-        display: none;
-        position: absolute;
-        bottom: 100% !important;
-        top: auto !important;
-        right: 0;
-        left: auto;
-        min-width: 180px;
-        z-index: 1001 !important;
-        background: var(--fundo-cards);
-        border: 1px solid var(--amarelo-dourado);
-        border-radius: 10px;
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        transform: none !important;
-      }
-
-      .menu-options.show {
-        display: block !important;
-        animation: fadeIn 0.2s ease !important;
-      }
-
-      .user-card {
-        overflow: visible !important;
-        position: relative;
-      }
-
-      .user-card:hover {
-        z-index: 999;
-      }
-
-      .actions-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .action-card {
-        padding: 1.2rem;
-        background: var(--fundo-claro);
-        border: 1px solid var(--amarelo-dourado-claro);
-      }
-
-      .action-card:hover {
-        background: var(--amarelo-dourado-claro);
-        border-color: var(--amarelo-dourado);
-      }
-
-      .welcome-section {
-        padding: 1.5rem;
-        margin-bottom: 2rem;
-        background: var(--fundo-cards);
-        border: 1px solid var(--amarelo-dourado-claro);
-      }
-
-      .welcome-section h2 {
-        font-size: 1.8rem;
-        color: var(--vermelho-vinho);
-      }
-
-      .quick-actions {
-        padding: 1.5rem;
-        background: var(--fundo-cards);
-        border: 1px solid var(--amarelo-dourado-claro);
-      }
-
-      .section-header {
-        flex-direction: column;
-        gap: 1rem;
-        align-items: flex-start;
-      }
-
-      .modal-content {
-        padding: 1.5rem;
-        margin: 1rem;
-      }
-
-      .modal-actions {
-        flex-direction: column;
-      }
-
-      .modal-actions .btn {
-        width: 100%;
-      }
-
-      .visitors-grid {
-        gap: 0.8rem;
-      }
-      
-      .visitor-card {
-        width: 110px;
-        padding: 0.8rem;
-        background: var(--fundo-claro);
-        border: 1px solid var(--amarelo-dourado-claro);
-      }
-      
-      .visitor-avatar {
-        width: 50px;
-        height: 50px;
-      }
-      
-      .visitors-actions {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 1rem;
-      }
-      
-      .visitors-header {
-        flex-direction: column;
-        gap: 1rem;
-        align-items: flex-start;
-      }
-      
-      .visitors-count {
-        align-self: flex-start;
-        background: var(--amarelo-dourado);
-        color: var(--preto);
-      }
-
-      /* AJUSTES PULSE MOBILE */
-      .pulse-btn {
-        padding: 0.5rem 0.8rem;
-        font-size: 0.8rem;
-        min-width: 70px;
-      }
-      
-      .user-card-actions {
-        gap: 0.3rem;
-      }
-      
-      .user-card-actions .btn {
-        font-size: 0.75rem;
-        padding: 0.5rem 0.6rem;
-      }
-      
-      .pulse-toast {
-        min-width: 180px;
-        padding: 10px 16px;
-        font-size: 0.9rem;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .logo img {
-        height: 160px !important;
-      }
-
-      .user-stats {
-        grid-template-columns: 1fr;
-      }
-
-      .welcome-section h2 {
-        font-size: 1.5rem;
-      }
-
-      .stat-number {
-        font-size: 1.5rem;
-      }
-
-      .btn {
-        padding: 0.5rem 1rem;
-        font-size: 0.85rem;
-      }
-
-      .header-content {
-        height: 70px;
-      }
-
-      .user-card-actions .btn {
-        font-size: 0.75rem;
-        padding: 0.7rem 0.3rem;
-      }
-
-      .btn-more {
-        width: 40px !important;
-        height: 40px !important;
-        font-size: 1.2rem !important;
-      }
-
-      .visitor-card {
-        width: 100px;
-      }
-      
-      .visitor-avatar {
-        width: 45px;
-        height: 45px;
-      }
-      
-      .visitor-name {
-        font-size: 0.75rem;
-        color: var(--grafite);
-      }
-      
-      .visitor-location {
-        font-size: 0.65rem;
-        color: var(--texto-cinza);
-      }
-      
-      .visitor-time {
-        font-size: 0.65rem;
-        color: var(--vermelho-vinho);
-      }
-      
-      .free-content {
-        padding: 1.5rem;
-      }
-      
-      .free-content .icon {
-        font-size: 2.5rem;
-      }
-
-      #mobileMenu {
-        padding: 1rem;
-        background: var(--preto);
-      }
-      
-      .mobile-nav {
-        max-width: 260px;
-      }
-      
-      .mobile-user-info .user-avatar {
-        width: 60px;
-        height: 60px;
-        font-size: 1.1rem;
-        background: var(--amarelo-dourado);
-        color: var(--preto);
-        border: 2px solid var(--amarelo-dourado-claro);
-      }
-      
-      .mobile-user-info #mobileUserNickname {
-        font-size: 1rem;
-        color: var(--amarelo-dourado);
-      }
-
-      /* AJUSTES PULSE MOBILE PEQUENO */
-      .pulse-btn {
-        min-width: 65px;
-        font-size: 0.75rem;
-        padding: 0.4rem 0.6rem;
-      }
-    }
-
-    /* ==================== CORREÇÕES ESPECÍFICAS ==================== */
-    /* CORREÇÃO BADGES PREMIUM/FREE */
-    #freeBadge, #premiumBtn {
-        display: inline-block !important;
-        min-width: 80px;
-        margin-left: 0.5rem;
-    }
-
-    /* CORREÇÃO SINO NOTIFICAÇÕES */
-    .notification-bell-container {
-        position: relative !important;
-        right: auto !important;
-        top: auto !important;
-        transform: none !important;
-        margin-left: 10px;
-    }
-
-    .notification-bell {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 50px;
-        height: 50px;
-        background: rgba(255, 255, 255, 0.1);
-        border: 2px solid var(--amarelo-dourado);
-        border-radius: 50%;
-        font-size: 1.5rem;
-        text-decoration: none;
-        transition: all 0.3s ease;
-        backdrop-filter: blur(10px);
-        color: var(--amarelo-dourado);
-    }
-
-    .notification-bell:hover {
-        background: var(--amarelo-dourado);
-        border-color: var(--amarelo-dourado-claro);
-        transform: translateY(-2px) scale(1.05);
-        box-shadow: 0 5px 15px rgba(198, 166, 100, 0.3);
-        color: var(--preto);
-    }
-
-    .notification-badge {
-        position: absolute;
-        top: -5px;
-        right: -5px;
-        background: linear-gradient(135deg, var(--vermelho-vinho), var(--vermelho-vinho-escuro));
-        color: white;
-        border-radius: 50%;
-        width: 20px;
-        height: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.7rem;
-        font-weight: bold;
-        border: 2px solid var(--branco);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    }
-
-    .notification-badge:empty {
-        display: none;
-    }
-
-    .notification-mobile-btn {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        width: 100%;
-    }
-
-    .notification-mobile-btn .notification-badge {
-        position: static;
-        margin-left: auto;
-    }
-
-    /* CORREÇÃO BOTÕES CLICÁVEIS */
-    .user-card-actions {
-        position: relative;
-        z-index: 1000;
-    }
-
-    .user-card-actions button {
-        pointer-events: auto !important;
-        position: relative !important;
-        z-index: 1001 !important;
-        cursor: pointer !important;
-    }
-
-    .user-card-actions .btn-more {
-        pointer-events: auto !important;
-        z-index: 1002 !important;
-    }
-
-    .menu-options {
-        z-index: 1003 !important;
-    }
-
-    .user-card {
-        position: relative;
-    }
-
-    .user-card > *:not(.user-card-actions) {
-        pointer-events: none;
-    }
-
-    .user-card-actions,
-    .user-card-actions * {
-        pointer-events: auto !important;
-    }
-
-    /* CORREÇÃO VISITANTES */
-    #premiumVisitors {
-        display: none;
-    }
-
-    #premiumVisitors.visible {
-        display: block !important;
-    }
-
-    #freeVisitors {
-        display: none;
-    }
-
-    #freeVisitors.visible {
-        display: block !important;
-    }
-
-    .visitors-card {
-        display: block !important;
-    }
-
-    .visitors-grid {
-        display: flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-    }
-
-    .visitors-loading {
-        display: block !important;
-    }
-
-    .visitors-empty {
-        display: block !important;
-    }
-
-    .free-content {
-        display: none;
-    }
-
-    .free-content.visible {
-        display: block !important;
-    }
-
-    .visitor-card {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-    }
-
-    .visitor-avatar {
-        display: flex !important;
-    }
-
     /* ==================== HEADER SIMPLIFICADO ==================== */
     
     /* BOTÕES COM ÍCONES - MESMO TAMANHO */
@@ -2275,72 +467,6 @@
             </div>
         </div>
     </footer>
-
-    <!-- ==================== MODAIS ==================== -->
-    <!-- Modal de Reporte -->
-    <div id="reportModal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Reportar Usuário</h3>
-                <button class="close-modal" onclick="closeReportModal()">×</button>
-            </div>
-            <div class="modal-body">
-                <p>Você está reportando: <strong id="reportUserName"></strong></p>
-                
-                <div class="report-categories">
-                    <label class="report-category">
-                        <input type="radio" name="reportReason" value="spam" onchange="selectReportCategory(this)">
-                        <span>Spam ou conteúdo comercial</span>
-                    </label>
-                    <label class="report-category">
-                        <input type="radio" name="reportReason" value="inappropriate" onchange="selectReportCategory(this)">
-                        <span>Conteúdo inadequado</span>
-                    </label>
-                    <label class="report-category">
-                        <input type="radio" name="reportReason" value="harassment" onchange="selectReportCategory(this)">
-                        <span>Assédio ou bullying</span>
-                    </label>
-                    <label class="report-category">
-                        <input type="radio" name="reportReason" value="fake" onchange="selectReportCategory(this)">
-                        <span>Perfil falso</span>
-                    </label>
-                    <label class="report-category">
-                        <input type="radio" name="reportReason" value="other" onchange="selectReportCategory(this)">
-                        <span>Outro motivo</span>
-                    </label>
-                </div>
-                
-                <div class="report-details">
-                    <textarea id="reportDescription" placeholder="Por favor, descreva o motivo do reporte..."></textarea>
-                </div>
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn-secondary" onclick="closeReportModal()">Cancelar</button>
-                <button class="btn btn-primary" id="submitReportBtn" onclick="submitReport()" disabled>Enviar Reporte</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de Bloqueio -->
-    <div id="blockModal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Bloquear Usuário</h3>
-                <button class="close-modal" onclick="closeBlockModal()">×</button>
-            </div>
-            <div class="modal-body">
-                <p>Tem certeza que deseja bloquear <strong id="blockUserName"></strong>?</p>
-                <p style="color: var(--texto-cinza); font-size: 0.9rem; margin-top: 0.5rem;">
-                    ⚠️ Esta ação não poderá ser desfeita. O usuário não poderá mais ver seu perfil ou enviar mensagens.
-                </p>
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn-secondary" onclick="closeBlockModal()">Cancelar</button>
-                <button class="btn btn-primary" id="confirmBlockBtn" onclick="confirmBlock()">Sim, Bloquear</button>
-            </div>
-        </div>
-    </div>
-
 <script>
 // ==================== CONFIGURAÇÃO SUPABASE ====================
 const supabaseUrl = 'https://gcukalndarlgydmgmmmt.supabase.co';
@@ -2352,93 +478,616 @@ let currentUser = null;
 let userProfile = null;
 let currentReportUserId = null;
 let currentReportUserName = null;
-let currentBlockUserId = null;
-let currentBlockUserName = null;
 
-// ==================== INICIALIZAÇÃO ====================
+// ==================== CSS DINÂMICO PARA CORREÇÕES ====================
+const dynamicCSS = `
+/* ==================== CORREÇÃO SINO NOTIFICAÇÕES ==================== */
+.notification-bell-container {
+    position: relative !important;
+    right: auto !important;
+    top: auto !important;
+    transform: none !important;
+    margin-left: 10px;
+}
+
+.notification-bell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    font-size: 1.5rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.notification-bell:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: linear-gradient(135deg, #e53e3e, #c53030);
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: bold;
+    border: 2px solid var(--branco);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.notification-badge:empty {
+    display: none;
+}
+
+.notification-mobile-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.notification-mobile-btn .notification-badge {
+    position: static;
+    margin-left: auto;
+}
+
+/* ==================== CORREÇÃO BOTÕES PULSE ==================== */
+.pulse-btn {
+    background: linear-gradient(135deg, #d1656d, #c44569);
+    color: white;
+    border: none;
+    padding: 0.6rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.85rem;
+    min-width: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+}
+
+.pulse-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(209, 101, 109, 0.3);
+}
+
+.pulse-btn.pulse-active {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.pulse-btn.pulse-match {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.pulse-toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: linear-gradient(135deg, #38a169, #2f855a);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-weight: 600;
+    z-index: 10000;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    text-align: center;
+    min-width: 200px;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.pulse-toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+@media (max-width: 768px) {
+    .notification-bell-container {
+        margin-left: auto;
+        margin-right: 10px;
+    }
+    
+    .notification-bell {
+        width: 45px;
+        height: 45px;
+        font-size: 1.3rem;
+    }
+    
+    .notification-badge {
+        width: 18px;
+        height: 18px;
+        font-size: 0.65rem;
+    }
+    
+    .pulse-btn {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.8rem;
+        min-width: 70px;
+    }
+}
+
+@media (max-width: 480px) {
+    .notification-bell-container {
+        margin-right: 5px;
+    }
+    
+    .notification-bell {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+    
+    .notification-badge {
+        width: 16px;
+        height: 16px;
+        font-size: 0.6rem;
+        top: -3px;
+        right: -3px;
+    }
+    
+    .pulse-btn {
+        min-width: 65px;
+        font-size: 0.75rem;
+        padding: 0.4rem 0.6rem;
+    }
+}
+
+/* ==================== CORREÇÃO BOTÕES CLICÁVEIS ==================== */
+.user-card-actions {
+    position: relative;
+    z-index: 1000;
+}
+
+.user-card-actions button {
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 1001 !important;
+    cursor: pointer !important;
+}
+
+.user-card-actions .btn-more {
+    pointer-events: auto !important;
+    z-index: 1002 !important;
+}
+
+.menu-options {
+    z-index: 1003 !important;
+}
+
+.user-card {
+    position: relative;
+}
+
+.user-card > *:not(.user-card-actions) {
+    pointer-events: none;
+}
+
+.user-card-actions,
+.user-card-actions * {
+    pointer-events: auto !important;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==================== CORREÇÃO VISITANTES ==================== */
+#premiumVisitors {
+    display: none;
+}
+
+#premiumVisitors.visible {
+    display: block !important;
+}
+
+#freeVisitors {
+    display: none;
+}
+
+#freeVisitors.visible {
+    display: block !important;
+}
+
+.visitors-card {
+    display: block !important;
+}
+
+.visitors-grid {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.visitors-loading {
+    display: block !important;
+}
+
+.visitors-empty {
+    display: block !important;
+}
+
+.free-content {
+    display: none;
+}
+
+.free-content.visible {
+    display: block !important;
+}
+
+.visitor-card {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.visitor-avatar {
+    display: flex !important;
+}
+`;
+
+// Inject dynamic CSS
+const style = document.createElement('style');
+style.textContent = dynamicCSS;
+document.head.appendChild(style);
+
+// ==================== INICIALIZAÇÃO CORRIGIDA ====================
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Iniciando aplicação...');
     initializeApp();
 });
 
+// ✅ CORREÇÃO CRÍTICA: Inicialização principal
 async function initializeApp() {
     try {
+        console.log('🎯 Iniciando aplicação Amor Conect...');
+        
+        // 1. Verificar autenticação UMA VEZ
         const { data: { user }, error } = await supabase.auth.getUser();
         
         if (error) {
-            console.error('Erro de autenticação:', error);
+            console.error('❌ Erro de autenticação:', error);
             window.location.href = 'login.html';
             return;
         }
         
         if (!user) {
+            console.log('❌ Usuário não autenticado, redirecionando...');
             window.location.href = 'login.html';
             return;
         }
         
+        console.log('✅ Usuário autenticado:', user.id);
         currentUser = user;
 
-        // ✅ SISTEMA DE STATUS
+        // ✅ INICIALIZAR SISTEMA DE STATUS (AGORA SEPARADO)
         if (window.initializeHomeStatusSystem) {
             await window.initializeHomeStatusSystem(supabase, currentUser);
+            console.log('✅ Sistema de status online inicializado!');
         }
 
-        // ✅ SISTEMA DE BLOQUEIO
+        // ✅ CORREÇÃO: Inicializar sistema de bloqueio
         if (window.HomeBlockSystem) {
             window.blockSystem = new HomeBlockSystem(supabase, currentUser);
             await window.blockSystem.initialize();
+            console.log('✅ Sistema de bloqueio inicializado!');
         } else {
+            console.error('❌ HomeBlockSystem não carregado');
             initializeBlockSystemFallback();
         }
         
-        // ✅ CARREGAR DADOS DO USUÁRIO (NICKNAME E AVATAR)
+        // 2. Carregar dados do usuário
         await loadUserData();
         
-        // ✅ CARREGAR USUÁRIOS (CONHEÇA NOVAS PESSOAS)
+        // 3. Carregar usuários OTIMIZADO
         await loadRealUsers();
         
-        // ✅ SISTEMA DE VISITANTES
-        let tentativasVisitantes = 0;
-        while (tentativasVisitantes < 8) {
+        // ✅ CORREÇÃO: Sistema de visitantes com garantia
+        console.log('👀 Inicializando sistema de visitantes...');
+        let tentativas = 0;
+        while (tentativas < 8) {
             if (window.inicializarSistemaVisitantes) {
+                console.log('✅ Sistema de visitantes encontrado! Inicializando...');
                 await window.inicializarSistemaVisitantes(supabase, currentUser);
+                console.log('✅ Sistema de visitantes inicializado com sucesso!');
                 break;
             }
-            await new Promise(resolve => setTimeout(resolve, 300));
-            tentativasVisitantes++;
             
-            if (tentativasVisitantes === 8) {
+            console.log('⏳ Aguardando sistema de visitantes...', tentativas + 1);
+            await new Promise(resolve => setTimeout(resolve, 300));
+            tentativas++;
+            
+            if (tentativas === 8) {
+                console.error('❌ Sistema de visitantes não carregou');
                 await criarSistemaVisitantesFallback();
             }
         }
         
-        // ✅ SISTEMA PULSE
-        let tentativasPulse = 0;
-        while (tentativasPulse < 5) {
-            if (window.HomePulseSystem) {
-                window.pulseSystem = new HomePulseSystem(supabase, currentUser);
-                await window.pulseSystem.initialize();
-                break;
-            }
-            await new Promise(resolve => setTimeout(resolve, 500));
-            tentativasPulse++;
+        // ✅ CORREÇÃO CRÍTICA: Sistema Pulse com CARREGAMENTO GARANTIDO
+        console.log('🎯 Inicializando sistema Pulse...');
+        const pulseLoaded = await initializePulseSystemWithRetry();
+        
+        if (!pulseLoaded) {
+            console.warn('⚠️ Pulse System não carregou, continuando sem ele...');
         }
         
-        // ✅ SISTEMA DE NOTIFICAÇÕES
-        initializeNotificationSystem();
+        // ✅ CORREÇÃO: Sistema de notificações
+        initializeNotificationSystem().catch(console.error);
         
-        // ✅ CONFIGURAÇÕES DE INTERFACE
+        // 4. Configurar sistemas secundários
         setupEventListeners();
         setupMobileMenu();
         
-        // ✅ ATUALIZAR ESTATÍSTICAS
+        // ✅ CORREÇÃO: Atualizar stats
         setTimeout(updateStats, 1000);
         
+        console.log('🎉 Aplicação carregada com sucesso!');
+        
     } catch (error) {
-        console.error('Erro na inicialização:', error);
+        console.error('❌ Erro crítico na inicialização:', error);
     }
 }
 
-// ✅ FUNÇÃO CRÍTICA: CARREGAR DADOS DO USUÁRIO (NICKNAME E AVATAR)
+// ✅ FALLBACK PARA SISTEMA DE BLOQUEIO
+function initializeBlockSystemFallback() {
+    console.log('🔄 Inicializando fallback de bloqueio...');
+    
+    window.blockSystem = {
+        async openBlockModal(userId, userName) {
+            console.log('🔄 Fallback: Abrindo modal para', userName);
+            document.getElementById('blockUserName').textContent = userName;
+            document.getElementById('blockModal').classList.add('show');
+            
+            const confirmBtn = document.getElementById('confirmBlockBtn');
+            if (confirmBtn) {
+                confirmBtn.onclick = async function() {
+                    await blockUserDirect(userId, userName);
+                };
+            }
+        },
+        
+        closeBlockModal() {
+            document.getElementById('blockModal').classList.remove('show');
+        },
+        
+        async confirmBlock() {
+            console.log('⚠️ Use blockUserDirect diretamente');
+        },
+        
+        isUserBlocked(userId) {
+            return false;
+        },
+        
+        removeUserCardImmediately(userId) {
+            const cards = document.querySelectorAll(`[data-user-id="${userId}"]`);
+            cards.forEach(card => {
+                card.style.transition = 'all 0.3s ease';
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.8)';
+                setTimeout(() => card.remove(), 300);
+            });
+        }
+    };
+}
+
+// ✅ FUNÇÃO DE BLOQUEIO DIRETO (GARANTIDA)
+async function blockUserDirect(userId, userName) {
+    console.log('🚫 BLOQUEIO DIRETO:', userName);
+    
+    try {
+        // 1. Fechar modal
+        document.getElementById('blockModal').classList.remove('show');
+        
+        // 2. Remover card IMEDIATAMENTE
+        const cards = document.querySelectorAll(`[data-user-id="${userId}"]`);
+        cards.forEach(card => {
+            card.style.transition = 'all 0.4s ease';
+            card.style.opacity = '0.3';
+            card.style.transform = 'scale(0.9)';
+            card.style.pointerEvents = 'none';
+            
+            setTimeout(() => {
+                card.style.height = '0';
+                card.style.margin = '0';
+                card.style.padding = '0';
+                card.style.overflow = 'hidden';
+                
+                setTimeout(() => card.remove(), 300);
+            }, 400);
+        });
+        
+        // 3. Salvar no banco
+        const { error } = await supabase
+            .from('user_blocks')
+            .insert({
+                blocker_id: currentUser.id,
+                blocked_user_id: userId,
+                created_at: new Date().toISOString()
+            });
+        
+        if (error) {
+            if (error.code === '23505') {
+                console.log('ℹ️ Usuário já estava bloqueado');
+            } else {
+                throw error;
+            }
+        }
+        
+        showQuickToast(`✅ ${userName} bloqueado com sucesso!`);
+        console.log('✅ Bloqueio realizado:', userName);
+        
+    } catch (error) {
+        console.error('❌ Erro no bloqueio direto:', error);
+        showQuickToast('⚠️ Bloqueado localmente (erro de rede)');
+    }
+}
+
+// ✅ FALLBACK para sistema de visitantes
+async function criarSistemaVisitantesFallback() {
+    console.log('🔄 Criando fallback para sistema de visitantes...');
+    
+    try {
+        const { data: visits, error } = await supabase
+            .from('profile_visits')
+            .select('id', { count: 'exact' })
+            .eq('visited_id', currentUser.id);
+
+        const visitCount = visits?.length || 0;
+        
+        // Atualizar UI manualmente
+        const visitorsCount = document.getElementById('visitorsCount');
+        const freeVisitorsCount = document.getElementById('freeVisitorsCount');
+        const premiumSection = document.getElementById('premiumVisitors');
+        const freeSection = document.getElementById('freeVisitors');
+        
+        if (visitorsCount) {
+            visitorsCount.textContent = `${visitCount} visita${visitCount !== 1 ? 's' : ''}`;
+        }
+        
+        if (freeVisitorsCount) {
+            const countText = visitCount === 1 ? '1 pessoa' : `${visitCount} pessoas`;
+            freeVisitorsCount.textContent = countText;
+        }
+        
+        // Sempre mostrar seção FREE no fallback
+        if (premiumSection && freeSection) {
+            premiumSection.style.display = 'none';
+            freeSection.style.display = 'block';
+        }
+        
+        console.log('✅ Fallback de visitantes configurado:', visitCount);
+        
+    } catch (error) {
+        console.error('❌ Erro no fallback:', error);
+    }
+}
+
+// ✅✅✅ CORREÇÃO DEFINITIVA: Configurar event listeners
+function setupEventListeners() {
+    console.log('🎯 Configurando event listeners...');
+    
+    // ✅ CORREÇÃO: Usar event delegation para evitar problemas de cache
+    document.addEventListener('click', function(e) {
+        // Logout desktop
+        if (e.target.id === 'logoutBtn' || e.target.closest('#logoutBtn')) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🖱️ Botão logout desktop clicado');
+            logout();
+        }
+        
+        // Logout mobile
+        if (e.target.id === 'mobileLogoutBtn' || e.target.closest('#mobileLogoutBtn')) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('📱 Botão logout mobile clicado');
+            logout();
+        }
+
+        // ✅ CORREÇÃO: Botões Pulse com event delegation
+        if (e.target.classList.contains('pulse-btn') || e.target.closest('.pulse-btn')) {
+            e.preventDefault();
+            e.stopPropagation();
+            const button = e.target.classList.contains('pulse-btn') ? e.target : e.target.closest('.pulse-btn');
+            const userId = button.getAttribute('data-user-id') || button.closest('[data-user-id]')?.getAttribute('data-user-id');
+            if (userId) {
+                console.log('💗 Pulse button clicado para:', userId);
+                handlePulseClick(userId, button);
+            }
+        }
+    });
+    
+    console.log('✅ Event listeners configurados (delegation)');
+}
+
+// ✅✅✅ CORREÇÃO COMPLETA: Função de logout
+async function logout() {
+    try {
+        console.log('🚪 Iniciando logout...');
+        
+        // Parar todos os intervalos e listeners ativos
+        if (window.homeStatusSystem) {
+            window.homeStatusSystem.stop();
+        }
+        
+        // Fazer logout no Supabase
+        const { error } = await supabase.auth.signOut();
+        
+        if (error) {
+            console.error('❌ Erro ao fazer logout:', error);
+            showQuickToast('Erro ao sair. Tente novamente.');
+            return;
+        }
+        
+        console.log('✅ Logout realizado com sucesso');
+        
+        // Limpar dados locais
+        localStorage.removeItem('supabase.auth.token');
+        localStorage.removeItem('viewingProfileId');
+        localStorage.removeItem('openChatWithUserId');
+        localStorage.removeItem('vipListUpdate');
+        
+        // Redirecionar para a página inicial
+        window.location.href = 'index.html';
+        
+    } catch (error) {
+        console.error('❌ Erro crítico no logout:', error);
+        // Forçar redirecionamento mesmo com erro
+        window.location.href = 'index.html';
+    }
+}
+
+function showQuickToast(message) {
+    document.querySelectorAll('.quick-toast').forEach(toast => toast.remove());
+    
+    const toast = document.createElement('div');
+    toast.className = 'quick-toast';
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+        background: #38a169; color: white; padding: 12px 20px; border-radius: 25px;
+        font-size: 14px; font-weight: 600; z-index: 10000; opacity: 0;
+        transition: opacity 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        text-align: center; min-width: 200px; max-width: 90%;
+    `;
+    
+    document.body.appendChild(toast);
+    setTimeout(() => toast.style.opacity = '1', 100);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// ✅ CORREÇÃO: Carregar dados do usuário
 async function loadUserData() {
     try {
         const { data: profile, error } = await supabase
@@ -2461,7 +1110,7 @@ async function loadUserData() {
             displayName = currentUser.email.split('@')[0];
         }
 
-        // ✅ ATUALIZAR NICKNAME NA INTERFACE
+        // Atualizar elementos da UI
         const nicknameElements = [
             document.getElementById('userNickname'),
             document.getElementById('mobileUserNickname'), 
@@ -2472,32 +1121,41 @@ async function loadUserData() {
             if (element) element.textContent = displayName;
         });
 
-        // ✅ ATUALIZAR AVATAR
+        // Atualizar avatar
         await updateUserAvatar(displayName, profile);
 
-        // ✅ ATUALIZAR BADGES FREE/PREMIUM
+        // Mostrar Free ou Premium
         const isPremium = profile?.is_premium || false;
         updatePremiumBadges(isPremium);
-        
-        // ✅ ATUALIZAR STATUS NO WELCOME
-        const welcomeStatusBadge = document.getElementById('welcomeStatusBadge');
-        if (welcomeStatusBadge) {
-            if (isPremium) {
-                welcomeStatusBadge.textContent = 'PREMIUM';
-                welcomeStatusBadge.className = 'welcome-status-badge status-premium';
-            } else {
-                welcomeStatusBadge.textContent = 'FREE';
-                welcomeStatusBadge.className = 'welcome-status-badge status-free';
-            }
-            welcomeStatusBadge.style.display = 'block';
-        }
         
     } catch (error) {
         console.error('Erro ao carregar dados do usuário:', error);
     }
 }
 
-// ✅ FUNÇÃO CRÍTICA: ATUALIZAR AVATAR
+// Atualizar badges premium/free
+function updatePremiumBadges(isPremium) {
+    const elements = {
+        freeBadge: document.getElementById('freeBadge'),
+        premiumBtn: document.getElementById('premiumBtn'),
+        mobileFreeBadge: document.getElementById('mobileFreeBadge'),
+        mobilePremiumBtn: document.getElementById('mobilePremiumBtn')
+    };
+    
+    if (isPremium) {
+        if (elements.premiumBtn) elements.premiumBtn.style.display = 'inline-block';
+        if (elements.freeBadge) elements.freeBadge.style.display = 'none';
+        if (elements.mobilePremiumBtn) elements.mobilePremiumBtn.style.display = 'flex';
+        if (elements.mobileFreeBadge) elements.mobileFreeBadge.style.display = 'none';
+    } else {
+        if (elements.freeBadge) elements.freeBadge.style.display = 'inline-block';
+        if (elements.premiumBtn) elements.premiumBtn.style.display = 'none';
+        if (elements.mobileFreeBadge) elements.mobileFreeBadge.style.display = 'flex';
+        if (elements.mobilePremiumBtn) elements.mobilePremiumBtn.style.display = 'none';
+    }
+}
+
+// Atualizar avatar
 async function updateUserAvatar(displayName, profile) {
     const avatarElements = [
         document.getElementById('userAvatar'),
@@ -2528,11 +1186,25 @@ async function updateUserAvatar(displayName, profile) {
     }
 }
 
-// ✅ FUNÇÃO CRÍTICA: CARREGAR USUÁRIOS (CONHEÇA NOVAS PESSOAS)
+// Carregar foto
+async function loadUserPhoto(avatarUrl) {
+    try {
+        if (!avatarUrl) return null;
+        const { data } = supabase.storage.from('avatars').getPublicUrl(avatarUrl);
+        return data?.publicUrl || null;
+    } catch (error) {
+        return null;
+    }
+}
+
+// ✅✅✅ CORREÇÃO CRÍTICA: Carregar usuários OTIMIZADO com função SQL
 async function loadRealUsers() {
     try {
+        console.log('👥 Carregando usuários OTIMIZADO...');
+        
         const limit = window.innerWidth <= 768 ? 4 : 8;
         
+        // ✅ USAR A FUNÇÃO SQL OTIMIZADA QUE JÁ FILTRA BLOQUEIOS
         const { data: users, error } = await supabase.rpc(
             'get_home_users_optimized', {
                 current_user_uuid: currentUser.id,
@@ -2541,9 +1213,13 @@ async function loadRealUsers() {
         );
 
         if (error) {
+            console.error('Erro ao carregar usuários otimizado:', error);
+            // Fallback para query normal
             await loadRealUsersFallback(limit);
             return;
         }
+
+        console.log(`✅ ${users?.length || 0} usuários encontrados (OTIMIZADO)`);
 
         if (!users || users.length === 0) {
             showEmptyState('Ainda não há outros usuários cadastrados.');
@@ -2558,18 +1234,55 @@ async function loadRealUsers() {
     }
 }
 
-// ✅ FUNÇÃO CRÍTICA: EXIBIR USUÁRIOS NO GRID
+// ✅ FALLBACK se a função SQL falhar
+async function loadRealUsersFallback(limit) {
+    console.log('🔄 Usando fallback...');
+    
+    const { data: users, error } = await supabase
+        .from('profiles')
+        .select(`
+            id,
+            nickname,
+            full_name,
+            birth_date,
+            avatar_url,
+            last_online_at,
+            is_invisible,
+            user_details (
+                gender,
+                zodiac,
+                profession,
+                interests,
+                looking_for,
+                description
+            )
+        `)
+        .neq('id', currentUser.id)
+        .limit(limit)
+        .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    
+    await displayUsersWithPhotos(users);
+}
+
+// Exibir usuários com fotos
 async function displayUsersWithPhotos(users) {
     const usersGrid = document.getElementById('usersGrid');
-    if (!usersGrid) return;
+    if (!usersGrid) {
+        console.error('❌ usersGrid não encontrado');
+        return;
+    }
     
     const userCards = [];
     
     for (const user of users) {
+        // ✅ AGORA O FILTRO DE BLOQUEIO É FEITO NO SQL, SEM VERIFICAÇÃO AQUI
         const card = await createUserCardWithPhoto(user);
         if (card) userCards.push(card);
     }
     
+    console.log(`🎴 Exibindo ${userCards.length} cards`);
     usersGrid.innerHTML = userCards.join('');
     
     if (userCards.length === 0) {
@@ -2577,25 +1290,29 @@ async function displayUsersWithPhotos(users) {
     }
 }
 
-// ✅ FUNÇÃO CRÍTICA: CRIAR CARD DE USUÁRIO
+// ✅✅✅ CORREÇÃO: Criar card de usuário com botão Pulse CORRETO
 async function createUserCardWithPhoto(user) {
     try {
+        // ✅ CORREÇÃO: A função SQL retorna campos diferentes, precisamos adaptar
         const userId = user.user_id || user.id;
         const nickname = user.nickname || user.full_name?.split(' ')[0] || 'Usuário';
         const age = user.birth_date ? calculateAge(user.birth_date) : null;
         
+        // ✅ CORREÇÃO: Dados podem vir de user_details JSONB ou do objeto principal
         let details = {};
         if (user.user_details) {
-            details = user.user_details;
+            details = user.user_details; // Veio da função SQL
         } else if (user.user_details) {
-            details = user.user_details;
+            details = user.user_details; // Veio do fallback
         }
         
+        // ✅ CORREÇÃO: AGORA USA O SISTEMA DE STATUS SEPARADO
         const isOnline = window.isUserOnline ? window.isUserOnline(user) : false;
         const onlineBadge = isOnline ? 
             '<div class="online-badge" title="Online"></div>' : 
             '<div class="offline-badge" title="Offline"></div>';
         
+        // ✅ CORREÇÃO CRÍTICA: Usar IMG tag igual no perfil.html
         let avatarHtml = '';
         if (user.avatar_url) {
             const photoUrl = await loadUserPhoto(user.avatar_url);
@@ -2610,6 +1327,7 @@ async function createUserCardWithPhoto(user) {
             }
         }
         
+        // ✅ Fallback apenas se não tiver foto
         if (!avatarHtml) {
             avatarHtml = `
                 <div class="user-card-avatar">
@@ -2624,6 +1342,7 @@ async function createUserCardWithPhoto(user) {
         const lookingFor = details.looking_for || user.looking_for;
         const bio = details.description || user.description || 'Este usuário ainda não adicionou uma descrição.';
 
+        // ✅ VERIFICAR SE JÁ TEM PULSE PARA ESTE USUÁRIO
         let pulseButtonState = 'pulse-btn';
         let pulseButtonText = '💗 Pulse';
         
@@ -2677,52 +1396,402 @@ async function createUserCardWithPhoto(user) {
             </div>
         `;
     } catch (error) {
+        console.error('Erro ao criar card:', error);
         return '';
     }
 }
 
-// ✅ CONTINUA COM TODAS AS FUNÇÕES ORIGINAIS MAS SEM LOGS:
-// - updatePremiumBadges
-// - loadUserPhoto  
-// - initializeBlockSystemFallback
-// - blockUserDirect
-// - criarSistemaVisitantesFallback
-// - setupEventListeners
-// - setupMobileMenu
-// - updateStats
-// - E TODAS AS OUTRAS FUNÇÕES DE INTERAÇÃO...
-
-// ==================== FUNÇÕES DE APOIO (MANTIDAS) ====================
-async function loadUserPhoto(avatarUrl) {
+// ✅✅✅ CORREÇÃO: Função handlePulseClick para home.html
+async function handlePulseClick(userId, button) {
     try {
-        if (!avatarUrl) return null;
-        const { data } = supabase.storage.from('avatars').getPublicUrl(avatarUrl);
-        return data?.publicUrl || null;
+        console.log('💗 Clique no pulse para:', userId);
+        
+        if (!window.pulseSystem) {
+            showQuickToast('Sistema de curtidas não disponível.');
+            return;
+        }
+
+        const isCurrentlyLiked = window.pulseSystem.isUserLiked(userId);
+        
+        if (isCurrentlyLiked) {
+            // Remover curtida
+            await window.pulseSystem.revokePulse(userId);
+            button.innerHTML = '💗 Pulse';
+            button.classList.remove('pulse-active', 'pulse-match');
+            showQuickToast('Curtida removida');
+        } else {
+            // Adicionar curtida
+            await window.pulseSystem.createPulse(userId);
+            button.innerHTML = '💗 Curtido';
+            button.classList.add('pulse-active');
+            
+            // Verificar match
+            if (window.pulseSystem.isMatch(userId)) {
+                button.innerHTML = '💝 Match!';
+                button.classList.add('pulse-match');
+                showQuickToast('💝 Novo match!');
+            } else {
+                showQuickToast('Curtida enviada!');
+            }
+        }
+
+        // Atualizar contadores
+        if (window.pulseSystem.updatePulseCounters) {
+            window.pulseSystem.updatePulseCounters();
+        }
+
+        // Atualizar estatísticas
+        setTimeout(() => {
+            if (window.updateStats) {
+                window.updateStats().catch(console.error);
+            }
+        }, 300);
+
     } catch (error) {
-        return null;
+        console.error('❌ Erro ao curtir:', error);
+        showQuickToast('Erro ao curtir');
     }
 }
 
-function updatePremiumBadges(isPremium) {
-    const elements = {
-        freeBadge: document.getElementById('freeBadge'),
-        premiumBtn: document.getElementById('premiumBtn'),
-        mobileFreeBadge: document.getElementById('mobileFreeBadge'),
-        mobilePremiumBtn: document.getElementById('mobilePremiumBtn')
-    };
+// ==================== SISTEMA DE REPORTE COMPLETO ====================
+
+function toggleMenu(button) {
+    const menu = button.nextElementSibling;
+    const isShowing = menu.classList.contains('show');
     
-    if (isPremium) {
-        if (elements.premiumBtn) elements.premiumBtn.style.display = 'inline-block';
-        if (elements.freeBadge) elements.freeBadge.style.display = 'none';
-        if (elements.mobilePremiumBtn) elements.mobilePremiumBtn.style.display = 'flex';
-        if (elements.mobileFreeBadge) elements.mobileFreeBadge.style.display = 'none';
+    // Fechar todos os menus abertos
+    document.querySelectorAll('.menu-options').forEach(m => {
+        if (m !== menu) {
+            m.classList.remove('show');
+        }
+    });
+    
+    if (!isShowing) {
+        menu.classList.add('show');
+        
+        const closeMenuHandler = function(event) {
+            if (!event.target.closest('.user-card-menu')) {
+                menu.classList.remove('show');
+                document.removeEventListener('click', closeMenuHandler);
+            }
+        };
+        
+        setTimeout(() => document.addEventListener('click', closeMenuHandler), 10);
     } else {
-        if (elements.freeBadge) elements.freeBadge.style.display = 'inline-block';
-        if (elements.premiumBtn) elements.premiumBtn.style.display = 'none';
-        if (elements.mobileFreeBadge) elements.mobileFreeBadge.style.display = 'flex';
-        if (elements.mobilePremiumBtn) elements.mobilePremiumBtn.style.display = 'none';
+        menu.classList.remove('show');
     }
 }
+
+function openReportModal(userId, userName) {
+    currentReportUserId = userId;
+    currentReportUserName = userName;
+    
+    document.getElementById('reportUserName').textContent = userName;
+    
+    // Resetar formulário
+    document.querySelectorAll('input[name="reportReason"]').forEach(radio => {
+        radio.checked = false;
+        radio.parentElement.classList.remove('selected');
+    });
+    document.getElementById('reportDescription').value = '';
+    document.getElementById('submitReportBtn').disabled = true;
+    
+    // Mostrar modal
+    document.getElementById('reportModal').classList.add('show');
+    
+    // ✅ CORREÇÃO: Focar no primeiro campo
+    setTimeout(() => {
+        const firstRadio = document.querySelector('input[name="reportReason"]');
+        if (firstRadio) {
+            firstRadio.focus();
+        }
+    }, 100);
+}
+
+function closeReportModal() {
+    document.getElementById('reportModal').classList.remove('show');
+    currentReportUserId = null;
+    currentReportUserName = null;
+}
+
+function selectReportCategory(radio) {
+    // Remover seleção de todas as categorias
+    document.querySelectorAll('.report-category').forEach(category => {
+        category.classList.remove('selected');
+    });
+    
+    // Selecionar categoria clicada
+    radio.parentElement.classList.add('selected');
+    document.getElementById('submitReportBtn').disabled = false;
+    
+    // ✅ CORREÇÃO: Focar na descrição após selecionar categoria
+    setTimeout(() => {
+        document.getElementById('reportDescription').focus();
+    }, 50);
+}
+
+// ✅✅✅ FUNÇÃO SUBMITREPORT - VERSÃO DEFINITIVA
+async function submitReport() {
+    const submitBtn = document.getElementById('submitReportBtn');
+    const originalText = submitBtn.innerHTML;
+    
+    try {
+        console.log('📝 Iniciando processo de reporte...');
+        
+        // Validações
+        const reason = document.querySelector('input[name="reportReason"]:checked')?.value;
+        const description = document.getElementById('reportDescription').value.trim();
+        
+        if (!reason) {
+            showQuickToast('⚠️ Selecione uma categoria para o reporte.');
+            return;
+        }
+
+        if (!description) {
+            showQuickToast('⚠️ Por favor, descreva o motivo do reporte.');
+            return;
+        }
+
+        // Mostrar loading
+        submitBtn.innerHTML = '⏳ Enviando...';
+        submitBtn.disabled = true;
+
+        // ESTRUTURA DE DADOS
+        const reportData = {
+            reporter_id: currentUser.id,
+            reported_user_id: currentReportUserId,
+            category: reason,
+            reason: description,
+            status: 'pending',
+            created_at: new Date().toISOString()
+        };
+
+        // INSERÇÃO NO BANCO
+        const { data, error } = await supabase
+            .from('user_reports')
+            .insert(reportData)
+            .select()
+            .single();
+
+        if (error) {
+            throw new Error(`Erro: ${error.message}`);
+        }
+
+        console.log('✅ Reporte enviado com sucesso:', data);
+        showQuickToast('✅ Reporte enviado! A equipe irá analisar.');
+        closeReportModal();
+
+    } catch (error) {
+        console.error('💥 Erro no reporte:', error);
+        showQuickToast('❌ Erro ao enviar reporte. Tente novamente.');
+        
+    } finally {
+        // Restaurar botão
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+}
+
+// ==================== FUNÇÕES DE INTERAÇÃO ====================
+
+async function sendMessage(userId, event) {
+    if (event) event.stopPropagation();
+    
+    console.log('💬 Enviando mensagem para:', userId);
+    
+    // Verificação de bloqueio
+    if (window.blockSystem && window.blockSystem.isUserBlocked(userId)) {
+        showQuickToast('🚫 Você bloqueou este usuário.');
+        return;
+    }
+    
+    // Verificar se o usuário te bloqueou
+    const isBlockedByUser = await checkIfBlockedByUser(userId);
+    if (isBlockedByUser) {
+        showQuickToast('🚫 Este usuário te bloqueou.');
+        if (window.blockSystem) {
+            window.blockSystem.removeUserCardImmediately(userId);
+        }
+        return;
+    }
+    
+    if (!isProfileComplete()) {
+        showQuickToast('📝 Complete seu perfil primeiro!');
+        window.location.href = 'painel.html';
+        return;
+    }
+    
+    localStorage.setItem('openChatWithUserId', userId);
+    window.location.href = 'mensagens.html';
+}
+
+async function viewProfile(userId, event) {
+    if (event) event.stopPropagation();
+
+    // Verificação de bloqueio
+    if (window.blockSystem && window.blockSystem.isUserBlocked(userId)) {
+        showQuickToast('🚫 Você bloqueou este usuário.');
+        return;
+    }
+    
+    // Verificar se o usuário te bloqueou
+    const isBlockedByUser = await checkIfBlockedByUser(userId);
+    if (isBlockedByUser) {
+        showQuickToast('🚫 Este usuário te bloqueou.');
+        if (window.blockSystem) {
+            window.blockSystem.removeUserCardImmediately(userId);
+        }
+        return;
+    }
+    
+    if (!isProfileComplete()) {
+        showQuickToast('📝 Complete seu perfil primeiro!');
+        window.location.href = 'painel.html';
+        return;
+    }
+    
+    // Registrar visita
+    if (window.registrarVisitaPerfil) {
+        await window.registrarVisitaPerfil(userId);
+    }
+    
+    localStorage.setItem('viewingProfileId', userId);
+    window.location.href = 'perfil.html';
+}
+
+async function checkIfBlockedByUser(userId) {
+    try {
+        if (!currentUser) return false;
+        
+        const { data: blocks, error } = await supabase
+            .from('user_blocks')
+            .select('blocker_id')
+            .eq('blocker_id', userId)
+            .eq('blocked_user_id', currentUser.id)
+            .single();
+
+        if (error) {
+            if (error.code === 'PGRST116') return false;
+            throw error;
+        }
+        return !!blocks;
+    } catch (error) {
+        return false;
+    }
+}
+
+// ==================== SISTEMA DE NOTIFICAÇÕES ====================
+
+async function initializeNotificationSystem() {
+    try {
+        console.log('🔔 Inicializando sistema de notificações...');
+        
+        // Carregar notificações não lidas
+        await loadUnreadNotifications();
+        
+        // Configurar atualização automática
+        setInterval(loadUnreadNotifications, 30000);
+        
+    } catch (error) {
+        console.error('❌ Erro ao inicializar sistema de notificações:', error);
+    }
+}
+
+async function loadUnreadNotifications() {
+    try {
+        const { data: notifications, error } = await supabase
+            .from('user_notifications')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .eq('read', false)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.warn('⚠️ Erro ao carregar notificações:', error);
+            return;
+        }
+
+        const unreadCount = notifications?.length || 0;
+        
+        // Atualizar badges
+        const desktopBadge = document.getElementById('notificationBadge');
+        const mobileBadge = document.getElementById('mobileNotificationBadge');
+        
+        if (desktopBadge) {
+            desktopBadge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+            desktopBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
+        }
+        
+        if (mobileBadge) {
+            mobileBadge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+            mobileBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
+        }
+        
+        console.log(`🔔 ${unreadCount} notificações não lidas`);
+        
+    } catch (error) {
+        console.error('❌ Erro ao carregar notificações:', error);
+    }
+}
+
+// ==================== ESTATÍSTICAS ====================
+async function updateStats() {
+    try {
+        // Inicializar com valores padrão
+        document.getElementById('totalUsers').textContent = '...';
+        document.getElementById('newMatches').textContent = '0';
+        document.getElementById('usersOnline').textContent = '...';
+        document.getElementById('profileViews').textContent = '...';
+
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+        
+        // Executar consultas em paralelo
+        const [totalResult, onlineResult] = await Promise.all([
+            supabase.from('profiles').select('*', { count: 'exact', head: true }),
+            supabase.from('profiles').select('*', { count: 'exact', head: true })
+                .gte('last_online_at', fiveMinutesAgo)
+                .eq('is_invisible', false)
+                .neq('id', currentUser.id)
+        ]);
+
+        // Atualizar a interface
+        document.getElementById('totalUsers').textContent = totalResult.count || 1;
+        document.getElementById('usersOnline').textContent = onlineResult.count || 0;
+        
+        // ✅ CORREÇÃO: Matches do sistema Pulse
+        if (window.pulseSystem && typeof window.pulseSystem.getMatchesCount === 'function') {
+            const matchesCount = window.pulseSystem.getMatchesCount();
+            document.getElementById('newMatches').textContent = matchesCount;
+        } else {
+            document.getElementById('newMatches').textContent = '0';
+        }
+        
+        // Visualizações
+        let visitCount = 0;
+        if (window.visitanteSystem && typeof window.visitanteSystem.getVisitCount === 'function') {
+            visitCount = window.visitanteSystem.getVisitCount();
+        } else {
+            // Fallback
+            const { data: visits } = await supabase
+                .from('profile_visits')
+                .select('id', { count: 'exact' })
+                .eq('visited_id', currentUser.id);
+            visitCount = visits?.length || 0;
+        }
+        
+        document.getElementById('profileViews').textContent = visitCount;
+
+    } catch (error) {
+        console.error('❌ Erro ao carregar estatísticas:', error);
+        // Valores fallback
+        document.getElementById('totalUsers').textContent = '1';
+        document.getElementById('newMatches').textContent = '0';
+        document.getElementById('usersOnline').textContent = '0';
+        document.getElementById('profileViews').textContent = '0';
+    }
+}
+
+// ==================== FUNÇÕES AUXILIARES ====================
 
 function calculateAge(birthDate) {
     if (!birthDate) return null;
@@ -2761,6 +1830,10 @@ function formatLookingFor(lookingFor) {
     return lookingFor || 'Não informado';
 }
 
+function isProfileComplete() {
+    return userProfile && userProfile.full_name && userProfile.full_name.trim() !== '' && userProfile.birth_date;
+}
+
 function showEmptyState(message) {
     const usersGrid = document.getElementById('usersGrid');
     if (usersGrid) {
@@ -2768,29 +1841,64 @@ function showEmptyState(message) {
     }
 }
 
-function showQuickToast(message) {
-    document.querySelectorAll('.quick-toast').forEach(toast => toast.remove());
+// ==================== MENU MOBILE ====================
+
+function setupMobileMenu() {
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    const closeMobileMenu = document.getElementById('closeMobileMenu');
+
+    if (!hamburgerBtn || !mobileMenu) {
+        console.warn('⚠️ Elementos do menu mobile não encontrados');
+        return;
+    }
+
+    // Abrir menu mobile
+    hamburgerBtn.addEventListener('click', () => {
+        mobileMenu.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    });
+
+    // Fechar menu mobile
+    closeMobileMenu.addEventListener('click', () => {
+        mobileMenu.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    });
+
+    // Fechar menu ao clicar em links
+    mobileMenu.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+            mobileMenu.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        });
+    });
+
+    // Gerenciar visibilidade do menu baseado no tamanho da tela
+    function checkScreenSize() {
+        const userMenu = document.querySelector('.user-menu');
+        if (!userMenu) return;
+        
+        if (window.innerWidth <= 768) {
+            userMenu.style.display = 'none';
+            if (hamburgerBtn) hamburgerBtn.style.display = 'flex';
+        } else {
+            userMenu.style.display = 'flex';
+            if (hamburgerBtn) hamburgerBtn.style.display = 'none';
+            mobileMenu.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    }
+
+    // Event listeners para responsividade
+    window.addEventListener('resize', checkScreenSize);
+    window.addEventListener('load', checkScreenSize);
     
-    const toast = document.createElement('div');
-    toast.className = 'quick-toast';
-    toast.textContent = message;
-    toast.style.cssText = `
-        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-        background: #38a169; color: white; padding: 12px 20px; border-radius: 25px;
-        font-size: 14px; font-weight: 600; z-index: 10000; opacity: 0;
-        transition: opacity 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        text-align: center; min-width: 200px; max-width: 90%;
-    `;
-    
-    document.body.appendChild(toast);
-    setTimeout(() => toast.style.opacity = '1', 100);
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
+    // Verificar inicialmente
+    checkScreenSize();
 }
 
 // ==================== EXPORTAR FUNÇÕES GLOBAIS ====================
+
 window.sendMessage = sendMessage;
 window.viewProfile = viewProfile;
 window.toggleMenu = toggleMenu;
@@ -2803,6 +1911,11 @@ window.closeBlockModal = closeBlockModal;
 window.confirmBlock = confirmBlock;
 window.closeConfirmModal = closeConfirmModal;
 window.openSupportModal = openSupportModal;
+
+console.log('🎉 SISTEMA HOME.HTML COMPLETO CARREGADO!');
+console.log('👤 Usuário:', currentUser?.email);
+console.log('🆔 User ID:', currentUser?.id);
+console.log('📊 Perfil carregado:', !!userProfile);
 </script>
 </body>
 </html>
