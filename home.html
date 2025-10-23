@@ -191,14 +191,18 @@
         margin-left: 0.5rem;
     }
 
-    /* CORREÇÃO: REMOVER O AVATAR E USER-INFO ANTIGO DO HEADER */
+    /* CORREÇÃO: MOSTRAR OS BADGES FREE/PREMIUM ORIGINAIS */
     .user-info {
         display: none !important;
     }
 
-    /* CORREÇÃO: REMOVER OS BOTÕES ANTIGOS DO HEADER */
     .user-menu .btn-outline {
         display: none !important;
+    }
+
+    /* GARANTIR QUE OS BADGES ORIGINAIS FICAM VISÍVEIS */
+    #freeBadge, #premiumBtn {
+        display: inline-block !important;
     }
     </style>
 </head>
@@ -227,7 +231,7 @@
                         <span class="notification-badge" id="notificationBadge">0</span>
                     </a>
                     
-                    <!-- BADGE FREE/PREMIUM ORIGINAL - MANTIDO PARA A LÓGICA JS -->
+                    <!-- BADGE FREE/PREMIUM ORIGINAL - VISÍVEL -->
                     <div id="freeBadge" class="free-badge" style="display: none;">Free</div>
                     <a href="princing.html" id="premiumBtn" class="btn btn-premium" style="display: none;">Premium</a>
                     
